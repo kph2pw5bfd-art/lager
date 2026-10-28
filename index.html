@@ -94,7 +94,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="2.1 (28.10.)";
+<script>const APPV="2.2 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -671,11 +671,11 @@ function retAdmin(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:
   if(!H.g||!H.name)return errBox("Spalten „Artikelgruppe“ und „Artikelname“ nicht gefunden. Bitte den Excel-Vordruck verwenden.");
   const out={};let n=0;ws.eachRow((row,ri)=>{if(ri===1)return;const g=tx(row.getCell(H.g)),name=tx(row.getCell(H.name));if(!g||!name||/^beispiel/i.test(g))return;
    let nr=H.nr?tx(row.getCell(H.nr)).toUpperCase():"";n++;let key=(nr.replace(/[^A-Z0-9-]/g,"")||("X"+ri));while(out[key])key+="_";const cat=H.ka&&yes(tx(row.getCell(H.ka)))?0:H.kc&&yes(tx(row.getCell(H.kc)))&&!(H.kb&&yes(tx(row.getCell(H.kb))))?2:1,o=H.ka||H.kb||H.kc?cat*100000+ri:H.o?parseFloat(tx(row.getCell(H.o))):NaN;
-   out[key]={nr:nr||key,g,u:H.u?tx(row.getCell(H.u)):"",name,id:H.id?yes(tx(row.getCell(H.id))):false,zub:H.zub?yes(tx(row.getCell(H.zub))):false,o:isNaN(o)?ri:o}});
+   out[key]={hasNr:!!nr,nr:nr||key,g,u:H.u?tx(row.getCell(H.u)):"",name,id:H.id?yes(tx(row.getCell(H.id))):false,zub:H.zub?yes(tx(row.getCell(H.zub))):false,o:isNaN(o)?ri:o}});
   if(!n)return errBox("Keine Artikel gefunden. Beispielzeilen werden übersprungen.");
   const zs=wb.getWorksheet("Zubehör"),zl=[];if(zs)zs.eachRow((row,ri)=>{if(ri>1){const v=tx(row.getCell(1));if(v&&!/^keine?$/i.test(v))zl.push(v)}});
   const jobs=Object.keys(out).map(k=>db.doc("rkat/"+k).set(out[k]));rkat.forEach(a=>{if(!out[a._k])jobs.push(db.doc("rkat/"+a._k).delete())});
-  jobs.push(db.doc("rkat/_zubehoer").set({list:zl.length?zl:rZub()}));let na=0;Object.values(out).forEach(a=>{let c=String(a.nr||"").toUpperCase().replace(/\s/g,"");if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");if(/^[A-Z0-9]{3,10}$/.test(c)){na++;jobs.push(db.doc("artikel/"+c).set({name:a.name}))}});
+  jobs.push(db.doc("rkat/_zubehoer").set({list:zl.length?zl:rZub()}));let na=0;Object.values(out).filter(a=>a.hasNr).forEach(a=>{let c=String(a.nr||"").toUpperCase().replace(/\s/g,"");if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");if(/^[A-Z0-9]{3,10}$/.test(c)){na++;jobs.push(db.doc("artikel/"+c).set({name:a.name}))}});
   await Promise.all(jobs);toast(n+" Artikel importiert, davon "+na+" mit Artikelnummer für den Scan",1)}catch(x){errBox("Datei konnte nicht gelesen werden. Bitte den Excel-Vordruck als .xlsx verwenden.")}}}
 
 $("#bk").onclick=()=>{if(retBack())return;back()};
