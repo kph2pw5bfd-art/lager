@@ -1,4 +1,4 @@
-const APPV="1.36 (28.10.)";
+const APPV="1.37 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -191,23 +191,39 @@ function rEditHead(r){const o=document.createElement("div");o.className="ov";
   try{await db.doc("retour/"+r.id).update({ev,ord,mod:me,modT:Date.now()});o.remove();toast("Gespeichert",1)}catch(e){g("hsv").disabled=false;errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}};
  setTimeout(()=>g("hev").focus(),50)}
 
-/* Artikel händisch eintragen + fehlende Artikel aufzeichnen */
-function rManBtn(){const q=(rs&&rs.q||"").trim();return '<button class="mbtn" id="rman" type="button">'+(q?'„'+esc(q)+'“ händisch eintragen':'+ Artikel nicht in der Liste? Händisch eintragen')+'</button>'}
-function rManBind(){const b=$("#rman");if(b)b.onclick=()=>rManDlg((rs&&rs.q||"").trim())}
-function rManDlg(pre){const o=document.createElement("div");o.className="ov";
- o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Artikel händisch eintragen</b><p class="mute" style="margin:4px 0 10px">Wird als „fehlender Artikel“ vorgemerkt, damit er in die Artikelliste aufgenommen werden kann.</p><label class="mute" for="mnm">Artikelname <span class="rq">*</span></label><input id="mnm" autocomplete="off"><label class="mute" for="mnr">Artikelnummer (falls bekannt)</label><input id="mnr" inputmode="numeric" autocomplete="off"><label class="mute" for="mq">Stückzahl</label><input id="mq" type="number" inputmode="numeric" min="1" value="1"><div class="row"><button class="btn ghost" id="mcn">Abbrechen</button><button class="btn" id="mok">Hinzufügen</button></div></div>';
- document.body.appendChild(o);const g=i=>o.querySelector("#"+i);g("mnm").value=pre||"";g("mcn").onclick=()=>o.remove();
+/* Artikel manuell eintragen + fehlende Artikel aufzeichnen */
+function rManBtn(){const q=(rs&&rs.q||"").trim();return rScanBtn()+'<button class="mbtn" id="rman" type="button">'+(q?'„'+esc(q)+'“ manuell eintragen':'+ Artikel nicht in der Liste? Manuell eintragen')+'</button>'}
+function rManBind(){const b=$("#rman");if(b)b.onclick=()=>rManDlg((rs&&rs.q||"").trim());const c=$("#rscanb");if(c)c.onclick=()=>rScanCam()}
+function rManDlg(pre,pnr){const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Artikel manuell eintragen</b><p class="mute" style="margin:4px 0 10px">Wird als „fehlender Artikel“ vorgemerkt, damit er in die Artikelliste aufgenommen werden kann.</p><label class="mute" for="mnm">Artikelname <span class="rq">*</span></label><input id="mnm" autocomplete="off"><label class="mute" for="mnr">Artikelnummer (falls bekannt)</label><input id="mnr" inputmode="numeric" autocomplete="off"><label class="mute" for="mq">Stückzahl</label><input id="mq" type="number" inputmode="numeric" min="1" value="1"><div class="row"><button class="btn ghost" id="mcn">Abbrechen</button><button class="btn" id="mok">Hinzufügen</button></div></div>';
+ document.body.appendChild(o);const g=i=>o.querySelector("#"+i);g("mnm").value=pre||"";if(pnr)g("mnr").value=pnr;g("mcn").onclick=()=>o.remove();
  g("mok").onclick=()=>{const name=g("mnm").value.trim().replace(/\s+/g," "),nr=g("mnr").value.trim(),q=Math.max(1,parseInt(g("mq").value,10)||1);if(!name){g("mnm").classList.add("bad");return errBox("Bitte den Artikelnamen eingeben.")}
   const cat=rKat().find(a=>(nr&&rNorm(a.nr)===rNorm(nr))||String(a.name).trim().toLowerCase()===name.toLowerCase());o.remove();
   if(cat){rAdd(cat.nr,{nr:cat.nr,name:cat.name,g:cat.g,u:cat.u||""},q);rs.q="";retEdit();toast("Ist schon in der Liste: "+cat.name+" (+"+q+")",1);return}
-  const key="M:"+(rNorm(nr)||rNorm(name)||Date.now());rAdd(key,{nr,name,g:"Händisch",u:"",manual:true},q);rs.q="";retEdit();toast("+"+q+" "+name+" (händisch)",1);rLogMissing(name,nr,q)};
+  const key="M:"+(rNorm(nr)||rNorm(name)||Date.now());rAdd(key,{nr,name,g:"Manuell",u:"",manual:true},q);rs.q="";retEdit();toast("+"+q+" "+name+" (manuell)",1);rLogMissing(name,nr,q)};
  setTimeout(()=>(pre?g("mq"):g("mnm")).focus(),60)}
+
+/* Artikel scannen im Retourschein: Code lesen, dann Zahlenfeld. Bei Artikeln mit ID zählen nur die ersten 4 Ziffern (1234–56 -> 1234). */
+function rScanBtn(){return '<button class="mbtn sbtn" id="rscanb" type="button"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M16.5 8v8"/></svg>Artikel scannen</button>'}
+function rScanNr(raw){const s=String(raw||"").trim(),head=s.split(/[\s\-‐‑‒–—―−]+/)[0]||"",m=head.match(/^\d{4}/);return m?m[0]:head}
+function rScanHit(raw){const nr=rScanNr(raw),a=nr&&rKat().find(x=>x.nr&&rNorm(x.nr)===rNorm(nr));
+ if(!a){beep(false);return ask2("Artikel „"+(nr||String(raw||"").trim())+"“ ist nicht in der Artikelliste.","Manuell eintragen","Abbrechen",()=>rManDlg("",nr))}
+ beep(true);rPad(a,{nr:a.nr,name:a.name,g:a.g,u:a.u||""})}
+async function rScanCam(){audioUnlock();if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return errBox("Die Kamera ist auf diesem Gerät nicht verfügbar.");let st;
+ try{st=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}})}catch(e){return errBox("Die Kamera konnte nicht gestartet werden. Bitte den Kamera-Zugriff erlauben.")}
+ const tr=st.getVideoTracks()[0];try{const cp=tr.getCapabilities?tr.getCapabilities():{};if(cp.focusMode&&cp.focusMode.includes("continuous"))await tr.applyConstraints({advanced:[{focusMode:"continuous"}]})}catch(e){}
+ const o=document.createElement("div");o.className="lcam rscan";o.innerHTML='<video playsinline muted autoplay></video><div class="lframe bc"></div><div class="lhint">Barcode in den Rahmen halten</div><div class="lbar" style="justify-content:center"><button class="lx" type="button">Abbrechen</button></div>';
+ document.body.appendChild(o);const v=o.querySelector("video");v.srcObject=st;try{await v.play()}catch(e){}const lt=document.createElement("button");lt.className="ltorch";lt.type="button";lt.hidden=true;o.appendChild(lt);torchUI(tr,null,lt);
+ let done=false,tm=null,zx=null;const close=()=>{done=true;clearInterval(tm);if(zx){try{zx.reset()}catch(e){}}st.getTracks().forEach(t=>t.stop());o.remove()};
+ const hit=c=>{if(done||!c)return;close();rScanHit(c)};o.querySelector(".lx").onclick=close;
+ if("BarcodeDetector" in window){let bd,busy=false;try{bd=new BarcodeDetector()}catch(e){}if(bd){tm=setInterval(async()=>{if(busy||done||v.readyState<2)return;busy=true;try{const r=await bd.detect(v);if(r&&r.length)hit(String(r[0].rawValue))}catch(e){}busy=false},200);return}}
+ if(window.ZXing){try{zx=new ZXing.BrowserMultiFormatReader(hints());zx.decodeFromStream(st,v,r=>{if(r)hit(r.getText())})}catch(e){close();errBox("Der Scanner konnte nicht gestartet werden.")}}else{close();errBox("Scanner-Bibliothek nicht geladen. Bitte die Seite neu laden.")}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
-async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die händisch in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');
+async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');
  const {data,error}=await SB.from("docs").select("id,data").eq("col","fehlartikel");const box=$("#fbx");if(!box)return;if(error){box.innerHTML='<div class="card mute">Konnte nicht geladen werden.</div>';return}
  const L=(data||[]).map(x=>({id:x.id,...x.data})).sort((a,b)=>b.times-a.times||b.last-a.last);
- if(!L.length){box.innerHTML='<div class="card mute">Noch keine. Sobald jemand einen Artikel händisch einträgt, erscheint er hier.</div>';return}
+ if(!L.length){box.innerHTML='<div class="card mute">Noch keine. Sobald jemand einen Artikel manuell einträgt, erscheint er hier.</div>';return}
  box.innerHTML='<button class="btn ghost" id="fxl" style="margin-bottom:8px">Als Excel herunterladen (Vorlage-Format)</button>'+L.map(a=>'<div class="card fl"><div style="min-width:0"><b>'+esc(a.name)+'</b><div class="mute">'+(a.nr?"Nr. "+esc(a.nr)+" · ":"")+a.times+"× eingetragen, "+a.qty+" Stück</div><div class=\"mute\">Zuletzt: "+esc(a.ev||"–")+(a.ord?" ("+esc(a.ord)+")":"")+", "+fmt(a.last)+'</div></div><button class="btn ghost s" data-fdel="'+a.id+'" style="flex:none">Erledigt</button></div>').join("");
  document.querySelectorAll("[data-fdel]").forEach(b=>b.onclick=()=>ask("Als erledigt markieren und aus der Liste entfernen?",async()=>{try{await db.doc("fehlartikel/"+b.dataset.fdel).delete();b.closest(".card").remove()}catch(e){errBox("Das hat nicht geklappt.")}}));
  $("#fxl").onclick=async()=>{try{const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Artikel");ws.columns=[{header:"Artikelgruppe",width:18},{header:"Untergruppe",width:16},{header:"Artikelnummer",width:15},{header:"Artikelname",width:40},{header:"Mit ID",width:9},{header:"A – oft",width:9},{header:"B – normal",width:11},{header:"C – selten",width:11},{header:"Wie oft eingetragen",width:20},{header:"Zuletzt bei",width:34}];
@@ -240,7 +256,7 @@ function rJ(x){try{return JSON.parse(x||"{}")||{}}catch(e){return{}}}
 function rCp(o){return JSON.parse(JSON.stringify(o||{}))}
 function rAddTo(t,src){Object.keys(src||{}).forEach(k=>{const x=src[k];if(!x||typeof x!=="object")return;if(!t[k])t[k]={...x,q:0};else{const q=t[k].q;Object.assign(t[k],x);t[k].q=q}t[k].q+=(+x.q||0)})}
 function rPos(t){const o={};Object.keys(t).forEach(k=>{if(t[k].q>0)o[k]=t[k]});return o}
-function rView(r){const t={};r._base=r.itemsJson||"{}";rAddTo(t,rJ(r._base));Object.keys(r).forEach(k=>{if(k.startsWith("pa_"))rAddTo(t,rJ(r[k]))});r.itemsJson=JSON.stringify(rPos(t));return r}
+function rView(r){const t={};r._base=r.itemsJson||"{}";rAddTo(t,rJ(r._base));Object.keys(r).forEach(k=>{if(k.startsWith("pa_"))rAddTo(t,rJ(r[k]))});Object.values(t).forEach(x=>{if(x.g==="Händisch")x.g="Manuell"});r.itemsJson=JSON.stringify(rPos(t));return r}
 function rOthers(r){const t={};rAddTo(t,rJ(r._base));Object.keys(r).forEach(k=>{if(k.startsWith("pa_")&&k!=="pa_"+me)rAddTo(t,rJ(r[k]))});return t}
 function rEd(r){const it=rIt(r);return{id:r.id,ev:r.ev,ord:r.ord||"",items:it,rem:r.rem||"",mine:rJ(r["pa_"+me]),view:rCp(it),h0:{ev:r.ev||"",ord:r.ord||"",rem:r.rem||""}}}
 /* eigene Änderungen seit dem letzten Abgleich in den eigenen Anteil übernehmen */
