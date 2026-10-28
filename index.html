@@ -51,7 +51,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 .added{background:var(--tint);border-radius:12px;padding:10px 10px 2px}.added .fg{border-left:5px solid var(--navy)}
 .btn.big{padding:24px 14px;font-size:19px}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}.ov .card{width:100%;max-width:360px;margin:0}
-.camb{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}.camb[hidden]{display:none}.lcam{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}.lcam video{position:absolute;inset:0;width:100%;height:100%;max-height:none;border-radius:0;object-fit:cover}
+.camb{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}.camb[hidden]{display:none}.srow{display:flex;gap:8px;align-items:center;margin:3px 0 8px}.srow input{flex:1;margin:0;min-width:0}.scb{width:auto;flex:none;padding:10px 14px;display:flex;align-items:center}.lcam{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}.lcam video{position:absolute;inset:0;width:100%;height:100%;max-height:none;border-radius:0;object-fit:cover}
 .lframe{position:absolute;left:50%;top:44%;width:min(84vw,62vh);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:14px;box-shadow:0 0 0 200vmax rgba(0,0,0,.45)}
 .lhint{position:absolute;left:0;right:0;top:calc(14px + env(safe-area-inset-top,0px));text-align:center;color:#fff;font-weight:600;font-size:17px;text-shadow:0 1px 3px #000}
 .lbar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;padding:18px max(20px,env(safe-area-inset-left,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-right,0px))}
@@ -94,7 +94,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.8 (28.10.)";
+<script>const APPV="1.9 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -213,7 +213,7 @@ const ocrScore=r=>(r.on?10:0)+(r.ev.match(/[A-Za-zÄÖÜäöüß]/g)||[]).length
 const LNR=/(\d{5,9})\s?[-–—]\s?(\d{1,3})(?!\d)/;
 const ocrLines=d=>(d.lines||[]).map(l=>({t:l.text.trim(),y0:l.bbox.y0,y1:l.bbox.y1,w:(l.words||[]).map(w=>[w.text,Math.round(w.confidence),w.bbox.y1-w.bbox.y0])}));
 async function ocrRun(blob,psm){await TW.setParameters({tessedit_pageseg_mode:psm});return(await TW.recognize(blob)).data}
-async function readLabel(file){await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");if(!TW)TW=await Tesseract.createWorker("deu");
+async function readLabel(file,opt){await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");if(!TW)TW=await Tesseract.createWorker("deu");
  const base=await ocrPrep(file,1000),log=[];let d=null,nl=null,blob=base;
  for(const rot of [0,90,270,180]){const b=rot?await rotBlob(base,rot):base;
   for(const psm of rot?["3"]:["3","11"]){const r=await ocrRun(b,psm);log.push({step:"voll",rot,psm,lines:ocrLines(r)});nl=(r.lines||[]).find(l=>LNR.test(l.text)&&!/telefon|tel\.|\+43|fax/i.test(l.text)&&(l.words||[]).some(w=>LNR.test(w.text)||/\d{5}/.test(w.text))&&(l.words||[]).filter(w=>/\d{3}/.test(w.text)).every(w=>(w.bbox.x1-w.bbox.x0)>(w.bbox.y1-w.bbox.y0)*1.8));if(nl){d=r;blob=b;break}}
@@ -221,6 +221,7 @@ async function readLabel(file){await loadScript("https://cdn.jsdelivr.net/npm/te
  let best;
  if(!nl){best={on:"",ev:""};for(const W of [700,1300]){const r=await ocrRun(await ocrPrep(file,W),"3"),x=parseLabelData(r);log.push({step:"groesse",W,lines:ocrLines(r),r:x});if(ocrScore(x)>ocrScore(best))best=x}}
  else{const m=nl.text.match(LNR),on=m[1]+"-"+m[2],nh=Math.max(10,...(nl.words||[]).filter(w=>/\d/.test(w.text)).map(w=>w.bbox.y1-w.bbox.y0));
+  if(opt&&opt.onlyNr){ocrSaveLog(log,{on,ev:""},blob);return{on,ev:""}}
   const im=await createImageBitmap(blob),y0=Math.min(im.height-1,Math.round(nl.bbox.y1+nh*.25)),y1=Math.min(im.height,Math.round(nl.bbox.y1+nh*12));
   const c=document.createElement("canvas");c.width=im.width;c.height=Math.max(1,y1-y0);c.getContext("2d").drawImage(im,0,y0,c.width,c.height,0,0,c.width,c.height);
   const cb=await new Promise(r=>c.toBlob(r,"image/jpeg",.92));let ev="";
@@ -244,6 +245,17 @@ async function labelCam(){if(!navigator.mediaDevices||!navigator.mediaDevices.ge
   o.querySelector(".lshot").onclick=()=>{const vw=v.videoWidth,vh=v.videoHeight;if(!vw)return;const vr=v.getBoundingClientRect(),fr=o.querySelector(".lframe").getBoundingClientRect(),sc=Math.max(vr.width/vw,vr.height/vh),ox=(vr.width-vw*sc)/2,oy=(vr.height-vh*sc)/2,m=.12;
    let x0=(fr.left-vr.left-ox)/sc,y0=(fr.top-vr.top-oy)/sc,w=fr.width/sc,h=fr.height/sc;x0-=w*m;y0-=h*m;w*=1+2*m;h*=1+2*m;x0=Math.max(0,x0);y0=Math.max(0,y0);w=Math.min(vw-x0,w);h=Math.min(vh-y0,h);
    const c=document.createElement("canvas");c.width=Math.round(w);c.height=Math.round(h);c.getContext("2d").drawImage(v,x0,y0,w,h,0,0,c.width,c.height);o.querySelector(".lshot").disabled=true;c.toBlob(b=>end(b),"image/jpeg",.93)}})}
+
+/* Retourschein über Etikett finden */
+function rNorm(x){return String(x||"").replace(/[^0-9A-Za-z]/g,"").toUpperCase()}
+function ask2(t,yl,nl,fy,fn){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card"><p></p><div style="display:grid;gap:8px"><button class="btn" id="a2y"></button><button class="btn ghost" id="a2n"></button></div></div>';o.querySelector("p").textContent=t;o.querySelector("#a2y").textContent=yl;o.querySelector("#a2n").textContent=nl;document.body.appendChild(o);o.querySelector("#a2y").onclick=()=>{o.remove();fy()};o.querySelector("#a2n").onclick=()=>{o.remove();if(fn)fn()}}
+function rScanBind(){const b=$("#rscan"),f=$("#rscanf");if(!b)return;
+ const run=async file=>{b.disabled=true;toast("Etikett wird gelesen …",1);try{const r=await readLabel(file,{onlyNr:true});if(!r.on)return errBox("Keine Auftragsnummer erkannt. Bitte nochmal gerade von vorne fotografieren.");rOpenByNr(r.on)}catch(e){console.error(e);errBox("Das Etikett konnte nicht gelesen werden. Bitte nochmal versuchen.")}finally{if($("#rscan"))$("#rscan").disabled=false}};
+ b.onclick=async()=>{const shot=await labelCam();if(shot===undefined)return f.click();if(shot)run(shot)};f.onchange=()=>{const x=f.files[0];f.value="";if(x)run(x)}}
+function rOpenByNr(on){const n=rNorm(on),hit=rets.filter(r=>rNorm(r.ord)===n);
+ if(hit.length===1){curRet=hit[0].id;go("retopen");toast("Retourschein "+on+" geöffnet",1);return}
+ const base=on.split("-")[0];rqv=hit.length?on:base;const q=$("#rsq");if(q)q.value=rqv;if($("#rlist"))rListBody();
+ if(!hit.length&&!rets.some(r=>rNorm(r.ord).startsWith(rNorm(base))))ask2("Kein Retourschein mit Auftragsnummer "+on+" gefunden.","Neuen Retourschein anlegen","Abbrechen",()=>{rqv="";rNew();rs.ord=on;retEdit()},()=>{rqv="";if($("#rsq"))$("#rsq").value="";if($("#rlist"))rListBody()})}
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -526,7 +538,7 @@ function rNew(){if(rs)rPersist(true);rs={id:null,ev:"",ord:"",items:{},rem:"",lv
 function retDraw(){rSyncLocal();if(view==="ret")return retList();if(view==="retopen")return retOpen();if(view==="retedit"&&rs)return retEdit();view="ret";retList()}
 
 function retList(){$("#t").textContent="Retourscheine";
- if(!$("#rsq")||!$("#rlist")){$("#app").innerHTML=rTabs()+'<input id="rsq" type="search" placeholder="Suchen (Veranstaltung oder Auftragsnummer)" value="'+esc(rqv)+'" autocomplete="off"><div id="rlist"></div>';rBindTabs();const s=$("#rsq");s.oninput=()=>{rqv=s.value;rListBody()}}
+ if(!$("#rsq")||!$("#rlist")){$("#app").innerHTML=rTabs()+'<div class="srow"><input id="rsq" type="search" placeholder="Suchen (Veranstaltung oder Auftragsnummer)" value="'+esc(rqv)+'" autocomplete="off"><button class="btn grey scb" id="rscan" aria-label="Etikett fotografieren und Retourschein öffnen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button></div><input type="file" id="rscanf" accept="image/*" capture="environment" hidden><div id="rlist"></div>';rBindTabs();rScanBind();const s=$("#rsq");s.oninput=()=>{rqv=s.value;rListBody()}}
  rListBody()}
 function rListBody(){const q=rqv.toLowerCase(),L=rets.filter(r=>!q||[r.ev,r.ord].join(" ").toLowerCase().includes(q));
  $("#rlist").innerHTML=L.length?L.map(r=>{const it=rIt(r);return '<div class="card" data-ro="'+r.id+'" style="cursor:pointer"><b>'+esc(r.ev)+'</b>'+(r.draft?' <span class="tag" style="background:#f2c200;color:#1f2a33">In Arbeit</span>':'')+'<div class="mute">'+(r.ord?"Auftragsnummer "+esc(r.ord)+" · ":"")+rTot(it)+" Stück · "+Object.keys(it).length+' Positionen</div><div class="mute">Erstellt: '+esc(nm(r.by))+", "+fmt(r.t)+'</div>'+(r.mod?'<div class="mute">Letzte Änderung: '+esc(nm(r.mod))+", "+fmt(r.modT)+'</div>':"")+'</div>'}).join(""):'<div class="card mute">'+(rets.length?"Kein Retourschein passt zur Suche.":"Noch kein Retourschein. Starte mit „Neuer Retourschein“.")+'</div>';
@@ -598,7 +610,8 @@ async function rCamBind(){const b=$("#rcam"),f=$("#rcamf");if(!b)return;b.hidden
  b.onclick=async()=>{const shot=await labelCam();if(shot===undefined)return f.click();if(shot)rReadShot(shot)};
  f.onchange=()=>{const file=f.files[0];f.value="";if(file)rReadShot(file)};
  const rReadShot=async file=>{const t=$("#rcamt");b.disabled=true;t.textContent="Aufkleber wird gelesen …";
-  try{const r=await readLabel(file);
+  try{const r=await readLabel(file);const ex=r.on&&rets.find(x=>rNorm(x.ord)===rNorm(r.on)&&(!rs||x.id!==rs.id));
+   if(ex){ask2("Für Auftragsnummer "+r.on+" gibt es schon einen Retourschein („"+ex.ev+"“). Diesen öffnen?","Bestehenden öffnen","Trotzdem neuen anlegen",()=>{rs=null;curRet=ex.id;hist=hist.filter(v=>v!=="retedit");view="retopen";draw()},()=>{if(r.ev&&$("#rev"))$("#rev").value=r.ev;if($("#rord"))$("#rord").value=r.on;if($("#rev"))$("#rev").dispatchEvent(new Event("input"))});return}
    if(!r.ev&&!r.on)errBox("Auf dem Foto war nichts lesbar. Bitte nochmal mit mehr Licht und gerade von vorne fotografieren.");
    else{if(r.ev&&$("#rev"))$("#rev").value=r.ev;if(r.on&&$("#rord"))$("#rord").value=r.on;if($("#rev"))$("#rev").dispatchEvent(new Event("input"));toast("Bitte kurz kontrollieren",1)}}
   catch(e){console.error(e);errBox("Der Aufkleber konnte nicht gelesen werden. Bitte nochmal versuchen oder von Hand eintippen.")}
