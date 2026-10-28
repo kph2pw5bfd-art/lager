@@ -51,7 +51,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 .added{background:var(--tint);border-radius:12px;padding:10px 10px 2px}.added .fg{border-left:5px solid var(--navy)}
 .btn.big{padding:24px 14px;font-size:19px}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}.ov .card{width:100%;max-width:360px;margin:0}
-.camb{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}.camb[hidden]{display:none}:root{--okbg:#dff3e5}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--okbg:#16402a}}:root[data-theme="dark"]{--okbg:#16402a}.rdone{background:var(--okbg);border-color:#1e9e55}.tdone{background:#1e9e55;color:#fff}.btn.okbtn{background:#1e9e55;color:#fff}.srow{display:flex;gap:8px;align-items:center;margin:3px 0 8px}.srow input{flex:1;margin:0;min-width:0}.scb{width:auto;flex:none;padding:10px 14px;display:flex;align-items:center}.lcam{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}.lcam video{position:absolute;inset:0;width:100%;height:100%;max-height:none;border-radius:0;object-fit:cover}
+.camb{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}.camb[hidden]{display:none}:root{--okbg:#dff3e5}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--okbg:#16402a}}:root[data-theme="dark"]{--okbg:#16402a}.rdone{background:var(--okbg);border-color:#1e9e55}.tdone{background:#1e9e55;color:#fff}.btn.okbtn{background:#1e9e55;color:#fff}.srow{display:flex;gap:8px;align-items:center;margin:3px 0 8px}.srow input{flex:1;margin:0;min-width:0}.scb{width:auto;flex:none;padding:10px 14px;display:flex;align-items:center}.updb{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:70;background:#114a97;color:#fff;border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,.3);font-weight:600}.updb button{background:#fff;color:#114a97;border:0;border-radius:8px;padding:10px 14px;font:inherit;font-weight:700;white-space:nowrap}.lcam{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}.lcam video{position:absolute;inset:0;width:100%;height:100%;max-height:none;border-radius:0;object-fit:cover}
 .lframe{position:absolute;left:50%;top:44%;width:min(84vw,62vh);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:14px;box-shadow:0 0 0 200vmax rgba(0,0,0,.45)}
 .lhint{position:absolute;left:0;right:0;top:calc(14px + env(safe-area-inset-top,0px));text-align:center;color:#fff;font-weight:600;font-size:17px;text-shadow:0 1px 3px #000}
 .lbar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;padding:18px max(20px,env(safe-area-inset-left,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-right,0px))}
@@ -101,7 +101,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="2.4 (28.10.)";
+<script>const APPV="2.5 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -274,6 +274,14 @@ function rShort2(a){const ws=String(a.name||"").trim().split(/\s+/),skip=new Set
 function rFit(){requestAnimationFrame(()=>document.querySelectorAll(".rtile b").forEach(el=>{el.style.fontSize="";let fs=parseFloat(getComputedStyle(el).fontSize),n=0;const lh=1.18,max=3;
  while(n++<16&&fs>12&&(el.scrollWidth>el.clientWidth+1||el.scrollHeight>fs*lh*max+2)){fs-=1;el.style.fontSize=fs+"px"}}))}
 window.addEventListener("resize",()=>{clearTimeout(window.__rf);window.__rf=setTimeout(()=>{if(document.querySelector(".rtile"))rFit()},150)});
+
+/* Automatische Update-Prüfung: neue Version erkennen und neu laden */
+let updShown=false;
+async function checkUpdate(){try{const t=await fetch(HERE,{cache:"reload"}).then(r=>r.ok?r.text():"");const m=t.match(/const APPV="([^"]+)"/);if(!m||m[1]===APPV)return;
+ const idle=(typeof view==="undefined"||view==="start")&&(typeof rs==="undefined"||!rs);if(idle&&!document.querySelector(".ov,.lcam,.eov")){location.reload();return}
+ if(updShown)return;updShown=true;const d=document.createElement("div");d.className="updb";d.innerHTML='<span>Neue Version '+m[1].replace(/[<>&]/g,"")+' verfügbar</span><button type="button">Jetzt aktualisieren</button>';d.querySelector("button").onclick=async()=>{if(typeof rs!=="undefined"&&rs){try{await rPersist(true)}catch(e){}}location.reload()};document.body.appendChild(d)}catch(e){}}
+setTimeout(checkUpdate,8000);setInterval(checkUpdate,10*60*1000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
