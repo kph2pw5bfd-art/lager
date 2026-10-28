@@ -101,7 +101,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="3.2 (28.10.)";
+<script>const APPV="3.3 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -379,6 +379,7 @@ function draw(){if(!db)return;$("#bk").hidden=view==="start";$("#pv").hidden=!(r
  if(view==="scan"&&c)return scanView(c);
  if(view==="new")return newView();
  if(view==="art")return artView();
+ if(view==="users"&&owner)return usersView();
  if(view==="artlist"&&owner)return artListView();
  if(view==="def")return defView();
  if(view==="defnew")return defNewView();
@@ -534,7 +535,7 @@ function startView(){$("#t").textContent="Hauptseite";
   T("defnew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>','Defekt melden',od.length+(od.length===1?' offener Defekt':' offene Defekte')+(ou?', davon '+ou+' dringend':''),ou?'!':'')+
   T("infonew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14h4"/></svg>','Info an das Lager',owner?ui+' ungelesen':'Nachricht mit Foto ans Lager',owner&&ui?ui:'')+
   (canLager()?T("ret",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h12a5 5 0 0 1 0 10h-3"/><path d="M7 6l-4 4 4 4"/></svg>','Retourschein',rets.length+(rets.length===1?' gespeicherter Schein':' gespeicherte Scheine'),''):'')+
- '</div>'+(owner?'<div style="text-align:center;margin-top:24px"><button class="btn ghost s" data-g="art">Einstellungen'+(pendingN()?' <span class="hc" style="display:inline-grid;margin-left:6px">'+pendingN()+'</span>':'')+'</button></div>':'')+'<div style="text-align:center;margin-top:10px"><button class="btn ghost s" id="lgo">Abmelden</button></div><div class="mute" style="text-align:center;font-size:12px;margin-top:14px">Version '+APPV+'</div>';
+ '</div>'+(owner?'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px"><button class="btn ghost s" data-g="art">Einstellungen</button><button class="btn ghost s" data-g="users">Benutzerverwaltung'+(pendingN()?' <span class="hc" style="display:inline-grid;margin-left:6px">'+pendingN()+'</span>':'')+'</button></div>':'')+'<div style="text-align:center;margin-top:10px"><button class="btn ghost s" id="lgo">Abmelden</button></div><div class="mute" style="text-align:center;font-size:12px;margin-top:14px">Version '+APPV+'</div>';
  document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const v=b.dataset.g;if(v==="defnew")dpho=null;if(v==="infonew")ipho=null;go(v)});$("#lgo").onclick=()=>ask("Wirklich abmelden?",()=>SB.auth.signOut())}
 function editList(c){const w=c.mode==="weiter",o=document.createElement("div");o.className="ov";
  o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Veranstaltung bearbeiten</b><div style="height:8px"></div><label class="mute">'+(w?"Von Veranstaltung":"Veranstaltung")+'</label><input id="ee1"><label class="mute">Auftragsnummer</label><input id="eo1">'+(w?'<label class="mute">Zu Veranstaltung</label><input id="ee2"><label class="mute">Auftragsnummer (Ziel)</label><input id="eo2">':'')+'<div class="row"><button class="btn" id="esv">Speichern</button><button class="btn ghost" id="ecn">Abbrechen</button></div></div>';
@@ -599,7 +600,8 @@ async function defEditView(){const d=defs.find(x=>x.id===curDef);if(!d||d.by!==m
    await db.doc("defekte/"+d.id).update({art:a,anr:$("#denr").value.trim(),ev,desc:$("#deds").value.trim(),urg:$("#deu").checked,fn:n,foto:n>0,edT:Date.now()});
    view="defopen";draw();toast("Gespeichert",1)}catch(x){$("#desv").disabled=false;toast("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}}
 function reqMark(p){let first=null;p.forEach(([id,m])=>{const el=$("#"+id);if(!el)return;el.classList.toggle("bad",m);if(m&&!first)first=el;if(!el._rq){el._rq=1;el.addEventListener("input",()=>{if(el.value.trim())el.classList.remove("bad")})}});if(first)first.scrollIntoView({block:"center",behavior:"smooth"})}
-function artView(){$("#t").textContent="Einstellungen";$("#app").innerHTML='<button class="btn ghost s" id="al">Artikelliste</button> <button class="btn ghost s" id="pvb">Als Monteur ansehen</button>';$("#al").onclick=()=>go("artlist");$("#pvb").onclick=()=>{owner=false;hist=[];view="start";draw()};userBlock();werkBlock();lagerBlock();retAdmin();fehlBlock()}
+function artView(){$("#t").textContent="Einstellungen";$("#app").innerHTML='<button class="btn ghost s" id="al">Artikelliste</button> <button class="btn ghost s" id="pvb">Als Monteur ansehen</button>';$("#al").onclick=()=>go("artlist");$("#pvb").onclick=()=>{owner=false;hist=[];view="start";draw()};retAdmin();fehlBlock()}
+function usersView(){$("#t").textContent="Benutzerverwaltung";$("#app").innerHTML="";userBlock();werkBlock();lagerBlock();const h=$("#app h3");if(h)h.style.marginTop="4px"}
 function artListView(){$("#t").textContent="Artikelliste";
  $("#app").innerHTML=nav()+'<div class="card"><input id="an" placeholder="Artikelnummer" maxlength="10"><input id="am" placeholder="Name"><button class="btn" id="as">Speichern</button><button class="btn ghost" id="imp" style="margin-top:8px">Aus Excel importieren</button><input id="impf" type="file" accept=".xlsx" hidden></div>'+
  Object.keys(art).sort().map(k=>'<div class="card row" style="align-items:center"><div><b>'+esc(art[k].name)+'</b> <span class="mute">'+k+'</span></div><button class="btn ghost s" data-x="'+k+'" style="flex:0">Löschen</button></div>').join("");
