@@ -94,7 +94,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.7 (28.10.)";
+<script>const APPV="1.8 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -216,7 +216,7 @@ async function ocrRun(blob,psm){await TW.setParameters({tessedit_pageseg_mode:ps
 async function readLabel(file){await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");if(!TW)TW=await Tesseract.createWorker("deu");
  const base=await ocrPrep(file,1000),log=[];let d=null,nl=null,blob=base;
  for(const rot of [0,90,270,180]){const b=rot?await rotBlob(base,rot):base;
-  for(const psm of rot?["3"]:["3","11"]){const r=await ocrRun(b,psm);log.push({step:"voll",rot,psm,lines:ocrLines(r)});nl=(r.lines||[]).find(l=>LNR.test(l.text)&&!/telefon|tel\.|\+43|fax/i.test(l.text));if(nl){d=r;blob=b;break}}
+  for(const psm of rot?["3"]:["3","11"]){const r=await ocrRun(b,psm);log.push({step:"voll",rot,psm,lines:ocrLines(r)});nl=(r.lines||[]).find(l=>LNR.test(l.text)&&!/telefon|tel\.|\+43|fax/i.test(l.text)&&(l.words||[]).some(w=>LNR.test(w.text)||/\d{5}/.test(w.text))&&(l.words||[]).filter(w=>/\d{3}/.test(w.text)).every(w=>(w.bbox.x1-w.bbox.x0)>(w.bbox.y1-w.bbox.y0)*1.8));if(nl){d=r;blob=b;break}}
   if(nl)break}
  let best;
  if(!nl){best={on:"",ev:""};for(const W of [700,1300]){const r=await ocrRun(await ocrPrep(file,W),"3"),x=parseLabelData(r);log.push({step:"groesse",W,lines:ocrLines(r),r:x});if(ocrScore(x)>ocrScore(best))best=x}}
