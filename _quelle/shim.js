@@ -1,4 +1,4 @@
-const APPV="1.40";
+const APPV="1.41";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -209,13 +209,13 @@ function rScanNr(raw){const s=String(raw||"").trim(),head=s.split(/[\s\-‐‑�
 function rScanHit(raw){const nr=rScanNr(raw),a=nr&&rKat().find(x=>x.nr&&rNorm(x.nr)===rNorm(nr));
  if(!a){beep(false);return ask2("Artikel „"+(nr||String(raw||"").trim())+"“ ist nicht in der Artikelliste.","Manuell eintragen","Abbrechen",()=>rManDlg("",nr))}
  beep(true);rPad(a,{nr:a.nr,name:a.name,g:a.g,u:a.u||""})}
-async function rScanCam(){audioUnlock();if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return errBox("Die Kamera ist auf diesem Gerät nicht verfügbar.");let st;
+async function rScanCam(onHit){audioUnlock();if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return errBox("Die Kamera ist auf diesem Gerät nicht verfügbar.");let st;
  try{st=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}})}catch(e){return errBox("Die Kamera konnte nicht gestartet werden. Bitte den Kamera-Zugriff erlauben.")}
  const tr=st.getVideoTracks()[0];try{const cp=tr.getCapabilities?tr.getCapabilities():{};if(cp.focusMode&&cp.focusMode.includes("continuous"))await tr.applyConstraints({advanced:[{focusMode:"continuous"}]})}catch(e){}
  const o=document.createElement("div");o.className="lcam rscan";o.innerHTML='<video playsinline muted autoplay></video><div class="lframe bc"></div><div class="lhint">Barcode in den Rahmen halten</div><div class="lbar" style="justify-content:center"><button class="lx" type="button">Abbrechen</button></div>';
  document.body.appendChild(o);const v=o.querySelector("video");v.srcObject=st;try{await v.play()}catch(e){}const lt=document.createElement("button");lt.className="ltorch";lt.type="button";lt.hidden=true;o.appendChild(lt);torchUI(tr,null,lt);
  let done=false,tm=null,zx=null;const close=()=>{done=true;clearInterval(tm);if(zx){try{zx.reset()}catch(e){}}st.getTracks().forEach(t=>t.stop());o.remove()};
- const hit=c=>{if(done||!c)return;close();rScanHit(c)};o.querySelector(".lx").onclick=close;
+ const hit=c=>{if(done||!c)return;close();(onHit||rScanHit)(c)};o.querySelector(".lx").onclick=close;
  if("BarcodeDetector" in window){let bd,busy=false;try{bd=new BarcodeDetector()}catch(e){}if(bd){tm=setInterval(async()=>{if(busy||done||v.readyState<2)return;busy=true;try{const r=await bd.detect(v);if(r&&r.length)hit(String(r[0].rawValue))}catch(e){}busy=false},200);return}}
  if(window.ZXing){try{zx=new ZXing.BrowserMultiFormatReader(hints());zx.decodeFromStream(st,v,r=>{if(r)hit(r.getText())})}catch(e){close();errBox("Der Scanner konnte nicht gestartet werden.")}}else{close();errBox("Scanner-Bibliothek nicht geladen. Bitte die Seite neu laden.")}}
 /* Manuell eingetragene Artikel des Scheins als eigene (orange) Gruppe */
@@ -224,6 +224,18 @@ function rManTile(){const L=rManItems();return L.length?'<button class="rtile gr
 function rManLevel(){const L=rManItems();if(!L.length){rs.lvl="groups";return retEdit()}$("#t").textContent="Manuell eingetragen";
  rPage('<div class="rgrid">'+L.map(x=>'<button class="rtile rmani" data-rmk="'+esc(x.k)+'">'+rBdg(x.q)+'<b>'+rLbl(x.name)+'</b><span class="mute">'+(x.nr?"Nr. "+esc(x.nr):"ohne Nummer")+'</span></button>').join("")+'</div>');
  document.querySelectorAll("[data-rmk]").forEach(b=>b.onclick=()=>{const x=rs.items[b.dataset.rmk];if(!x)return;const base={...x};delete base.q;rPad({nr:b.dataset.rmk,name:x.name,lbl:x.nr?"Nr. "+x.nr:"Manuell eingetragen"},base)})}
+/* ===== Eine Artikelliste für alles =====
+   Materialliste, Retourschein und Defekt melden lesen nur noch die Artikelliste (docs 'rkat').
+   art (Nummer -> Name) wird daraus gebaut; die frühere Scan-Liste (docs 'artikel') entfällt. */
+function artCode(nr){let c=String(nr||"").toUpperCase().replace(/\s/g,"");if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");return /^[A-Z0-9]{3,10}$/.test(c)&&!/^X\d+_*$/.test(c)?c:""}
+function artFromKat(){const o={};rKat().forEach(a=>{const c=artCode(a.nr);if(c&&!o[c])o[c]={name:a.name}});art=o}
+let artCleaned=false;
+async function artCleanup(){if(artCleaned||!can("v_app"))return;artCleaned=true;try{const {data}=await SB.from("docs").select("id").eq("col","artikel");for(const r of data||[])await db.doc("artikel/"+r.id).delete()}catch(e){}}
+/* Defekt melden: Live-Scan, Nummer mit ID behalten (es geht um genau dieses Gerät) */
+function defScanHit(raw){const v=String(raw||"").trim(),m=v.match(CODE_RE);const nr=m?m[1].toUpperCase():(v.split(/[\s\-‐‑‒–—―−]+/)[0]||"").toUpperCase(),id=m&&m[2];
+ const c=artCode(nr)||nr,a=art[c]||rKat().find(x=>rNorm(x.nr)===rNorm(nr)),f=$("#dnart")||$("#deart"),n=$("#dnnr")||$("#denr");if(!f||!n)return;
+ n.value=c+(id?"–"+id:"");if(a){beep(true);f.value=a.name;f.classList.remove("bad");toast(a.name+(id?" · ID "+id:""),1)}else{beep(false);errBox("Artikel "+c+" ist nicht in der Artikelliste. Bitte den Namen eintragen.");setTimeout(()=>f.focus(),300)}}
+function defScan(fileInput){audioUnlock();if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return fileInput&&fileInput.click();rScanCam(defScanHit)}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');
@@ -335,7 +347,7 @@ function artList2(){$("#t").textContent="Artikelliste";
 function alBody(){const box=$("#albody");if(!box)return;const q=alq.trim().toLowerCase();
  if(!rkat.length){box.innerHTML='<div class="card mute">Noch keine Artikelliste importiert. Bitte unter App-Verwaltung → „Artikelliste importieren“ die Excel-Datei hochladen.</div>';return}
  const L=rkat.filter(a=>!q||[a.name,a.nr,a.g,a.u].join(" ").toLowerCase().includes(q)).slice().sort((a,b)=>alRow(a)-alRow(b)||String(a.name).localeCompare(b.name,"de",{numeric:true}));
- const scanOnly=Object.keys(art||{}).filter(k=>!rkat.some(a=>rNorm(a.nr)===rNorm(k))).filter(k=>!q||(k+" "+art[k].name).toLowerCase().includes(q));
+ const scanOnly=[];
  const groups=[];L.forEach(a=>{let g=groups.find(x=>x.g===a.g);if(!g)groups.push(g={g:a.g,subs:[]});let u=g.subs.find(x=>x.u===(a.u||""));if(!u)g.subs.push(u={u:a.u||"",items:[]});u.items.push(a)});
  const row=a=>'<button class="alrow" data-ak="'+esc(a._k)+'"><span class="nr">'+esc(a.nr&&!/^X\d+_*$/.test(a.nr)?a.nr:"–")+'</span><span class="nm">'+esc(a.name)+'</span><span class="tg">'+(a.id?'<span>ID</span>':'')+(a.zub?'<span>Zub.</span>':'')+'<span class="'+["ca","","cc"][alCat(a)]+'">'+"ABC"[alCat(a)]+'</span></span></button>';
  box.innerHTML='<p class="mute" style="margin:4px 2px">'+L.length+' Artikel in '+groups.length+' Gruppen'+(q?' (gefiltert)':'')+'</p>'+groups.map(g=>'<details class="algrp" data-dg="'+esc(g.g)+'"'+(q||alOpen.has(g.g)?' open':'')+'><summary><span>'+esc(g.g)+'</span><span style="font-weight:600;opacity:.85;margin-left:auto;margin-right:10px">'+g.subs.reduce((n,u)=>n+u.items.length,0)+'</span></summary>'+g.subs.map(u=>(u.u?'<div class="alsub"><span>'+esc(u.u)+'</span><span>'+u.items.length+'</span></div>':'')+u.items.map(row).join("")).join("")+'</details>').join("")+
@@ -352,8 +364,8 @@ function alEdit(a){const isNew=!a;a=a||{g:"",u:"",nr:"",name:"",id:false,zub:fal
  g("esv").onclick=async()=>{const G=g("eg").value.trim(),U=g("eu").value.trim(),NR=g("enr").value.trim().toUpperCase(),NM=g("enm").value.trim();if(!G||!NM)return errBox("Bitte Hauptgruppe und Artikelname eingeben.");
   const dup=NR&&rkat.find(x=>x._k!==a._k&&rNorm(x.nr)===rNorm(NR));if(dup)return errBox("Die Artikelnummer "+NR+" hat schon „"+dup.name+"“.");
   const row=alRow(a)||99999,k=a._k||(NR?NR.replace(/[^A-Z0-9-]/g,""):"")||("X"+Date.now().toString(36)),doc={nr:NR||k,hasNr:!!NR,g:G,u:U,name:NM,id:g("eid").checked,zub:g("ezb").checked,o:cat*100000+row};
-  try{await db.doc("rkat/"+k).set(doc);let c=NR;if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");if(c&&/^[A-Z0-9]{3,10}$/.test(c))await db.doc("artikel/"+c).set({name:NM});const old=realNr.toUpperCase();if(old&&old!==NR&&/^[A-Z0-9]{3,10}$/.test(old))await db.doc("artikel/"+old).delete();o.remove();toast("Gespeichert",1);alBody()}catch(e){errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}};
- if(g("edl"))g("edl").onclick=()=>ask("Artikel „"+a.name+"“ wirklich löschen?",async()=>{try{await db.doc("rkat/"+a._k).delete();if(realNr&&/^[A-Z0-9]{3,10}$/.test(realNr.toUpperCase()))await db.doc("artikel/"+realNr.toUpperCase()).delete();o.remove();toast("Gelöscht",1);alBody()}catch(e){errBox("Löschen fehlgeschlagen.")}})}
+  try{await db.doc("rkat/"+k).set(doc);let c=NR;if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");o.remove();toast("Gespeichert",1);alBody()}catch(e){errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}};
+ if(g("edl"))g("edl").onclick=()=>ask("Artikel „"+a.name+"“ wirklich löschen?",async()=>{try{await db.doc("rkat/"+a._k).delete();o.remove();toast("Gelöscht",1);alBody()}catch(e){errBox("Löschen fehlgeschlagen.")}})}
 
 /* Kollegen einladen (WhatsApp / Mail / Teilen) */
 function invText(){return "Hallo!\n\nDu bist zur TPC Lager App eingeladen.\n\nSo geht's:\n1. Diesen Link öffnen: "+HERE+"\n2. „Neues Konto erstellen“ antippen und Name, E-Mail und Passwort eingeben.\n3. Kurz warten, bis dein Konto freigegeben ist. Dann einfach anmelden.\n\nApp auf den Homebildschirm legen:\n• iPhone: Link in Safari öffnen → unten auf das Teilen-Symbol (Quadrat mit Pfeil nach oben) → „Zum Home-Bildschirm“ → „Hinzufügen“.\n• Android: Link in Chrome öffnen → oben rechts auf ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.\n\nDanach startest du die App einfach über das Symbol „TPC Lager“.\n\nLiebe Grüße\ndas Lager Team"}

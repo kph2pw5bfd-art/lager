@@ -109,7 +109,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.40";
+<script>const APPV="1.41";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -320,13 +320,13 @@ function rScanNr(raw){const s=String(raw||"").trim(),head=s.split(/[\s\-‐‑�
 function rScanHit(raw){const nr=rScanNr(raw),a=nr&&rKat().find(x=>x.nr&&rNorm(x.nr)===rNorm(nr));
  if(!a){beep(false);return ask2("Artikel „"+(nr||String(raw||"").trim())+"“ ist nicht in der Artikelliste.","Manuell eintragen","Abbrechen",()=>rManDlg("",nr))}
  beep(true);rPad(a,{nr:a.nr,name:a.name,g:a.g,u:a.u||""})}
-async function rScanCam(){audioUnlock();if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return errBox("Die Kamera ist auf diesem Gerät nicht verfügbar.");let st;
+async function rScanCam(onHit){audioUnlock();if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return errBox("Die Kamera ist auf diesem Gerät nicht verfügbar.");let st;
  try{st=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}})}catch(e){return errBox("Die Kamera konnte nicht gestartet werden. Bitte den Kamera-Zugriff erlauben.")}
  const tr=st.getVideoTracks()[0];try{const cp=tr.getCapabilities?tr.getCapabilities():{};if(cp.focusMode&&cp.focusMode.includes("continuous"))await tr.applyConstraints({advanced:[{focusMode:"continuous"}]})}catch(e){}
  const o=document.createElement("div");o.className="lcam rscan";o.innerHTML='<video playsinline muted autoplay></video><div class="lframe bc"></div><div class="lhint">Barcode in den Rahmen halten</div><div class="lbar" style="justify-content:center"><button class="lx" type="button">Abbrechen</button></div>';
  document.body.appendChild(o);const v=o.querySelector("video");v.srcObject=st;try{await v.play()}catch(e){}const lt=document.createElement("button");lt.className="ltorch";lt.type="button";lt.hidden=true;o.appendChild(lt);torchUI(tr,null,lt);
  let done=false,tm=null,zx=null;const close=()=>{done=true;clearInterval(tm);if(zx){try{zx.reset()}catch(e){}}st.getTracks().forEach(t=>t.stop());o.remove()};
- const hit=c=>{if(done||!c)return;close();rScanHit(c)};o.querySelector(".lx").onclick=close;
+ const hit=c=>{if(done||!c)return;close();(onHit||rScanHit)(c)};o.querySelector(".lx").onclick=close;
  if("BarcodeDetector" in window){let bd,busy=false;try{bd=new BarcodeDetector()}catch(e){}if(bd){tm=setInterval(async()=>{if(busy||done||v.readyState<2)return;busy=true;try{const r=await bd.detect(v);if(r&&r.length)hit(String(r[0].rawValue))}catch(e){}busy=false},200);return}}
  if(window.ZXing){try{zx=new ZXing.BrowserMultiFormatReader(hints());zx.decodeFromStream(st,v,r=>{if(r)hit(r.getText())})}catch(e){close();errBox("Der Scanner konnte nicht gestartet werden.")}}else{close();errBox("Scanner-Bibliothek nicht geladen. Bitte die Seite neu laden.")}}
 /* Manuell eingetragene Artikel des Scheins als eigene (orange) Gruppe */
@@ -335,6 +335,18 @@ function rManTile(){const L=rManItems();return L.length?'<button class="rtile gr
 function rManLevel(){const L=rManItems();if(!L.length){rs.lvl="groups";return retEdit()}$("#t").textContent="Manuell eingetragen";
  rPage('<div class="rgrid">'+L.map(x=>'<button class="rtile rmani" data-rmk="'+esc(x.k)+'">'+rBdg(x.q)+'<b>'+rLbl(x.name)+'</b><span class="mute">'+(x.nr?"Nr. "+esc(x.nr):"ohne Nummer")+'</span></button>').join("")+'</div>');
  document.querySelectorAll("[data-rmk]").forEach(b=>b.onclick=()=>{const x=rs.items[b.dataset.rmk];if(!x)return;const base={...x};delete base.q;rPad({nr:b.dataset.rmk,name:x.name,lbl:x.nr?"Nr. "+x.nr:"Manuell eingetragen"},base)})}
+/* ===== Eine Artikelliste für alles =====
+   Materialliste, Retourschein und Defekt melden lesen nur noch die Artikelliste (docs 'rkat').
+   art (Nummer -> Name) wird daraus gebaut; die frühere Scan-Liste (docs 'artikel') entfällt. */
+function artCode(nr){let c=String(nr||"").toUpperCase().replace(/\s/g,"");if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");return /^[A-Z0-9]{3,10}$/.test(c)&&!/^X\d+_*$/.test(c)?c:""}
+function artFromKat(){const o={};rKat().forEach(a=>{const c=artCode(a.nr);if(c&&!o[c])o[c]={name:a.name}});art=o}
+let artCleaned=false;
+async function artCleanup(){if(artCleaned||!can("v_app"))return;artCleaned=true;try{const {data}=await SB.from("docs").select("id").eq("col","artikel");for(const r of data||[])await db.doc("artikel/"+r.id).delete()}catch(e){}}
+/* Defekt melden: Live-Scan, Nummer mit ID behalten (es geht um genau dieses Gerät) */
+function defScanHit(raw){const v=String(raw||"").trim(),m=v.match(CODE_RE);const nr=m?m[1].toUpperCase():(v.split(/[\s\-‐‑‒–—―−]+/)[0]||"").toUpperCase(),id=m&&m[2];
+ const c=artCode(nr)||nr,a=art[c]||rKat().find(x=>rNorm(x.nr)===rNorm(nr)),f=$("#dnart")||$("#deart"),n=$("#dnnr")||$("#denr");if(!f||!n)return;
+ n.value=c+(id?"–"+id:"");if(a){beep(true);f.value=a.name;f.classList.remove("bad");toast(a.name+(id?" · ID "+id:""),1)}else{beep(false);errBox("Artikel "+c+" ist nicht in der Artikelliste. Bitte den Namen eintragen.");setTimeout(()=>f.focus(),300)}}
+function defScan(fileInput){audioUnlock();if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return fileInput&&fileInput.click();rScanCam(defScanHit)}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');
@@ -446,7 +458,7 @@ function artList2(){$("#t").textContent="Artikelliste";
 function alBody(){const box=$("#albody");if(!box)return;const q=alq.trim().toLowerCase();
  if(!rkat.length){box.innerHTML='<div class="card mute">Noch keine Artikelliste importiert. Bitte unter App-Verwaltung → „Artikelliste importieren“ die Excel-Datei hochladen.</div>';return}
  const L=rkat.filter(a=>!q||[a.name,a.nr,a.g,a.u].join(" ").toLowerCase().includes(q)).slice().sort((a,b)=>alRow(a)-alRow(b)||String(a.name).localeCompare(b.name,"de",{numeric:true}));
- const scanOnly=Object.keys(art||{}).filter(k=>!rkat.some(a=>rNorm(a.nr)===rNorm(k))).filter(k=>!q||(k+" "+art[k].name).toLowerCase().includes(q));
+ const scanOnly=[];
  const groups=[];L.forEach(a=>{let g=groups.find(x=>x.g===a.g);if(!g)groups.push(g={g:a.g,subs:[]});let u=g.subs.find(x=>x.u===(a.u||""));if(!u)g.subs.push(u={u:a.u||"",items:[]});u.items.push(a)});
  const row=a=>'<button class="alrow" data-ak="'+esc(a._k)+'"><span class="nr">'+esc(a.nr&&!/^X\d+_*$/.test(a.nr)?a.nr:"–")+'</span><span class="nm">'+esc(a.name)+'</span><span class="tg">'+(a.id?'<span>ID</span>':'')+(a.zub?'<span>Zub.</span>':'')+'<span class="'+["ca","","cc"][alCat(a)]+'">'+"ABC"[alCat(a)]+'</span></span></button>';
  box.innerHTML='<p class="mute" style="margin:4px 2px">'+L.length+' Artikel in '+groups.length+' Gruppen'+(q?' (gefiltert)':'')+'</p>'+groups.map(g=>'<details class="algrp" data-dg="'+esc(g.g)+'"'+(q||alOpen.has(g.g)?' open':'')+'><summary><span>'+esc(g.g)+'</span><span style="font-weight:600;opacity:.85;margin-left:auto;margin-right:10px">'+g.subs.reduce((n,u)=>n+u.items.length,0)+'</span></summary>'+g.subs.map(u=>(u.u?'<div class="alsub"><span>'+esc(u.u)+'</span><span>'+u.items.length+'</span></div>':'')+u.items.map(row).join("")).join("")+'</details>').join("")+
@@ -463,8 +475,8 @@ function alEdit(a){const isNew=!a;a=a||{g:"",u:"",nr:"",name:"",id:false,zub:fal
  g("esv").onclick=async()=>{const G=g("eg").value.trim(),U=g("eu").value.trim(),NR=g("enr").value.trim().toUpperCase(),NM=g("enm").value.trim();if(!G||!NM)return errBox("Bitte Hauptgruppe und Artikelname eingeben.");
   const dup=NR&&rkat.find(x=>x._k!==a._k&&rNorm(x.nr)===rNorm(NR));if(dup)return errBox("Die Artikelnummer "+NR+" hat schon „"+dup.name+"“.");
   const row=alRow(a)||99999,k=a._k||(NR?NR.replace(/[^A-Z0-9-]/g,""):"")||("X"+Date.now().toString(36)),doc={nr:NR||k,hasNr:!!NR,g:G,u:U,name:NM,id:g("eid").checked,zub:g("ezb").checked,o:cat*100000+row};
-  try{await db.doc("rkat/"+k).set(doc);let c=NR;if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");if(c&&/^[A-Z0-9]{3,10}$/.test(c))await db.doc("artikel/"+c).set({name:NM});const old=realNr.toUpperCase();if(old&&old!==NR&&/^[A-Z0-9]{3,10}$/.test(old))await db.doc("artikel/"+old).delete();o.remove();toast("Gespeichert",1);alBody()}catch(e){errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}};
- if(g("edl"))g("edl").onclick=()=>ask("Artikel „"+a.name+"“ wirklich löschen?",async()=>{try{await db.doc("rkat/"+a._k).delete();if(realNr&&/^[A-Z0-9]{3,10}$/.test(realNr.toUpperCase()))await db.doc("artikel/"+realNr.toUpperCase()).delete();o.remove();toast("Gelöscht",1);alBody()}catch(e){errBox("Löschen fehlgeschlagen.")}})}
+  try{await db.doc("rkat/"+k).set(doc);let c=NR;if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");o.remove();toast("Gespeichert",1);alBody()}catch(e){errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}};
+ if(g("edl"))g("edl").onclick=()=>ask("Artikel „"+a.name+"“ wirklich löschen?",async()=>{try{await db.doc("rkat/"+a._k).delete();o.remove();toast("Gelöscht",1);alBody()}catch(e){errBox("Löschen fehlgeschlagen.")}})}
 
 /* Kollegen einladen (WhatsApp / Mail / Teilen) */
 function invText(){return "Hallo!\n\nDu bist zur TPC Lager App eingeladen.\n\nSo geht's:\n1. Diesen Link öffnen: "+HERE+"\n2. „Neues Konto erstellen“ antippen und Name, E-Mail und Passwort eingeben.\n3. Kurz warten, bis dein Konto freigegeben ist. Dann einfach anmelden.\n\nApp auf den Homebildschirm legen:\n• iPhone: Link in Safari öffnen → unten auf das Teilen-Symbol (Quadrat mit Pfeil nach oben) → „Zum Home-Bildschirm“ → „Hinzufügen“.\n• Android: Link in Chrome öffnen → oben rechts auf ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.\n\nDanach startest du die App einfach über das Symbol „TPC Lager“.\n\nLiebe Grüße\ndas Lager Team"}
@@ -568,13 +580,12 @@ function okBox(code){const o0=document.querySelector(".okb");if(o0)o0.remove();c
 function toast(t,ok){if(!ok)return errBox(t);const d=document.createElement("div");d.className="toast"+(ok?" ok":"");d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 async function init(){try{db=await claude.use("db");user=await claude.use("user");if(!db||!user)throw 0;me=await user.id();owner=await user.isOwner();realOwner=owner;
  db.collection("lists").onSnapshot(s=>{lists=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);res(lists.flatMap(l=>[l.by,l.mod]));if(view==="scan"&&cur&&!lists.some(l=>l.id===cur)){cur=null;view="home";errBox("Diese Liste wurde gelöscht.")}draw()});
- db.collection("artikel").onSnapshot(s=>{art={};s.docs.forEach(d=>art[d.id]=d.data());draw()});
- db.collection("defekte").onSnapshot(s=>{defs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);res(defs.flatMap(d=>[d.by,d.doneBy]));draw()});
+  db.collection("defekte").onSnapshot(s=>{defs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);res(defs.flatMap(d=>[d.by,d.doneBy]));draw()});
  db.collection("infos").onSnapshot(s=>{infos=s.docs.map(d=>({id:d.id,...d.data()}));res(infos.flatMap(i=>[i.by,i.readBy]));draw()});
  db.collection("werkstatt").onSnapshot(s=>{werk={};s.docs.forEach(d=>werk[d.id]=d.data());draw()});
  db.collection("lager").onSnapshot(s=>{lagr={};s.docs.forEach(d=>lagr[d.id]=d.data());draw()});rightsSub();
  db.collection("retour").onSnapshot(s=>{rets=s.docs.map(d=>rView({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);res(rets.flatMap(r=>[r.by,r.mod,...Object.keys(r).filter(k=>k.startsWith("ed_")).map(k=>k.slice(3))]));rRemote();draw()});
- db.collection("rkat").onSnapshot(s=>{rkat=[];rzub=[];s.docs.forEach(d=>{const x=d.data();if(d.id==="_zubehoer")rzub=Array.isArray(x.list)?x.list:[];else rkat.push({...x,_k:d.id})});draw()});
+ db.collection("rkat").onSnapshot(s=>{rkat=[];rzub=[];s.docs.forEach(d=>{const x=d.data();if(d.id==="_zubehoer")rzub=Array.isArray(x.list)?x.list:[];else rkat.push({...x,_k:d.id})});artFromKat();artCleanup();draw()});
  db.collection("users").onSnapshot(s=>{usr={};s.docs.forEach(d=>usr[d.id]=d.data());res(Object.keys(usr));draw()});
  db.doc("users/"+me).set({t:Date.now()}).catch(()=>{});res([me])}
  catch(e){console.error(e);$("#app").innerHTML='<div class="card">Keine Verbindung zur Datenbank. Bitte Internet prüfen und neu laden.</div>'}}
@@ -714,10 +725,10 @@ function defView(){$("#t").textContent="Defekte";
  bindNav();
  bindDefTools();document.querySelectorAll("[data-df]").forEach(e=>e.onclick=()=>{if(e.dataset.just)return;curDef=e.dataset.df;go("defopen")});if(can("def_l"))swipe()}
 function defNewView(){$("#t").textContent="Defekt melden";
- $("#app").innerHTML=nav()+'<div class="card"><button class="btn" id="dnsc" style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px"><svg width="26" height="22" viewBox="0 0 26 22" fill="none" stroke="#fff" stroke-width="2.4"><path d="M3 1v20M7 1v20M12 1v20M16 1v20M20 1v20M24 1v20"/></svg>Artikel scannen</button><input id="dnsf" type="file" accept="image/*" capture="environment" hidden><label class="mute">Artikel <span class="rq">*</span></label><input id="dnart" placeholder="z.B. VT 125A Maxi 2"><label class="mute">Artikelnummer (optional)</label><input id="dnnr" placeholder="z. B. 1234 oder 1234--56"><label class="mute">Veranstaltung <span class="rq">*</span></label><input id="dnev" list="evs2"><datalist id="evs2">'+[...new Set([...lists.flatMap(l=>[l.ev1,l.ev2]),...defs.map(d=>d.ev)].filter(Boolean))].map(e=>'<option value="'+esc(e)+'">').join("")+'</datalist><label class="mute">Beschreibung des Defekts <span class="rq">*</span></label><textarea id="dnds" placeholder="Kurz beschreiben, was kaputt ist"></textarea><label style="display:flex;gap:8px;align-items:center;margin:4px 0 10px"><input type="checkbox" id="dnu" style="width:auto;margin:0">Dringend</label><button class="btn ghost" id="dnph">Foto aufnehmen</button><input id="dnpf" type="file" accept="image/*" capture="environment" hidden><div id="dnpv" class="thr"></div><div class="mute" style="margin-bottom:8px"><span class="rq">*</span> Pflichtfeld</div><button class="btn" id="dnsend">Defekt melden</button></div>';
+ $("#app").innerHTML=nav()+'<div class="card"><button class="btn" id="dnsc" style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px"><svg width="26" height="22" viewBox="0 0 26 22" fill="none" stroke="#fff" stroke-width="2.4"><path d="M3 1v20M7 1v20M12 1v20M16 1v20M20 1v20M24 1v20"/></svg>Artikel scannen</button><input id="dnsf" type="file" accept="image/*" capture="environment" hidden><label class="mute">Artikel <span class="rq">*</span></label><input id="dnart" placeholder="z.B. VT 125A Maxi 2"><label class="mute">Artikelnummer (optional)</label><input id="dnnr" placeholder="z. B. 1234 oder 1234–56"><label class="mute">Veranstaltung <span class="rq">*</span></label><input id="dnev" list="evs2"><datalist id="evs2">'+[...new Set([...lists.flatMap(l=>[l.ev1,l.ev2]),...defs.map(d=>d.ev)].filter(Boolean))].map(e=>'<option value="'+esc(e)+'">').join("")+'</datalist><label class="mute">Beschreibung des Defekts <span class="rq">*</span></label><textarea id="dnds" placeholder="Kurz beschreiben, was kaputt ist"></textarea><label style="display:flex;gap:8px;align-items:center;margin:4px 0 10px"><input type="checkbox" id="dnu" style="width:auto;margin:0">Dringend</label><button class="btn ghost" id="dnph">Foto aufnehmen</button><input id="dnpf" type="file" accept="image/*" capture="environment" hidden><div id="dnpv" class="thr"></div><div class="mute" style="margin-bottom:8px"><span class="rq">*</span> Pflichtfeld</div><button class="btn" id="dnsend">Defekt melden</button></div>';
  bindNav();$("#dnph").onclick=()=>$("#dnpf").click();
- $("#dnsc").onclick=()=>$("#dnsf").click();
- $("#dnsf").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const v=await decodeImg(f);if(!v)return errBox("Kein Code erkannt. Bitte nah, gerade und scharf fotografieren.");const c=normCode(v),m=c.match(CODE_RE),a=m&&art[m[1].toUpperCase()];if(!a)return errBox("Artikelnummer nicht bekannt");$("#dnart").value=a.name;$("#dnnr").value=c;okBox(c)};
+ $("#dnsc").onclick=()=>defScan($("#dnsf"));
+ $("#dnsf").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const v=await decodeImg(f);if(!v)return errBox("Kein Code erkannt. Bitte nah, gerade und scharf fotografieren.");defScanHit(v)};
  $("#dnpf").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if((dpho||[]).length>=6)return toast("Maximal 6 Fotos.");dpho=[...(dpho||[]),await shrink(f)];showTh("dnpv",dpho,"dnph");e.target.value=""}catch(x){toast("Foto konnte nicht gelesen werden.")}};
  $("#dnsend").onclick=async()=>{const a=$("#dnart").value.trim(),ev=$("#dnev").value.trim(),ds=$("#dnds").value.trim(),miss=[!a&&"Artikel",!ev&&"Veranstaltung",!ds&&"Beschreibung"].filter(Boolean);if(miss.length){reqMark([["dnart",!a],["dnev",!ev],["dnds",!ds]]);return errBox("Bitte ausfüllen: "+miss.join(", "))}$("#dnsend").disabled=true;
   const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -972,7 +983,7 @@ async function retXl(r,share){const dl=await claude.use("downloads");if(!dl)retu
 function lagerBlock(){const ids=Object.keys(usr).filter(i=>i!==me&&profActive(i));
  $("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Lager-Berechtigung</h3><p class="mute" style="margin:0 0 8px">Wer darf Retourscheine sehen und erstellen? Du als Administrator immer.</p>'+(ids.length?ids.map(i=>'<div class="card row" style="align-items:center"><b>'+esc(nm(i))+'</b><button class="btn s'+(lagr[i]?'':' ghost')+'" data-lg="'+i+'" style="flex:0 0 140px">'+(lagr[i]?"Berechtigt":"Nicht berechtigt")+'</button></div>').join(""):'<div class="card mute">Noch keine Kollegen haben die App geöffnet.</div>'));
  document.querySelectorAll("[data-lg]").forEach(b=>b.onclick=()=>lagr[b.dataset.lg]?db.doc("lager/"+b.dataset.lg).delete():db.doc("lager/"+b.dataset.lg).set({t:Date.now()}))}
-function retAdmin(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Artikelliste</h3><p class="mute" style="margin:0 0 8px">'+(rIsEx()?"Noch Beispielartikel aktiv.":rkat.length+" Artikel, "+rZub().length+" Zubehörteile hinterlegt.")+' Eine Liste für alle Bereiche: Retourschein (Gruppen und Kacheln) und Materialliste (Name zum gescannten Code). Der Import ersetzt die bisherige Retour-Liste.</p><a class="btn ghost" href="Artikelliste_Vorlage.xlsx" download="Artikelliste_Vorlage.xlsx" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px">Excel-Vorlage herunterladen</a><button class="btn ghost" id="rimp">Artikelliste importieren</button><input id="rimpf" type="file" accept=".xlsx" hidden>');
+function retAdmin(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Artikelliste</h3><p class="mute" style="margin:0 0 8px">'+(rIsEx()?"Noch Beispielartikel aktiv.":rkat.length+" Artikel, "+rZub().length+" Zubehörteile hinterlegt.")+' Eine Liste für alle Bereiche: Materialliste, Retourschein und Defekt melden. Der Import ersetzt die bisherige Artikelliste.</p><a class="btn ghost" href="Artikelliste_Vorlage.xlsx" download="Artikelliste_Vorlage.xlsx" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px">Excel-Vorlage herunterladen</a><button class="btn ghost" id="rimp">Artikelliste importieren</button><input id="rimpf" type="file" accept=".xlsx" hidden>');
  $("#rimp").onclick=()=>$("#rimpf").click();
  $("#rimpf").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;try{const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
   const ws=wb.getWorksheet("Artikel")||wb.worksheets[0],H={},tx=c=>String(c.text??"").trim(),yes=v=>/^(✔|✓|x|ja|j|1|true|wahr)$/i.test(v);
@@ -984,8 +995,8 @@ function retAdmin(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:
   if(!n)return errBox("Keine Artikel gefunden. Beispielzeilen werden übersprungen.");
   const zs=wb.getWorksheet("Zubehör"),zl=[];if(zs)zs.eachRow((row,ri)=>{if(ri>1){const v=tx(row.getCell(1));if(v&&!/^keine?$/i.test(v))zl.push(v)}});
   rDedupe(Object.values(out));const jobs=Object.keys(out).map(k=>db.doc("rkat/"+k).set(out[k]));rkat.forEach(a=>{if(!out[a._k])jobs.push(db.doc("rkat/"+a._k).delete())});
-  jobs.push(db.doc("rkat/_zubehoer").set({list:zl.length?zl:rZub()}));let na=0;Object.values(out).filter(a=>a.hasNr).forEach(a=>{let c=String(a.nr||"").toUpperCase().replace(/\s/g,"");if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");if(/^[A-Z0-9]{3,10}$/.test(c)){na++;jobs.push(db.doc("artikel/"+c).set({name:a.name}))}});
-  await Promise.all(jobs);toast(n+" Artikel importiert, davon "+na+" mit Artikelnummer für den Scan",1)}catch(x){errBox("Datei konnte nicht gelesen werden. Bitte den Excel-Vordruck als .xlsx verwenden.")}}}
+  jobs.push(db.doc("rkat/_zubehoer").set({list:zl.length?zl:rZub()}));let na=0;Object.values(out).filter(a=>a.hasNr).forEach(a=>{let c=String(a.nr||"").toUpperCase().replace(/\s/g,"");if(/^\d{1,3}$/.test(c))c=c.padStart(4,"0");if(/^[A-Z0-9]{3,10}$/.test(c))na++});
+  await Promise.all(jobs);toast(n+" Artikel importiert, davon "+na+" mit Artikelnummer",1)}catch(x){errBox("Datei konnte nicht gelesen werden. Bitte den Excel-Vordruck als .xlsx verwenden.")}}}
 
 $("#bk").onclick=()=>{if(retBack())return;back()};
 $("#pv").onclick=()=>{owner=realOwner;hist=[];view="start";draw()};
