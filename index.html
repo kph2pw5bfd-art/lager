@@ -101,7 +101,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="2.5 (28.10.)";
+<script>const APPV="2.6 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -282,6 +282,17 @@ async function checkUpdate(){try{const t=await fetch(HERE,{cache:"reload"}).then
  if(updShown)return;updShown=true;const d=document.createElement("div");d.className="updb";d.innerHTML='<span>Neue Version '+m[1].replace(/[<>&]/g,"")+' verfügbar</span><button type="button">Jetzt aktualisieren</button>';d.querySelector("button").onclick=async()=>{if(typeof rs!=="undefined"&&rs){try{await rPersist(true)}catch(e){}}location.reload()};document.body.appendChild(d)}catch(e){}}
 setTimeout(checkUpdate,8000);setInterval(checkUpdate,10*60*1000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
+
+/* Veranstaltung und Auftragsnummer nachträglich ändern */
+function rEditHead(r){const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Kopfdaten ändern</b><div style="height:8px"></div><label class="mute" for="hev">Veranstaltung <span class="rq">*</span></label><input id="hev"><label class="mute" for="hord">Auftragsnummer</label><input id="hord"><div id="hwarn" class="mute" style="color:var(--bad);margin:-2px 0 8px" hidden></div><div class="row"><button class="btn ghost" id="hcn">Abbrechen</button><button class="btn" id="hsv">Speichern</button></div></div>';
+ document.body.appendChild(o);const g=i=>o.querySelector("#"+i);g("hev").value=r.ev||"";g("hord").value=r.ord||"";
+ const chk=()=>{const n=rNorm(g("hord").value),d=n&&rets.find(x=>x.id!==r.id&&rNorm(x.ord)===n);g("hwarn").hidden=!d;if(d)g("hwarn").textContent="Achtung: Diese Auftragsnummer hat schon der Retourschein „"+d.ev+"“."};g("hord").oninput=chk;
+ g("hcn").onclick=()=>o.remove();
+ g("hsv").onclick=async()=>{const ev=g("hev").value.trim(),ord=g("hord").value.trim();if(!ev){g("hev").classList.add("bad");return errBox("Bitte die Veranstaltung eingeben.")}
+  if(ev===(r.ev||"")&&ord===(r.ord||""))return o.remove();g("hsv").disabled=true;
+  try{await db.doc("retour/"+r.id).update({ev,ord,mod:me,modT:Date.now()});o.remove();toast("Gespeichert",1)}catch(e){g("hsv").disabled=false;errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}};
+ setTimeout(()=>g("hev").focus(),50)}
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -621,12 +632,13 @@ function retSum(){rPersist();$("#t").textContent="Retourschein prüfen";const R=
   clearTimeout(rTimer);await rChain.catch(()=>{});const d={ev:rs.ev,ord:rs.ord,rem:rs.rem.trim(),itemsJson:JSON.stringify(rs.items),by:old?old.by:me,t:old?old.t:now,draft:false};if(old){d.mod=me;d.modT=now}
   try{await db.doc("retour/"+id).set(d);rDone[id]=JSON.stringify({ev:d.ev,ord:d.ord,rem:d.rem,itemsJson:d.itemsJson});{const o=rBk();delete o[id];rBkSet(o)}curRet=id;rs=null;hist=hist.filter(v=>v!=="retedit");view="retopen";draw();toast("Retourschein gespeichert",1)}catch(x){b.disabled=false;errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}};window.scrollTo(0,0)}
 function retOpen(){const r=rets.find(x=>x.id===curRet);if(!r){view="ret";return retList()}$("#t").textContent="Retourschein";const it=rIt(r),R=rRows(it);
- $("#app").innerHTML=rTabs()+'<div class="card"><b style="font-size:18px">'+esc(r.ev)+'</b><div class="mute">Auftragsnummer: '+esc(r.ord||"–")+'</div><div class="mute">Erstellt: '+esc(nm(r.by))+", "+fmt(r.t)+'</div>'+(r.mod?'<div class="mute">Letzte Änderung: '+esc(nm(r.mod))+", "+fmt(r.modT)+'</div>':"")+'</div>'+
+ $("#app").innerHTML=rTabs()+'<div class="card">'+(r.closed?'':'<button class="btn ghost s" id="rhed" style="float:right;margin:0 0 6px 10px">Ändern</button>')+'<b style="font-size:18px">'+esc(r.ev)+'</b><div class="mute">Auftragsnummer: '+esc(r.ord||"–")+'</div><div class="mute">Erstellt: '+esc(nm(r.by))+", "+fmt(r.t)+'</div>'+(r.mod?'<div class="mute">Letzte Änderung: '+esc(nm(r.mod))+", "+fmt(r.modT)+'</div>':"")+'</div>'+
  '<div class="card" style="padding:4px 8px;overflow-x:auto"><table class="rtbl"><thead><tr><th>Artikel</th><th style="text-align:right">Retour</th></tr></thead><tbody>'+R.map(x=>'<tr><td><b>'+esc(x.name)+'</b><div class="mute" style="font-size:13px">'+(x.nr?"Nr. "+esc(x.nr):"Zubehör")+'</div></td><td style="text-align:right;font-weight:700">'+x.q+'</td></tr>').join("")+'<tr><td style="text-align:right"><b>Gesamt</b></td><td style="text-align:right;font-weight:800">'+rTot(it)+'</td></tr></tbody></table></div>'+
  (r.rem?'<div class="card"><div class="mute">Bemerkungen</div>'+esc(r.rem)+'</div>':"")+
  (r.closed?'<div class="card rdone"><b>Abgeschlossen</b><div class="mute">'+esc(nm(r.closedBy))+', '+fmt(r.closedT)+'</div></div>':'')+'<div style="display:grid;gap:8px">'+(r.closed?'':'<button class="btn" id="radd">Artikel hinzufügen</button>')+'<button class="btn grey" id="rxl">Als Excel speichern</button><button class="btn grey" id="rmail" hidden>Per Mail senden</button>'+(r.closed?'<button class="btn ghost" id="rreo">Wieder öffnen</button>':'<button class="btn ghost" id="red">Bearbeiten</button><button class="btn okbtn" id="rclose">Abschließen</button>')+(canLager()?'<button class="btn ghost" id="rdel" style="color:var(--bad)">Löschen</button>':"")+'</div>';
  rBindTabs();$("#rxl").onclick=()=>retXl(r);if(navigator.canShare){$("#rmail").hidden=false;$("#rmail").onclick=()=>retXl(r,1)}
  if($("#red"))$("#red").onclick=()=>{rs={id:r.id,ev:r.ev,ord:r.ord||"",items:rIt(r),rem:r.rem||"",lvl:"sum",g:null,u:null};go("retedit")};
+ if($("#rhed"))$("#rhed").onclick=()=>rEditHead(r);
  if($("#rclose"))$("#rclose").onclick=()=>ask("Retourschein abschließen? Danach kann er nur noch angesehen werden. Bei Bedarf kann man ihn wieder öffnen.",async()=>{try{await db.doc("retour/"+r.id).update({closed:true,closedBy:me,closedT:Date.now(),draft:false});toast("Retourschein abgeschlossen",1)}catch(x){errBox("Abschließen fehlgeschlagen. Bitte nochmal versuchen.")}});
  if($("#rreo"))$("#rreo").onclick=()=>ask("Retourschein wieder öffnen, damit er bearbeitet werden kann?",async()=>{try{await db.doc("retour/"+r.id).update({closed:false,mod:me,modT:Date.now()});toast("Retourschein wieder geöffnet",1)}catch(x){errBox("Das hat nicht geklappt. Bitte nochmal versuchen.")}});
  if($("#radd"))$("#radd").onclick=()=>{rs={id:r.id,ev:r.ev,ord:r.ord||"",items:rIt(r),rem:r.rem||"",lvl:"groups",g:null,u:null,add:true};go("retedit")};
