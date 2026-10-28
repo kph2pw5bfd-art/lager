@@ -15,7 +15,7 @@ cp /home/claude/lager/_quelle/basis.html /home/claude/lager_app.html
 cd /home/claude/gh && python3 build.py && python3 -c "import re;s=open('index.html').read();sc=re.findall(r'<script>(.*?)</script>',s,re.S);open('a.js','w').write(sc[-2]);open('b.js','w').write(sc[-1])" && node --check a.js && node --check b.js
 ```
 ## Veröffentlichen
-Version in shim.js erhöhen (`const APPV="1.43"` → 1.44 …, zwei Stellen nach dem Punkt, ohne Datum),
+Version in shim.js erhöhen (`const APPV="1.44"` → 1.45 …, zwei Stellen nach dem Punkt, ohne Datum),
 dann index.html nach /home/claude/lager kopieren, die geänderten Quelldateien nach `_quelle/`, committen, `git push origin main`.
 
 ## Aufbau
@@ -32,6 +32,7 @@ dann index.html nach /home/claude/lager kopieren, die geänderten Quelldateien n
 - `tests/pg/` – Tests gegen echtes Postgres (Supabase nachgebildet in `mock.sql`): `sql_rechte_test.py` (Regeln direkt), `rechte_t.js`/`old_t.js` (App im Browser über `pgharness.js`, das jede Anfrage als der jeweilige Benutzer in Postgres ausführt). Postgres 16 liegt unter /usr/lib/postgresql/16/bin; Server siehe pgharness (Socket /home/postgres/pgt, Port 5499).
 - Eine Artikelliste (ab 1.41, `einelistepatch.py` + `artFromKat`/`defScanHit` in shim.js): einzige Quelle ist docs `rkat`. `art` (Nummer → Name für Materialliste/Defekte) wird daraus gebaut, Nummern 1–3-stellig werden auf 4 Stellen aufgefüllt. Die frühere Scan-Liste (docs `artikel`) wird nicht mehr gelesen/geschrieben und beim Start (Recht App-Verwaltung) gelöscht. Defekt melden: Live-Scanner (`rScanCam(defScanHit)`), Nummer mit ID `1234–56`. Test: `tests/eine_t.js`.
 - Defekt melden/bearbeiten (ab 1.42, `defordpatch.py` + `defLabelBind` in shim.js): Knopf „Etikett fotografieren“ über Veranstaltung (labelCam + readLabel wie Retourschein) füllt Veranstaltung + Auftragsnummer (Feld `ord`, optional, nur in der Detailansicht). Beschreibung optional; Pflicht nur Artikel + Veranstaltung. Formular in drei Karten mit Überschrift (Artikel / Veranstaltung / Defekt, Klasse `dsh`, ab 1.43). Test: `tests/deford_t.js`.
+- Materialliste (ab 1.44, `matpatch.py`, `materialliste.sql`): „Abgeschlossen“ statt „Geprüft“ (interner Wert bleibt `chk`, Filterwert `geprüft`). Rechte `mat_b` (Abschließen/Wieder öffnen, abgeschlossene Liste ändern) und `mat_l` (Löschen); erstellen/scannen darf jeder. Solange kein Titel mat_* hat, gilt fürs Abschließen Defekte-Bearbeiten (alt). DB: lists mit chk=true nur mit mat_b änderbar, Löschen nur mit mat_l. Tests: `tests/pg/mat_t.js`, `tests/pg/sql_materialliste_test.py`.
 - `datenbank.sql` – Supabase-Schema mit Berechtigungen
 - `tests/` – Playwright-Tests mit Fake-Supabase (`fakesb.js`); Kamera-Tests mit `--use-fake-device-for-media-stream`. `two.js` + `fakesb2.js`: zwei Benutzer gleichzeitig an einem Schein (liegt neben two.js, Verzögerung per `LAT=300`). Pfad `S` in den alten Tests auf das aktuelle Scratchpad anpassen.
 

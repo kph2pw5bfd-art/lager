@@ -8,7 +8,7 @@ function setupDb(db,seed){execFileSync("psql",[...PSQL,"-d","postgres","-c","dro
  const run=sql=>execFileSync("psql",[...PSQL,"-d",db],{input:sql});
  try{run("create role anon nologin; create role authenticated nologin;")}catch(e){}
  run(fs.readFileSync("/home/postgres/pgt/mock.sql","utf8").replace("create role anon nologin; create role authenticated nologin;",""));
- run(fs.readFileSync("/home/claude/gh/datenbank.sql","utf8"));seed.pre&&run(seed.pre);run(fs.readFileSync("/home/claude/gh/rechte.sql","utf8"));seed.post&&run(seed.post)}
+ run(fs.readFileSync("/home/claude/gh/datenbank.sql","utf8"));seed.pre&&run(seed.pre);run(fs.readFileSync("/home/claude/gh/rechte.sql","utf8"));if(fs.existsSync("/home/claude/gh/materialliste.sql"))run(fs.readFileSync("/home/claude/gh/materialliste.sql","utf8"));seed.post&&run(seed.post)}
 function makeSrv(db,pages,LAT){
  const cond=f=>f.length?" where "+f.map(([ty,k,v])=>ty==="eq"?k+"::text="+lit(v):k+"::text in ("+v.map(lit).join(",")+")").join(" and "):"";
  async function bc(ev){for(const pg of pages){let send=true;

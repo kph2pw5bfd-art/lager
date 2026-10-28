@@ -153,3 +153,4 @@ grant execute on function public.admin_set_user(uuid,boolean,text) to authentica
 grant execute on function public.set_my_name(text) to authenticated;
 
 -- Danach für Titel und Rechte zusätzlich rechte.sql ausführen (ab App-Version 1.39).
+-- Danach materialliste.sql ausführen (ab App-Version 1.44).

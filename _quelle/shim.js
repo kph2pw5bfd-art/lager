@@ -1,4 +1,4 @@
-const APPV="1.43";
+const APPV="1.44";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -404,16 +404,19 @@ async function rXlPhotos(wb,r,ws,last){const f=r.fotos||[];if(!f.length||!ws)ret
    docs 'titel': {name, o (Reihenfolge), r:{Recht:true}}   docs 'rolle' (id = Benutzer-ID): {t: Titel-ID, x:{Extra-Rechte}}
    Rechte: def_/ret_/inf_ + s (sehen) b (bearbeiten) l (löschen); v_user, v_rights, v_app. Der Admin darf immer alles.
    Die Datenbank prüft dieselben Rechte (rechte.sql). */
-const RK=["def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","v_user","v_rights","v_app"];
+const RK=["mat_b","mat_l","def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","v_user","v_rights","v_app"];
+const RMAT=[["mat_b","Abschließen / Wieder öffnen"],["mat_l","Löschen"]];
 const RAREA=[["def","Defekte","Alle Defekte, nicht nur die eigenen"],["ret","Retourscheine",""],["inf","Infos an das Lager",""]],RLVL=[["s","Sehen"],["b","Bearbeiten"],["l","Löschen"]];
 const RVW=[["v_user","Benutzer freigeben/sperren"],["v_rights","Titel und Rechte"],["v_app","App-Verwaltung (inkl. Artikelliste)"]];
 let TIT={},ROL={},rkLast=null,rxOpen=new Set(),tOpen=new Set();
-function rSum(r){r=rNormR(r);const L=RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([,t])=>t.toLowerCase());return l.length?n+": "+l.join(", "):""}).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
+function rSum(r){r=rNormR(r);const mt=RMAT.filter(([k])=>r[k]).map(([,t])=>t.toLowerCase());const L=(mt.length?["Materialliste: "+mt.join(", ")]:[]).concat(RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([,t])=>t.toLowerCase());return l.length?n+": "+l.join(", "):""})).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
 function rNormR(o){o=o||{};const r={};RK.forEach(k=>{if(o[k]===true)r[k]=true});["def","ret","inf"].forEach(a=>{if(r[a+"_b"]||r[a+"_l"])r[a+"_s"]=true});return r}
 function uRights(uid){const x=ROL[uid]||{},t=TIT[x.t]||{};return rNormR({...(t.r||{}),...Object.fromEntries(Object.entries(x.x||{}).filter(([,v])=>v===true))})}
 /* Solange die Datenbank-Änderung (rechte.sql) fehlt, gibt es keine Titel: dann gelten die alten Häkchen Werkstatt/Lager */
 const rightsReady=()=>Object.keys(TIT).length>0;
-function can(k){if(owner)return true;if(!rightsReady()){if(k.startsWith("def_"))return k!=="def_l"&&!!werk[me];if(k.startsWith("ret_"))return !!lagr[me];return false}return !!uRights(me)[k]}
+/* Materialliste-Recht: solange noch kein Titel mat_* hat (Datenbank-Update fehlt), gilt wie früher Defekte-Bearbeiten fürs Abschließen */
+const matReady=()=>Object.values(TIT).some(t=>t.r&&(t.r.mat_b||t.r.mat_l))||Object.values(ROL).some(x=>x.x&&(x.x.mat_b||x.x.mat_l));
+function can(k){if(owner)return true;if(k.startsWith("mat_")&&!matReady())return k==="mat_b"&&can("def_b");if(!rightsReady()){if(k.startsWith("def_"))return k!=="def_l"&&!!werk[me];if(k.startsWith("ret_"))return !!lagr[me];return false}return !!uRights(me)[k]}
 function rightsSub(){db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
 function rightsChanged(){const k=JSON.stringify(uRights(me));if(rkLast!==null&&k!==rkLast&&!owner)DBX.reloadAll();rkLast=k;draw()}
 const titList=()=>Object.keys(TIT).map(id=>({id,...TIT[id]})).sort((a,b)=>(a.o||0)-(b.o||0)||String(a.name).localeCompare(String(b.name),"de"));
@@ -424,7 +427,7 @@ function infoDelBtn(i){if(!can("inf_l")||$("#idel"))return;$("#app").insertAdjac
  $("#idel").onclick=()=>ask("Nachricht wirklich löschen?",async()=>{try{await db.doc("infos/"+i.id).delete();for(let k=0;k<(i.fn||0);k++){try{await db.doc("fotos/"+i.id+"-"+k).delete()}catch(e){}}view="info";hist=hist.filter(v=>v!=="infoopen");draw();toast("Nachricht gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
 /* Kästchen-Raster: cur = eigene Häkchen, inh = vom Titel geerbt (grau, nicht änderbar) */
 function rMx(cur,inh,attr){cur=cur||{};inh=inh||{};const cb=(k,l)=>{const i=!!inh[k],c=i||!!cur[k];return '<label class="rmc'+(i?' inh':'')+'"><input type="checkbox" '+attr+' data-k="'+k+'"'+(c?' checked':'')+(i?' disabled':'')+'><span>'+l+'</span></label>'};
- return '<div class="rmx">'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,t)).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
+ return '<div class="rmx"><div class="rmr"><div class="rmh"><b>Materialliste</b><small>Erstellen und scannen darf jeder</small></div><div class="rml">'+RMAT.map(([k,t])=>cb(k,t)).join("")+'</div></div>'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,t)).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
 /* Häkchen lesen + Regeln: Bearbeiten/Löschen schließt Sehen ein, ohne Sehen kein Bearbeiten/Löschen */
 function rMxRead(box,changed){const g=k=>box.querySelector('[data-k="'+k+'"]');const k=changed&&changed.dataset.k;
  if(k){const [a,l]=k.split("_");if(["def","ret","inf"].includes(a)){if((l==="b"||l==="l")&&changed.checked){const s=g(a+"_s");if(s&&!s.disabled)s.checked=true}if(l==="s"&&!changed.checked)["b","l"].forEach(x=>{const e=g(a+"_"+x);if(e&&!e.disabled)e.checked=false})}}
@@ -438,7 +441,7 @@ function rightsBlock(){if(!rightsReady()){$("#app").insertAdjacentHTML("beforeen
   U.map(p=>{const x=ROL[p.id]||{},adm=p.role==="admin",t=TIT[x.t],xr=rNormR(x.x),nx=Object.keys(xr).length;
    return '<div class="card ttl"><div class="fl" style="flex-wrap:wrap"><div style="min-width:0;flex:1"><b>'+esc(p.name||"Ohne Namen")+'</b>'+(p.id===me?' <span class="mute">(du)</span>':'')+(adm?' <span class="tag">Admin</span>':'')+'</div>'+(adm?'<span class="mute" style="font-size:14px">darf immer alles</span>':'<select class="tsel" data-ut="'+p.id+'">'+opt(x.t||"")+'</select>')+'</div>'+
    (adm?'':'<details class="rxd" data-xu="'+p.id+'"'+(rxOpen.has(p.id)?' open':'')+'><summary>Extra-Rechte'+(nx?' <span class="rxn">'+nx+'</span>':'')+'</summary><div data-xbox="'+p.id+'">'+rMx(xr,t?rNormR(t.r):{},'data-xc="'+p.id+'"')+'</div><p class="mute" style="font-size:12px;margin:6px 0 0">Grau = kommt schon vom Titel'+(t?' „'+esc(t.name)+'“':'')+'.</p></details>')+'</div>'}).join("")+
-  '<h3 style="margin:22px 0 4px">Titel und ihre Rechte</h3><p class="mute" style="margin:0 0 8px">Titel antippen, um seine Rechte zu ändern. Gilt sofort für alle mit diesem Titel. Materialliste, eigene Defekte und Infos ans Lager schicken darf jeder.</p>'+
+  '<h3 style="margin:22px 0 4px">Titel und ihre Rechte</h3><p class="mute" style="margin:0 0 8px">Titel antippen, um seine Rechte zu ändern. Gilt sofort für alle mit diesem Titel. Materiallisten erstellen und scannen, eigene Defekte melden und Infos ans Lager schicken darf jeder.</p>'+
   T.map(t=>{const n=Object.values(ROL).filter(x=>x.t===t.id).length;return '<details class="card ttl tdet" data-tbox="'+esc(t.id)+'"'+(tOpen.has(t.id)?' open':'')+'><summary><div class="fl"><b style="font-size:17px">'+esc(t.name)+'</b><span class="mute" style="font-size:13px;white-space:nowrap">'+(n===1?"1 Person":n+" Personen")+'</span></div><div class="mute tsum">'+esc(rSum(t.r))+'</div></summary>'+rMx(rNormR(t.r),{},'data-tc="'+esc(t.id)+'"')+'<div class="ubt" style="margin-top:10px"><button class="btn ghost s" data-tren="'+esc(t.id)+'">Umbenennen</button><button class="btn ghost s" data-tdel="'+esc(t.id)+'" style="color:var(--bad)">Titel löschen</button></div></details>'}).join("")+
   '<button class="mbtn" id="tnew" type="button">+ Neuer Titel</button>');
  document.querySelectorAll("[data-ut]").forEach(sel=>sel.onchange=()=>{const id=sel.dataset.ut,v=sel.value;rSave(()=>ROL[id]?db.doc("rolle/"+id).update({t:v}):db.doc("rolle/"+id).set({t:v,x:{}}),"Titel gespeichert")});
