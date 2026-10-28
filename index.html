@@ -104,7 +104,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="3.8 (28.10.)";
+<script>const APPV="3.9 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -397,17 +397,17 @@ function invDlg(){const t=invText(),o=document.createElement("div");o.className=
 /* Fotos im Retourschein */
 const RPH={};
 async function rPhoto(id){if(RPH[id])return RPH[id];try{const d=await db.doc("fotos/"+id).get();if(d.exists){RPH[id]=d.data().d;return RPH[id]}}catch(e){}return null}
-function rPhotoBlock(r){const f=r.fotos||[];return '<div class="card"><div class="fl"><b>Fotos'+(f.length?' ('+f.length+')':'')+'</b>'+(r.closed?'':'<button class="btn ghost s" id="rphadd" style="width:auto">+ Foto hinzufügen</button>')+'</div><input type="file" id="rphf" accept="image/*" multiple hidden>'+(f.length?'<div class="rph">'+f.map(id=>'<div class="thw"><img data-ph="'+esc(id)+'" alt="Foto">'+(r.closed?'':'<button class="thx" data-phx="'+esc(id)+'" aria-label="Foto löschen">✕</button>')+'</div>').join("")+'</div>':'<p class="mute" style="margin:6px 0 0">Noch keine Fotos. Fotos werden in der Excel-Datei auf dem Blatt „Fotos“ mitgeschickt.</p>')+'</div>'}
+function rPhotoBlock(r){const f=r.fotos||[];return '<div class="card"><div class="fl"><b>Fotos'+(f.length?' ('+f.length+')':'')+'</b>'+(r.closed?'':'<button class="btn ghost s" id="rphadd" style="width:auto">+ Foto hinzufügen</button>')+'</div><input type="file" id="rphf" accept="image/*" multiple hidden>'+(f.length?'<div class="rph">'+f.map(id=>'<div class="thw"><img data-ph="'+esc(id)+'" alt="Foto">'+(r.closed?'':'<button class="thx" data-phx="'+esc(id)+'" aria-label="Foto löschen">✕</button>')+'</div>').join("")+'</div>':'<p class="mute" style="margin:6px 0 0">Noch keine Fotos. Fotos werden in der Excel-Datei unten angehängt und mitgeschickt.</p>')+'</div>'}
 function rPhotoBind(r){document.querySelectorAll("[data-ph]").forEach(async im=>{const u=await rPhoto(im.dataset.ph);if(u)im.src=u;im.onclick=()=>{if(!im.src)return;const v=document.createElement("div");v.className="phv";v.innerHTML='<img alt="Foto">';v.querySelector("img").src=im.src;v.onclick=()=>v.remove();document.body.appendChild(v)}});
  const b=$("#rphadd"),f=$("#rphf");if(b){b.onclick=()=>f.click();f.onchange=async()=>{const files=[...f.files];f.value="";if(!files.length)return;b.disabled=true;b.textContent="Wird hochgeladen …";const ids=[];
   try{for(const file of files){const d=await shrink(file),id="r-"+r.id+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);await db.doc("fotos/"+id).set({d});RPH[id]=d;ids.push(id)}
    const cur=(rets.find(x=>x.id===r.id)||r).fotos||[];await db.doc("retour/"+r.id).update({fotos:cur.concat(ids),mod:me,modT:Date.now()});toast(ids.length===1?"Foto gespeichert":ids.length+" Fotos gespeichert",1)}
   catch(e){console.error(e);errBox("Foto konnte nicht gespeichert werden. Bitte nochmal versuchen.");if(ids.length){try{const cur=(rets.find(x=>x.id===r.id)||r).fotos||[];await db.doc("retour/"+r.id).update({fotos:cur.concat(ids)})}catch(x){}}}}}
  document.querySelectorAll("[data-phx]").forEach(x=>x.onclick=()=>ask("Foto löschen?",async()=>{const id=x.dataset.phx;try{const cur=((rets.find(y=>y.id===r.id)||r).fotos||[]).filter(y=>y!==id);await db.doc("retour/"+r.id).update({fotos:cur,mod:me,modT:Date.now()});await db.doc("fotos/"+id).delete().catch(()=>{});toast("Foto gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}}))}
-async function rXlPhotos(wb,r){const f=r.fotos||[];if(!f.length)return;const ws=wb.addWorksheet("Fotos");ws.getColumn(1).width=80;let row=1;
- ws.getCell("A1").value="Fotos zum Retourschein "+r.ev+(r.ord?" ("+r.ord+")":"");ws.getCell("A1").font={bold:true,size:14};row=3;
- for(let i=0;i<f.length;i++){const u=await rPhoto(f[i]);if(!u)continue;const im=new Image();im.src=u;try{await im.decode()}catch(e){continue}const W=480,H=Math.round(im.naturalHeight*W/im.naturalWidth);
-  ws.getCell("A"+row).value="Foto "+(i+1);ws.getCell("A"+row).font={bold:true};const ix=wb.addImage({base64:u,extension:"jpeg"});ws.addImage(ix,{tl:{col:0,row:row},ext:{width:W,height:H}});row+=Math.ceil(H/20)+3}}
+async function rXlPhotos(wb,r,ws,last){const f=r.fotos||[];if(!f.length||!ws)return;let row=(last||ws.rowCount)+3;
+ const t=ws.getCell("A"+row);t.value="Fotos ("+f.length+")";t.font={bold:true,size:14,color:{argb:"FF114A97"}};row+=1;
+ for(let i=0;i<f.length;i++){const u=await rPhoto(f[i]);if(!u)continue;const im=new Image();im.src=u;try{await im.decode()}catch(e){continue}const W=520,H=Math.round(im.naturalHeight*W/im.naturalWidth);
+  ws.getCell("A"+row).value="Foto "+(i+1);ws.getCell("A"+row).font={bold:true};const ix=wb.addImage({base64:u,extension:"jpeg"});ws.addImage(ix,{tl:{col:0,row:row},ext:{width:W,height:H}});row+=Math.ceil(H/20)+2}}
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -813,7 +813,7 @@ async function retXl(r,share){const dl=await claude.use("downloads");if(!dl)retu
   rw++;const hr=ws.getRow(rw);hr.values=["Artikelnr.","Artikel","Ausgang","Retour","Differenz"];hr.height=22;hr.eachCell(x=>{x.fill=fill(NAVY);x.font={bold:true,color:{argb:"FFFFFFFF"}};x.alignment={horizontal:"center",vertical:"middle"};x.border=bd});
   rRows(rIt(r)).filter(x=>x.q>0).forEach((x,i)=>{rw++;const row=ws.getRow(rw);row.values=[x.nr||"",x.name,null,x.q,{formula:'IF(C'+rw+'="","",C'+rw+'-D'+rw+')',result:""}];
    const f=i%2?fill("FFF6F8FB"):null;for(let n=1;n<=5;n++){const c=row.getCell(n);c.border=bd;c.alignment={horizontal:n>=3?"center":"left",vertical:"middle"};if(f)c.fill=f}row.getCell(2).font={bold:true};row.getCell(3).fill=fill("FFFFF8DC")});
-  await rXlPhotos(wb,r);const buf=await wb.xlsx.writeBuffer(),fn="Retourschein_"+String(r.ev).replace(/[^A-Za-z0-9äöüÄÖÜß]+/g,"_")+"_"+new Date(r.t).toISOString().slice(0,10)+".xlsx";
+  await rXlPhotos(wb,r,ws,rw);const buf=await wb.xlsx.writeBuffer(),fn="Retourschein_"+String(r.ev).replace(/[^A-Za-z0-9äöüÄÖÜß]+/g,"_")+"_"+new Date(r.t).toISOString().slice(0,10)+".xlsx";
   const XT="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",blob=new Blob([buf],{type:XT});
   if(share){const file=new File([blob],fn,{type:XT});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:rMailSubj(r),text:rMailBody(r)});await rMarkSent(r,share&&share.to);return}toast("Teilen geht auf diesem Gerät nicht. Die Datei wird gespeichert.",1)}
   await dl.save({filename:fn,data:blob})
