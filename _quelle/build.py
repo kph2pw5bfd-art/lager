@@ -91,6 +91,7 @@ exec(open("/home/claude/gh/invpatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/photopatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/permpatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/torchpatch.py",encoding="utf-8").read())
+exec(open("/home/claude/gh/splashpatch.py",encoding="utf-8").read())
 # boot
 rep('\ninit();\n</script>','\nboot();\n</script>')
 rep('<script>\nlet db,user,me,','<script>'+shim+'</script>\n<script>\nlet db,user,me,')
