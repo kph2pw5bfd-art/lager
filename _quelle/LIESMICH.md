@@ -15,7 +15,7 @@ cp /home/claude/lager/_quelle/basis.html /home/claude/lager_app.html
 cd /home/claude/gh && python3 build.py && python3 -c "import re;s=open('index.html').read();sc=re.findall(r'<script>(.*?)</script>',s,re.S);open('a.js','w').write(sc[-2]);open('b.js','w').write(sc[-1])" && node --check a.js && node --check b.js
 ```
 ## Veröffentlichen
-Version in shim.js erhöhen (`const APPV="1.34 (28.10.)"` → 1.35 …, zwei Stellen nach dem Punkt),
+Version in shim.js erhöhen (`const APPV="1.35 (28.10.)"` → 1.36 …, zwei Stellen nach dem Punkt),
 dann index.html nach /home/claude/lager kopieren, die geänderten Quelldateien nach `_quelle/`, committen, `git push origin main`.
 
 ## Aufbau

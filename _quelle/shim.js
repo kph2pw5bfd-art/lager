@@ -1,4 +1,4 @@
-const APPV="1.34 (28.10.)";
+const APPV="1.35 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -234,8 +234,31 @@ function rSentAll(r){const s=r.sent||[];if(!s.length)return "";return s.slice().
 /* Signalton beim Scannen und Artikelname im grünen Feld */
 let ACX=null;
 function audioUnlock(){try{if(!ACX){const C=window.AudioContext||window.webkitAudioContext;if(C)ACX=new C()}if(ACX&&ACX.state==="suspended")ACX.resume();if(ACX){const o=ACX.createOscillator(),g=ACX.createGain();g.gain.value=0;o.connect(g).connect(ACX.destination);o.start();o.stop(ACX.currentTime+.01)}}catch(e){}}
-function beep(ok){try{if(navigator.vibrate&&pref("vib"))navigator.vibrate(ok?60:[120,80,120]);if(!ACX||!pref("snd"))return;if(ACX.state==="suspended")ACX.resume();const t=ACX.currentTime,tones=ok?[[1320,0,.12]]:[[330,0,.18],[220,.22,.28]];
- tones.forEach(([f,s,d])=>{const o=ACX.createOscillator(),g=ACX.createGain();o.type=ok?"sine":"square";o.frequency.value=f;g.gain.setValueAtTime(0,t+s);g.gain.linearRampToValueAtTime(ok?.35:.18,t+s+.01);g.gain.setValueAtTime(ok?.35:.18,t+s+d-.03);g.gain.linearRampToValueAtTime(0,t+s+d);o.connect(g).connect(ACX.destination);o.start(t+s);o.stop(t+s+d+.02)})}catch(e){}}
+/* Tonauswahl: [Frequenz, Start, Dauer, Wellenform, Lautstärke, Ziel-Frequenz (Gleiten), ausklingen] */
+const SND={ok:[
+ {id:"piep",n:"Piep",t:[[1320,0,.12,"sine",.35]]},
+ {id:"kasse",n:"Kassen-Piep",t:[[2400,0,.09,"square",.12]]},
+ {id:"doppel",n:"Doppel-Piep",t:[[1500,0,.07,"sine",.35],[1500,.11,.07,"sine",.35]]},
+ {id:"glocke",n:"Glocke",t:[[1760,0,.7,"sine",.32,0,1],[3520,0,.35,"sine",.08,0,1]]},
+ {id:"dingdong",n:"Ding-Dong",t:[[1047,0,.3,"sine",.32,0,1],[784,.24,.45,"sine",.32,0,1]]},
+ {id:"auf",n:"Aufwärts",t:[[880,0,.08,"sine",.3],[1320,.09,.12,"sine",.3]]}],
+ err:[
+ {id:"summer",n:"Doppelton",t:[[330,0,.18,"square",.18],[220,.22,.28,"square",.18]]},
+ {id:"brumm",n:"Brummen",t:[[110,0,.5,"sawtooth",.22]]},
+ {id:"hupe",n:"Hupe",t:[[400,0,.4,"square",.13],[505,0,.4,"square",.1]]},
+ {id:"drei",n:"Dreifach-Piep",t:[[880,0,.09,"square",.15],[880,.15,.09,"square",.15],[880,.3,.09,"square",.15]]},
+ {id:"ab",n:"Abwärts",t:[[620,0,.5,"triangle",.32,150]]},
+ {id:"rattern",n:"Rattern",t:[[200,0,.06,"square",.18],[200,.09,.06,"square",.18],[200,.18,.06,"square",.18],[200,.27,.06,"square",.18]]}]};
+function sndSel(ok){const L=SND[ok?"ok":"err"];let v=null;try{v=localStorage.getItem("tpc_snd_"+(ok?"ok":"err"))}catch(e){}return L.find(x=>x.id===v)||L[0]}
+function sndSet(ok,id){try{localStorage.setItem("tpc_snd_"+(ok?"ok":"err"),id)}catch(e){}}
+function sndPlay(tones){try{if(!ACX)return;if(ACX.state==="suspended")ACX.resume();const t=ACX.currentTime+.01;
+ tones.forEach(([f,s,d,w,v,f2,dec])=>{const o=ACX.createOscillator(),g=ACX.createGain();o.type=w;o.frequency.setValueAtTime(f,t+s);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+s+d);
+  g.gain.setValueAtTime(0,t+s);g.gain.linearRampToValueAtTime(v,t+s+.01);if(dec){g.gain.exponentialRampToValueAtTime(.001,t+s+d)}else{g.gain.setValueAtTime(v,t+s+d-.03);g.gain.linearRampToValueAtTime(0,t+s+d)}
+  o.connect(g).connect(ACX.destination);o.start(t+s);o.stop(t+s+d+.02)})}catch(e){}}
+function beep(ok){try{if(navigator.vibrate&&pref("vib"))navigator.vibrate(ok?60:[120,80,120]);if(!ACX||!pref("snd"))return;sndPlay(sndSel(ok).t)}catch(e){}}
+function sndBlock(){const grp=(ok,t)=>'<div class="sndg"><div class="mute" style="margin:8px 0 6px;font-weight:600">'+t+'</div><div class="sndl">'+SND[ok?"ok":"err"].map((x,i)=>'<button type="button" class="sndb'+(sndSel(ok).id===x.id?' on':'')+'" data-sok="'+(ok?1:0)+'" data-sid="'+x.id+'"><span class="sndp">▶</span>'+x.n+(i?'':' <small>Standard</small>')+'</button>').join("")+'</div></div>';
+ return '<div class="card" style="margin-bottom:8px"><b>Töne auswählen</b><span class="mute" style="display:block;font-size:13px">Antippen spielt den Ton und wählt ihn aus.</span>'+grp(true,"Bei richtig erkanntem Artikel")+grp(false,"Bei Fehler")+'</div>'}
+function sndBind(){document.querySelectorAll("[data-sid]").forEach(b=>b.onclick=()=>{const ok=b.dataset.sok==="1";audioUnlock();sndSet(ok,b.dataset.sid);sndPlay(sndSel(ok).t);document.querySelectorAll('[data-sok="'+b.dataset.sok+'"]').forEach(x=>x.classList.toggle("on",x===b))})}
 function artName(code){const nr=String(code||"").split(/-+/)[0].trim().toUpperCase();if(!nr)return "";const a=(typeof art!=="undefined"&&art[nr])||null;if(a&&a.name)return a.name;const k=rKat().find(x=>rNorm(x.nr)===rNorm(nr));return k?k.name:"Unbekannter Artikel"}
 
 /* Bildschirm anlassen, solange die App offen ist */
