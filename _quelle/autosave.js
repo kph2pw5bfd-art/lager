@@ -23,5 +23,5 @@ function retBack(){if(view!=="retedit"||!rs)return false;if(rs.q){rs.q="";retEdi
  rPersist(true);const saved=!!rs.id;
  if(!rs.isNew&&rs.add&&rs.lvl==="groups"){const id=rs.id;rs=null;curRet=id;hist=hist.filter(v=>v!=="retedit"&&v!=="retopen");view="retopen";draw();toast("Retourschein gespeichert",1);return true}
  if(!rs.isNew&&rs.lvl==="sum"){rs=null;toast("Retourschein gespeichert",1);return false}
- const m={sum:"groups",items:rs.u!==null?"subs":"groups",subs:"groups",groups:rs.isNew?"head":"sum"};const n=m[rs.lvl];
+ const m={manual:"groups",sum:"groups",items:rs.u!==null?"subs":"groups",subs:"groups",groups:rs.isNew?"head":"sum"};const n=m[rs.lvl];
  if(!n){rs=null;if(saved)toast("Retourschein gespeichert (in Arbeit)",1);return false}if(n==="subs")rs.u=null;rs.lvl=n;retEdit();return true}

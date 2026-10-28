@@ -1,4 +1,4 @@
-const APPV="1.37 (28.10.)";
+const APPV="1.38 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -218,6 +218,12 @@ async function rScanCam(){audioUnlock();if(!navigator.mediaDevices||!navigator.m
  const hit=c=>{if(done||!c)return;close();rScanHit(c)};o.querySelector(".lx").onclick=close;
  if("BarcodeDetector" in window){let bd,busy=false;try{bd=new BarcodeDetector()}catch(e){}if(bd){tm=setInterval(async()=>{if(busy||done||v.readyState<2)return;busy=true;try{const r=await bd.detect(v);if(r&&r.length)hit(String(r[0].rawValue))}catch(e){}busy=false},200);return}}
  if(window.ZXing){try{zx=new ZXing.BrowserMultiFormatReader(hints());zx.decodeFromStream(st,v,r=>{if(r)hit(r.getText())})}catch(e){close();errBox("Der Scanner konnte nicht gestartet werden.")}}else{close();errBox("Scanner-Bibliothek nicht geladen. Bitte die Seite neu laden.")}}
+/* Manuell eingetragene Artikel des Scheins als eigene (orange) Gruppe */
+function rManItems(){return Object.keys(rs.items).filter(k=>rs.items[k].manual).map(k=>({k,...rs.items[k]})).sort((a,b)=>String(a.name).localeCompare(String(b.name),"de",{numeric:true}))}
+function rManTile(){const L=rManItems();return L.length?'<button class="rtile grp rmang" data-rmg="1">'+rBdg(L.reduce((a,x)=>a+(x.q||0),0))+'<b>Manuell eingetragene Artikel</b><span class="mute">'+L.length+' Artikel</span></button>':""}
+function rManLevel(){const L=rManItems();if(!L.length){rs.lvl="groups";return retEdit()}$("#t").textContent="Manuell eingetragen";
+ rPage('<div class="rgrid">'+L.map(x=>'<button class="rtile rmani" data-rmk="'+esc(x.k)+'">'+rBdg(x.q)+'<b>'+rLbl(x.name)+'</b><span class="mute">'+(x.nr?"Nr. "+esc(x.nr):"ohne Nummer")+'</span></button>').join("")+'</div>');
+ document.querySelectorAll("[data-rmk]").forEach(b=>b.onclick=()=>{const x=rs.items[b.dataset.rmk];if(!x)return;const base={...x};delete base.q;rPad({nr:b.dataset.rmk,name:x.name,lbl:x.nr?"Nr. "+x.nr:"Manuell eingetragen"},base)})}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');
