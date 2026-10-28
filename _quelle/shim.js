@@ -1,4 +1,4 @@
-const APPV="1.38 (28.10.)";
+const APPV="1.39 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -7,7 +7,7 @@ const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const SB=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const HERE=location.origin+location.pathname;
 let ME=null,PROF=null,PROFS=[];
-const LIVE=["lists","artikel","defekte","infos","werkstatt","users","lager","retour","rkat"];
+const LIVE=["lists","artikel","defekte","infos","werkstatt","users","lager","retour","rkat","titel","rolle"];
 const DBX=(()=>{const subs={};let ch=null;
  const snap=s=>({docs:[...s.rows.values()].map(r=>({id:r.id,data:()=>r.data}))});
  const emit=c=>{const s=subs[c];if(!s||!s.ready)return;const v=snap(s);s.cbs.slice().forEach(f=>{try{f(v)}catch(e){console.error(e)}})};
@@ -24,7 +24,7 @@ const DBX=(()=>{const subs={};let ch=null;
    .subscribe(st=>{if(st==="SUBSCRIBED")reload()})}
  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&ME){reload();loadProfs()}});
  window.addEventListener("online",()=>{if(ME){reload();loadProfs()}});
- const api={
+ const api={reloadAll:()=>reload(),
   collection:c=>({onSnapshot(cb){let s=subs[c];if(!s){s=subs[c]={rows:new Map(),cbs:[],ready:false};load(c)}s.cbs.push(cb);if(s.ready)cb(snap(s));listen();return()=>{s.cbs=s.cbs.filter(f=>f!==cb)}},doc:id=>api.doc(c+"/"+id)}),
   doc:p=>{const i=p.indexOf("/"),c=p.slice(0,i),id=p.slice(i+1);return{
    async set(d){const {data,error}=await SB.from("docs").upsert({col:c,id,data:d,updated_at:new Date().toISOString()}).select("data").single();if(error)throw error;put(c,id,data.data)},
@@ -80,7 +80,7 @@ async function boot(){SB.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT")locati
 
 /* ===== Admin: Kollegen verwalten ===== */
 function userBlock(){const L=PROFS.filter(p=>p.id!==me).sort((a,b)=>(a.active-b.active)||String(a.name).localeCompare(b.name,"de"));
- $("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Benutzer</h3><p class="mute" style="margin:0 0 8px">Neue Konten müssen hier freigegeben werden. Gesperrte Benutzer kommen nicht mehr in die App.</p>'+(L.length?L.map(p=>'<div class="card ubx'+(p.active?'':' wait')+'"><div style="min-width:0"><b>'+esc(p.name||"Ohne Namen")+'</b>'+(p.role==="admin"?' <span class="tag">Admin</span>':'')+'<div class="mute" style="overflow-wrap:anywhere">'+esc(p.email||"")+'</div><div class="mute">'+(p.active?"Freigegeben":"Nicht freigegeben")+'</div></div><div class="ubt"><button class="btn s'+(p.active?' ghost':'')+'" data-ua="'+p.id+'">'+(p.active?"Sperren":"Freigeben")+'</button>'+(p.active?'<button class="btn ghost s" data-ur="'+p.id+'">'+(p.role==="admin"?"Admin entfernen":"Zum Admin machen")+'</button>':'')+'</div></div>').join(""):'<div class="card mute">Noch keine weiteren Konten. Lade Benutzer über „Benutzer einladen“ ein.</div>'));
+ $("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Benutzer</h3><p class="mute" style="margin:0 0 8px">Neue Konten müssen hier freigegeben werden. Gesperrte Benutzer kommen nicht mehr in die App.</p>'+(L.length?L.map(p=>'<div class="card ubx'+(p.active?'':' wait')+'"><div style="min-width:0"><b>'+esc(p.name||"Ohne Namen")+'</b>'+(p.role==="admin"?' <span class="tag">Admin</span>':'')+'<div class="mute" style="overflow-wrap:anywhere">'+esc(p.email||"")+'</div><div class="mute">'+(p.active?"Freigegeben":"Nicht freigegeben")+'</div></div><div class="ubt">'+(owner||p.role!=="admin"?'<button class="btn s'+(p.active?' ghost':'')+'" data-ua="'+p.id+'">'+(p.active?"Sperren":"Freigeben")+'</button>':'')+(owner&&p.active?'<button class="btn ghost s" data-ur="'+p.id+'">'+(p.role==="admin"?"Admin entfernen":"Zum Admin machen")+'</button>':'')+'</div></div>').join(""):'<div class="card mute">Noch keine weiteren Konten. Lade Benutzer über „Benutzer einladen“ ein.</div>'));
  const set=async(p,a,r)=>{const {error}=await SB.rpc("admin_set_user",{p_id:p.id,p_active:a,p_role:r});if(error)return errBox("Ändern fehlgeschlagen: "+error.message);await loadProfs();toast("Gespeichert",1)};
  document.querySelectorAll("[data-ua]").forEach(b=>b.onclick=()=>{const p=PROFS.find(x=>x.id===b.dataset.ua);if(!p)return;if(p.active)ask((p.name||"Kollege")+" sperren?",()=>set(p,false,"user"));else set(p,true,p.role)});
  document.querySelectorAll("[data-ur]").forEach(b=>b.onclick=()=>{const p=PROFS.find(x=>x.id===b.dataset.ur);if(!p)return;const na=p.role==="admin"?"user":"admin";ask(na==="admin"?(p.name||"Kollege")+" zum Administrator machen? Er kann dann alles verwalten.":"Admin-Rechte von "+(p.name||"Kollege")+" entfernen?",()=>set(p,true,na))})}
@@ -378,6 +378,57 @@ async function rXlPhotos(wb,r,ws,last){const f=r.fotos||[];if(!f.length||!ws)ret
  const t=ws.getCell("A"+row);t.value="Fotos ("+f.length+")";t.font={bold:true,size:14,color:{argb:"FF114A97"}};row+=1;
  for(let i=0;i<f.length;i++){const u=await rPhoto(f[i]);if(!u)continue;const im=new Image();im.src=u;try{await im.decode()}catch(e){continue}const W=520,H=Math.round(im.naturalHeight*W/im.naturalWidth);
   ws.getCell("A"+row).value="Foto "+(i+1);ws.getCell("A"+row).font={bold:true};const ix=wb.addImage({base64:u,extension:"jpeg"});ws.addImage(ix,{tl:{col:0,row:row},ext:{width:W,height:H}});row+=Math.ceil(H/20)+2}}
+
+/* ===== Titel und Rechte =====
+   docs 'titel': {name, o (Reihenfolge), r:{Recht:true}}   docs 'rolle' (id = Benutzer-ID): {t: Titel-ID, x:{Extra-Rechte}}
+   Rechte: def_/ret_/inf_ + s (sehen) b (bearbeiten) l (löschen); v_user, v_rights, v_app. Der Admin darf immer alles.
+   Die Datenbank prüft dieselben Rechte (rechte.sql). */
+const RK=["def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","v_user","v_rights","v_app"];
+const RAREA=[["def","Defekte","Alle Defekte, nicht nur die eigenen"],["ret","Retourscheine",""],["inf","Infos an das Lager",""]],RLVL=[["s","Sehen"],["b","Bearbeiten"],["l","Löschen"]];
+const RVW=[["v_user","Benutzer freigeben/sperren"],["v_rights","Titel und Rechte"],["v_app","App-Verwaltung (inkl. Artikelliste)"]];
+let TIT={},ROL={},rkLast=null,rxOpen=new Set(),tOpen=new Set();
+function rSum(r){r=rNormR(r);const L=RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([,t])=>t.toLowerCase());return l.length?n+": "+l.join(", "):""}).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
+function rNormR(o){o=o||{};const r={};RK.forEach(k=>{if(o[k]===true)r[k]=true});["def","ret","inf"].forEach(a=>{if(r[a+"_b"]||r[a+"_l"])r[a+"_s"]=true});return r}
+function uRights(uid){const x=ROL[uid]||{},t=TIT[x.t]||{};return rNormR({...(t.r||{}),...Object.fromEntries(Object.entries(x.x||{}).filter(([,v])=>v===true))})}
+/* Solange die Datenbank-Änderung (rechte.sql) fehlt, gibt es keine Titel: dann gelten die alten Häkchen Werkstatt/Lager */
+const rightsReady=()=>Object.keys(TIT).length>0;
+function can(k){if(owner)return true;if(!rightsReady()){if(k.startsWith("def_"))return k!=="def_l"&&!!werk[me];if(k.startsWith("ret_"))return !!lagr[me];return false}return !!uRights(me)[k]}
+function rightsSub(){db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
+function rightsChanged(){const k=JSON.stringify(uRights(me));if(rkLast!==null&&k!==rkLast&&!owner)DBX.reloadAll();rkLast=k;draw()}
+const titList=()=>Object.keys(TIT).map(id=>({id,...TIT[id]})).sort((a,b)=>(a.o||0)-(b.o||0)||String(a.name).localeCompare(String(b.name),"de"));
+/* Retourschein: Knöpfe ohne Recht ausblenden */
+function rLock(){if(!can("ret_b"))document.querySelectorAll('#radd,#red,#rclose,#rreo,#rhed,#rphadd,#rmail,#rscan,[data-rv="new"],.rph .thx').forEach(e=>e.remove());if(!can("ret_l")){const d=$("#rdel");if(d)d.remove()}}
+/* Info löschen (Recht "Infos an das Lager – Löschen") */
+function infoDelBtn(i){if(!can("inf_l")||$("#idel"))return;$("#app").insertAdjacentHTML("beforeend",'<button class="btn ghost" id="idel" style="color:var(--bad);margin-top:8px">Nachricht löschen</button>');
+ $("#idel").onclick=()=>ask("Nachricht wirklich löschen?",async()=>{try{await db.doc("infos/"+i.id).delete();for(let k=0;k<(i.fn||0);k++){try{await db.doc("fotos/"+i.id+"-"+k).delete()}catch(e){}}view="info";hist=hist.filter(v=>v!=="infoopen");draw();toast("Nachricht gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
+/* Kästchen-Raster: cur = eigene Häkchen, inh = vom Titel geerbt (grau, nicht änderbar) */
+function rMx(cur,inh,attr){cur=cur||{};inh=inh||{};const cb=(k,l)=>{const i=!!inh[k],c=i||!!cur[k];return '<label class="rmc'+(i?' inh':'')+'"><input type="checkbox" '+attr+' data-k="'+k+'"'+(c?' checked':'')+(i?' disabled':'')+'><span>'+l+'</span></label>'};
+ return '<div class="rmx">'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,t)).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
+/* Häkchen lesen + Regeln: Bearbeiten/Löschen schließt Sehen ein, ohne Sehen kein Bearbeiten/Löschen */
+function rMxRead(box,changed){const g=k=>box.querySelector('[data-k="'+k+'"]');const k=changed&&changed.dataset.k;
+ if(k){const [a,l]=k.split("_");if(["def","ret","inf"].includes(a)){if((l==="b"||l==="l")&&changed.checked){const s=g(a+"_s");if(s&&!s.disabled)s.checked=true}if(l==="s"&&!changed.checked)["b","l"].forEach(x=>{const e=g(a+"_"+x);if(e&&!e.disabled)e.checked=false})}}
+ const o={};box.querySelectorAll("[data-k]").forEach(c=>{if(c.checked&&!c.disabled)o[c.dataset.k]=true});return o}
+function tDlg(title,val,ok){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>'+esc(title)+'</b><div style="height:8px"></div><input id="tdn" maxlength="40" autocomplete="off"><div class="row"><button class="btn ghost" id="tdc">Abbrechen</button><button class="btn" id="tdo">Speichern</button></div></div>';
+ document.body.appendChild(o);const i=o.querySelector("#tdn");i.value=val||"";o.querySelector("#tdc").onclick=()=>o.remove();o.querySelector("#tdo").onclick=()=>{const v=i.value.trim().replace(/\s+/g," ");if(!v){i.classList.add("bad");return}o.remove();ok(v)};setTimeout(()=>i.focus(),60)}
+async function rSave(fn,msg){try{await fn();toast(msg||"Gespeichert",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht dazu?")}}
+function rightsBlock(){if(!rightsReady()){$("#app").insertAdjacentHTML("beforeend",'<div class="card" style="border-color:#f2c200;margin-top:14px"><b>Datenbank-Update fehlt</b><p class="mute" style="margin:4px 0 0">Für Titel und Rechte muss einmal die Datei rechte.sql in Supabase ausgeführt werden. Bis dahin gelten die alten Häkchen.</p></div>');return permBlock()}const T=titList(),U=PROFS.filter(p=>p.active).sort((a,b)=>String(a.name).localeCompare(String(b.name),"de"));
+ const opt=sel=>'<option value="">– kein Titel –</option>'+T.map(t=>'<option value="'+esc(t.id)+'"'+(t.id===sel?' selected':'')+'>'+esc(t.name)+'</option>').join("");
+ $("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Titel der Benutzer</h3><p class="mute" style="margin:0 0 8px">Der Titel bestimmt die Rechte. Unter „Extra-Rechte“ kannst du einer Person zusätzlich etwas erlauben. Administratoren dürfen immer alles.</p>'+
+  U.map(p=>{const x=ROL[p.id]||{},adm=p.role==="admin",t=TIT[x.t],xr=rNormR(x.x),nx=Object.keys(xr).length;
+   return '<div class="card ttl"><div class="fl" style="flex-wrap:wrap"><div style="min-width:0;flex:1"><b>'+esc(p.name||"Ohne Namen")+'</b>'+(p.id===me?' <span class="mute">(du)</span>':'')+(adm?' <span class="tag">Admin</span>':'')+'</div>'+(adm?'<span class="mute" style="font-size:14px">darf immer alles</span>':'<select class="tsel" data-ut="'+p.id+'">'+opt(x.t||"")+'</select>')+'</div>'+
+   (adm?'':'<details class="rxd" data-xu="'+p.id+'"'+(rxOpen.has(p.id)?' open':'')+'><summary>Extra-Rechte'+(nx?' <span class="rxn">'+nx+'</span>':'')+'</summary><div data-xbox="'+p.id+'">'+rMx(xr,t?rNormR(t.r):{},'data-xc="'+p.id+'"')+'</div><p class="mute" style="font-size:12px;margin:6px 0 0">Grau = kommt schon vom Titel'+(t?' „'+esc(t.name)+'“':'')+'.</p></details>')+'</div>'}).join("")+
+  '<h3 style="margin:22px 0 4px">Titel und ihre Rechte</h3><p class="mute" style="margin:0 0 8px">Titel antippen, um seine Rechte zu ändern. Gilt sofort für alle mit diesem Titel. Materialliste, eigene Defekte und Infos ans Lager schicken darf jeder.</p>'+
+  T.map(t=>{const n=Object.values(ROL).filter(x=>x.t===t.id).length;return '<details class="card ttl tdet" data-tbox="'+esc(t.id)+'"'+(tOpen.has(t.id)?' open':'')+'><summary><div class="fl"><b style="font-size:17px">'+esc(t.name)+'</b><span class="mute" style="font-size:13px;white-space:nowrap">'+(n===1?"1 Person":n+" Personen")+'</span></div><div class="mute tsum">'+esc(rSum(t.r))+'</div></summary>'+rMx(rNormR(t.r),{},'data-tc="'+esc(t.id)+'"')+'<div class="ubt" style="margin-top:10px"><button class="btn ghost s" data-tren="'+esc(t.id)+'">Umbenennen</button><button class="btn ghost s" data-tdel="'+esc(t.id)+'" style="color:var(--bad)">Titel löschen</button></div></details>'}).join("")+
+  '<button class="mbtn" id="tnew" type="button">+ Neuer Titel</button>');
+ document.querySelectorAll("[data-ut]").forEach(sel=>sel.onchange=()=>{const id=sel.dataset.ut,v=sel.value;rSave(()=>ROL[id]?db.doc("rolle/"+id).update({t:v}):db.doc("rolle/"+id).set({t:v,x:{}}),"Titel gespeichert")});
+ document.querySelectorAll("details[data-xu]").forEach(d=>d.ontoggle=()=>{d.open?rxOpen.add(d.dataset.xu):rxOpen.delete(d.dataset.xu)});
+ document.querySelectorAll("details[data-tbox]").forEach(d=>d.ontoggle=()=>{d.open?tOpen.add(d.dataset.tbox):tOpen.delete(d.dataset.tbox)});
+ document.querySelectorAll("[data-xc]").forEach(c=>c.onchange=()=>{const id=c.dataset.xc,box=document.querySelector('[data-xbox="'+id+'"]'),x=rMxRead(box,c);rSave(()=>ROL[id]?db.doc("rolle/"+id).update({x}):db.doc("rolle/"+id).set({t:"",x}))});
+ document.querySelectorAll("[data-tc]").forEach(c=>c.onchange=()=>{const id=c.dataset.tc,box=document.querySelector('[data-tbox="'+id+'"]'),r=rMxRead(box,c);rSave(()=>db.doc("titel/"+id).update({r}))});
+ document.querySelectorAll("[data-tren]").forEach(b=>b.onclick=()=>{const id=b.dataset.tren;tDlg("Titel umbenennen",TIT[id]&&TIT[id].name,v=>rSave(()=>db.doc("titel/"+id).update({name:v})))});
+ document.querySelectorAll("[data-tdel]").forEach(b=>b.onclick=()=>{const id=b.dataset.tdel,t=TIT[id];if(!t)return;const us=Object.keys(ROL).filter(u=>ROL[u].t===id);
+  ask("Titel „"+t.name+"“ löschen?"+(us.length?" "+us.length+(us.length===1?" Person verliert":" Personen verlieren")+" damit den Titel und seine Rechte.":""),()=>rSave(async()=>{for(const u of us)await db.doc("rolle/"+u).update({t:""});await db.doc("titel/"+id).delete()},"Titel gelöscht"))});
+ $("#tnew").onclick=()=>tDlg("Neuer Titel","",v=>{const o=Math.max(0,...titList().map(t=>t.o||0))+1,id="t"+Date.now().toString(36);tOpen.add(id);rSave(()=>db.doc("titel/"+id).set({name:v,o,r:{}}),"Titel angelegt")})}
 
 /* Berechtigungen pro Benutzer zum Abhaken */
 function permBlock(){const L=PROFS.filter(p=>p.active&&p.id!==me).sort((a,b)=>String(a.name).localeCompare(b.name,"de"));

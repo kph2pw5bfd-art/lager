@@ -151,3 +151,5 @@ grant select, insert, update, delete on public.docs to authenticated;
 grant execute on function public.doc_update(text,text,jsonb) to authenticated;
 grant execute on function public.admin_set_user(uuid,boolean,text) to authenticated;
 grant execute on function public.set_my_name(text) to authenticated;
+
+-- Danach für Titel und Rechte zusätzlich rechte.sql ausführen (ab App-Version 1.39).

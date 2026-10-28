@@ -1,0 +1,18 @@
+const {chromium}=require("playwright");const H=require("./pgharness.js");const fs=require("fs");const {execFileSync}=require("child_process");
+const PSQL=["-h","/home/postgres/pgt","-p","5499","-U","postgres","-X","-q","-v","ON_ERROR_STOP=1"];
+execFileSync("psql",[...PSQL,"-d","postgres","-c","drop database if exists alt"]);execFileSync("psql",[...PSQL,"-d","postgres","-c","create database alt"]);
+const run=sql=>execFileSync("psql",[...PSQL,"-d","alt"],{input:sql,stdio:["pipe","ignore","ignore"]});
+run(fs.readFileSync("/home/postgres/pgt/mock.sql","utf8").replace("create role anon nologin; create role authenticated nologin;",""));run(fs.readFileSync("/home/claude/gh/datenbank.sql","utf8"));
+const A="00000000-0000-0000-0000-00000000000a",L="00000000-0000-0000-0000-00000000000b",W="00000000-0000-0000-0000-00000000000e";
+run(`insert into auth.users(id,email,raw_user_meta_data) values ('${A}','a@x','{"name":"Jürgen"}'),('${L}','l@x','{"name":"Lena"}'),('${W}','w@x','{"name":"Willi"}');update profiles set active=true;
+insert into docs(col,id,data) values ('lager','${L}','{}'),('werkstatt','${W}','{}'),('retour','r1','{"ev":"Messe","itemsJson":"{}","by":"${A}","t":1}'),('defekte','d1','{"by":"${A}","art":"X","t":1}');`);
+let F=0;const ok=(t,c,x)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(x!==undefined?" → "+x:""))};
+(async()=>{const b=await chromium.launch();const pages=[];const srv=H.makeSrv("alt",pages,0);
+ const Lp=await H.openPage(b,L,srv,pages),Wp=await H.openPage(b,W,srv,pages),Ap=await H.openPage(b,A,srv,pages);
+ const st=p=>p.evaluate(()=>{view="start";draw();return [...document.querySelectorAll("[data-g]")].map(e=>e.dataset.g).join(",")});
+ ok("Ohne Update: Lena (altes Lager) sieht Retourscheine",/ret/.test(await st(Lp)),await Lp.evaluate(()=>rets.length));
+ await Lp.evaluate(()=>{curRet="r1";view="retopen";draw()});await Lp.waitForTimeout(200);ok("…und darf bearbeiten",!!(await Lp.$("#red")));
+ ok("Ohne Update: Willi (alte Werkstatt) sieht alle Defekte + erledigen",(await Wp.evaluate(()=>vdefs().length))===1&&(await Wp.evaluate(()=>canDone())));
+ await Ap.evaluate(()=>{view="users";draw()});await Ap.waitForTimeout(300);const t=await Ap.evaluate(()=>document.getElementById("app").innerText);
+ ok("Admin sieht Hinweis 'Datenbank-Update fehlt' + alte Häkchen",/Datenbank-Update fehlt/.test(t)&&/Werkstatt/.test(t));
+ console.log("Seitenfehler:",[Lp,Wp,Ap].flatMap(p=>p.__errs));console.log("FEHLER GESAMT:",F);await b.close()})();
