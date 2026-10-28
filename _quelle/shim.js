@@ -1,4 +1,4 @@
-const APPV="1.41";
+const APPV="1.42";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -236,6 +236,15 @@ function defScanHit(raw){const v=String(raw||"").trim(),m=v.match(CODE_RE);const
  const c=artCode(nr)||nr,a=art[c]||rKat().find(x=>rNorm(x.nr)===rNorm(nr)),f=$("#dnart")||$("#deart"),n=$("#dnnr")||$("#denr");if(!f||!n)return;
  n.value=c+(id?"–"+id:"");if(a){beep(true);f.value=a.name;f.classList.remove("bad");toast(a.name+(id?" · ID "+id:""),1)}else{beep(false);errBox("Artikel "+c+" ist nicht in der Artikelliste. Bitte den Namen eintragen.");setTimeout(()=>f.focus(),300)}}
 function defScan(fileInput){audioUnlock();if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return fileInput&&fileInput.click();rScanCam(defScanHit)}
+/* Defekt melden/bearbeiten: Etikett fotografieren -> Veranstaltung + Auftragsnummer (gleiche Erkennung wie beim Retourschein) */
+function defLabelBind(p){const b=$("#"+p+"lab"),f=$("#"+p+"labf"),t=$("#"+p+"labt");if(!b)return;
+ const read=async file=>{b.disabled=true;t.textContent="Etikett wird gelesen …";
+  try{const r=await readLabel(file);if(!r.ev&&!r.on)errBox("Auf dem Foto war nichts lesbar. Bitte nochmal mit mehr Licht und gerade von vorne fotografieren.");
+   else{const e=$("#"+p+"ev"),o=$("#"+p+"ord");if(r.ev&&e){e.value=r.ev;e.classList.remove("bad")}if(r.on&&o)o.value=r.on;toast("Bitte kurz kontrollieren",1)}}
+  catch(e){console.error(e);errBox("Das Etikett konnte nicht gelesen werden. Bitte nochmal versuchen oder von Hand eintippen.")}
+  finally{if(document.body.contains(b)){b.disabled=false;t.textContent="Etikett fotografieren"}}};
+ b.onclick=async()=>{const shot=await labelCam();if(shot===undefined)return f.click();if(shot)read(shot)};
+ f.onchange=()=>{const x=f.files[0];f.value="";if(x)read(x)}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');

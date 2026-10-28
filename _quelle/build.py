@@ -96,6 +96,7 @@ exec(open("/home/claude/gh/scanpatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/mangrppatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/rechtepatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/einelistepatch.py",encoding="utf-8").read())
+exec(open("/home/claude/gh/defordpatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/splashpatch.py",encoding="utf-8").read())
 # boot
 rep('\ninit();\n</script>','\nboot();\n</script>')

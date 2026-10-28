@@ -1,0 +1,23 @@
+const {chromium}=require("playwright");const fs=require("fs");const S="/tmp/claude-0/-home-claude/a6efebc1-256e-5874-b05e-dc76785976da/scratchpad/";
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();
+  if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});
+  if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});
+  return r.fulfill({status:404,body:""})});
+ const ok=(t,c,x)=>console.log((c?"OK   ":"FEHLT")+" "+t+(x!==undefined?" → "+x:""));
+ await p.goto("https://app.test/");await p.waitForTimeout(600);await p.mouse.click(200,400);await p.waitForTimeout(400);
+ await p.evaluate(()=>{window.labelCam=async()=>new Blob(["x"]);window.readLabel=async()=>{await new Promise(r=>setTimeout(r,300));return{ev:"Ice Magic Innsbruck",on:"2601080-01"}};dpho=null;view="defnew";hist=["start"];draw()});await p.waitForTimeout(300);
+ const lbl=await p.evaluate(()=>[...document.querySelectorAll("#app label")].map(l=>l.textContent).join(" | "));console.log("   Felder:",lbl);
+ ok("Etikett-Knopf + Auftragsnummer optional + Beschreibung optional",!!(await p.$("#dnlab"))&&/Auftragsnummer \(optional\)/.test(lbl)&&/Beschreibung des Defekts \(optional\)/.test(lbl));
+ await p.screenshot({path:S+"deford1.png"});
+ await p.click("#dnlab");await p.waitForTimeout(100);ok("Während des Lesens Hinweis",(await p.textContent("#dnlabt"))==="Etikett wird gelesen …");await p.waitForTimeout(600);
+ ok("Veranstaltung + Auftragsnummer eingetragen",(await p.inputValue("#dnev"))==="Ice Magic Innsbruck"&&(await p.inputValue("#dnord"))==="2601080-01");
+ await p.fill("#dnart","Kabel 16A 50m");await p.click("#dnsend");await p.waitForTimeout(500);
+ const d=await p.evaluate(()=>{const x=__T.docs.find(x=>x.col==="defekte");return x&&x.data});ok("Ohne Beschreibung gemeldet, Auftragsnummer gespeichert",d&&d.ord==="2601080-01"&&d.desc===""&&d.ev==="Ice Magic Innsbruck",d&&JSON.stringify({ev:d.ev,ord:d.ord,desc:d.desc}));
+ await p.evaluate(()=>{curDef=defs[0].id;view="defopen";draw()});await p.waitForTimeout(300);const t=await p.evaluate(()=>document.getElementById("app").innerText);ok("Detail zeigt Auftragsnummer",/Auftragsnummer: 2601080-01/.test(t));
+ await p.evaluate(()=>{view="def";draw()});await p.waitForTimeout(200);const lt=await p.evaluate(()=>document.getElementById("app").innerText);ok("Liste ohne Auftragsnummer",!/2601080/.test(lt));
+ await p.evaluate(()=>{curDef=defs[0].id;view="defedit";draw()});await p.waitForTimeout(500);ok("Bearbeiten: Nummer vorbelegt + Etikett-Knopf",(await p.inputValue("#deord"))==="2601080-01"&&!!(await p.$("#delab")));
+ await p.fill("#deord","2601999-02");await p.click("#desv");await p.waitForTimeout(500);ok("Bearbeiten speichert neue Nummer",(await p.evaluate(()=>__T.docs.find(x=>x.col==="defekte").data.ord))==="2601999-02");
+ // Pflichtfelder weiterhin
+ await p.evaluate(()=>{dpho=null;view="defnew";draw()});await p.waitForTimeout(200);await p.click("#dnsend");await p.waitForTimeout(200);const m=await p.evaluate(()=>{const o=document.querySelector(".ov,.eov");return o&&o.textContent});ok("Ohne Artikel/Veranstaltung: Hinweis, ohne Beschreibung",/Artikel, Veranstaltung/.test(m||"")&&!/Beschreibung/.test(m||""),m);
+ console.log("Fehler:",errs);await b.close()})();
