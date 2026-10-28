@@ -1,4 +1,4 @@
-const APPV="1.35 (28.10.)";
+const APPV="1.36 (28.10.)";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -230,6 +230,37 @@ function rMailAsk(r){const o=document.createElement("div");o.className="ov";cons
 async function rMarkSent(r,to){try{const cur=(rets.find(x=>x.id===r.id)||r).sent||[];await db.doc("retour/"+r.id).update({sent:cur.concat([{t:Date.now(),by:me,to:to||""}])});toast("Als per Mail gesendet vermerkt",1)}catch(e){console.warn(e)}}
 function rSentLine(r){const s=r.sent||[];if(!s.length)return "";const x=s[s.length-1];return '<div class="msent">✉ Per Mail gesendet'+(x.to?' an '+esc(x.to):'')+' · '+fmt(x.t)+(s.length>1?' ('+s.length+'×)':'')+'</div>'}
 function rSentAll(r){const s=r.sent||[];if(!s.length)return "";return s.slice().reverse().map(x=>'<div class="msent">✉ Per Mail gesendet'+(x.to?' an '+esc(x.to):'')+' · '+esc(nm(x.by))+', '+fmt(x.t)+'</div>').join("")}
+
+/* ===== Mehrere Personen an einem Retourschein =====
+   Jede Person speichert nur ihren eigenen Anteil im Feld pa_<Benutzer-ID> (JSON wie itemsJson, Mengen dürfen negativ sein = Korrektur).
+   itemsJson bleibt der Grundstand (ältere Scheine). Angezeigt wird Grundstand + alle Anteile.
+   Die Datenbank führt Felder per doc_update zusammen, darum überschreibt niemand den Anteil eines anderen.
+   ed_<Benutzer-ID> = Zeitstempel "arbeitet gerade daran". */
+function rJ(x){try{return JSON.parse(x||"{}")||{}}catch(e){return{}}}
+function rCp(o){return JSON.parse(JSON.stringify(o||{}))}
+function rAddTo(t,src){Object.keys(src||{}).forEach(k=>{const x=src[k];if(!x||typeof x!=="object")return;if(!t[k])t[k]={...x,q:0};else{const q=t[k].q;Object.assign(t[k],x);t[k].q=q}t[k].q+=(+x.q||0)})}
+function rPos(t){const o={};Object.keys(t).forEach(k=>{if(t[k].q>0)o[k]=t[k]});return o}
+function rView(r){const t={};r._base=r.itemsJson||"{}";rAddTo(t,rJ(r._base));Object.keys(r).forEach(k=>{if(k.startsWith("pa_"))rAddTo(t,rJ(r[k]))});r.itemsJson=JSON.stringify(rPos(t));return r}
+function rOthers(r){const t={};rAddTo(t,rJ(r._base));Object.keys(r).forEach(k=>{if(k.startsWith("pa_")&&k!=="pa_"+me)rAddTo(t,rJ(r[k]))});return t}
+function rEd(r){const it=rIt(r);return{id:r.id,ev:r.ev,ord:r.ord||"",items:it,rem:r.rem||"",mine:rJ(r["pa_"+me]),view:rCp(it),h0:{ev:r.ev||"",ord:r.ord||"",rem:r.rem||""}}}
+/* eigene Änderungen seit dem letzten Abgleich in den eigenen Anteil übernehmen */
+function rFold(){if(!rs)return;if(!rs.mine)rs.mine={};if(!rs.view)rs.view={};const ks=new Set([...Object.keys(rs.items||{}),...Object.keys(rs.view)]);
+ ks.forEach(k=>{const a=rs.items[k],b=rs.view[k],d=(a?+a.q||0:0)-(b?+b.q||0:0);if(!d)return;const m={...(rs.mine[k]||{}),...(a||b)};m.q=(rs.mine[k]?+rs.mine[k].q||0:0)+d;if(m.q)rs.mine[k]=m;else delete rs.mine[k]});
+ rs.view=rCp(rs.items)}
+/* Änderungen anderer in den offenen Schein übernehmen */
+function rRemote(){if(!rs||!rs.id)return;const r=rets.find(x=>x.id===rs.id);if(!r)return;rFold();const t=rOthers(r);rAddTo(t,rs.mine);rs.items=rPos(t);rs.view=rCp(rs.items);
+ if(rs.h0)["ev","ord","rem"].forEach(f=>{const loc=String(rs[f]||""),rem=String(r[f]||"");if(loc===String(rs.h0[f]||"")&&rem!==loc)rs[f]=rem});
+ rs.h0={ev:r.ev||"",ord:r.ord||"",rem:r.rem||""}}
+/* Hinweis: wer arbeitet gerade noch an diesem Schein */
+function rWhoL(r){const n=Date.now();return r?Object.keys(r).filter(k=>k.startsWith("ed_")&&k!=="ed_"+me&&n-(+r[k]||0)<90000).map(k=>nm(k.slice(3))):[]}
+function rWho(){const L=rWhoL(rs&&rs.id&&rets.find(x=>x.id===rs.id));return L.length?'<div class="rwho"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.8"/><path d="M17 14.5c2.5.2 4.1 1.9 4.5 5"/></svg><span>'+esc(L.join(", "))+(L.length>1?" arbeiten":" arbeitet")+' gerade auch an diesem Schein. Eure Mengen werden zusammengezählt.</span></div>':""}
+let rHbId=null,rHbLast=0;
+function rHb(){const id=rs&&rs.id&&view==="retedit"&&document.visibilityState==="visible"&&rets.find(x=>x.id===rs.id)?rs.id:null;
+ if(rHbId&&rHbId!==id){db.doc("retour/"+rHbId).update({["ed_"+me]:0}).catch(()=>{});rHbLast=0}
+ if(id&&(id!==rHbId||Date.now()-rHbLast>30000)){rHbLast=Date.now();db.doc("retour/"+id).update({["ed_"+me]:Date.now()}).catch(()=>{})}
+ rHbId=id}
+setInterval(()=>{if(typeof db!=="undefined"&&db&&me)rHb()},4000);
+document.addEventListener("visibilitychange",()=>{if(typeof db!=="undefined"&&db&&me)rHb()});
 
 /* Signalton beim Scannen und Artikelname im grünen Feld */
 let ACX=null;
