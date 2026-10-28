@@ -1,0 +1,12 @@
+const {chromium}=require("playwright");const fs=require("fs");const S=__dirname+"/";
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(800);
+ await p.evaluate(async()=>{__T.profiles.push({id:"u2",name:"Max Monteur",email:"max@tpc.at",role:"user",active:true,created_at:"1"},{id:"u3",name:"Anna Lager",email:"anna@tpc.at",role:"user",active:true,created_at:"2"});await loadProfs();view="start";draw()});
+ await p.click('[data-g="users"]');await p.waitForTimeout(400);
+ await p.check('[data-perm="lager"][data-uid="u3"]');await p.waitForTimeout(400);await p.check('[data-perm="werkstatt"][data-uid="u2"]');await p.waitForTimeout(400);
+ console.log("DB:",await p.evaluate(()=>__T.docs.filter(d=>d.col==="lager"||d.col==="werkstatt").map(d=>d.col+"/"+d.id).join(", ")));
+ await p.locator("text=Berechtigungen").scrollIntoViewIfNeeded();await p.screenshot({path:S+"perm.png"});
+ await p.click("#inv");await p.waitForTimeout(200);const t=await p.inputValue("#ivt");console.log("Schluss:",JSON.stringify(t.slice(-40)),"Titel:",await p.textContent(".ov b"));
+ await p.click("#ivx");await p.click("#bk");await p.waitForTimeout(200);await p.click('[data-g="art"]');await p.waitForTimeout(300);console.log("Einst:",(await p.textContent("#app")).replace(/\s+/g," ").slice(0,200));
+ console.log("ERR",errs);await b.close()})();

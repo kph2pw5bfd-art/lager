@@ -1,0 +1,4 @@
+rep("""<div style="text-align:center;margin-top:24px"><button class="btn ghost s" data-g="art">Einstellungen'+(pendingN()?' <span class="hc" style="display:inline-grid;margin-left:6px">'+pendingN()+'</span>':'')+'</button></div>'""",
+ """<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px"><button class="btn ghost s" data-g="art">Einstellungen</button><button class="btn ghost s" data-g="users">Benutzerverwaltung'+(pendingN()?' <span class="hc" style="display:inline-grid;margin-left:6px">'+pendingN()+'</span>':'')+'</button></div>'""")
+rep(' if(view==="art")return artView();',' if(view==="art")return artView();\n if(view==="users"&&owner)return usersView();')
+rep('userBlock();werkBlock();lagerBlock();retAdmin();fehlBlock()}','retAdmin();fehlBlock()}\nfunction usersView(){$("#t").textContent="Benutzerverwaltung";$("#app").innerHTML="";userBlock();werkBlock();lagerBlock();const h=$("#app h3");if(h)h.style.marginTop="4px"}')

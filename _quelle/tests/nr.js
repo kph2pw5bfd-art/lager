@@ -1,0 +1,21 @@
+const {chromium}=require("playwright");const fs=require("fs");const S=__dirname+"/";
+(async()=>{const b=await chromium.launch({args:["--use-fake-ui-for-media-stream","--use-fake-device-for-media-stream"]});const ctx=await b.newContext({viewport:{width:390,height:780},permissions:["camera"]});const p=await ctx.newPage();
+ const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(800);
+ await p.evaluate(async()=>{await DBX.doc("retour/r1").set({ev:"Kaiserwiesn 2026",ord:"2600222-01",rem:"",itemsJson:"{}",by:"u1",t:Date.now(),draft:true});await DBX.doc("retour/r2").set({ev:"Ice Magic",ord:"2601080-01",rem:"",itemsJson:"{}",by:"u1",t:Date.now()})});
+ const txt=async()=>(await p.textContent("#app")).replace(/\s+/g," ").slice(0,110);
+ await p.click('[data-g="ret"]');await p.waitForTimeout(300);
+ await p.evaluate(()=>{window.__nr="2600222-01";window.readLabel=async()=>({on:window.__nr,ev:"Kaiserwiesn 2026"})});
+ await p.click("#rscan");await p.waitForTimeout(1000);await p.click(".lshot");await p.waitForTimeout(800);
+ console.log("A Scan bekannte Nr ->",await txt());
+ await p.click("#bk");await p.waitForTimeout(400);
+ await p.evaluate(()=>window.__nr="2609999-01");await p.click("#rscan");await p.waitForTimeout(1000);await p.click(".lshot");await p.waitForTimeout(800);
+ console.log("B unbekannte Nr, Dialog:",await p.evaluate(()=>document.querySelector(".ov")&&document.querySelector(".ov").innerText.replace(/\s+/g," ")));
+ await p.click("#a2y");await p.waitForTimeout(500);console.log("  -> neu:",await txt(),"ord=",await p.inputValue("#rord"));
+ // Neuer Schein, Etikett mit bestehender Nummer
+ await p.evaluate(()=>window.__nr="2601080-01");await p.click("#rcam");await p.waitForTimeout(1000);await p.click(".lshot");await p.waitForTimeout(800);
+ console.log("C neuer Schein, Duplikat-Dialog:",await p.evaluate(()=>document.querySelector(".ov")&&document.querySelector(".ov").innerText.replace(/\s+/g," ")));
+ await p.click("#a2y");await p.waitForTimeout(500);console.log("  -> ",await txt());
+ console.log("DB retour:",await p.evaluate(()=>__T.docs.filter(d=>d.col==="retour").map(d=>d.id+":"+d.data.ord).join(", ")));
+ console.log("ERR",errs);await p.screenshot({path:S+"nr.png"});await b.close()})();

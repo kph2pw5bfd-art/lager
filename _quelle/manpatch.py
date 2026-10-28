@@ -1,0 +1,5 @@
+rep("b.innerHTML=x;rFit();return}","b.innerHTML=x+rManBtn();rFit();rManBind();return}")
+rep("""'<div id="rbody">'+x+'</div>'+rBar();rFit()}""","""'<div id="rbody">'+x+rManBtn()+'</div>'+rBar();rFit();rManBind()}""")
+rep('(x.nr?"Nr. "+esc(x.nr):"Zubehör")','(x.nr?"Nr. "+esc(x.nr):x.manual?"Händisch eingetragen":"Zubehör")')
+rep('(r.nr?"Nr. "+esc(r.nr):"Zubehör")','(r.nr?"Nr. "+esc(r.nr):r.manual?"Händisch eingetragen":"Zubehör")')
+rep('userBlock();werkBlock();lagerBlock();retAdmin()}','userBlock();werkBlock();lagerBlock();retAdmin();fehlBlock()}')

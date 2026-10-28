@@ -1,0 +1,16 @@
+const {chromium}=require("playwright");const fs=require("fs");const S=__dirname+"/";
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:780}});const p=await ctx.newPage();
+ const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(800);
+ await p.evaluate(async()=>{await DBX.doc("retour/r1").set({ev:"Kaiserwiesn 2026",ord:"2600222-01",rem:"",itemsJson:JSON.stringify({"7009":{nr:"7009",name:"16A 100m",g:"Kabel",u:"16A",q:5}}),by:"u1",t:Date.now()});await DBX.doc("retour/r2").set({ev:"Ice Magic",ord:"2601080-01",rem:"",itemsJson:"{}",by:"u1",t:Date.now()-1000,draft:true})});
+ const txt=async()=>(await p.textContent("#app")).replace(/\s+/g," ").slice(0,200);
+ await p.click('[data-g="ret"]');await p.waitForTimeout(300);await p.click('[data-ro="r1"]');await p.waitForTimeout(300);
+ await p.click("#rclose");await p.waitForTimeout(200);await p.click(".ov #y");await p.waitForTimeout(500);
+ console.log("A nach Abschließen:",await txt());console.log("  Knöpfe:",await p.evaluate(()=>[...document.querySelectorAll("#app button")].map(b=>b.textContent).join(" | ")));
+ await p.click("#bk");await p.waitForTimeout(400);console.log("B Liste:",await txt());await p.screenshot({path:S+"close.png"});
+ await p.click('[data-rf="offen"]');await p.waitForTimeout(200);console.log("C Filter offen:",await txt());
+ await p.click('[data-rf="zu"]');await p.waitForTimeout(200);console.log("D Filter zu:",await txt());
+ await p.click('[data-ro="r1"]');await p.waitForTimeout(300);await p.click("#rreo");await p.click(".ov #y");await p.waitForTimeout(500);
+ console.log("E wieder geöffnet, Knöpfe:",await p.evaluate(()=>[...document.querySelectorAll("#app button")].map(b=>b.textContent).join(" | ")));
+ console.log("DB:",await p.evaluate(()=>JSON.stringify(__T.docs.filter(d=>d.col==="retour").map(d=>[d.id,d.data.closed,!!d.data.closedBy]))),"ERR",errs);await b.close()})();

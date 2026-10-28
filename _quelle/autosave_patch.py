@@ -1,0 +1,15 @@
+auto=open("/home/claude/gh/autosave.js",encoding="utf-8").read()
+rep('function rNew(){rs={id:null,ev:"",ord:"",items:{},rem:"",lvl:"head",g:null,u:null};','function rNew(){if(rs)rPersist(true);rs={id:null,ev:"",ord:"",items:{},rem:"",lvl:"head",g:null,u:null,isNew:true};')
+rep('function rBindTabs(){document.querySelectorAll("[data-rv]").forEach(b=>b.onclick=()=>{if(b.dataset.rv==="ret"){','function rBindTabs(){document.querySelectorAll("[data-rv]").forEach(b=>b.onclick=()=>{if(b.dataset.rv==="ret"){if(rs){rPersist(true);rs=null}')
+rep('function retDraw(){if(view==="ret")','function retDraw(){rSyncLocal();if(view==="ret")')
+rep('function retEdit(){const k=rKat(),L=rs.lvl;','function retEdit(){rPersist();const k=rKat(),L=rs.lvl;')
+rep('function retSum(){','function retSum(){rPersist();')
+rep('$("#rrem").oninput=e=>rs.rem=e.target.value;','$("#rrem").oninput=e=>{rs.rem=e.target.value;rPersist()};')
+rep('rBindTabs();rCamBind();$("#rgo").onclick=()=>{','rBindTabs();rCamBind();const rHi=()=>{rs.ev=$("#rev").value.trim();rs.ord=$("#rord").value.trim();rPersist()};$("#rev").oninput=rHi;$("#rord").oninput=rHi;$("#rgo").onclick=()=>{')
+rep('if(r.on&&$("#rord"))$("#rord").value=r.on;','if(r.on&&$("#rord"))$("#rord").value=r.on;if($("#rev"))$("#rev").dispatchEvent(new Event("input"));')
+rep('const d={ev:rs.ev,ord:rs.ord,rem:rs.rem.trim(),itemsJson:JSON.stringify(rs.items),by:old?old.by:me,t:old?old.t:now};','clearTimeout(rTimer);await rChain.catch(()=>{});const d={ev:rs.ev,ord:rs.ord,rem:rs.rem.trim(),itemsJson:JSON.stringify(rs.items),by:old?old.by:me,t:old?old.t:now,draft:false};')
+rep('try{await db.doc("retour/"+id).set(d);curRet=id;rs=null;','try{await db.doc("retour/"+id).set(d);rDone[id]=JSON.stringify({ev:d.ev,ord:d.ord,rem:d.rem,itemsJson:d.itemsJson});{const o=rBk();delete o[id];rBkSet(o)}curRet=id;rs=null;')
+i=s.index("function retBack(){");j=s.index("\n",s.index("rs.lvl=n;retEdit();return true}",i))+1
+s=s[:i]+auto.strip()+"\n"+s[j:]
+rep("<b>'+esc(r.ev)+'</b><div class=\"mute\">'+(r.ord?","<b>'+esc(r.ev)+'</b>'+(r.draft?' <span class=\"tag\" style=\"background:#f2c200;color:#1f2a33\">In Arbeit</span>':'')+'<div class=\"mute\">'+(r.ord?")
+rep("(owner||r.by===me?'<button class=\"btn ghost\" id=\"rdel\"","(canLager()?'<button class=\"btn ghost\" id=\"rdel\"")

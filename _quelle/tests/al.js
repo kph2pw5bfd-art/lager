@@ -1,0 +1,12 @@
+const {chromium}=require("playwright");const fs=require("fs");const S=__dirname+"/";
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(800);
+ const rows=JSON.parse(fs.readFileSync(S+"rkat.json"));await p.evaluate(async rows=>{rDedupe(rows);for(const [i,a] of rows.entries())await DBX.doc("rkat/"+a.nr).set(a);await DBX.doc("artikel/7777").set({name:"Alter Scan-Artikel"})},rows);
+ await p.click('[data-g="appv"]');await p.waitForTimeout(300);await p.click("#al");await p.waitForTimeout(400);await p.screenshot({path:S+"al0.png"});
+ await p.click('[data-dg="Kabel"] summary');await p.waitForTimeout(300);await p.screenshot({path:S+"al1.png"});
+ await p.fill("#alq","Mennekes");await p.waitForTimeout(300);console.log("Suche:",(await p.textContent("#albody")).replace(/\s+/g," ").slice(0,200));
+ await p.click('.alrow >> nth=0');await p.waitForTimeout(200);await p.screenshot({path:S+"al2.png"});await p.fill("#enm","Verteiler 32A Mennekes (6xSchuko) NEU");await p.click('[data-c="2"]');await p.click("#esv");await p.waitForTimeout(400);
+ console.log("nach Speichern:",(await p.textContent("#albody")).replace(/\s+/g," ").slice(0,160));
+ console.log("DB:",await p.evaluate(()=>JSON.stringify([__T.docs.find(d=>d.col==="rkat"&&d.id==="1034").data,__T.docs.find(d=>d.col==="artikel"&&d.id==="1034").data])));
+ console.log("ERR",errs);await b.close()})();

@@ -1,0 +1,11 @@
+const {chromium}=require("playwright");const fs=require("fs");const S=__dirname+"/";
+(async()=>{const b=await chromium.launch({args:["--use-fake-ui-for-media-stream","--use-fake-device-for-media-stream"]});const ctx=await b.newContext({viewport:{width:390,height:780},permissions:["camera"]});const p=await ctx.newPage();
+ const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.addInitScript(()=>{window.__tc=[];const g=MediaStreamTrack.prototype.getCapabilities;MediaStreamTrack.prototype.getCapabilities=function(){return{...g.call(this),torch:true}};const a=MediaStreamTrack.prototype.applyConstraints;MediaStreamTrack.prototype.applyConstraints=function(c){if(c&&c.advanced&&"torch" in c.advanced[0]){window.__tc.push(c.advanced[0].torch);return Promise.resolve()}return a.call(this,c)}});
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(800);await p.click('[data-g="ret"]');await p.waitForTimeout(300);await p.click('[data-rv="new"]');await p.waitForTimeout(300);
+ await p.click("#rcam");await p.waitForTimeout(1500);
+ console.log("label:",await p.evaluate(()=>{const t=document.querySelector(".ltorch");return[t&&!t.hidden,t&&t.textContent,window.__tc.join()]}));
+ await p.click(".ltorch");await p.waitForTimeout(200);console.log("nach klick:",await p.evaluate(()=>[document.querySelector(".ltorch").textContent,window.__tc.join()]));
+ await p.screenshot({path:S+"torch.png"});
+ console.log("ERR",errs);await b.close()})();

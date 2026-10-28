@@ -1,0 +1,15 @@
+rep("let rets=[],rkat=[],","let rf=\"alle\",rets=[],rkat=[],")
+rep("""'<div style="display:grid;gap:8px"><button class="btn" id="radd">Artikel hinzufügen</button><button class="btn grey" id="rxl">Als Excel speichern</button><button class="btn grey" id="rmail" hidden>Per Mail senden</button><button class="btn ghost" id="red">Bearbeiten</button>'""",
+ """(r.closed?'<div class="card rdone"><b>Abgeschlossen</b><div class="mute">'+esc(nm(r.closedBy))+', '+fmt(r.closedT)+'</div></div>':'')+'<div style="display:grid;gap:8px">'+(r.closed?'':'<button class="btn" id="radd">Artikel hinzufügen</button>')+'<button class="btn grey" id="rxl">Als Excel speichern</button><button class="btn grey" id="rmail" hidden>Per Mail senden</button>'+(r.closed?'<button class="btn ghost" id="rreo">Wieder öffnen</button>':'<button class="btn ghost" id="red">Bearbeiten</button><button class="btn okbtn" id="rclose">Abschließen</button>')""")
+rep(""" $("#red").onclick=()=>{rs={id:r.id,""",""" if($("#red"))$("#red").onclick=()=>{rs={id:r.id,""")
+rep(""" $("#radd").onclick=()=>{rs={id:r.id,""",""" if($("#rclose"))$("#rclose").onclick=()=>ask("Retourschein abschließen? Danach kann er nur noch angesehen werden. Bei Bedarf kann man ihn wieder öffnen.",async()=>{try{await db.doc("retour/"+r.id).update({closed:true,closedBy:me,closedT:Date.now(),draft:false});toast("Retourschein abgeschlossen",1)}catch(x){errBox("Abschließen fehlgeschlagen. Bitte nochmal versuchen.")}});
+ if($("#rreo"))$("#rreo").onclick=()=>ask("Retourschein wieder öffnen, damit er bearbeitet werden kann?",async()=>{try{await db.doc("retour/"+r.id).update({closed:false,mod:me,modT:Date.now()});toast("Retourschein wieder geöffnet",1)}catch(x){errBox("Das hat nicht geklappt. Bitte nochmal versuchen.")}});
+ if($("#radd"))$("#radd").onclick=()=>{rs={id:r.id,""")
+rep("""function rListBody(){const q=rqv.toLowerCase(),L=rets.filter(r=>!q||[r.ev,r.ord].join(" ").toLowerCase().includes(q));
+ $("#rlist").innerHTML=L.length?""","""function rListBody(){const q=rqv.toLowerCase(),L=rets.filter(r=>(!q||[r.ev,r.ord].join(" ").toLowerCase().includes(q))&&(rf==="alle"||(rf==="zu")===!!r.closed));
+ $("#rlist").innerHTML=chips([["alle","Alle"],["offen","Offen"],["zu","Abgeschlossen"]],rf,"data-rf")+(L.length?""")
+rep("""<div class="card" data-ro="'+r.id+'" style="cursor:pointer"><b>'+esc(r.ev)+'</b>'+(r.draft?' <span class="tag" style="background:#f2c200;color:#1f2a33">In Arbeit</span>':'')""",
+ """<div class="card'+(r.closed?' rdone':'')+'" data-ro="'+r.id+'" style="cursor:pointer"><b>'+esc(r.ev)+'</b>'+(r.closed?' <span class="tag tdone">Abgeschlossen</span>':r.draft?' <span class="tag" style="background:#f2c200;color:#1f2a33">In Arbeit</span>':'')""")
+rep("""(rets.length?"Kein Retourschein passt zur Suche.":"Noch kein Retourschein. Starte mit „Neuer Retourschein“.")+'</div>';
+ document.querySelectorAll("[data-ro]")""","""(rets.length?"Kein Retourschein passt zur Suche oder zum Filter.":"Noch kein Retourschein. Starte mit „Neuer Retourschein“.")+'</div>');
+ document.querySelectorAll("[data-rf]").forEach(b=>b.onclick=()=>{rf=b.dataset.rf;rListBody()});document.querySelectorAll("[data-ro]")""")

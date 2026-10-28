@@ -1,0 +1,16 @@
+const {chromium}=require("playwright");const fs=require("fs");const S=__dirname+"/";
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(800);
+ const rows=JSON.parse(fs.readFileSync(S+"rkat.json"));await p.evaluate(async rows=>{rDedupe(rows);for(const [i,a] of rows.entries())await DBX.doc("rkat/k"+i).set(a)},rows);
+ await p.click('[data-g="ret"]');await p.waitForTimeout(200);await p.click('[data-rv="new"]');await p.waitForTimeout(200);await p.fill("#rev","Testfest");await p.click("#rgo");await p.waitForTimeout(300);
+ await p.click("#rman");await p.fill("#mnm","Kabeltrommel 25m");await p.fill("#mq","3");await p.screenshot({path:S+"man.png"});await p.click("#mok");await p.waitForTimeout(400);
+ await p.fill("#rasq","Lichterkette");await p.waitForTimeout(300);console.log("Suchknopf:",await p.textContent("#rman"));await p.click("#rman");await p.fill("#mnr","9876");await p.click("#mok");await p.waitForTimeout(400);
+ await p.click("#rman");await p.fill("#mnm","x");await p.fill("#mnr","1092");await p.click("#mok");await p.waitForTimeout(400);
+ await p.click("#rman");await p.fill("#mnm","Kabeltrommel 25m");await p.fill("#mq","2");await p.click("#mok");await p.waitForTimeout(600);
+ await p.click("#rsum");await p.waitForTimeout(400);console.log("Schein:",(await p.textContent("#app")).replace(/\s+/g," ").slice(0,330));
+ console.log("fehl DB:",await p.evaluate(()=>JSON.stringify(__T.docs.filter(d=>d.col==="fehlartikel").map(d=>[d.id,d.data.name,d.data.nr,d.data.times,d.data.qty]))));
+ await p.click("#bk");await p.waitForTimeout(300);await p.click("#bk");await p.waitForTimeout(300);await p.click("#bk");await p.waitForTimeout(300);
+ await p.evaluate(()=>{view="start";draw()});await p.waitForTimeout(200);await p.click('[data-g="art"]');await p.waitForTimeout(800);
+ const t=await p.textContent("#fbx");console.log("Einstellungen:",t.replace(/\s+/g," ").slice(0,300));await p.locator("#fbx").scrollIntoViewIfNeeded();await p.screenshot({path:S+"fehl.png"});
+ console.log("ERR",errs);await b.close()})();

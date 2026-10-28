@@ -1,0 +1,3 @@
+rep(' if(view==="artlist"&&owner)return artListView();',' if(view==="artlist"&&owner)return $("#albody")?alBody():artList2();')
+rep("""'<h3 style="margin:4px 0 4px">Einzelne Artikel</h3><p class="mute" style="margin:0 0 8px">Artikelnummer und Name einzeln anlegen oder löschen (für den Scan in der Materialliste).</p><button class="btn ghost" id="al">Artikel einzeln bearbeiten</button>'""",
+ """'<h3 style="margin:4px 0 4px">Artikelliste</h3><p class="mute" style="margin:0 0 8px">Alle Artikel nach Haupt- und Untergruppen geordnet, wie in der Excel-Liste. Einzelne Artikel ansehen, ändern, hinzufügen oder löschen.</p><button class="btn ghost" id="al">Artikelliste öffnen</button>'""")

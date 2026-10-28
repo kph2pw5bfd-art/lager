@@ -1,0 +1,2 @@
+rep('v.srcObject=stream;$("#camp").hidden=false;document.body.classList.add("camon");await v.play();const bd=new BarcodeDetector();','v.srcObject=stream;$("#camp").hidden=false;document.body.classList.add("camon");await v.play();torchUI(stream.getVideoTracks()[0],$("#cx"));const bd=new BarcodeDetector();')
+rep('function stop(r){clearInterval(timer);','function stop(r){clearInterval(timer);torchRemove();')

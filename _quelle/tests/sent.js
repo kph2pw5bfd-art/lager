@@ -1,0 +1,12 @@
+const {chromium}=require("playwright");const fs=require("fs");const S=__dirname+"/";
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.addInitScript(()=>{navigator.canShare=()=>true;navigator.share=async()=>{}});
+ await p.goto("https://app.test/");await p.waitForTimeout(800);
+ await p.evaluate(async()=>{await DBX.doc("retour/r1").set({ev:"Kaiserwiesn 2026",ord:"2600222-01",rem:"",itemsJson:"{}",by:"u1",t:Date.now()});window.retXl=async(r,share)=>{await rMarkSent(r,share&&share.to)}});
+ await p.click('[data-g="ret"]');await p.waitForTimeout(300);await p.click('[data-ro="r1"]');await p.waitForTimeout(300);
+ await p.click("#rmail");await p.fill("#mto","Max Projektleiter");await p.screenshot({path:S+"sent1.png"});await p.click("#mtg");await p.waitForTimeout(600);
+ console.log("Schein:",(await p.textContent("#app")).replace(/\s+/g," ").slice(0,220));
+ await p.click("#rmail");console.log("vorbefüllt:",await p.inputValue("#mto"));await p.fill("#mto","");await p.click("#mtg");await p.waitForTimeout(600);
+ await p.click("#bk");await p.waitForTimeout(400);console.log("Liste:",(await p.textContent("#rlist")).replace(/\s+/g," ").slice(0,250));await p.screenshot({path:S+"sent2.png"});
+ console.log("ERR",errs);await b.close()})();

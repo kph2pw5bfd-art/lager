@@ -1,0 +1,15 @@
+const {chromium}=require("playwright");const fs=require("fs");const S=__dirname+"/";
+const W=+process.argv[2]||390,H=+process.argv[3]||800,tag=process.argv[4]||"p";
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:W,height:H},deviceScaleFactor:2});const p=await ctx.newPage();
+ const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(800);
+ const rows=JSON.parse(fs.readFileSync(S+"rkat.json"));
+ await p.evaluate(async rows=>{rDedupe(rows);for(const [i,a] of rows.entries())await DBX.doc("rkat/k"+i).set(a);await DBX.doc("rkat/_zubehoer").set({list:["C-Haken","Halbschelle","Manfrotto-Klemme","Sicherheitsseil"]})},rows);
+ await p.click('[data-g="ret"]');await p.waitForTimeout(300);await p.click('[data-rv="new"]');await p.waitForTimeout(300);
+ await p.fill("#rev","Test");await p.click("#rgo");await p.waitForTimeout(400);await p.screenshot({path:S+"t_"+tag+"_groups.png"});
+ await p.click('[data-rg="Verteiler"]');await p.waitForTimeout(300);await p.screenshot({path:S+"t_"+tag+"_subs.png"});
+ await p.click('[data-ru="32A"]');await p.waitForTimeout(300);await p.screenshot({path:S+"t_"+tag+"_v32.png",fullPage:true});
+ await p.click("#bk");await p.waitForTimeout(200);await p.click("#bk");await p.waitForTimeout(200);await p.click('[data-rg="Kabel"]');await p.waitForTimeout(300);await p.screenshot({path:S+"t_"+tag+"_ksubs.png",fullPage:true});
+ await p.click('[data-ru="Powerlock 150mm²"]');await p.waitForTimeout(300);await p.screenshot({path:S+"t_"+tag+"_pl.png",fullPage:true});
+ console.log("ERR",errs);await b.close()})();

@@ -1,0 +1,13 @@
+const {chromium}=require("playwright");const fs=require("fs");const S=__dirname+"/";
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(800);
+ await p.evaluate(async()=>{await DBX.doc("retour/r1").set({ev:"Ice Magic Innsbruck",ord:"2601080-01",rem:"",itemsJson:"{}",by:"u1",t:Date.now()})});
+ await p.click('[data-g="ret"]');await p.waitForTimeout(300);await p.click('[data-ro="r1"]');await p.waitForTimeout(300);
+ await p.setInputFiles("#rphf",[S+"ph1.jpg",S+"ph1.jpg"]);await p.waitForTimeout(2500);
+ console.log("Schein:",(await p.textContent("#app")).replace(/\s+/g," ").slice(0,260));
+ console.log("DB:",await p.evaluate(()=>JSON.stringify({fotos:__T.docs.find(d=>d.id==="r1").data.fotos,sizes:__T.docs.filter(d=>d.col==="fotos").map(d=>d.data.d.length)})));
+ await p.waitForTimeout(500);await p.screenshot({path:S+"ph.png"});
+ await p.click('[data-phx] >> nth=0');await p.click(".ov #y");await p.waitForTimeout(600);console.log("nach Löschen:",await p.evaluate(()=>__T.docs.find(d=>d.id==="r1").data.fotos.length));
+ await p.click("#bk");await p.waitForTimeout(300);console.log("Liste:",(await p.textContent("#rlist")).replace(/\s+/g," ").slice(0,200));
+ console.log("ERR",errs);await b.close()})();
