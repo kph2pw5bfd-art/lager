@@ -15,7 +15,7 @@ cp /home/claude/lager/_quelle/basis.html /home/claude/lager_app.html
 cd /home/claude/gh && python3 build.py && python3 -c "import re;s=open('index.html').read();sc=re.findall(r'<script>(.*?)</script>',s,re.S);open('a.js','w').write(sc[-2]);open('b.js','w').write(sc[-1])" && node --check a.js && node --check b.js
 ```
 ## Veröffentlichen
-Version in shim.js erhöhen (`const APPV="1.45"` → 1.46 …, zwei Stellen nach dem Punkt, ohne Datum),
+Version in shim.js erhöhen (`const APPV="1.46"` → 1.47 …, zwei Stellen nach dem Punkt, ohne Datum),
 dann index.html nach /home/claude/lager kopieren, die geänderten Quelldateien nach `_quelle/`, committen, `git push origin main`.
 
 ## Aufbau
@@ -33,7 +33,7 @@ dann index.html nach /home/claude/lager kopieren, die geänderten Quelldateien n
 - Eine Artikelliste (ab 1.41, `einelistepatch.py` + `artFromKat`/`defScanHit` in shim.js): einzige Quelle ist docs `rkat`. `art` (Nummer → Name für Materialliste/Defekte) wird daraus gebaut, Nummern 1–3-stellig werden auf 4 Stellen aufgefüllt. Die frühere Scan-Liste (docs `artikel`) wird nicht mehr gelesen/geschrieben und beim Start (Recht App-Verwaltung) gelöscht. Defekt melden: Live-Scanner (`rScanCam(defScanHit)`), Nummer mit ID `1234–56`. Test: `tests/eine_t.js`.
 - Defekt melden/bearbeiten (ab 1.42, `defordpatch.py` + `defLabelBind` in shim.js): Knopf „Etikett fotografieren“ über Veranstaltung (labelCam + readLabel wie Retourschein) füllt Veranstaltung + Auftragsnummer (Feld `ord`, optional, nur in der Detailansicht). Beschreibung optional; Pflicht nur Artikel + Veranstaltung. Formular in drei Karten mit Überschrift (Artikel / Veranstaltung / Defekt, Klasse `dsh`, ab 1.43). Test: `tests/deford_t.js`.
 - Materialliste (ab 1.44, `matpatch.py`, `materialliste.sql`): „Abgeschlossen“ statt „Geprüft“ (interner Wert bleibt `chk`, Filterwert `geprüft`). Rechte `mat_b` (Abschließen/Wieder öffnen, abgeschlossene Liste ändern) und `mat_l` (Löschen); erstellen/scannen darf jeder. Solange kein Titel mat_* hat, gilt fürs Abschließen Defekte-Bearbeiten (alt). DB: lists mit chk=true nur mit mat_b änderbar, Löschen nur mit mat_l. Tests: `tests/pg/mat_t.js`, `tests/pg/sql_materialliste_test.py`.
-- Startbild-Hexe (ab 1.45): `splashpatch.py` + `splash-hexe.svg` (Lager-Hexe mit Warnweste, Klemmbrett, TPC-Fähnchen weht nach hinten; Text `.ftx` wird beim Linksflug zurückgespiegelt). Flug per requestAnimationFrame, gleiches Timing wie das Logo; Größe relativ zur Logobreite. Vorschau-Vorlage mit 4 Varianten: `hexe/hexe_vorschau_vorlage.html` (Funktion `witch(v)`, `__LOGO__` durch Base64 ersetzen). Gewünscht von Jürgen; Lagerleiterin Sonja („Hexe“) ist einverstanden mit dem Spitznamen.
+- Startbild-Hexe (ab 1.45, seit 1.46 dezent): `splashpatch.py` + `splash-hexe.svg` = einfarbige dunkle Silhouette, fliegt ca. 0,25–1,55 s halbtransparent (max. 55 %) im Hintergrund von links nach rechts über/hinter dem Logo, klein, ohne Zoom. Vorschau-Vorlage mit den früheren 4 Varianten: `hexe/hexe_vorschau_vorlage.html`.
 - `datenbank.sql` – Supabase-Schema mit Berechtigungen
 - `tests/` – Playwright-Tests mit Fake-Supabase (`fakesb.js`); Kamera-Tests mit `--use-fake-device-for-media-stream`. `two.js` + `fakesb2.js`: zwei Benutzer gleichzeitig an einem Schein (liegt neben two.js, Verzögerung per `LAT=300`). Pfad `S` in den alten Tests auf das aktuelle Scratchpad anpassen.
 
