@@ -1,4 +1,4 @@
-const APPV="1.49";
+const APPV="1.50";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -291,6 +291,57 @@ async function rlogRetXl(r,btn){const lbl=btn&&btn.textContent;try{const dl=awai
   await dl.save({filename:"Protokoll "+safe(r.ev)+(r.ord?" "+safe(r.ord):"")+".xlsx",data:blob})}
  catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);errBox("Das Protokoll konnte nicht erstellt werden.")}
  finally{if(btn&&document.body.contains(btn)){btn.disabled=false;btn.textContent=lbl}}}
+/* ===== Jarvis (vorerst nur Admin) =====
+   Eigene Karte auf der Hauptseite, eigener HUD-Bildschirm (dunkel, hell umschaltbar).
+   Zeigt, was die App schon weiß: offene Retourscheine, offene Defekte, seit dem letzten Briefing repariert, letzte Retouren.
+   Herrichten / Heute zurück / Überfällig brauchen die Packlisten (kommt später). Briefing per Sprachausgabe. */
+const JV_ICON='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-dasharray="5 2.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>';
+let jvPrev=null,jvSpeaking=false;
+function jvLS(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function jvGreet(){const h=new Date().getHours();return (h<11?"Guten Morgen":h<18?"Guten Tag":"Guten Abend")+", "+String(names[me]||"").split(" ")[0]}
+function jvData(){
+ const open=rets.filter(r=>!r.closed).sort((a,b)=>(b.modT||b.t||0)-(a.modT||a.t||0));
+ const od=defs.filter(d=>!d.done).sort((a,b)=>(b.urg?1:0)-(a.urg?1:0)||b.t-a.t),urg=od.filter(d=>d.urg).length;
+ const since=jvPrev||Date.now()-864e5,fixed=defs.filter(d=>d.done&&(d.doneT||0)>since).sort((a,b)=>b.doneT-a.doneT);
+ const last=rets.filter(r=>r.closed).sort((a,b)=>(b.closedT||0)-(a.closedT||0)).slice(0,5);
+ return{open,od,urg,fixed,last,since}}
+function jvRow(attr,l,r,cls){return '<button class="jvrow" '+attr+'><span>'+l+'</span><span class="'+(cls||"ok")+'">'+r+'</span></button>'}
+function jvAgo(t){const d=Math.floor((Date.now()-t)/864e5);return d<=0?"heute":d===1?"gestern":"vor "+d+" Tagen"}
+function jvPanels(D){
+ const st='<section class="jvpn"><div class="jvlb">Status <span>live</span></div><div class="jvstats">'+
+  '<div class="jvstat"><div class="n">'+String(D.open.length).padStart(2,"0")+'</div><div class="t">Retourscheine offen</div></div>'+
+  '<div class="jvstat'+(D.urg?' al':'')+'"><div class="n">'+String(D.od.length).padStart(2,"0")+'</div><div class="t">Defekte offen'+(D.urg?', '+D.urg+' dringend':'')+'</div></div>'+
+  '<div class="jvstat"><div class="n">'+String(D.fixed.length).padStart(2,"0")+'</div><div class="t">Repariert</div></div></div></section>';
+ const ret='<section class="jvpn"><div class="jvlb">Offene Retourscheine <span>'+D.open.length+'</span></div>'+(D.open.length?D.open.slice(0,8).map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),rTot(rIt(r))+" Stk · "+jvAgo(r.modT||r.t))).join(""):'<div class="jvempty">Keine offenen Retourscheine.</div>')+'</section>';
+ const soon='<section class="jvpn dim"><div class="jvlb">Herrichten · Heute zurück · Überfällig <span>bald</span></div><div class="jvempty">Kommt, sobald Jarvis die Packlisten aus dem Lager-Postfach lesen darf.</div></section>';
+ const def='<section class="jvpn'+(D.urg?' al':'')+'"><div class="jvlb">Offene Defekte <span>'+D.od.length+'</span></div>'+(D.od.length?D.od.slice(0,8).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art+(d.ev?" · "+d.ev:"")),d.urg?"dringend":jvAgo(d.t),d.urg?"warn":"ok")).join(""):'<div class="jvempty">Keine offenen Defekte.</div>')+'</section>';
+ const fx='<section class="jvpn"><div class="jvlb">Wieder einsatzbereit <span>seit '+(jvPrev?"letztem Briefing":"24 Std.")+'</span></div>'+(D.fixed.length?D.fixed.slice(0,6).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art),"repariert "+fmt(d.doneT).slice(0,6)+" "+fmt(d.doneT).slice(-5))).join(""):'<div class="jvempty">Nichts Neues repariert.</div>')+'</section>';
+ const lr='<section class="jvpn"><div class="jvlb">Letzte Retouren <span>abgeschlossen</span></div>'+(D.last.length?D.last.map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),jvAgo(r.closedT||r.t))).join(""):'<div class="jvempty">Noch keine abgeschlossenen Retourscheine.</div>')+'</section>';
+ return{left:st+ret+soon,right:def+fx+lr}}
+function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i%6===0,r1=86,r2=r1+(big?12:5);t+='<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'" stroke="var(--jv-tick'+(big?'b':'')+')" stroke-width="1.2"/>'}
+ return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
+function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+" · "+d.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"})}
+setInterval(jvClock,1000);
+function jvBind(){document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")})}
+function jvText(D){const n=(x,s,p)=>x===1?"ein"+s:x+" "+p;let t=jvGreet()+". ";
+ t+=D.open.length?"Es "+(D.open.length===1?"ist ein Retourschein":"sind "+D.open.length+" Retourscheine")+" offen. ":"Es sind keine Retourscheine offen. ";
+ t+=D.od.length?(D.od.length===1?"Ein Defekt ist":D.od.length+" Defekte sind")+" noch offen"+(D.urg?", davon "+(D.urg===1?"einer":D.urg)+" dringend":"")+". ":"Es sind keine Defekte offen. ";
+ if(D.fixed.length)t+=(D.fixed.length===1?"Wieder einsatzbereit ist: ":"Wieder einsatzbereit sind: ")+D.fixed.slice(0,5).map(d=>d.art).join(", ")+". ";
+ return t+"Herrichten und Überfälliges kann ich dir sagen, sobald ich die Packlisten lesen darf."}
+function jvSpeak(){const b=$("#jvsp"),jv=$("#jv");if(!("speechSynthesis" in window))return toast("Sprachausgabe geht auf diesem Gerät nicht.");
+ if(jvSpeaking){speechSynthesis.cancel();return}
+ const u=new SpeechSynthesisUtterance(jvText(jvData()));u.lang="de-DE";const v=speechSynthesis.getVoices().find(x=>/^de/i.test(x.lang));if(v)u.voice=v;u.rate=1.02;
+ u.onstart=()=>{jvSpeaking=true;if(jv)jv.classList.add("talk");if(b)b.textContent="Briefing stoppen"};
+ u.onend=u.onerror=()=>{jvSpeaking=false;const j=$("#jv"),bb=$("#jvsp");if(j)j.classList.remove("talk");if(bb)bb.textContent="Briefing vorlesen"};
+ speechSynthesis.cancel();speechSynthesis.speak(u)}
+function jarvisView(){$("#t").textContent="Jarvis";const D=jvData(),P=jvPanels(D);
+ if($("#jv")){$("#jvl").innerHTML=P.left;$("#jvr").innerHTML=P.right;$("#jvg").textContent=jvGreet();jvBind();return}
+ if(jvPrev===null){jvPrev=+jvLS("tpc_jv_last")||0;jvLS("tpc_jv_last",String(Date.now()))}
+ const light=jvLS("tpc_jv_light")==="1";
+ $("#app").innerHTML='<div class="jv'+(light?' light':'')+'" id="jv"><div class="jvtop"><b>System · Lager-Assistent</b><span><span class="jvdot" aria-hidden="true"></span>Online · <button class="jvlink" id="jvth" type="button">'+(light?"Dunkel":"Hell")+'</button></span></div>'+
+  '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcenter"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div><div class="jvreactor">'+jvReactor()+'</div><div class="jvgreet" id="jvg">'+jvGreet()+'</div><button class="jvbtn" id="jvsp" type="button">Briefing vorlesen</button></div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
+  '<p class="jvnote">Vorschau nur für dich als Admin. Herrichten, Heute zurück und Überfällig kommen mit den Packlisten.</p></div>';
+ jvClock();jvBind();$("#jvsp").onclick=jvSpeak;$("#jvth").onclick=()=>{const l=!$("#jv").classList.contains("light");jvLS("tpc_jv_light",l?"1":"0");$("#jv").classList.toggle("light",l);$("#jvth").textContent=l?"Dunkel":"Hell"}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');

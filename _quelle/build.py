@@ -99,6 +99,8 @@ exec(open("/home/claude/gh/einelistepatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/defordpatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/matpatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/rlogpatch.py",encoding="utf-8").read())
+exec(open("/home/claude/gh/jarvispatch.py",encoding="utf-8").read())
+rep("</style>","\n"+open("/home/claude/gh/jarvis.css",encoding="utf-8").read()+"</style>",1)
 exec(open("/home/claude/gh/splashpatch.py",encoding="utf-8").read())
 # boot
 rep('\ninit();\n</script>','\nboot();\n</script>')
