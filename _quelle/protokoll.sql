@@ -58,12 +58,16 @@ $$;
 -- 4) Protokoll-Zeilen anlegen (nur neue Zeilen, „by“ wird immer auf den angemeldeten Benutzer gesetzt)
 create or replace function public.rlog_add(p_rows jsonb) returns integer
 language plpgsql security definer set search_path = public as $$
-declare r jsonb; n integer := 0;
+declare r jsonb; n integer := 0; b bigint;
 begin
   if not app_active() then raise exception 'Keine Berechtigung'; end if;
+  -- Zeilen von vor dem Nachtrag sind dort schon enthalten -> überspringen (sonst doppelt)
+  select coalesce((data->>'t')::bigint, 0) into b from docs where col = 'meta' and id = 'rlog_backfill';
+  b := coalesce(b, 0);
   if jsonb_typeof(p_rows) <> 'array' or jsonb_array_length(p_rows) > 500 then raise exception 'Ungültige Daten'; end if;
   for r in select * from jsonb_array_elements(p_rows) loop
     if coalesce(r->>'id','') = '' or length(r->>'id') > 60 then continue; end if;
+    if coalesce((r->'d'->>'t')::bigint, 0) < b then continue; end if;
     insert into docs (col, id, data)
       values ('rlog', r->>'id', (r->'d') - 'by' || jsonb_build_object('by', auth.uid()::text))
       on conflict (col, id) do nothing;
@@ -105,7 +109,8 @@ begin
         on conflict (col, id) do nothing;
     end loop;
   end loop;
-  insert into docs (col, id, data) values ('meta', 'rlog_backfill', '{"version":"1.47"}');
+  insert into docs (col, id, data) values ('meta', 'rlog_backfill',
+    jsonb_build_object('version', '1.47', 't', (extract(epoch from clock_timestamp()) * 1000)::bigint));
 end $$;
 
 select 'Fertig: Material-Protokoll ist eingerichtet. Nachgetragene Zeilen: ' ||
