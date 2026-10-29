@@ -1,4 +1,4 @@
-const APPV="1.47";
+const APPV="1.48";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -260,37 +260,37 @@ window.addEventListener("online",()=>setTimeout(rlFlush,2000));setInterval(rlFlu
 const rlDay=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const rlHM=t=>new Date(t).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
 const rlDE=s=>{const [y,m,d]=s.split("-");return d+"."+m+"."+y};
-function rlogBlock(){if(!owner)return;$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Material-Protokoll</h3><p class="mute" style="margin:0 0 8px">Welches Material an welchem Tag auf Retourscheine gekommen ist. Nur für dich als Administrator sichtbar.</p><button class="btn ghost" id="rlx">Als Excel herunterladen</button>');$("#rlx").onclick=rlDlg}
-function rlDlg(){const o=document.createElement("div");o.className="ov";const now=new Date(),iso=d=>rlDay(d.getTime());
- const P={heute:[now,now],woche:[new Date(now.getFullYear(),now.getMonth(),now.getDate()-((now.getDay()+6)%7)),now],monat:[new Date(now.getFullYear(),now.getMonth(),1),now],vormonat:[new Date(now.getFullYear(),now.getMonth()-1,1),new Date(now.getFullYear(),now.getMonth(),0)],alles:[new Date(2020,0,1),now]};
- o.innerHTML='<div class="card" style="width:100%;max-width:400px;margin:0"><b>Material-Protokoll</b><p class="mute" style="margin:4px 0 10px">Zeitraum wählen</p><div class="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+[["heute","Heute"],["woche","Diese Woche"],["monat","Dieser Monat"],["vormonat","Letzter Monat"],["alles","Alles"]].map(([k,t])=>'<button type="button" class="btn ghost s" data-rp="'+k+'" style="width:auto">'+t+'</button>').join("")+'</div><div class="row"><div style="flex:1"><label class="mute" for="rlf">Von</label><input type="date" id="rlf"></div><div style="flex:1"><label class="mute" for="rlt">Bis</label><input type="date" id="rlt"></div></div><div class="row" style="margin-top:6px"><button class="btn ghost" id="rlc">Abbrechen</button><button class="btn" id="rlo">Excel erstellen</button></div></div>';
- document.body.appendChild(o);const f=o.querySelector("#rlf"),t=o.querySelector("#rlt"),set=k=>{f.value=iso(P[k][0]);t.value=iso(P[k][1]);o.querySelectorAll("[data-rp]").forEach(b=>b.classList.toggle("on",b.dataset.rp===k))};set("monat");
- o.querySelectorAll("[data-rp]").forEach(b=>b.onclick=()=>set(b.dataset.rp));o.querySelector("#rlc").onclick=()=>o.remove();
- o.querySelector("#rlo").onclick=async()=>{if(!f.value||!t.value||f.value>t.value)return errBox("Bitte einen gültigen Zeitraum wählen.");const b=o.querySelector("#rlo");b.disabled=true;b.textContent="Wird erstellt …";await rlogXl(f.value,t.value);o.remove()}}
-async function rlogXl(from,to){try{const dl=await claude.use("downloads");if(!window.ExcelJS)return toast("Excel-Bibliothek nicht geladen.");
+/* Admin: Protokoll eines einzelnen Retourscheins als Excel (Pro Tag, „Bearbeitet von“) */
+async function rlogRetXl(r,btn){const lbl=btn&&btn.textContent;try{const dl=await claude.use("downloads");if(!window.ExcelJS)return toast("Excel-Bibliothek nicht geladen.");
+  if(btn){btn.disabled=true;btn.textContent="Wird erstellt …"}await rlFlush();
   let all=[],off=0;for(;;){const {data,error}=await SB.from("docs").select("id,data").eq("col","rlog").range(off,off+999);if(error)throw error;all=all.concat(data||[]);if(!data||data.length<1000)break;off+=1000}
-  const days={};all.forEach(r=>{const x=r.data||{};if(!x.t)return;const day=rlDay(x.t);if(day<from||day>to)return;const D=days[day]=days[day]||{items:{},first:null,last:null};
+  const rows=all.map(x=>x.data||{}).filter(x=>x.rid===r.id&&x.t!==undefined);
+  if(!rows.length)return errBox("Für diesen Retourschein gibt es noch keine Protokoll-Einträge.");
+  const days={},who=[];rows.slice().sort((a,b)=>(a.t||0)-(b.t||0)).forEach(x=>{if(x.by&&!who.includes(x.by))who.push(x.by);const day=rlDay(x.t||0),D=days[day]=days[day]||{items:{},first:null,last:null};
    if(!x.nt){if(D.first===null||x.t<D.first)D.first=x.t;if(D.last===null||x.t>D.last)D.last=x.t}
    const key=String(x.k||x.nr||x.name),it=D.items[key]=D.items[key]||{nr:x.nr,name:x.name,g:x.g,q:0};it.q+=(+x.d||0);if(x.name)it.name=x.name;if(x.nr)it.nr=x.nr;if(x.g)it.g=x.g});
+  if(!who.length&&r.by)who.push(r.by);
   const dk=Object.keys(days).sort().filter(d=>Object.values(days[d].items).some(i=>i.q));
-  if(!dk.length)return errBox("Im gewählten Zeitraum ist nichts auf Retourscheine gekommen.");
-  const NAVY="FF114A97",wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Pro Tag",{pageSetup:{orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0},views:[{state:"frozen",ySplit:5}]});
+  if(!dk.length)return errBox("Für diesen Retourschein gibt es noch keine Protokoll-Einträge.");
+  const NAVY="FF114A97",wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Protokoll",{pageSetup:{orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0},views:[{state:"frozen",ySplit:6}]});
   ws.columns=[{width:16},{width:12},{width:42},{width:16},{width:10}];
   const thin={style:"thin",color:{argb:"FFD5DBE5"}},bd={top:thin,left:thin,bottom:thin,right:thin},fill=h=>({type:"pattern",pattern:"solid",fgColor:{argb:h}});
-  ws.mergeCells("A1:E1");const ti=ws.getCell("A1");ti.value="Material-Protokoll Retourscheine";ti.font={size:18,bold:true,color:{argb:NAVY}};ws.getRow(1).height=28;
-  ws.mergeCells("A2:E2");ws.getCell("A2").value="Zeitraum: "+rlDE(from)+" – "+rlDE(to)+" · erstellt "+fmt(Date.now());ws.getCell("A2").font={color:{argb:"FF667385"}};
-  ws.mergeCells("A3:E3");ws.getCell("A3").value="Menge = pro Tag verrechnet (dazugezählt minus abgezogen). Uhrzeit = erster und letzter Eintrag des Tages.";ws.getCell("A3").font={size:9,italic:true,color:{argb:"FF667385"}};
-  const hr=ws.getRow(5);hr.values=["Datum","Artikelnr.","Artikel","Gruppe","Menge"];hr.height=22;hr.eachCell(c=>{c.fill=fill(NAVY);c.font={bold:true,color:{argb:"FFFFFFFF"}};c.alignment={vertical:"middle",horizontal:"left"};c.border=bd});hr.getCell(5).alignment={vertical:"middle",horizontal:"right"};
-  let rw=5,tot=0;const gO=g=>g==="Zubehör"?2:g==="Manuell"?1:0;
+  ws.mergeCells("A1:E1");const ti=ws.getCell("A1");ti.value="Protokoll Retourschein";ti.font={size:18,bold:true,color:{argb:NAVY}};ws.getRow(1).height=28;
+  ws.mergeCells("A2:E2");ws.getCell("A2").value=String(r.ev||"")+(r.ord?" · Auftragsnummer "+r.ord:"");ws.getCell("A2").font={size:13,bold:true};
+  ws.mergeCells("A3:E3");ws.getCell("A3").value="Bearbeitet von: "+who.map(nm).join(", ");
+  ws.mergeCells("A4:E4");ws.getCell("A4").value="Menge = pro Tag verrechnet (dazugezählt minus abgezogen). Uhrzeit = erster und letzter Eintrag des Tages. Erstellt "+fmt(Date.now());ws.getCell("A4").font={size:9,italic:true,color:{argb:"FF667385"}};
+  const hr=ws.getRow(6);hr.values=["Datum","Artikelnr.","Artikel","Gruppe","Menge"];hr.height=22;hr.eachCell(c=>{c.fill=fill(NAVY);c.font={bold:true,color:{argb:"FFFFFFFF"}};c.alignment={vertical:"middle",horizontal:"left"};c.border=bd});hr.getCell(5).alignment={vertical:"middle",horizontal:"right"};
+  let rw=6,tot=0;const gO=g=>g==="Zubehör"?2:g==="Manuell"?1:0;
   dk.forEach(day=>{const D=days[day],L=Object.values(D.items).filter(i=>i.q).sort((a,b)=>gO(a.g)-gO(b.g)||String(a.g).localeCompare(String(b.g),"de")||String(a.name).localeCompare(String(b.name),"de",{numeric:true})),sum=L.reduce((a,i)=>a+i.q,0);tot+=sum;
    rw++;const dr=ws.getRow(rw);const wd=new Date(day+"T12:00").toLocaleDateString("de-DE",{weekday:"short"}).replace(".","");
    dr.values=[wd+" "+rlDE(day),(D.first!==null?"erster Eintrag "+rlHM(D.first)+" · letzter Eintrag "+rlHM(D.last):"nachgetragen, ohne Uhrzeit"),null,null,sum];ws.mergeCells("B"+rw+":D"+rw);dr.height=20;
    for(let n=1;n<=5;n++){const c=dr.getCell(n);c.fill=fill("FFDCE6F4");c.font={bold:true,color:{argb:"FF0E2A55"}};c.border=bd;c.alignment={vertical:"middle",horizontal:n===5?"right":"left"}}
-   L.forEach((i,ix)=>{rw++;const r=ws.getRow(rw);r.values=["",i.nr&&!/^X\d+_*$/.test(i.nr)?i.nr:"–",i.name,i.g||"",i.q];for(let n=1;n<=5;n++){const c=r.getCell(n);c.border=bd;c.alignment={vertical:"middle",horizontal:n===5?"right":"left"};if(ix%2)c.fill=fill("FFF6F8FB")}})});
+   L.forEach((i,ix)=>{rw++;const rr=ws.getRow(rw);rr.values=["",i.nr&&!/^X\d+_*$/.test(i.nr)?i.nr:"–",i.name,i.g||"",i.q];for(let n=1;n<=5;n++){const c=rr.getCell(n);c.border=bd;c.alignment={vertical:"middle",horizontal:n===5?"right":"left"};if(ix%2)c.fill=fill("FFF6F8FB")}})});
   rw++;const fr=ws.getRow(rw);fr.values=["Gesamt","","","",tot];ws.mergeCells("A"+rw+":D"+rw);for(let n=1;n<=5;n++){const c=fr.getCell(n);c.font={bold:true,color:{argb:"FFFFFFFF"}};c.fill=fill(NAVY);c.border=bd;c.alignment={horizontal:n===5?"right":"left"}}
-  const buf=await wb.xlsx.writeBuffer(),blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-  await dl.save({filename:"Material-Protokoll_"+from+"_bis_"+to+".xlsx",data:blob});window.__rlogLast={dk,days}}
- catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);errBox("Das Protokoll konnte nicht erstellt werden.")}}
+  const buf=await wb.xlsx.writeBuffer(),blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),safe=v=>String(v||"").replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim().slice(0,60);
+  await dl.save({filename:"Protokoll "+safe(r.ev)+(r.ord?" "+safe(r.ord):"")+".xlsx",data:blob})}
+ catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);errBox("Das Protokoll konnte nicht erstellt werden.")}
+ finally{if(btn&&document.body.contains(btn)){btn.disabled=false;btn.textContent=lbl}}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');
