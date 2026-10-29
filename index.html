@@ -165,7 +165,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.50";
+<script>const APPV="1.51";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -490,25 +490,66 @@ function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i
 function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+" · "+d.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"})}
 setInterval(jvClock,1000);
 function jvBind(){document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")})}
-function jvText(D){const n=(x,s,p)=>x===1?"ein"+s:x+" "+p;let t=jvGreet()+". ";
- t+=D.open.length?"Es "+(D.open.length===1?"ist ein Retourschein":"sind "+D.open.length+" Retourscheine")+" offen. ":"Es sind keine Retourscheine offen. ";
- t+=D.od.length?(D.od.length===1?"Ein Defekt ist":D.od.length+" Defekte sind")+" noch offen"+(D.urg?", davon "+(D.urg===1?"einer":D.urg)+" dringend":"")+". ":"Es sind keine Defekte offen. ";
- if(D.fixed.length)t+=(D.fixed.length===1?"Wieder einsatzbereit ist: ":"Wieder einsatzbereit sind: ")+D.fixed.slice(0,5).map(d=>d.art).join(", ")+". ";
- return t+"Herrichten und Überfälliges kann ich dir sagen, sobald ich die Packlisten lesen darf."}
-function jvSpeak(){const b=$("#jvsp"),jv=$("#jv");if(!("speechSynthesis" in window))return toast("Sprachausgabe geht auf diesem Gerät nicht.");
- if(jvSpeaking){speechSynthesis.cancel();return}
- const u=new SpeechSynthesisUtterance(jvText(jvData()));u.lang="de-DE";const v=speechSynthesis.getVoices().find(x=>/^de/i.test(x.lang));if(v)u.voice=v;u.rate=1.02;
- u.onstart=()=>{jvSpeaking=true;if(jv)jv.classList.add("talk");if(b)b.textContent="Briefing stoppen"};
- u.onend=u.onerror=()=>{jvSpeaking=false;const j=$("#jv"),bb=$("#jvsp");if(j)j.classList.remove("talk");if(bb)bb.textContent="Briefing vorlesen"};
- speechSynthesis.cancel();speechSynthesis.speak(u)}
+/* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
+const JV_MALE=/conrad|killian|florian|christoph|kasper|ralf|bernd|klaus|jonas|markus|martin|yannick|viktor|stefan|hans|thomas|männlich|male/i;
+function jvVoiceScore(v){let s=0;if(/^de[-_]DE/i.test(v.lang))s+=3;else if(/^de[-_]AT/i.test(v.lang))s+=2;else if(/^de/i.test(v.lang))s+=1;else return -99;
+ if(/natural|neural|online/i.test(v.name))s+=40;if(/premium|enhanced|erweitert|verbessert/i.test(v.name))s+=30;if(/google/i.test(v.name))s+=12;
+ if(JV_MALE.test(v.name))s+=20;if(/katja|amala|seraphina|louisa|anna|helena|petra|hedda|vicki|marlene|ingrid|female|weiblich/i.test(v.name))s-=8;if(/eloquence|compact|espeak/i.test(v.name))s-=15;return s}
+function jvVoices(){if(!("speechSynthesis" in window))return[];return speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang)).sort((a,b)=>jvVoiceScore(b)-jvVoiceScore(a)||a.name.localeCompare(b.name))}
+function jvVoice(){const L=jvVoices(),n=jvLS("tpc_jv_voice");return (n&&L.find(v=>v.name===n))||L[0]||null}
+const jvPitch=()=>{const p=parseFloat(jvLS("tpc_jv_pitch"));return isFinite(p)?p:.9},jvRate=()=>{const r=parseFloat(jvLS("tpc_jv_rate"));return isFinite(r)?r:.96};
+const JV_NUM=["keine","ein","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn","elf","zwölf"];
+const jvN=n=>n<JV_NUM.length?JV_NUM[n]:String(n);
+const jvList=a=>a.length<2?a.join(""):a.slice(0,-1).join(", ")+" und "+a[a.length-1];
+function jvSay(s){return String(s||"").replace(/\s+/g," ").replace(/(\d)\s*[-–]\s*(\d)/g,"$1 Strich $2").trim()}
+/* Briefing als natürliche Sätze */
+function jvText(D){const S=[jvGreet()+"."];
+ if(!D.open.length)S.push("Bei den Retourscheinen ist gerade alles abgeschlossen.");
+ else if(D.open.length===1)S.push("Ein Retourschein ist noch offen: "+jvSay(D.open[0].ev)+".");
+ else if(D.open.length<=3)S.push(jvN(D.open.length).replace(/^./,c=>c.toUpperCase())+" Retourscheine sind noch offen: "+jvList(D.open.map(r=>jvSay(r.ev)))+".");
+ else S.push(jvN(D.open.length).replace(/^./,c=>c.toUpperCase())+" Retourscheine sind noch offen. Der jüngste ist "+jvSay(D.open[0].ev)+".");
+ const U=D.od.filter(d=>d.urg);
+ if(!D.od.length)S.push("Defekte gibt es keine offenen.");
+ else{S.push(D.od.length===1?"Ein Defekt ist noch offen.":jvN(D.od.length).replace(/^./,c=>c.toUpperCase())+" Defekte sind noch offen.");
+  if(U.length===1)S.push("Dringend ist "+jvSay(U[0].art)+(U[0].ev?" von "+jvSay(U[0].ev):"")+".");
+  else if(U.length>1)S.push("Dringend sind "+jvList(U.slice(0,3).map(d=>jvSay(d.art)))+".")}
+ if(D.fixed.length===1)S.push("Gute Nachricht: "+jvSay(D.fixed[0].art)+" ist repariert und wieder einsatzbereit.");
+ else if(D.fixed.length>1)S.push("Gute Nachricht: "+jvList(D.fixed.slice(0,4).map(d=>jvSay(d.art)))+" sind repariert und wieder einsatzbereit.");
+ S.push("Was heute herzurichten ist und was überfällig ist, sage ich dir, sobald ich die Packlisten lesen darf.");
+ return S}
+function jvTalk(on){jvSpeaking=on;const j=$("#jv"),b=$("#jvsp");if(j)j.classList.toggle("talk",on);if(b)b.textContent=on?"Briefing stoppen":"Briefing vorlesen"}
+function jvSpeakLines(lines,done){if(!("speechSynthesis" in window)){toast("Sprachausgabe geht auf diesem Gerät nicht.");return}
+ speechSynthesis.cancel();const v=jvVoice();let i=0,stop=false;jvTalk(true);
+ const next=()=>{if(stop||!jvSpeaking||i>=lines.length){jvTalk(false);if(done)done();return}
+  const u=new SpeechSynthesisUtterance(lines[i++]);u.lang=v?v.lang:"de-DE";if(v)u.voice=v;u.pitch=jvPitch();u.rate=jvRate();
+  u.onend=()=>setTimeout(next,260);u.onerror=e=>{if(e&&e.error==="interrupted"){stop=true}jvTalk(false)};speechSynthesis.speak(u)};
+ setTimeout(next,60)}
+function jvSpeak(){if(jvSpeaking){jvSpeaking=false;speechSynthesis.cancel();jvTalk(false);return}jvSpeakLines(jvText(jvData()))}
+/* Stimmen-Einstellung mit Probe-Hören */
+function jvVoiceDlg(){const L=jvVoices(),cur=jvVoice(),o=document.createElement("div");o.className="ov";
+ const best=L[0];o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b>Stimme von Jarvis</b><p class="mute" style="margin:4px 0 10px">Gilt nur für dieses Gerät. Wie gut eine Stimme klingt, hängt vom Gerät ab.</p>'+
+  (L.length?'<label class="mute" for="jvvs">Stimme</label><select id="jvvs">'+L.map(v=>'<option value="'+esc(v.name)+'"'+(cur&&v.name===cur.name?' selected':'')+'>'+esc(v.name)+(v===best?' (empfohlen)':'')+'</option>').join("")+'</select>':'<p class="mute">Auf diesem Gerät ist keine deutsche Stimme installiert.</p>')+
+  '<label class="mute" for="jvvp">Tonlage <span id="jvvpv"></span></label><input type="range" id="jvvp" min="0.6" max="1.3" step="0.05" value="'+jvPitch()+'">'+
+  '<label class="mute" for="jvvr">Tempo <span id="jvvrv"></span></label><input type="range" id="jvvr" min="0.75" max="1.25" step="0.05" value="'+jvRate()+'">'+
+  '<p class="mute" style="font-size:13px;margin:8px 0">Tipp: Am PC klingen in Microsoft Edge die „Natural“-Stimmen am echtesten (z. B. Conrad). Am iPhone unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch eine „Premium“- oder „Erweitert“-Stimme laden.</p>'+
+  '<div class="row"><button class="btn ghost" id="jvvt" type="button">Probe hören</button><button class="btn" id="jvvo" type="button">Fertig</button></div>'+
+  '<button class="lnk" id="jvvd" type="button" style="margin-top:6px">Auf Standard zurücksetzen</button></div>';
+ document.body.appendChild(o);const g=i=>o.querySelector("#"+i),lab=()=>{g("jvvpv").textContent=Math.round(+g("jvvp").value*100)+" %";g("jvvrv").textContent=Math.round(+g("jvvr").value*100)+" %"};lab();
+ const save=()=>{if(g("jvvs"))jvLS("tpc_jv_voice",g("jvvs").value);jvLS("tpc_jv_pitch",g("jvvp").value);jvLS("tpc_jv_rate",g("jvvr").value);lab()};
+ ["jvvs","jvvp","jvvr"].forEach(i=>{const e=g(i);if(e)e.oninput=e.onchange=save});
+ g("jvvt").onclick=()=>{save();jvSpeaking=false;jvSpeakLines([jvGreet()+".","So klinge ich mit dieser Einstellung. Soll ich so bleiben?"])};
+ g("jvvd").onclick=()=>{["tpc_jv_voice","tpc_jv_pitch","tpc_jv_rate"].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});o.remove();jvVoiceDlg()};
+ g("jvvo").onclick=()=>{if(jvSpeaking){jvSpeaking=false;speechSynthesis.cancel()}o.remove()};
+ o.addEventListener("click",e=>{if(e.target===o)g("jvvo").click()})}
+if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.addEventListener&&speechSynthesis.addEventListener("voiceschanged",()=>{})}
 function jarvisView(){$("#t").textContent="Jarvis";const D=jvData(),P=jvPanels(D);
  if($("#jv")){$("#jvl").innerHTML=P.left;$("#jvr").innerHTML=P.right;$("#jvg").textContent=jvGreet();jvBind();return}
  if(jvPrev===null){jvPrev=+jvLS("tpc_jv_last")||0;jvLS("tpc_jv_last",String(Date.now()))}
  const light=jvLS("tpc_jv_light")==="1";
- $("#app").innerHTML='<div class="jv'+(light?' light':'')+'" id="jv"><div class="jvtop"><b>System · Lager-Assistent</b><span><span class="jvdot" aria-hidden="true"></span>Online · <button class="jvlink" id="jvth" type="button">'+(light?"Dunkel":"Hell")+'</button></span></div>'+
+ $("#app").innerHTML='<div class="jv'+(light?' light':'')+'" id="jv"><div class="jvtop"><b>System · Lager-Assistent</b><span><span class="jvdot" aria-hidden="true"></span>Online · <button class="jvlink" id="jvvc" type="button">Stimme</button> · <button class="jvlink" id="jvth" type="button">'+(light?"Dunkel":"Hell")+'</button></span></div>'+
   '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcenter"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div><div class="jvreactor">'+jvReactor()+'</div><div class="jvgreet" id="jvg">'+jvGreet()+'</div><button class="jvbtn" id="jvsp" type="button">Briefing vorlesen</button></div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
   '<p class="jvnote">Vorschau nur für dich als Admin. Herrichten, Heute zurück und Überfällig kommen mit den Packlisten.</p></div>';
- jvClock();jvBind();$("#jvsp").onclick=jvSpeak;$("#jvth").onclick=()=>{const l=!$("#jv").classList.contains("light");jvLS("tpc_jv_light",l?"1":"0");$("#jv").classList.toggle("light",l);$("#jvth").textContent=l?"Dunkel":"Hell"}}
+ jvClock();jvBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvth").onclick=()=>{const l=!$("#jv").classList.contains("light");jvLS("tpc_jv_light",l?"1":"0");$("#jv").classList.toggle("light",l);$("#jvth").textContent=l?"Dunkel":"Hell"}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');
