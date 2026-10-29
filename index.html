@@ -165,7 +165,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.51";
+<script>const APPV="1.52";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -492,11 +492,14 @@ setInterval(jvClock,1000);
 function jvBind(){document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")})}
 /* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
 const JV_MALE=/conrad|killian|florian|christoph|kasper|ralf|bernd|klaus|jonas|markus|martin|yannick|viktor|stefan|hans|thomas|männlich|male/i;
-function jvVoiceScore(v){let s=0;if(/^de[-_]DE/i.test(v.lang))s+=3;else if(/^de[-_]AT/i.test(v.lang))s+=2;else if(/^de/i.test(v.lang))s+=1;else return -99;
- if(/natural|neural|online/i.test(v.name))s+=40;if(/premium|enhanced|erweitert|verbessert/i.test(v.name))s+=30;if(/google/i.test(v.name))s+=12;
- if(JV_MALE.test(v.name))s+=20;if(/katja|amala|seraphina|louisa|anna|helena|petra|hedda|vicki|marlene|ingrid|female|weiblich/i.test(v.name))s-=8;if(/eloquence|compact|espeak/i.test(v.name))s-=15;return s}
-function jvVoices(){if(!("speechSynthesis" in window))return[];return speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang)).sort((a,b)=>jvVoiceScore(b)-jvVoiceScore(a)||a.name.localeCompare(b.name))}
-function jvVoice(){const L=jvVoices(),n=jvLS("tpc_jv_voice");return (n&&L.find(v=>v.name===n))||L[0]||null}
+const jvVK=v=>v.voiceURI||v.name;
+function jvVQ(v){const u=String(v.voiceURI||"")+" "+v.name;return /premium/i.test(u)?"Premium":/enhanced|erweitert|verbessert/i.test(u)?"Erweitert":/natural|neural|online/i.test(u)?"Natural":/compact|kompakt/i.test(u)?"Standard":""}
+function jvVLabel(v){const q=jvVQ(v);return v.name+(q&&!v.name.includes(q)?" ("+q+")":"")}
+function jvVoiceScore(v){let s=0;const nm=v.name+" "+String(v.voiceURI||"");if(/^de[-_]DE/i.test(v.lang))s+=3;else if(/^de[-_]AT/i.test(v.lang))s+=2;else if(/^de/i.test(v.lang))s+=1;else return -99;
+ if(/natural|neural|online/i.test(nm))s+=40;if(/premium/i.test(nm))s+=34;if(/enhanced|erweitert|verbessert/i.test(nm))s+=30;if(/google/i.test(nm))s+=12;
+ if(JV_MALE.test(v.name))s+=20;if(/katja|amala|seraphina|louisa|anna|helena|petra|hedda|vicki|marlene|ingrid|female|weiblich/i.test(v.name))s-=8;if(/eloquence|compact|espeak|super-compact/i.test(nm))s-=15;return s}
+function jvVoices(){if(!("speechSynthesis" in window))return[];const seen=new Set();return speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang)&&!seen.has(jvVK(v))&&seen.add(jvVK(v))).sort((a,b)=>jvVoiceScore(b)-jvVoiceScore(a)||a.name.localeCompare(b.name))}
+function jvVoice(){const L=jvVoices(),n=jvLS("tpc_jv_voice");return (n&&(L.find(v=>jvVK(v)===n)||L.find(v=>v.name===n)))||L[0]||null}
 const jvPitch=()=>{const p=parseFloat(jvLS("tpc_jv_pitch"));return isFinite(p)?p:.9},jvRate=()=>{const r=parseFloat(jvLS("tpc_jv_rate"));return isFinite(r)?r:.96};
 const JV_NUM=["keine","ein","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn","elf","zwölf"];
 const jvN=n=>n<JV_NUM.length?JV_NUM[n]:String(n);
@@ -528,10 +531,10 @@ function jvSpeak(){if(jvSpeaking){jvSpeaking=false;speechSynthesis.cancel();jvTa
 /* Stimmen-Einstellung mit Probe-Hören */
 function jvVoiceDlg(){const L=jvVoices(),cur=jvVoice(),o=document.createElement("div");o.className="ov";
  const best=L[0];o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b>Stimme von Jarvis</b><p class="mute" style="margin:4px 0 10px">Gilt nur für dieses Gerät. Wie gut eine Stimme klingt, hängt vom Gerät ab.</p>'+
-  (L.length?'<label class="mute" for="jvvs">Stimme</label><select id="jvvs">'+L.map(v=>'<option value="'+esc(v.name)+'"'+(cur&&v.name===cur.name?' selected':'')+'>'+esc(v.name)+(v===best?' (empfohlen)':'')+'</option>').join("")+'</select>':'<p class="mute">Auf diesem Gerät ist keine deutsche Stimme installiert.</p>')+
+  (L.length?'<label class="mute" for="jvvs">Stimme</label><select id="jvvs">'+L.map(v=>'<option value="'+esc(jvVK(v))+'"'+(cur&&jvVK(v)===jvVK(cur)?' selected':'')+'>'+esc(jvVLabel(v))+(v===best?' – empfohlen':'')+'</option>').join("")+'</select>':'<p class="mute">Auf diesem Gerät ist keine deutsche Stimme installiert.</p>')+
   '<label class="mute" for="jvvp">Tonlage <span id="jvvpv"></span></label><input type="range" id="jvvp" min="0.6" max="1.3" step="0.05" value="'+jvPitch()+'">'+
   '<label class="mute" for="jvvr">Tempo <span id="jvvrv"></span></label><input type="range" id="jvvr" min="0.75" max="1.25" step="0.05" value="'+jvRate()+'">'+
-  '<p class="mute" style="font-size:13px;margin:8px 0">Tipp: Am PC klingen in Microsoft Edge die „Natural“-Stimmen am echtesten (z. B. Conrad). Am iPhone unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch eine „Premium“- oder „Erweitert“-Stimme laden.</p>'+
+  '<p class="mute" style="font-size:13px;margin:8px 0">Tipp: Am PC klingen in Microsoft Edge die „Natural“-Stimmen am echtesten (z. B. Conrad). Am iPhone gibt es ab Werk nur „Anna“. Männerstimme: Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch → z. B. „Martin“ antippen und die Fassung „Erweitert“ oder „Premium“ laden. Danach die App ganz schließen und neu öffnen.</p>'+
   '<div class="row"><button class="btn ghost" id="jvvt" type="button">Probe hören</button><button class="btn" id="jvvo" type="button">Fertig</button></div>'+
   '<button class="lnk" id="jvvd" type="button" style="margin-top:6px">Auf Standard zurücksetzen</button></div>';
  document.body.appendChild(o);const g=i=>o.querySelector("#"+i),lab=()=>{g("jvvpv").textContent=Math.round(+g("jvvp").value*100)+" %";g("jvvrv").textContent=Math.round(+g("jvvr").value*100)+" %"};lab();

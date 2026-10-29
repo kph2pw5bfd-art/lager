@@ -10,11 +10,13 @@ const sets={
  edge:["Microsoft Katja Online (Natural) - German (Germany)|de-DE","Microsoft Conrad Online (Natural) - German (Germany)|de-DE","Microsoft Hedda - German (Germany)|de-DE","Microsoft Jonas Online (Natural) - German (Austria)|de-AT","Microsoft David - English (United States)|en-US"],
  android:["Deutsch Deutschland|de-DE","Google Deutsch|de-DE","English United States|en-US"],
  iphone:["Anna|de-DE","Helena|de-DE","Martin|de-DE","Markus (Erweitert)|de-DE","Petra (Premium)|de-DE"],
+ iphone_ab_werk:["Anna|de-DE|com.apple.voice.compact.de-DE.Anna","Anna|de-DE|com.apple.voice.enhanced.de-DE.Anna","Samantha|en-US|com.apple.voice.compact.en-US.Samantha"],
+ iphone_martin:["Anna|de-DE|com.apple.voice.compact.de-DE.Anna","Anna|de-DE|com.apple.voice.enhanced.de-DE.Anna","Martin|de-DE|com.apple.voice.enhanced.de-DE.Martin"],
  keine:["Samantha|en-US"]};
 (async()=>{const b=await chromium.launch();
  for(const [k,vs] of Object.entries(sets)){
   const ctx=await b.newContext({viewport:{width:390,height:844}});
-  await ctx.addInitScript(vs=>{window.__said=[];const V=vs.map(x=>{const [name,lang]=x.split("|");return{name,lang,voiceURI:name,default:false,localService:true}});
+  await ctx.addInitScript(vs=>{window.__said=[];const V=vs.map(x=>{const [name,lang,uri]=x.split("|");return{name,lang,voiceURI:uri||name,default:false,localService:true}});
    window.SpeechSynthesisUtterance=class{constructor(t){this.text=t}};
    Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{getVoices:()=>V,addEventListener(){},cancel(){window.__cancel=(window.__cancel||0)+1},speak(u){__said.push({t:u.text,v:u.voice&&u.voice.name,p:u.pitch,r:u.rate});setTimeout(()=>u.onend&&u.onend(),30)}}})},vs);
   const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
@@ -27,6 +29,7 @@ const sets={
   await p.waitForTimeout(3000);const said=await p.evaluate(()=>__said);
   if(k==="edge"){said.forEach((x,i)=>console.log("   Satz "+(i+1)+":",x.t));console.log("   Stimme/Tonlage/Tempo:",said[0].v,said[0].p,said[0].r)}
   console.log("   Sätze gesprochen:",said.length,"| danach Knopf:",await p.textContent("#jvsp"));
+  if(k.startsWith("iphone_")){await p.click("#jvvc");await p.waitForTimeout(200);console.log("   Auswahl:",(await p.$$eval("#jvvs option",l=>l.map(o=>o.textContent))).join(" | "));await p.click("#jvvo")}
   if(k==="edge"){await p.click("#jvvc");await p.waitForTimeout(200);const opts=await p.$$eval("#jvvs option",l=>l.map(o=>o.textContent));console.log("   Auswahl:",opts.join(" | "));
    await p.screenshot({path:S+"jvv_dlg.png"});
    await p.selectOption("#jvvs",{index:2});await p.fill("#jvvp","0.75");await p.evaluate(()=>document.getElementById("jvvp").dispatchEvent(new Event("input")));
