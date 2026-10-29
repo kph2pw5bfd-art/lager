@@ -16,10 +16,10 @@ function end(){if(!d)return;clearTimeout(t);cancelAnimationFrame(raf);d.remove()
 function ease(x){return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2}
 function fly(now){if(!d)return;var el=now-t0,T=Math.min(1,el/3000),W=d.clientWidth,H=d.clientHeight,U=im.offsetWidth/.78;
  w.style.width=(U*.62)+"px";
- /* dezent: nur Silhouette, kurz im Hintergrund hinter dem Logo von links nach rechts (ca. 0,25 s bis 1,55 s) */
- var p=(T-.08)/.43;if(p<0||p>1){w.style.opacity=0;if(T<1)raf=requestAnimationFrame(fly);return}
+ /* dezent: nur Silhouette, kurz im Hintergrund hinter dem Logo von links nach rechts (ca. 0,15 s bis 2,05 s) */
+ var p=(T-.05)/.63;if(p<0||p>1){w.style.opacity=0;if(T<1)raf=requestAnimationFrame(fly);return}
  var x=W/2+U*(-.95+1.9*p),y=H/2-U*.30-U*.10*Math.sin(Math.PI*p)+Math.sin(el/150)*U*.008,
-  s=.42,tilt=-8+16*p,o=.55*Math.min(1,p/.15,(1-p)/.15);
+  s=.52,tilt=-8+16*p,o=.55*Math.min(1,p/.15,(1-p)/.15);
  w.style.transform="translate("+(x-w.offsetWidth/2)+"px,"+(y-w.offsetHeight/2)+"px) rotate("+tilt+"deg) scale("+s+")";
  w.style.zIndex=1;w.style.opacity=o;
  if(T<1)raf=requestAnimationFrame(fly)}
