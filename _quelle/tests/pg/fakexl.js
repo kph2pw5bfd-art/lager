@@ -1,0 +1,4 @@
+window.ExcelJS={Workbook:class{constructor(){this.sheets=[]}addWorksheet(n){const rows={},ws={name:n,columns:[],merges:[],mergeCells(r){this.merges.push(r)},
+ getRow(i){return rows[i]=rows[i]||{_v:[],height:0,set values(v){this._v=v},get values(){return this._v},getCell(n){return this._c=this._c||{},this._c[n]=this._c[n]||{}},eachCell(f){(this._v||[]).forEach((x,k)=>f(this.getCell(k+1)))}}},
+ getCell(a){const m=a.match(/([A-Z])(\d+)/),r=this.getRow(+m[2]);const c=r.getCell(m[1].charCodeAt(0)-64);return new Proxy(c,{set(t,k,v){t[k]=v;if(k==="value"){const vv=r._v.slice();vv[m[1].charCodeAt(0)-65]=v;r._v=vv}return true}})},addImage(){},rows};this.sheets.push(ws);return ws}
+ addImage(){return 0}get xlsx(){const me=this;return{async writeBuffer(){const s=me.sheets[0];const out=Object.keys(s.rows).map(Number).sort((a,b)=>a-b).map(i=>[i,s.rows[i]._v]);return new TextEncoder().encode(JSON.stringify({name:s.name,rows:out,merges:s.merges}))}}}}};

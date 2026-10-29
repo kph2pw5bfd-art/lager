@@ -8,7 +8,7 @@ function setupDb(db,seed){execFileSync("psql",[...PSQL,"-d","postgres","-c","dro
  const run=sql=>execFileSync("psql",[...PSQL,"-d",db],{input:sql});
  try{run("create role anon nologin; create role authenticated nologin;")}catch(e){}
  run(fs.readFileSync("/home/postgres/pgt/mock.sql","utf8").replace("create role anon nologin; create role authenticated nologin;",""));
- run(fs.readFileSync("/home/claude/gh/datenbank.sql","utf8"));seed.pre&&run(seed.pre);run(fs.readFileSync("/home/claude/gh/rechte.sql","utf8"));if(fs.existsSync("/home/claude/gh/materialliste.sql"))run(fs.readFileSync("/home/claude/gh/materialliste.sql","utf8"));seed.post&&run(seed.post)}
+ run(fs.readFileSync("/home/claude/gh/datenbank.sql","utf8"));seed.pre&&run(seed.pre);run(fs.readFileSync("/home/claude/gh/rechte.sql","utf8"));if(fs.existsSync("/home/claude/gh/materialliste.sql"))run(fs.readFileSync("/home/claude/gh/materialliste.sql","utf8"));if(fs.existsSync("/home/claude/gh/protokoll.sql"))run(fs.readFileSync("/home/claude/gh/protokoll.sql","utf8"));seed.post&&run(seed.post)}
 function makeSrv(db,pages,LAT){
  const cond=f=>f.length?" where "+f.map(([ty,k,v])=>ty==="eq"?k+"::text="+lit(v):k+"::text in ("+v.map(lit).join(",")+")").join(" and "):"";
  async function bc(ev){for(const pg of pages){let send=true;
@@ -18,6 +18,7 @@ function makeSrv(db,pages,LAT){
   if(q.rpc){const a=q.a;let sql;
    if(q.rpc==="doc_update")sql="select public.doc_update("+lit(a.p_col)+","+lit(a.p_id)+","+lit(JSON.stringify(a.p_patch))+"::jsonb)";
    else if(q.rpc==="admin_set_user")sql="select public.admin_set_user("+lit(a.p_id)+"::uuid,"+(a.p_active?"true":"false")+","+lit(a.p_role)+")";
+   else if(q.rpc==="rlog_add")sql="select public.rlog_add("+lit(JSON.stringify(a.p_rows))+"::jsonb)";
    else if(q.rpc==="set_my_name")sql="select public.set_my_name("+lit(a.p_name)+")";else return{data:null,error:null};
    const r=await psql(db,asUser(uid,sql));if(r.err)return{data:null,error:{message:r.err.replace(/^.*ERROR:\s*/s,"").split("\n")[0]}};
    if(q.rpc==="doc_update"){const d=JSON.parse(r.out.split("\n").pop());bc({table:"docs",eventType:"UPDATE",new:{col:a.p_col,id:a.p_id,data:d}});return{data:d,error:null}}
@@ -34,7 +35,7 @@ function makeSrv(db,pages,LAT){
 async function openPage(b,uid,srv,pages){const ctx=await b.newContext({viewport:{width:390,height:844}});await ctx.addInitScript(u=>{window.__UID=u},uid);
  await ctx.exposeFunction("__srv",q=>srv(uid,q));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});
-  if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(__dirname+"/fakesb2.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+  if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(__dirname+"/fakesb2.js"),contentType:"text/javascript"});if(u.includes("exceljs"))return r.fulfill({body:fs.readFileSync(__dirname+"/fakexl.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  const p=await ctx.newPage();p.__errs=[];p.on("pageerror",e=>p.__errs.push(e.message));p.on("console",m=>{if(m.type()==="error"&&!/404|Failed to load/.test(m.text()))p.__errs.push("console: "+m.text())});
  pages.push({uid,page:p});await p.goto("https://app.test/");await p.waitForTimeout(1500);await p.mouse.click(200,420);await p.waitForTimeout(400);return p}
 module.exports={setupDb,makeSrv,openPage,psql,asUser,lit};

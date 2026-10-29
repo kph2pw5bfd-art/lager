@@ -15,7 +15,7 @@ cp /home/claude/lager/_quelle/basis.html /home/claude/lager_app.html
 cd /home/claude/gh && python3 build.py && python3 -c "import re;s=open('index.html').read();sc=re.findall(r'<script>(.*?)</script>',s,re.S);open('a.js','w').write(sc[-2]);open('b.js','w').write(sc[-1])" && node --check a.js && node --check b.js
 ```
 ## Veröffentlichen
-Version in shim.js erhöhen (`const APPV="1.46"` → 1.47 …, zwei Stellen nach dem Punkt, ohne Datum),
+Version in shim.js erhöhen (`const APPV="1.47"` → 1.48 …, zwei Stellen nach dem Punkt, ohne Datum),
 dann index.html nach /home/claude/lager kopieren, die geänderten Quelldateien nach `_quelle/`, committen, `git push origin main`.
 
 ## Aufbau
@@ -34,6 +34,7 @@ dann index.html nach /home/claude/lager kopieren, die geänderten Quelldateien n
 - Defekt melden/bearbeiten (ab 1.42, `defordpatch.py` + `defLabelBind` in shim.js): Knopf „Etikett fotografieren“ über Veranstaltung (labelCam + readLabel wie Retourschein) füllt Veranstaltung + Auftragsnummer (Feld `ord`, optional, nur in der Detailansicht). Beschreibung optional; Pflicht nur Artikel + Veranstaltung. Formular in drei Karten mit Überschrift (Artikel / Veranstaltung / Defekt, Klasse `dsh`, ab 1.43). Test: `tests/deford_t.js`.
 - Materialliste (ab 1.44, `matpatch.py`, `materialliste.sql`): „Abgeschlossen“ statt „Geprüft“ (interner Wert bleibt `chk`, Filterwert `geprüft`). Rechte `mat_b` (Abschließen/Wieder öffnen, abgeschlossene Liste ändern) und `mat_l` (Löschen); erstellen/scannen darf jeder. Solange kein Titel mat_* hat, gilt fürs Abschließen Defekte-Bearbeiten (alt). DB: lists mit chk=true nur mit mat_b änderbar, Löschen nur mit mat_l. Tests: `tests/pg/mat_t.js`, `tests/pg/sql_materialliste_test.py`.
 - Startbild-Hexe (ab 1.45, seit 1.46 dezent): `splashpatch.py` + `splash-hexe.svg` = einfarbige dunkle Silhouette, fliegt ca. 0,25–1,55 s halbtransparent (max. 55 %) im Hintergrund von links nach rechts über/hinter dem Logo, klein, ohne Zoom. Vorschau-Vorlage mit den früheren 4 Varianten: `hexe/hexe_vorschau_vorlage.html`.
+- Material-Protokoll (ab 1.47, `rlogpatch.py`, Abschnitt in shim.js, `protokoll.sql`): jede eigene Mengen-Änderung im Retourschein (aus `rFold`) → Zeile in docs `rlog` {t,rid,ev,ord,k,nr,name,g,d}. Warteschlange in localStorage `tpc_rlog_queue`, Senden per rpc `rlog_add` (setzt by, nur neue Zeilen). Lesen nur Admin, ändern/löschen niemand. Alte Scheine einmalig mit Anlegedatum nachgetragen (`nt:true`, id `alt_…`). Admin: App-Verwaltung → „Material-Protokoll“ → Zeitraum → Excel „Pro Tag“ (Tageszeile mit erstem/letztem Eintrag + Summe, darunter Artikel netto). Tests: `tests/pg/rlog_t.js` (ExcelJS-Attrappe `fakexl.js`), `tests/pg/sql_protokoll_test.py`.
 - `datenbank.sql` – Supabase-Schema mit Berechtigungen
 - `tests/` – Playwright-Tests mit Fake-Supabase (`fakesb.js`); Kamera-Tests mit `--use-fake-device-for-media-stream`. `two.js` + `fakesb2.js`: zwei Benutzer gleichzeitig an einem Schein (liegt neben two.js, Verzögerung per `LAT=300`). Pfad `S` in den alten Tests auf das aktuelle Scratchpad anpassen.
 
