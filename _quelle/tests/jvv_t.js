@@ -16,7 +16,7 @@ const sets={
 (async()=>{const b=await chromium.launch();
  for(const [k,vs] of Object.entries(sets)){
   const ctx=await b.newContext({viewport:{width:390,height:844}});
-  await ctx.addInitScript(vs=>{window.__said=[];const V=vs.map(x=>{const [name,lang,uri]=x.split("|");return{name,lang,voiceURI:uri||name,default:false,localService:true}});
+  await ctx.addInitScript(vs=>{window.__said=[];localStorage.setItem("tpc_jv_engine","device");const V=vs.map(x=>{const [name,lang,uri]=x.split("|");return{name,lang,voiceURI:uri||name,default:false,localService:true}});
    window.SpeechSynthesisUtterance=class{constructor(t){this.text=t}};
    Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{getVoices:()=>V,addEventListener(){},cancel(){window.__cancel=(window.__cancel||0)+1},speak(u){__said.push({t:u.text,v:u.voice&&u.voice.name,p:u.pitch,r:u.rate});setTimeout(()=>u.onend&&u.onend(),30)}}})},vs);
   const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));

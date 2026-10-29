@@ -1,4 +1,4 @@
-const APPV="1.52";
+const APPV="1.53";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -331,7 +331,7 @@ function jvVLabel(v){const q=jvVQ(v);return v.name+(q&&!v.name.includes(q)?" ("+
 function jvVoiceScore(v){let s=0;const nm=v.name+" "+String(v.voiceURI||"");if(/^de[-_]DE/i.test(v.lang))s+=3;else if(/^de[-_]AT/i.test(v.lang))s+=2;else if(/^de/i.test(v.lang))s+=1;else return -99;
  if(/natural|neural|online/i.test(nm))s+=40;if(/premium/i.test(nm))s+=34;if(/enhanced|erweitert|verbessert/i.test(nm))s+=30;if(/google/i.test(nm))s+=12;
  if(JV_MALE.test(v.name))s+=20;if(/katja|amala|seraphina|louisa|anna|helena|petra|hedda|vicki|marlene|ingrid|female|weiblich/i.test(v.name))s-=8;if(/eloquence|compact|espeak|super-compact/i.test(nm))s-=15;return s}
-function jvVoices(){if(!("speechSynthesis" in window))return[];const seen=new Set();return speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang)&&!seen.has(jvVK(v))&&seen.add(jvVK(v))).sort((a,b)=>jvVoiceScore(b)-jvVoiceScore(a)||a.name.localeCompare(b.name))}
+function jvVoices(){if(!("speechSynthesis" in window))return[];const seen=new Set(),lab=new Set();return speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang)&&!seen.has(jvVK(v))&&seen.add(jvVK(v))).sort((a,b)=>jvVoiceScore(b)-jvVoiceScore(a)||a.name.localeCompare(b.name)).filter(v=>!lab.has(jvVLabel(v))&&lab.add(jvVLabel(v)))}
 function jvVoice(){const L=jvVoices(),n=jvLS("tpc_jv_voice");return (n&&(L.find(v=>jvVK(v)===n)||L.find(v=>v.name===n)))||L[0]||null}
 const jvPitch=()=>{const p=parseFloat(jvLS("tpc_jv_pitch"));return isFinite(p)?p:.9},jvRate=()=>{const r=parseFloat(jvLS("tpc_jv_rate"));return isFinite(r)?r:.96};
 const JV_NUM=["keine","ein","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn","elf","zwölf"];
@@ -354,28 +354,55 @@ function jvText(D){const S=[jvGreet()+"."];
  S.push("Was heute herzurichten ist und was überfällig ist, sage ich dir, sobald ich die Packlisten lesen darf.");
  return S}
 function jvTalk(on){jvSpeaking=on;const j=$("#jv"),b=$("#jvsp");if(j)j.classList.toggle("talk",on);if(b)b.textContent=on?"Briefing stoppen":"Briefing vorlesen"}
-function jvSpeakLines(lines,done){if(!("speechSynthesis" in window)){toast("Sprachausgabe geht auf diesem Gerät nicht.");return}
+function jvSpeakDevice(lines,done){if(!("speechSynthesis" in window)){jvTalk(false);toast("Sprachausgabe geht auf diesem Gerät nicht.");return}
  speechSynthesis.cancel();const v=jvVoice();let i=0,stop=false;jvTalk(true);
  const next=()=>{if(stop||!jvSpeaking||i>=lines.length){jvTalk(false);if(done)done();return}
   const u=new SpeechSynthesisUtterance(lines[i++]);u.lang=v?v.lang:"de-DE";if(v)u.voice=v;u.pitch=jvPitch();u.rate=jvRate();
   u.onend=()=>setTimeout(next,260);u.onerror=e=>{if(e&&e.error==="interrupted"){stop=true}jvTalk(false)};speechSynthesis.speak(u)};
  setTimeout(next,60)}
-function jvSpeak(){if(jvSpeaking){jvSpeaking=false;speechSynthesis.cancel();jvTalk(false);return}jvSpeakLines(jvText(jvData()))}
+/* Thorsten: freie deutsche Männerstimme (Piper/Thorsten-Voice), wird im Gerät berechnet.
+   Bibliothek @diffusionstudio/vits-web lädt Sprachmodell (~60 MB, einmalig, im Gerät gespeichert) und rechnet Satz für Satz.
+   Klappt etwas nicht, spricht Jarvis automatisch mit der Gerätestimme. Vorerst nur Admin-Test (Lizenz für Firmeneinsatz prüfen). */
+const JV_TH_ID="de_DE-thorsten-medium";
+const JV_TH_SRC=["https://cdn.jsdelivr.net/npm/@diffusionstudio/vits-web@1.0.3/+esm","https://cdn.jsdelivr.net/npm/@diffusionstudio/vits-web/+esm","https://esm.sh/@diffusionstudio/vits-web@1.0.3"];
+let jvTH=null,jvAud=null;
+const jvEngine=()=>jvLS("tpc_jv_engine")||"thorsten";
+async function jvThLib(){if(jvTH)return jvTH;let err=null;for(const u of (window.__JV_TH_SRC||JV_TH_SRC)){try{const m=await import(u);if(m&&typeof m.predict==="function"){jvTH=m;return m}}catch(e){err=e}}throw err||new Error("Sprachprogramm nicht gefunden")}
+function jvAudio(){if(!jvAud){jvAud=new Audio();jvAud.setAttribute("playsinline","");jvAud.preload="auto"}return jvAud}
+const JV_SILENT="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+function jvUnlock(){const a=jvAudio();try{a.src=JV_SILENT;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+function jvBtn(t){const b=$("#jvsp");if(b)b.textContent=t}
+async function jvThReady(){const m=await jvThLib();let have=[];try{have=(await m.stored())||[]}catch(e){}
+ if(!have.includes(JV_TH_ID)){jvBtn("Thorsten wird geladen …");await m.download(JV_TH_ID,p=>{if(p&&p.total)jvBtn("Thorsten wird geladen … "+Math.min(100,Math.round(p.loaded*100/p.total))+" %")})}return m}
+async function jvThSpeak(lines){const m=await jvThReady();if(!jvSpeaking)return;jvBtn("Thorsten überlegt …");const a=jvAudio();
+ let next=m.predict({text:lines[0],voiceId:JV_TH_ID});
+ for(let i=0;i<lines.length&&jvSpeaking;i++){const blob=await next;if(i+1<lines.length)next=m.predict({text:lines[i+1],voiceId:JV_TH_ID});if(!jvSpeaking)break;
+  if(i===0)jvBtn("Briefing stoppen");const u=URL.createObjectURL(blob);a.src=u;a.playbackRate=jvRate();
+  await new Promise(res=>{a.onended=res;a.onerror=res;a.onpause=()=>{if(!jvSpeaking)res()};try{const p=a.play();if(p&&p.catch)p.catch(res)}catch(e){res()}});
+  URL.revokeObjectURL(u);if(jvSpeaking)await new Promise(r=>setTimeout(r,180))}}
+function jvSpeakLines(lines,done){jvTalk(true);
+ if(jvEngine()==="thorsten"){jvUnlock();jvThSpeak(lines).then(()=>{jvTalk(false);if(done)done()}).catch(e=>{console.warn("Thorsten",e);
+   if(!jvSpeaking)return;toast("Thorsten ging nicht ("+String(e&&e.message||e).slice(0,80)+"). Ich spreche mit der Gerätestimme.");jvSpeakDevice(lines,done)});return}
+ jvSpeakDevice(lines,done)}
+function jvStop(){jvSpeaking=false;try{speechSynthesis.cancel()}catch(e){}if(jvAud){try{jvAud.pause()}catch(e){}}jvTalk(false)}
+function jvSpeak(){if(jvSpeaking)return jvStop();jvSpeakLines(jvText(jvData()))}
 /* Stimmen-Einstellung mit Probe-Hören */
 function jvVoiceDlg(){const L=jvVoices(),cur=jvVoice(),o=document.createElement("div");o.className="ov";
- const best=L[0];o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b>Stimme von Jarvis</b><p class="mute" style="margin:4px 0 10px">Gilt nur für dieses Gerät. Wie gut eine Stimme klingt, hängt vom Gerät ab.</p>'+
+ const best=L[0];o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b>Stimme von Jarvis</b><p class="mute" style="margin:4px 0 10px">Gilt nur für dieses Gerät.</p>'+
+  '<div class="row seg" style="margin-bottom:10px"><button type="button" id="jvet" class="'+(jvEngine()==="thorsten"?"on":"")+'">Thorsten</button><button type="button" id="jved" class="'+(jvEngine()==="device"?"on":"")+'">Gerätestimme</button></div>'+
+  '<p class="mute" id="jvthi" style="font-size:13px;margin:0 0 8px">Freie deutsche Männerstimme, wird im Gerät berechnet. Beim ersten Mal einmalig ca. 60 MB laden (am besten im WLAN), danach geht es auch offline. Test nur für dich – für den Firmeneinsatz Lizenz noch prüfen.</p><div id="jvdev">'+
   (L.length?'<label class="mute" for="jvvs">Stimme</label><select id="jvvs">'+L.map(v=>'<option value="'+esc(jvVK(v))+'"'+(cur&&jvVK(v)===jvVK(cur)?' selected':'')+'>'+esc(jvVLabel(v))+(v===best?' – empfohlen':'')+'</option>').join("")+'</select>':'<p class="mute">Auf diesem Gerät ist keine deutsche Stimme installiert.</p>')+
-  '<label class="mute" for="jvvp">Tonlage <span id="jvvpv"></span></label><input type="range" id="jvvp" min="0.6" max="1.3" step="0.05" value="'+jvPitch()+'">'+
+  '<label class="mute" for="jvvp">Tonlage <span id="jvvpv"></span></label><input type="range" id="jvvp" min="0.6" max="1.3" step="0.05" value="'+jvPitch()+'"></div>'+
   '<label class="mute" for="jvvr">Tempo <span id="jvvrv"></span></label><input type="range" id="jvvr" min="0.75" max="1.25" step="0.05" value="'+jvRate()+'">'+
-  '<p class="mute" style="font-size:13px;margin:8px 0">Tipp: Am PC klingen in Microsoft Edge die „Natural“-Stimmen am echtesten (z. B. Conrad). Am iPhone gibt es ab Werk nur „Anna“. Männerstimme: Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Deutsch → z. B. „Martin“ antippen und die Fassung „Erweitert“ oder „Premium“ laden. Danach die App ganz schließen und neu öffnen.</p>'+
+  '<p class="mute" id="jvtip" style="font-size:13px;margin:8px 0">Tipp: Am PC klingen in Microsoft Edge die „Natural“-Stimmen am echtesten (z. B. Conrad). Am iPhone bekommt die App meist nur „Anna“, auch wenn weitere Stimmen geladen sind – dafür gibt es Thorsten.</p>'+
   '<div class="row"><button class="btn ghost" id="jvvt" type="button">Probe hören</button><button class="btn" id="jvvo" type="button">Fertig</button></div>'+
   '<button class="lnk" id="jvvd" type="button" style="margin-top:6px">Auf Standard zurücksetzen</button></div>';
- document.body.appendChild(o);const g=i=>o.querySelector("#"+i),lab=()=>{g("jvvpv").textContent=Math.round(+g("jvvp").value*100)+" %";g("jvvrv").textContent=Math.round(+g("jvvr").value*100)+" %"};lab();
+ document.body.appendChild(o);const g=i=>o.querySelector("#"+i),eng=e=>{jvLS("tpc_jv_engine",e);g("jvet").classList.toggle("on",e==="thorsten");g("jved").classList.toggle("on",e==="device");g("jvdev").hidden=e==="thorsten";g("jvtip").hidden=e==="thorsten";g("jvthi").hidden=e!=="thorsten"};eng(jvEngine());g("jvet").onclick=()=>eng("thorsten");g("jved").onclick=()=>eng("device");const lab=()=>{g("jvvpv").textContent=Math.round(+g("jvvp").value*100)+" %";g("jvvrv").textContent=Math.round(+g("jvvr").value*100)+" %"};lab();
  const save=()=>{if(g("jvvs"))jvLS("tpc_jv_voice",g("jvvs").value);jvLS("tpc_jv_pitch",g("jvvp").value);jvLS("tpc_jv_rate",g("jvvr").value);lab()};
  ["jvvs","jvvp","jvvr"].forEach(i=>{const e=g(i);if(e)e.oninput=e.onchange=save});
- g("jvvt").onclick=()=>{save();jvSpeaking=false;jvSpeakLines([jvGreet()+".","So klinge ich mit dieser Einstellung. Soll ich so bleiben?"])};
- g("jvvd").onclick=()=>{["tpc_jv_voice","tpc_jv_pitch","tpc_jv_rate"].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});o.remove();jvVoiceDlg()};
- g("jvvo").onclick=()=>{if(jvSpeaking){jvSpeaking=false;speechSynthesis.cancel()}o.remove()};
+ g("jvvt").onclick=()=>{save();jvStop();jvSpeakLines([jvGreet()+".","So klinge ich mit dieser Einstellung. Soll ich so bleiben?"])};
+ g("jvvd").onclick=()=>{["tpc_jv_voice","tpc_jv_pitch","tpc_jv_rate","tpc_jv_engine"].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});o.remove();jvVoiceDlg()};
+ g("jvvo").onclick=()=>{if(jvSpeaking)jvStop();o.remove()};
  o.addEventListener("click",e=>{if(e.target===o)g("jvvo").click()})}
 if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.addEventListener&&speechSynthesis.addEventListener("voiceschanged",()=>{})}
 function jarvisView(){$("#t").textContent="Jarvis";const D=jvData(),P=jvPanels(D);
