@@ -33,3 +33,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Klappt Laden/Berechnen nicht → Hinweis und automatisch Gerätestimme (`jvSpeakDevice`). Umschalten im Stimmen-Dialog (`localStorage tpc_jv_engine` = thorsten/device).
 - Lizenz: Thorsten-Daten CC0, das Medium-Modell ist aber evtl. nur nicht-kommerziell (Feintuning auf „lessac“) → vor Firmeneinsatz prüfen. Vorerst nur Admin.
 - Test `tests/jvth_t.js` nutzt ein Stub-Modul (echte Bibliothek ist aus der Testumgebung nicht erreichbar).
+
+## Jarvis-Sprechart (ab 1.54)
+- `jvText` wählt nach `localStorage tpc_jv_style`: „frech“ (Standard, `jvTextFrech` + `jvHiFrech`, pro Lage mehrere Sätze per Zufall) oder „sachlich“ (`jvTextSachlich`, frühere Sätze).
+- Begrüßung frech: mal „Servus <Name>“, mal „Guten Morgen/Tag/Abend, <Name>“ + Spruch (morgens Kaffee, abends „Noch so spät da?“).
+- Umschalter „Art zu sprechen: Frech / Sachlich“ im Stimmen-Dialog; „Auf Standard zurücksetzen“ setzt auf frech zurück.
+- Test `tests/jvfr_t.js` (Pfad zur fakesb.js über Umgebungsvariable SP).
