@@ -3,7 +3,7 @@ const {chromium}=require("playwright");const fs=require("fs");const S=(process.e
 const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),day=864e5;
 const pos=[{p:"1.18",n:2,u:"Stk",t:"E-Heizer 15KW",a:"1182",f:0},{p:"1.14",n:20,u:"Stk",t:"Kabel Schuko 3x2,5mm Gummi 20m",a:"1081",f:11},{p:"1.7",n:16,u:"Stk",t:"Kabel CEE 32A 5pol 50m",a:"1098",f:0},{p:"1.12",n:10,u:"Stk",t:"VT Zugang CEE 16A 5pol auf 3xSchuko Gummi",a:"4670",f:3},{p:"3.4",n:10,u:"",t:"Kette ca 1m",a:"",f:0}];
 const seed=[{col:"pack",id:"20260714",data:{ord:"260111401",ps:"20260714",ev:"Winterwunder Mörbisch",pl:"Marvin Wellisch",db:T0+8*36e5,de:T0+60*day,pos,by:"u1",t:Date.now()}},
- {col:"rkat",id:"k1",data:{nr:"1097",g:"Kabel",u:"CEE 32A",name:"CEE 32A 25m"}},{col:"rkat",id:"k2",data:{nr:"1098",g:"Kabel",u:"CEE 32A",name:"CEE 32A 50m"}}];
+ {col:"rkat",id:"k1",data:{nr:"1097",g:"Kabel",u:"CEE 32A",name:"CEE 32A 25m",o:2}},{col:"rkat",id:"k2",data:{nr:"1098",g:"Kabel",u:"CEE 32A",name:"CEE 32A 50m",o:1}},{col:"rkat",id:"k3",data:{nr:"4670",g:"Verteiler",u:"16A",name:"VT 16A auf 3x Schuko",o:3}},{col:"rkat",id:"k4",data:{nr:"1182",g:"Heizung",u:"",name:"E-Heizer 15kW",o:5}}];
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});
  await ctx.addInitScript(()=>{window.__said=[];localStorage.setItem("tpc_jv_engine","device");localStorage.setItem("tpc_jv_style","sachlich");const V=[{name:"Google Deutsch",lang:"de-DE",voiceURI:"g",localService:true}];window.SpeechSynthesisUtterance=class{constructor(t){this.text=t}};
   Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{getVoices:()=>V,addEventListener(){},cancel(){},speak(u){__said.push(u.text);setTimeout(()=>u.onend&&u.onend(),5)}}})});

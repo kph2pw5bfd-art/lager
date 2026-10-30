@@ -70,13 +70,20 @@ function pkProg(P){const H=pkH(P),K=pkKeys(P);let d=0,dev=0;(P.pos||[]).forEach(
 async function pkHSet(P,patch){try{if(!packh[P.id])await db.doc("packh/"+P.id).set({c:Date.now()});await db.doc("packh/"+P.id).update(patch)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}
 /* Anzeigename: wie in der Artikelliste (über die Artikelnummer), sonst wie im Packschein */
 function pkName(x){const c=typeof artCode==="function"?artCode(x&&x.a):"";if(c&&typeof rkat!=="undefined"&&Array.isArray(rkat)){const k=rkat.find(a=>artCode(a.nr)===c);if(k&&k.name)return k.name}return (x&&x.t)||""}
+/* Reihenfolge wie in der Artikelliste (Gruppen und Untergruppen in der Reihenfolge, in der die Artikelliste sie zeigt); Artikel ohne Treffer danach, in Packschein-Reihenfolge */
+let pkRkRef=null,pkRkLen=-1,pkRank={};
+function pkRanks(){if(typeof rkat==="undefined"||!Array.isArray(rkat))return{};if(pkRkRef===rkat&&pkRkLen===rkat.length)return pkRank;
+ const rw=a=>typeof alRow==="function"?alRow(a):(+a.o||0)%100000,L=rkat.slice().sort((a,b)=>rw(a)-rw(b)||String(a.name).localeCompare(b.name,"de",{numeric:true})),G=[];
+ L.forEach(a=>{let g=G.find(x=>x.g===a.g);if(!g)G.push(g={g:a.g,subs:[]});let u=g.subs.find(x=>x.u===(a.u||""));if(!u)g.subs.push(u={u:a.u||"",items:[]});u.items.push(a)});
+ const R={};let n=0;G.forEach(g=>g.subs.forEach(u=>u.items.forEach(a=>{const c=artCode(a.nr);if(c&&!(c in R))R[c]=n;n++})));pkRkRef=rkat;pkRkLen=rkat.length;pkRank=R;return R}
+function pkSortIdx(P){const R=pkRanks(),big=1e9;return (P.pos||[]).map((x,i)=>{const c=artCode(x.a);return{i,r:c&&c in R?R[c]:big}}).sort((a,b)=>a.r-b.r||a.i-b.i).map(o=>o.i)}
 const pkNum=v=>String(v).replace(".",",");
 const pkFmTxt=(x,h)=>!(x.f>0)?"":h&&h.fm==="miete"?pkNum(x.f)+" werden zugemietet → "+pkNum(pkNeed(x,h))+" aus dem Lager":h&&h.fm==="lager"?"Aus dem Lager statt Fremdmiete ("+pkNum(x.f)+")":pkNum(x.f)+" Fremdmiete – antippen zum Klären";
 function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack";return packView()}
  const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&document.querySelector(".ov"))return;
  $("#t").textContent="Packliste";const s=pkState(p),R=pkRets(p),pr=pkProg(p),H=pr.H,K=pkKeys(p),fin=pr.fin;
  const pct=pr.n?Math.round(pr.d*100/pr.n):0;
- const rows=(p.pos||[]).map((x,i)=>{const h=H[K[i]],st=pkPS(x,h);return{x,i,h,st}}).filter(r=>pkHf==="alle"||r.st.s!=="ok");
+ const rows=pkSortIdx(p).map(i=>{const x=p.pos[i],h=H[K[i]],st=pkPS(x,h);return{x,i,h,st}}).filter(r=>pkHf==="alle"||r.st.s!=="ok");
  $("#app").innerHTML='<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;min-width:0;font-size:18px">'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span></div>'+
   '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+
   '<details class="pkmore"><summary>Alle Angaben</summary><div class="pkkv"><span>Packschein</span><b>'+esc(p.ps||"–")+'</b>'+(p.sa?'<span>Selbstabholer</span><b>'+esc(p.sa)+'</b>':'')+(p.pk?'<span>Packen</span><b>'+pkD(p.pk)+'</b>':'')+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+(p.eb?'<span>Event</span><b>'+pkD(p.eb)+' – '+pkD(p.ee)+'</b>':'')+'</div><div class="mute" style="font-size:13px;margin-top:6px">Hochgeladen '+fmt(p.t)+' von '+esc(nm(p.by))+'</div></details>'+
