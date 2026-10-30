@@ -55,3 +55,4 @@ body.jvon:has(.jv.light){background:#EEF6FA}
 .jvat{color:var(--jv-ice);line-height:1.45}
 .jvarows{display:flex;flex-direction:column}
 .jvacts{display:flex;gap:8px;flex-wrap:wrap}.jvacts .jvbtn{margin:0;padding:8px 12px;font-size:12px}
+.jvms{font-size:12px;color:var(--jv-mute);min-height:0;text-align:left;letter-spacing:.02em}.jvms:empty{display:none}

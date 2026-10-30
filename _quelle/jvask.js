@@ -10,7 +10,7 @@ const jvStk=n=>(String(n).replace(".",","))+(n===1?" Stück":" Stück");
 function jvAskHtml(){return '<div class="jvask"><div class="jvaskrow">'+
  '<button class="jvmic" id="jvmic" type="button" aria-label="Frag Jarvis per Sprache" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>'+
  '<input id="jvaq" type="search" enterkeyhint="send" autocomplete="off" placeholder="Frag Jarvis … z. B. „Hilfe“" aria-label="Frage an Jarvis">'+
- '<button class="jvbtn jvgo" id="jvgo" type="button">Fragen</button></div><div class="jvans" id="jvans" aria-live="polite"></div></div>'}
+ '<button class="jvbtn jvgo" id="jvgo" type="button">Fragen</button></div><div class="jvms" id="jvms" aria-live="polite"></div><div class="jvans" id="jvans" aria-live="polite"></div></div>'}
 function jvAskBind(){const q=$("#jvaq"),go=()=>{const v=q.value.trim();if(v)jvAsk(v)};$("#jvgo").onclick=go;q.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();go()}};
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition,mb=$("#jvmic");if(SR&&mb){mb.hidden=false;mb.onclick=()=>jvListen(SR)}
  if(jvLast)jvShow(jvLast,false)}
@@ -20,18 +20,28 @@ function jvAskBind(){const q=$("#jvaq"),go=()=>{const v=q.value.trim();if(v)jvAs
 let jvRecTxt="",jvRecT=null;
 function jvRecUi(on){const mb=$("#jvmic"),q=$("#jvaq");if(mb)mb.classList.toggle("on",on);if(q)q.placeholder=on?"Ich höre zu …":"Frag Jarvis … z. B. „Hilfe“"}
 function jvRecKill(){const r=jvRec;jvRec=null;jvRecOn=false;clearTimeout(jvRecT);if(r){r.onresult=r.onerror=r.onend=null;try{r.abort()}catch(e){}}}
-function jvRecDone(){if(!jvRecOn&&!jvRecTxt)return;const t=jvRecTxt.trim();jvRecTxt="";jvRecKill();jvRecUi(false);if(t)setTimeout(()=>jvAsk(t),150)}
-function jvListen(SR,retry){if(jvRecOn){if(jvRecTxt)return jvRecDone();jvRecKill();jvRecUi(false);return}
- jvStop();jvRecKill();let r;try{r=new SR();r.lang="de-AT";r.interimResults=true;r.continuous=false;r.maxAlternatives=1}catch(e){return toast("Spracherkennung geht auf diesem Gerät nicht. Bitte die Frage eintippen.")}
- jvRec=r;jvRecTxt="";const q=$("#jvaq");if(q)q.value="";
+function jvRecDone(){if(!jvRecOn&&!jvRecTxt)return;const t=jvRecTxt.trim();jvRecTxt="";jvRecKill();jvRecUi(false);jvAudioBack();jvMs("");if(t)setTimeout(()=>jvAsk(t),150)}
+/* Status-Zeile unter dem Eingabefeld: was das Mikrofon meldet (zur Fehlersuche am iPhone) */
+function jvMs(t){const m=$("#jvms");if(m)m.textContent=t||""}
+/* Ton freigeben, bevor das Mikrofon startet: iPhone blockiert das Mikrofon, solange noch ein Audio-Element "spielt" oder geladen ist */
+function jvFreeAudio(){try{speechSynthesis.cancel()}catch(e){}if(jvAud){try{jvAud.pause();jvAud.removeAttribute("src");jvAud.load()}catch(e){}}
+ try{if(navigator.audioSession)navigator.audioSession.type="play-and-record"}catch(e){}}
+function jvAudioBack(){try{if(navigator.audioSession)navigator.audioSession.type="auto"}catch(e){}}
+function jvListen(SR){if(jvRecOn){if(jvRecTxt)return jvRecDone();jvRecKill();jvRecUi(false);jvMs("");return}
+ jvSpeaking=false;jvTalk(false);jvFreeAudio();jvRecKill();
+ /* start() muss direkt im Antippen passieren (iPhone) – kein verzögerter zweiter Versuch, sondern sofort mit neuer Erkennung */
+ const mk=()=>{const r=new SR();r.lang="de-AT";r.interimResults=true;r.continuous=false;r.maxAlternatives=1;return r};
+ let r,err="";for(let i=0;i<2&&!r;i++){try{const x=mk();x.start();r=x}catch(e){err=(e&&(e.name||e.message))||"Fehler";jvRecKill()}}
+ if(!r){jvRecUi(false);jvAudioBack();jvMs("Mikrofon startet nicht ("+err+"). Bitte die Frage eintippen.");return}
+ jvRec=r;jvRecTxt="";jvRecOn=true;jvRecUi(true);jvMs("Ich höre zu …");const q=$("#jvaq");if(q)q.value="";
+ const off=()=>{jvRecUi(false);jvAudioBack()};
+ r.onaudiostart=()=>{if(jvRec===r)jvMs("Mikrofon an – sprich jetzt.")};
  r.onresult=e=>{if(jvRec!==r)return;let t="",fin=false;for(const x of e.results){t+=x[0].transcript;if(x.isFinal)fin=true}jvRecTxt=t;if(q)q.value=t;
   if(fin){try{r.stop()}catch(x){}clearTimeout(jvRecT);jvRecT=setTimeout(jvRecDone,1200)}};
- r.onerror=e=>{if(jvRec!==r)return;const er=e&&e.error;const t=jvRecTxt;jvRecKill();jvRecUi(false);if(t)return setTimeout(()=>jvAsk(t),150);
-  if(er==="not-allowed"||er==="service-not-allowed")toast("Bitte das Mikrofon für die App erlauben – oder die Frage eintippen.");
-  else if(er==="no-speech")toast("Ich habe nichts gehört. Nochmal aufs Mikrofon tippen.",1)};
- r.onend=()=>{if(jvRec!==r)return;if(jvRecTxt)jvRecDone();else{jvRecKill();jvRecUi(false)}};
- try{r.start();jvRecOn=true;jvRecUi(true);jvRecT=setTimeout(()=>{if(jvRec===r&&!jvRecTxt){jvRecKill();jvRecUi(false)}},12000)}
- catch(e){jvRecKill();jvRecUi(false);if(!retry)setTimeout(()=>jvListen(SR,true),400);else toast("Das Mikrofon ist gerade belegt. Bitte kurz warten und nochmal tippen.",1)}}
+ r.onerror=e=>{if(jvRec!==r)return;const er=(e&&e.error)||"unbekannt";const t=jvRecTxt;jvRecKill();off();if(t){jvMs("");return setTimeout(()=>jvAsk(t),150)}
+  jvMs(er==="not-allowed"||er==="service-not-allowed"?"Mikrofon nicht erlaubt ("+er+"). Bitte in den Einstellungen erlauben oder eintippen.":er==="no-speech"?"Ich habe nichts gehört. Nochmal aufs Mikrofon tippen.":"Mikrofon-Fehler: "+er+". Bitte nochmal tippen oder eintippen.")};
+ r.onend=()=>{if(jvRec!==r)return;if(jvRecTxt){jvMs("");jvRecDone()}else{jvRecKill();off();jvMs("Mikrofon wurde beendet, ohne etwas zu hören. Nochmal tippen.")}};
+ jvRecT=setTimeout(()=>{if(jvRec===r&&!jvRecTxt){jvRecKill();off();jvMs("Nichts gehört. Nochmal aufs Mikrofon tippen.")}},12000)}
 /* Antwort anzeigen + sprechen. A = {q, say:[Sätze], rows:[{l,r,pk?,ret?,cls?}], acts:[{l,fn}]} */
 function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;
  box.innerHTML='<div class="jvaq2">„'+esc(A.q)+'“</div><div class="jvat">'+A.say.map(esc).join(" ")+'</div>'+
