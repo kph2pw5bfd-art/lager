@@ -33,16 +33,19 @@ function pkState(p){const t0=pkDay(Date.now()),R=pkRets(p),done=R.some(r=>r.clos
  return{k:"out",l:"Unterwegs",c:""}}
 const pkD=t=>t?new Date(t).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"})+(new Date(t).getHours()||new Date(t).getMinutes()?" "+new Date(t).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"}):""):"–";
 const pkPosN=n=>n+(n===1?" Position":" Positionen");
-const pkF=p=>(p.pos||[]).filter(x=>x.f>0);
+const pkF=p=>pkPosAll(p).filter(x=>x.f>0);
 function pkGroups(){const G={over:[],late:[],herr:[],back:[],out:[],next:[],done:[]};packs.forEach(p=>G[pkState(p).k].push(p));
  G.over.sort((a,b)=>(a.de||0)-(b.de||0));G.herr.sort((a,b)=>(a.db||0)-(b.db||0));G.back.sort((a,b)=>(a.de||0)-(b.de||0));G.out.sort((a,b)=>(a.de||0)-(b.de||0));G.next.sort((a,b)=>pkHDay(a)-pkHDay(b));G.late.sort((a,b)=>pkHDay(a)-pkHDay(b));G.done.sort((a,b)=>(b.de||0)-(a.de||0));return G}
 function pkHint(p){const s=pkState(p),h=pkHd(p),out=[];
  if(s.k==="late")out.push('<div class="pkhint warn">⚠ Noch nicht hergerichtet – '+(pkShifted(p)?'verschoben auf '+pkWd(pkHDay(p))+', ':'')+'Dispo-Beginn war '+pkWd(p.db)+'</div>');
  else if(pkShifted(p))out.push('<div class="pkhint">↻ Herrichten verschoben auf '+pkWd(pkHDay(p))+' (Dispo-Beginn '+pkWd(p.db)+')'+(h.why?' – '+esc(h.why):'')+(h.by?' · '+esc(String(nm(h.by)).split(" ")[0]):'')+'</div>');
+ const H=packh[p.id]||{};
+ if(H.reo&&H.reo.t&&!(H.fin&&H.fin.t))out.push('<div class="pkhint warn">↺ Wieder geöffnet – '+esc(H.reo.why||"Zusatz-Packschein")+' ('+fmt(H.reo.t).slice(0,6)+'), Zusatz noch herrichten</div>');
+ else if((p.zus||[]).length)out.push('<div class="pkhint">＋ '+(p.zus.length===1?'Zusatz-Packschein '+esc(p.zus[0].ps)+' angehängt':p.zus.length+' Zusatz-Packscheine angehängt')+'</div>');
  return out.join("")}
 function pkRow(p){const s=pkState(p),f=pkF(p).length;
  return '<div class="card pkr" data-pk="'+esc(p.id)+'"><div class="row" style="align-items:center"><b style="flex:1;min-width:0">'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(s.c?'<span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>':'')+'</div>'+
-  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div><div class="mute">'+(()=>{const g=pkProg(p);return g.fin?'Hergerichtet ✓ · ':g.d?g.d+' von '+g.n+' hergerichtet · ':''})()+pkPosN((p.pos||[]).length)+(f?' · <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div>'+pkHint(p)+'</div>'}
+  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div><div class="mute">'+(()=>{const g=pkProg(p);return g.fin?'Hergerichtet ✓ · ':g.d?g.d+' von '+g.n+' hergerichtet · ':''})()+pkPosN(pkPosAll(p).length)+((p.zus||[]).length?' · '+(p.zus.length===1?'1 Zusatz':p.zus.length+' Zusätze'):'')+(f?' · <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div>'+pkHint(p)+'</div>'}
 function packView(){$("#t").textContent="Packlisten";const G=pkGroups();
  const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
  const cur=sec("Überfällig",G.over)+sec("Noch nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
@@ -56,29 +59,45 @@ async function pkUpload(files){for(const f of files){let P;const b=$("#pkup");if
   try{P=await pkRead(f)}catch(e){console.warn("Packliste",e);if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}
    errBox(/Packliste|Auftragsnummer|Positionen/.test(String(e&&e.message))?"„"+f.name+"“ sieht nicht wie eine epirent-Packliste aus.":"Die PDF konnte nicht gelesen werden ("+String(e&&e.message||e).slice(0,80)+"). Bitte Internetverbindung prüfen und nochmal versuchen.");continue}
   if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}
-  const ok=await pkConfirm(P);if(!ok)continue;
-  const id=P.ps||("A"+pkDig(P.ord));
-  try{await db.doc("pack/"+id).set({...P,by:me,t:Date.now()});toast("Packliste gespeichert",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}}}
-function pkConfirm(P){return new Promise(res=>{const id=P.ps||("A"+pkDig(P.ord)),old=packs.find(x=>x.id===id),f=P.pos.filter(x=>x.f>0).length,o=document.createElement("div");o.className="ov";
- o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0;max-height:90vh;overflow:auto"><b>Packliste erkannt</b>'+
+  const id=P.ps||("A"+pkDig(P.ord)),main=pkMainFor(P,id);
+  const ok=await pkConfirm(P,main);if(!ok)continue;
+  if(ok==="zus"){try{const zus=(main.zus||[]).filter(z=>String(z.ps)!==String(P.ps)).concat([{ps:P.ps,ev:P.ev,t:Date.now(),by:me,pos:P.pos}]);
+    await db.doc("pack/"+main.id).update({zus});const H=packh[main.id]||{};
+    if(H.fin&&H.fin.t)await pkHSet(main,{fin:null,reo:{by:me,t:Date.now(),why:"Zusatz-Packschein "+P.ps}});
+    toast(H.fin&&H.fin.t?"Zusatz angehängt – Packliste wieder geöffnet":"Zusatz angehängt",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}continue}
+  const old=packs.find(x=>x.id===id);
+  try{await db.doc("pack/"+id).set({...P,zus:(old&&old.zus)||[],by:me,t:Date.now()});toast("Packliste gespeichert",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}}}
+/* Gibt es schon eine Packliste mit derselben Auftragsnummer (anderer Packschein)? -> Zusatz. Bereits angehängter Zusatz mit gleicher Nummer -> derselbe Haupt-Packschein */
+function pkMainFor(P,id){const o=pkDig(P.ord);if(!o||packs.some(x=>x.id===id))return null;
+ const z=packs.find(x=>(x.zus||[]).some(q=>String(q.ps)===String(P.ps)));if(z)return z;
+ return packs.filter(x=>pkDig(x.ord)===o).sort((a,b)=>(a.t||0)-(b.t||0))[0]||null}
+function pkConfirm(P,main){return new Promise(res=>{const id=P.ps||("A"+pkDig(P.ord)),old=packs.find(x=>x.id===id),f=P.pos.filter(x=>x.f>0).length,o=document.createElement("div");o.className="ov";
+ const mf=main&&(packh[main.id]||{}).fin,again=main&&(main.zus||[]).some(q=>String(q.ps)===String(P.ps));
+ o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0;max-height:90vh;overflow:auto"><b>'+(main?'Zusatz-Packschein erkannt':'Packliste erkannt')+'</b>'+
   '<div class="pkkv"><span>Veranstaltung</span><b>'+esc(P.ev||"–")+'</b><span>Auftrag</span><b>'+esc(P.ord||"–")+'</b><span>Packschein</span><b>'+esc(P.ps||"–")+'</b><span>Projektleiter</span><b>'+esc(P.pl||"–")+'</b><span>Dispo Beginn</span><b>'+pkD(P.db)+'</b><span>Dispo Ende</span><b>'+pkD(P.de)+'</b></div>'+
   '<p style="margin:8px 0">'+pkPosN(P.pos.length)+(f?', davon <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</p>'+
   (old?'<p class="pkold">Diese Packliste ist schon da (hochgeladen '+fmt(old.t)+' von '+esc(nm(old.by))+'). Beim Speichern wird sie ersetzt.</p>':'')+
-  '<div class="row"><button class="btn ghost" id="pkcn">Abbrechen</button><button class="btn" id="pkok">'+(old?'Ersetzen':'Speichern')+'</button></div></div>';
- document.body.appendChild(o);o.querySelector("#pkcn").onclick=()=>{o.remove();res(false)};o.querySelector("#pkok").onclick=()=>{o.remove();res(true)}})}
+  (main?'<p class="pkzinfo">Zum Auftrag '+esc(P.ord)+' gibt es schon die Packliste <b>'+esc(main.ev||"")+'</b> (Packschein '+esc(main.ps||main.id)+'). '+(again?'Dieser Zusatz ist dort schon angehängt und wird ersetzt. ':'Der Zusatz wird unten angehängt. ')+'Die Dispo-Zeiten bleiben die vom ersten Packschein.'+(mf&&mf.t?' <b>Die Packliste ist schon hergerichtet und wird wieder geöffnet.</b>':'')+'</p>':'')+
+  (main?'<button class="btn" id="pkzok" type="button">Als Zusatz anhängen</button><div style="height:8px"></div><div class="row"><button class="btn ghost" id="pkcn">Abbrechen</button><button class="btn ghost" id="pkok">Als eigene Packliste</button></div></div>'
+   :'<div class="row"><button class="btn ghost" id="pkcn">Abbrechen</button><button class="btn" id="pkok">'+(old?'Ersetzen':'Speichern')+'</button></div></div>');
+ document.body.appendChild(o);o.querySelector("#pkcn").onclick=()=>{o.remove();res(false)};o.querySelector("#pkok").onclick=()=>{o.remove();res(true)};if(o.querySelector("#pkzok"))o.querySelector("#pkzok").onclick=()=>{o.remove();res("zus")}})}
 /* ===== Herrichten (ab 1.58) =====
    Stand pro Packliste in docs 'packh' (id = Packlisten-id), damit jeder mit "Packlisten – Sehen" herrichten kann.
    Pro Position ein eigenes Feld h_<Pos> = {ok, q (vorhanden), alt:[{n,t,a}], fm ("lager"|"miete"), by, t} -> doc_update führt Felder zusammen,
    mehrere Kollegen können gleichzeitig an verschiedenen Positionen arbeiten. fin = {by,t} wenn abgeschlossen, info = {by,t} wenn PL-Info verschickt. */
 let packh={},pkHf="alle";
-function pkKeys(P){const seen={};return (P.pos||[]).map((x,i)=>{let k="h_"+String(x.p||i).replace(/[^0-9A-Za-z]/g,"_");if(seen[k])k+="_"+i;seen[k]=1;return k})}
+/* Alle Positionen: Haupt-Packschein, dann angehängte Zusatz-Packscheine (P.zus = [{ps, ev, t, by, pos}]); Zusatz-Schlüssel h_z<ps>_<Pos> */
+function pkItems(P){const seen={},out=[];const add=(x,i,pre,zps)=>{let k="h_"+pre+String(x.p||i).replace(/[^0-9A-Za-z]/g,"_");if(seen[k])k+="_"+i;seen[k]=1;out.push({x,k,z:zps})};
+ (P.pos||[]).forEach((x,i)=>add(x,i,"",null));(P.zus||[]).forEach(z=>(z.pos||[]).forEach((x,i)=>add(x,i,"z"+String(z.ps||"").replace(/[^0-9A-Za-z]/g,"")+"_",String(z.ps||""))));return out}
+const pkKeys=P=>pkItems(P).map(o=>o.k);
+const pkPosAll=P=>pkItems(P).map(o=>o.x);
 const pkH=P=>packh[P.id]||{};
 const pkNeed=(x,h)=>Math.max(0,(+x.n||0)-(h&&h.fm==="miete"?(+x.f||0):0));
 function pkPS(x,h){const need=pkNeed(x,h);if(!h)return{s:"open",need,alt:[]};const alt=h.alt||[];
  if(h.ok)return{s:"ok",q:need,need,alt};const q=typeof h.q==="number"?h.q:null;
  if(q!==null||alt.length)return{s:q!==null&&q>=need?"ok":"part",q:q===null?0:q,need,alt};return{s:"open",need,alt}}
-function pkProg(P){const H=pkH(P),K=pkKeys(P);let d=0,dev=0;(P.pos||[]).forEach((x,i)=>{const h=H[K[i]],st=pkPS(x,h);if(st.s!=="open")d++;if(st.s==="part"||st.alt.length||(h&&h.fm==="lager"&&x.f>0))dev++});
- return{d,n:(P.pos||[]).length,dev,fin:!!(H.fin&&H.fin.t),H}}
+function pkProg(P){const H=pkH(P),K=pkKeys(P);let d=0,dev=0;pkPosAll(P).forEach((x,i)=>{const h=H[K[i]],st=pkPS(x,h);if(st.s!=="open")d++;if(st.s==="part"||st.alt.length||(h&&h.fm==="lager"&&x.f>0))dev++});
+ return{d,n:pkPosAll(P).length,dev,fin:!!(H.fin&&H.fin.t),H}}
 async function pkHSet(P,patch){try{if(!packh[P.id])await db.doc("packh/"+P.id).set({c:Date.now()});await db.doc("packh/"+P.id).update(patch)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}
 /* Anzeigename: wie in der Artikelliste (über die Artikelnummer), sonst wie im Packschein */
 function pkKat(x){const c=typeof artCode==="function"?artCode(x&&x.a):"";if(!c||typeof rkat==="undefined"||!Array.isArray(rkat))return null;return rkat.find(a=>artCode(a.nr)===c)||null}
@@ -90,14 +109,14 @@ function pkRanks(){if(typeof rkat==="undefined"||!Array.isArray(rkat))return{};i
  const rw=a=>typeof alRow==="function"?alRow(a):(+a.o||0)%100000,L=rkat.slice().sort((a,b)=>rw(a)-rw(b)||String(a.name).localeCompare(b.name,"de",{numeric:true})),G=[];
  L.forEach(a=>{let g=G.find(x=>x.g===a.g);if(!g)G.push(g={g:a.g,subs:[]});let u=g.subs.find(x=>x.u===(a.u||""));if(!u)g.subs.push(u={u:a.u||"",items:[]});u.items.push(a)});
  const R={};let n=0;G.forEach(g=>g.subs.forEach(u=>u.items.forEach(a=>{const c=artCode(a.nr);if(c&&!(c in R))R[c]=n;n++})));pkRkRef=rkat;pkRkLen=rkat.length;pkRank=R;return R}
-function pkSortIdx(P){const R=pkRanks(),big=1e9;return (P.pos||[]).map((x,i)=>{const c=artCode(x.a);return{i,r:c&&c in R?R[c]:big}}).sort((a,b)=>a.r-b.r||a.i-b.i).map(o=>o.i)}
+function pkSortIdx(P){const R=pkRanks(),big=1e9,I=pkItems(P),zo=[null].concat((P.zus||[]).map(z=>String(z.ps||"")));return I.map((o,i)=>{const c=artCode(o.x.a);return{i,zi:zo.indexOf(o.z),r:c&&c in R?R[c]:big}}).sort((a,b)=>a.zi-b.zi||a.r-b.r||a.i-b.i).map(o=>o.i)}
 const pkNum=v=>String(v).replace(".",",");
 const pkFmTxt=(x,h)=>!(x.f>0)?"":h&&h.fm==="miete"?pkNum(x.f)+" werden zugemietet → "+pkNum(pkNeed(x,h))+" aus dem Lager":h&&h.fm==="lager"?"Aus dem Lager statt Fremdmiete ("+pkNum(x.f)+")":pkNum(x.f)+" Fremdmiete – antippen zum Klären";
 function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack";return packView()}
  const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&document.querySelector(".ov"))return;
  $("#t").textContent="Packliste";const s=pkState(p),R=pkRets(p),pr=pkProg(p),H=pr.H,K=pkKeys(p),fin=pr.fin;
  const pct=pr.n?Math.round(pr.d*100/pr.n):0;
- const rows=pkSortIdx(p).map(i=>{const x=p.pos[i],h=H[K[i]],st=pkPS(x,h);return{x,i,h,st}}).filter(r=>pkHf==="alle"||r.st.s!=="ok");
+ const IT=pkItems(p),rows=pkSortIdx(p).map(i=>{const x=IT[i].x,h=H[K[i]],st=pkPS(x,h);return{x,i,h,st,z:IT[i].z}}).filter(r=>pkHf==="alle"||r.st.s!=="ok");
  $("#app").innerHTML='<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;min-width:0;font-size:18px">'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span></div>'+
   '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+
   '<div class="pkhday"><span>Herrichten: <b>'+pkWd(pkHDay(p))+'</b>'+(pkShifted(p)?' <span class="mute">(verschoben)</span>':'')+'</span>'+(fin?'':'<button class="btn ghost s" id="pkmv" type="button">Verschieben</button>')+'</div>'+pkHint(p)+
@@ -106,8 +125,10 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
   '<div class="card pkprog'+(fin?' fin':'')+'" style="cursor:default"><div class="row" style="align-items:baseline"><b style="flex:1;font-size:17px">'+(fin?'Hergerichtet':pr.d+' von '+pr.n+' Positionen')+'</b>'+(pr.dev?'<span class="pkdev">'+pr.dev+' mit Abweichung</span>':'')+'</div>'+
   '<div class="pkbar"><i style="width:'+pct+'%"></i></div>'+(fin?'<div class="mute" style="margin-top:6px">von '+esc(nm(H.fin.by))+', '+fmt(H.fin.t)+(H.info&&H.info.t?' · Info an Projektleiter '+fmt(H.info.t):'')+'</div>':'')+'</div>'+
   chips([["alle","Alle"],["offen","Noch offen"]],pkHf,"data-pkhf")+
-  '<div class="card pkl" style="cursor:default">'+(rows.length?rows.map(({x,i,h,st},ri)=>{const fm=pkFmTxt(x,h),gl=pkGrp(x),gh=ri===0||pkGrp(rows[ri-1].x)!==gl?'<div class="pkg">'+esc(gl)+'</div>':'';
-   return gh+'<div class="pkp pk-'+st.s+'"><button class="pkc" type="button" data-pc="'+i+'" aria-label="Abhaken"'+(fin?' disabled':'')+'>'+(st.s==="ok"?'✓':st.s==="part"?'!':'')+'</button>'+
+  '<div class="card pkl" style="cursor:default">'+(rows.length?rows.map(({x,i,h,st,z},ri)=>{const fm=pkFmTxt(x,h),gl=pkGrp(x),newZ=z&&(ri===0||rows[ri-1].z!==z),zd=newZ?(p.zus||[]).find(q=>String(q.ps)===z):null,
+    zh=newZ?'<div class="pkzh"><span>Zusatz-Packschein '+esc(z)+(zd&&zd.t?' · '+fmt(zd.t).slice(0,6):'')+'</span>'+(can("pk_l")?'<button class="lnk" type="button" data-pkzx="'+esc(z)+'">Entfernen</button>':'')+'</div>':'',
+    gh=newZ||ri===0||pkGrp(rows[ri-1].x)!==gl||rows[ri-1].z!==z?'<div class="pkg">'+esc(gl)+'</div>':'';
+   return zh+gh+'<div class="pkp pk-'+st.s+'"><button class="pkc" type="button" data-pc="'+i+'" aria-label="Abhaken"'+(fin?' disabled':'')+'>'+(st.s==="ok"?'✓':st.s==="part"?'!':'')+'</button>'+
    '<span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+
    (fm?'<em class="'+(h&&h.fm?'pkfm':'pkfr')+'">'+esc(fm)+'</em>':'')+
    (st.s==="part"?'<em class="pkpart">'+pkNum(st.q)+' von '+pkNum(st.need)+' da – fehlen '+pkNum(st.need-st.q)+'</em>':'')+
@@ -121,6 +142,7 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
  document.querySelectorAll("[data-pe]").forEach(b=>b.onclick=()=>{if(fin)return toast("Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkEdit(p,+b.dataset.pe)});
  if($("#pkfin"))$("#pkfin").onclick=()=>pkFinish(p);
  if($("#pkmv"))$("#pkmv").onclick=()=>pkMove(p);
+ document.querySelectorAll("[data-pkzx]").forEach(b=>b.onclick=()=>ask("Zusatz-Packschein "+b.dataset.pkzx+" wirklich entfernen?",async()=>{try{const rest=(p.zus||[]).filter(z=>String(z.ps)!==b.dataset.pkzx);await db.doc("pack/"+p.id).update({zus:rest});if(!rest.length&&(packh[p.id]||{}).reo)await pkHSet(p,{reo:null});toast("Zusatz entfernt",1)}catch(e){errBox("Entfernen fehlgeschlagen. Hast du das Recht dazu?")}}));
  if($("#pkreo"))$("#pkreo").onclick=()=>ask("Herrichten wieder öffnen?",()=>pkHSet(p,{fin:null}));
  if($("#pkinfo"))$("#pkinfo").onclick=()=>pkMail(p);
  if($("#pkdel"))$("#pkdel").onclick=()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
@@ -140,7 +162,7 @@ function pkMove(P){const h=pkHd(P),o=document.createElement("div");o.className="
   if(d===dbd)return pkHSet(P,{hd:null}).then(()=>toast("Herrichten am Dispo-Beginn",1));
   pkHSet(P,{hd:{d,why:g("pmvw").value.trim(),by:me,t:Date.now()}}).then(()=>toast("Herrichten verschoben auf "+pkWd(pkFromYmd(d)),1))}}
 /* Kreis antippen: offen -> komplett; komplett (ohne Alternative) -> wieder offen; sonst Bearbeiten. Fremdmiete ungeklärt -> zuerst fragen */
-function pkTap(P,i){const x=P.pos[i],k=pkKeys(P)[i],h=pkH(P)[k],st=pkPS(x,h);if(pkProg(P).fin)return;
+function pkTap(P,i){const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k],st=pkPS(x,h);if(pkProg(P).fin)return;
  const put=fm=>pkHSet(P,{[k]:{ok:true,q:null,alt:(h&&h.alt)||[],fm:fm||(h&&h.fm)||"",by:me,t:Date.now()}});
  if(x.f>0&&!(h&&h.fm))return pkFmAsk(x,fm=>put(fm));
  if(st.s==="open")return put();
@@ -151,7 +173,7 @@ function pkFmAsk(x,cb){const o=document.createElement("div");o.className="ov";
   '<button class="btn" id="fml" type="button">Aus dem Lager<br><small style="font-weight:400">alle '+pkNum(x.n)+' kommen von uns</small></button><div style="height:8px"></div><button class="btn" id="fmm" type="button">Wird zugemietet<br><small style="font-weight:400">nur '+pkNum(Math.max(0,x.n-x.f))+' aus dem Lager</small></button><div style="height:8px"></div><button class="btn ghost" id="fmx" type="button">Abbrechen</button></div>';
  document.body.appendChild(o);o.querySelector("#fml").onclick=()=>{o.remove();cb("lager")};o.querySelector("#fmm").onclick=()=>{o.remove();cb("miete")};o.querySelector("#fmx").onclick=()=>o.remove()}
 /* Menge, Alternative, Fremdmiete bearbeiten */
-function pkEdit(P,i){const x=P.pos[i],k=pkKeys(P)[i],h=pkH(P)[k]||{};let fm=h.fm||"",alt=(h.alt||[]).map(a=>({...a})),pick=null;
+function pkEdit(P,i){const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k]||{};let fm=h.fm||"",alt=(h.alt||[]).map(a=>({...a})),pick=null;
  const o=document.createElement("div");o.className="ov";
  const need=()=>pkNeed(x,{fm});
  o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0;max-height:92vh;overflow:auto"><b style="font-size:17px">'+esc(pkName(x))+'</b>'+(x.a?' <span class="mute">'+esc(x.a)+'</span>':'')+(pkName(x)!==x.t?'<div class="mute" style="font-size:13px">Im Packschein: '+esc(x.t)+'</div>':'')+
@@ -187,10 +209,10 @@ function pkEdit(P,i){const x=P.pos[i],k=pkKeys(P)[i],h=pkH(P)[k]||{};let fm=h.fm
   pkHSet(P,{[k]:{ok:q!==null&&q>=need()&&!alt.length,q,alt,fm,by:me,t:Date.now()}})}}
 /* Abschließen + Info an Projektleiter */
 function pkFinish(P){const pr=pkProg(P),open=pr.n-pr.d;
- const go2=()=>pkHSet(P,{fin:{by:me,t:Date.now()}}).then(()=>{toast("Herrichten abgeschlossen",1);const pp=pkProg(P);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(P.pl||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P))});
+ const go2=()=>pkHSet(P,{fin:{by:me,t:Date.now()},reo:null}).then(()=>{toast("Herrichten abgeschlossen",1);const pp=pkProg(P);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(P.pl||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P))});
  if(open>0)ask("Noch "+open+(open===1?" Position ist":" Positionen sind")+" nicht hergerichtet. Trotzdem abschließen?",go2);else go2()}
-function pkMailText(P){const H=pkH(P),K=pkKeys(P),L=[];
- (P.pos||[]).forEach((x,i)=>{const h=H[K[i]],st=pkPS(x,h),nm2=x.t+(x.a?" ("+x.a+")":""),u=x.u?" "+x.u:"";
+function pkMailText(P){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[];
+ pkPosAll(P).forEach((x,i)=>{const h=H[K[i]],st=pkPS(x,h),nm2=x.t+(x.a?" ("+x.a+")":"")+(IT[i].z?" [Zusatz "+IT[i].z+"]":""),u=x.u?" "+x.u:"";
   if(st.s==="open")L.push("- "+nm2+": nicht hergerichtet (laut Packliste "+pkNum(st.need)+u+")");
   else if(st.s==="part")L.push("- "+nm2+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q));
   if(st.alt.length)st.alt.forEach(a=>L.push((st.s==="part"||st.s==="open"?"  ":"- "+nm2+":\n  ")+"Alternative: "+pkNum(a.n)+"× "+a.t+(a.a?" ("+a.a+")":"")));
