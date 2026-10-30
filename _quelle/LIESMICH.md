@@ -104,3 +104,10 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.74
 - Kachel auf der Hauptseite heißt „Material vor Ort erfassen“ statt „Materialliste erstellen“ (Jürgens Wahl, Variante 1: nur der Knopf). Der Begriff „Materialliste“ bleibt überall sonst (Überschriften, Recht, Meldungen, Assistent). Umsetzung als `rep` am Ende von build.py.
+
+## Version 1.75 – Hauptseite sortieren
+- `home.js` (von build.py nach jvfrag.js angehängt). Reihenfolge der Kacheln: eigene (docs `hord`, id = Benutzer-ID, {o:[…],t}) → Vorgabe vom Titel (`titel.ho`) → Vorschlag nach Titelname (`hoDefFor`: „Werkstatt“ → W, „Monteur“/„Projektleiter“ → M, sonst Lager L). Kachel-Schlüssel: jarvis, pack, ret, infonew, defnew, new.
+- `homeSort()` sortiert nach dem Aufbau von startView die Kinder von `.hgrid` (rep in build.py). Rechte blenden wie bisher aus; „Lager Übersicht“ ist jetzt auch sortierbar.
+- Titel: in „Titel und ihre Rechte“ unter den Häkchen „Reihenfolge auf der Hauptseite“ mit ↑/↓ (`hoTitleBlock`/`hoTitleBind`), „Vorschlag wiederherstellen“ setzt `ho` auf null.
+- Einstellungen: Abschnitt „Hauptseite“ (`hoMineBlock`/`hoMineBind`), „Zurück zur Reihenfolge vom Titel“ löscht `hord/<id>`. Lager-Tablet: gilt für das Tablet-Konto.
+- Kein SQL nötig (`hord` fällt unter die Standardregel). Test `tests/home_t.js`.

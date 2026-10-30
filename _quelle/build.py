@@ -1,6 +1,6 @@
 import re,json
 s=open("/home/claude/lager_app.html",encoding="utf-8").read()
-shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/tablet.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvask.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvfrag.js",encoding="utf-8").read()
+shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/tablet.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvask.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvfrag.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/home.js",encoding="utf-8").read()
 def rep(a,b,c=1):
     global s
     n=s.count(a); assert n==c,(a[:80],n); s=s.replace(a,b)
@@ -117,6 +117,10 @@ s=s.replace('$("#who").textContent=names[me]||"";','tabHead();')
 print("Tablet: Schreibstellen",_n0,"Anzeigestellen",_n1)
 # 1.74: Kachel auf der Hauptseite heißt „Material vor Ort erfassen“ (Begriff „Materialliste“ bleibt sonst überall)
 rep("'Materialliste erstellen',ol+","'Material vor Ort erfassen',ol+")
+# 1.75: Hauptseite nach Titel / eigener Wahl sortieren (home.js)
+rep('''Version '+APPV+'</div>';\n document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const v=b.dataset.g;if(v==="defnew")dpho=null;''','''Version '+APPV+'</div>';homeSort();\n document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const v=b.dataset.g;if(v==="defnew")dpho=null;''')
+rep(''''<h3 style="margin:18px 0 4px">App</h3>''','''hoMineBlock()+'<h3 style="margin:18px 0 4px">App</h3>''')
+rep('prefBind();sndBind();$("#upd")','prefBind();sndBind();hoMineBind();$("#upd")')
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},

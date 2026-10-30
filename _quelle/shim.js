@@ -1,4 +1,4 @@
-const APPV="1.74";
+const APPV="1.75";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -641,7 +641,7 @@ const rightsReady=()=>Object.keys(TIT).length>0;
 /* Materialliste-Recht: solange noch kein Titel mat_* hat (Datenbank-Update fehlt), gilt wie früher Defekte-Bearbeiten fürs Abschließen */
 const matReady=()=>Object.values(TIT).some(t=>t.r&&(t.r.mat_b||t.r.mat_l))||Object.values(ROL).some(x=>x.x&&(x.x.mat_b||x.x.mat_l));
 function can(k){if(owner)return true;if(k.startsWith("mat_")&&!matReady())return k==="mat_b"&&can("def_b");if(!rightsReady()){if(k.startsWith("def_"))return k!=="def_l"&&!!werk[me];if(k.startsWith("ret_"))return !!lagr[me];return false}return !!uRights(me)[k]}
-function rightsSub(){packSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
+function rightsSub(){packSub();if(typeof hoSub==="function")hoSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
 function rightsChanged(){const k=JSON.stringify(uRights(me));if(rkLast!==null&&k!==rkLast&&!owner)DBX.reloadAll();rkLast=k;draw();tabCheck()}
 const titList=()=>Object.keys(TIT).map(id=>({id,...TIT[id]})).sort((a,b)=>(a.o||0)-(b.o||0)||String(a.name).localeCompare(String(b.name),"de"));
 /* Retourschein: Knöpfe ohne Recht ausblenden */
@@ -667,7 +667,7 @@ function rightsBlock(){if(!rightsReady()){$("#app").insertAdjacentHTML("beforeen
    (adm?'':'<details class="rxd" data-xu="'+p.id+'"'+(rxOpen.has(p.id)?' open':'')+'><summary>Extra-Rechte'+(nx?' <span class="rxn">'+nx+'</span>':'')+'</summary><div data-xbox="'+p.id+'">'+rMx(xr,t?rNormR(t.r):{},'data-xc="'+p.id+'"')+'</div><p class="mute" style="font-size:12px;margin:6px 0 0">Grau = kommt schon vom Titel'+(t?' „'+esc(t.name)+'“':'')+'.</p></details>')+
    '<div class="tabopt"><label><input type="checkbox" data-tl="'+p.id+'"'+(x.tl===true?' checked':'')+'> am Lager-Tablet <small>(Namenskachel)</small></label>'+(adm?'':'<label><input type="checkbox" data-tab="'+p.id+'"'+(x.tab===true?' checked':'')+'> Gemeinsames Gerät (Lager-Tablet) <small>fragt beim Start, wer arbeitet</small></label>')+'</div></div>'}).join("")+
   '<h3 style="margin:22px 0 4px">Titel und ihre Rechte</h3><p class="mute" style="margin:0 0 8px">Titel antippen, um seine Rechte zu ändern. Gilt sofort für alle mit diesem Titel. Materiallisten erstellen und scannen, eigene Defekte melden und Infos ans Lager schicken darf jeder.</p>'+
-  T.map(t=>{const n=Object.values(ROL).filter(x=>x.t===t.id).length;return '<details class="card ttl tdet" data-tbox="'+esc(t.id)+'"'+(tOpen.has(t.id)?' open':'')+'><summary><div class="fl"><b style="font-size:17px">'+esc(t.name)+'</b><span class="mute" style="font-size:13px;white-space:nowrap">'+(n===1?"1 Person":n+" Personen")+'</span></div><div class="mute tsum">'+esc(rSum(t.r))+'</div></summary>'+rMx(rNormR(t.r),{},'data-tc="'+esc(t.id)+'"')+'<div class="ubt" style="margin-top:10px"><button class="btn ghost s" data-tren="'+esc(t.id)+'">Umbenennen</button><button class="btn ghost s" data-tdel="'+esc(t.id)+'" style="color:var(--bad)">Titel löschen</button></div></details>'}).join("")+
+  T.map(t=>{const n=Object.values(ROL).filter(x=>x.t===t.id).length;return '<details class="card ttl tdet" data-tbox="'+esc(t.id)+'"'+(tOpen.has(t.id)?' open':'')+'><summary><div class="fl"><b style="font-size:17px">'+esc(t.name)+'</b><span class="mute" style="font-size:13px;white-space:nowrap">'+(n===1?"1 Person":n+" Personen")+'</span></div><div class="mute tsum">'+esc(rSum(t.r))+'</div></summary>'+rMx(rNormR(t.r),{},'data-tc="'+esc(t.id)+'"')+hoTitleBlock(t)+'<div class="ubt" style="margin-top:10px"><button class="btn ghost s" data-tren="'+esc(t.id)+'">Umbenennen</button><button class="btn ghost s" data-tdel="'+esc(t.id)+'" style="color:var(--bad)">Titel löschen</button></div></details>'}).join("")+
   '<button class="mbtn" id="tnew" type="button">+ Neuer Titel</button>');
  document.querySelectorAll("[data-ut]").forEach(sel=>sel.onchange=()=>{const id=sel.dataset.ut,v=sel.value;rSave(()=>ROL[id]?db.doc("rolle/"+id).update({t:v}):db.doc("rolle/"+id).set({t:v,x:{}}),"Titel gespeichert")});
  document.querySelectorAll("details[data-xu]").forEach(d=>d.ontoggle=()=>{d.open?rxOpen.add(d.dataset.xu):rxOpen.delete(d.dataset.xu)});
@@ -678,6 +678,7 @@ function rightsBlock(){if(!rightsReady()){$("#app").insertAdjacentHTML("beforeen
  document.querySelectorAll("[data-tren]").forEach(b=>b.onclick=()=>{const id=b.dataset.tren;tDlg("Titel umbenennen",TIT[id]&&TIT[id].name,v=>rSave(()=>db.doc("titel/"+id).update({name:v})))});
  document.querySelectorAll("[data-tdel]").forEach(b=>b.onclick=()=>{const id=b.dataset.tdel,t=TIT[id];if(!t)return;const us=Object.keys(ROL).filter(u=>ROL[u].t===id);
   ask("Titel „"+t.name+"“ löschen?"+(us.length?" "+us.length+(us.length===1?" Person verliert":" Personen verlieren")+" damit den Titel und seine Rechte.":""),()=>rSave(async()=>{for(const u of us)await db.doc("rolle/"+u).update({t:""});await db.doc("titel/"+id).delete()},"Titel gelöscht"))});
+ hoTitleBind();
  $("#tnew").onclick=()=>tDlg("Neuer Titel","",v=>{const o=Math.max(0,...titList().map(t=>t.o||0))+1,id="t"+Date.now().toString(36);tOpen.add(id);rSave(()=>db.doc("titel/"+id).set({name:v,o,r:{}}),"Titel angelegt")})}
 
 /* Berechtigungen pro Benutzer zum Abhaken */
