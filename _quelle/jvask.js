@@ -14,13 +14,24 @@ function jvAskHtml(){return '<div class="jvask"><div class="jvaskrow">'+
 function jvAskBind(){const q=$("#jvaq"),go=()=>{const v=q.value.trim();if(v)jvAsk(v)};$("#jvgo").onclick=go;q.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();go()}};
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition,mb=$("#jvmic");if(SR&&mb){mb.hidden=false;mb.onclick=()=>jvListen(SR)}
  if(jvLast)jvShow(jvLast,false)}
-function jvListen(SR){if(jvRecOn){try{jvRec.stop()}catch(e){}return}jvStop();
- try{jvRec=new SR();jvRec.lang="de-AT";jvRec.interimResults=true;jvRec.maxAlternatives=1}catch(e){return toast("Spracherkennung geht auf diesem Gerät nicht. Bitte tippen.")}
- const mb=$("#jvmic"),q=$("#jvaq");jvRecOn=true;if(mb)mb.classList.add("on");if(q){q.value="";q.placeholder="Ich höre zu …"}
- jvRec.onresult=e=>{let t="";for(const r of e.results)t+=r[0].transcript;if(q)q.value=t;if(e.results[e.results.length-1].isFinal){jvRecOn=false;jvAsk(t)}};
- jvRec.onerror=e=>{jvRecOn=false;if(mb)mb.classList.remove("on");if(q)q.placeholder="Frag Jarvis …";if(e&&e.error==="not-allowed")toast("Bitte das Mikrofon für die App erlauben – oder die Frage eintippen.")};
- jvRec.onend=()=>{jvRecOn=false;if(mb)mb.classList.remove("on");if(q)q.placeholder="Frag Jarvis …"};
- try{jvRec.start()}catch(e){jvRecOn=false;if(mb)mb.classList.remove("on")}}
+/* Zuhören. iPhone/Safari gibt die Erkennung nach einem Ergebnis oft nicht frei (kein onend) -> eine zweite Frage ging erst nach
+   Neustart. Darum: alte Erkennung immer hart beenden (abort), nach dem Endergebnis selbst stoppen, Frage erst nach dem Ende
+   (oder spätestens nach 1,2 s) stellen, bei "läuft noch" einmal neu versuchen. */
+let jvRecTxt="",jvRecT=null;
+function jvRecUi(on){const mb=$("#jvmic"),q=$("#jvaq");if(mb)mb.classList.toggle("on",on);if(q)q.placeholder=on?"Ich höre zu …":"Frag Jarvis … z. B. „Hilfe“"}
+function jvRecKill(){const r=jvRec;jvRec=null;jvRecOn=false;clearTimeout(jvRecT);if(r){r.onresult=r.onerror=r.onend=null;try{r.abort()}catch(e){}}}
+function jvRecDone(){if(!jvRecOn&&!jvRecTxt)return;const t=jvRecTxt.trim();jvRecTxt="";jvRecKill();jvRecUi(false);if(t)setTimeout(()=>jvAsk(t),150)}
+function jvListen(SR,retry){if(jvRecOn){if(jvRecTxt)return jvRecDone();jvRecKill();jvRecUi(false);return}
+ jvStop();jvRecKill();let r;try{r=new SR();r.lang="de-AT";r.interimResults=true;r.continuous=false;r.maxAlternatives=1}catch(e){return toast("Spracherkennung geht auf diesem Gerät nicht. Bitte die Frage eintippen.")}
+ jvRec=r;jvRecTxt="";const q=$("#jvaq");if(q)q.value="";
+ r.onresult=e=>{if(jvRec!==r)return;let t="",fin=false;for(const x of e.results){t+=x[0].transcript;if(x.isFinal)fin=true}jvRecTxt=t;if(q)q.value=t;
+  if(fin){try{r.stop()}catch(x){}clearTimeout(jvRecT);jvRecT=setTimeout(jvRecDone,1200)}};
+ r.onerror=e=>{if(jvRec!==r)return;const er=e&&e.error;const t=jvRecTxt;jvRecKill();jvRecUi(false);if(t)return setTimeout(()=>jvAsk(t),150);
+  if(er==="not-allowed"||er==="service-not-allowed")toast("Bitte das Mikrofon für die App erlauben – oder die Frage eintippen.");
+  else if(er==="no-speech")toast("Ich habe nichts gehört. Nochmal aufs Mikrofon tippen.",1)};
+ r.onend=()=>{if(jvRec!==r)return;if(jvRecTxt)jvRecDone();else{jvRecKill();jvRecUi(false)}};
+ try{r.start();jvRecOn=true;jvRecUi(true);jvRecT=setTimeout(()=>{if(jvRec===r&&!jvRecTxt){jvRecKill();jvRecUi(false)}},12000)}
+ catch(e){jvRecKill();jvRecUi(false);if(!retry)setTimeout(()=>jvListen(SR,true),400);else toast("Das Mikrofon ist gerade belegt. Bitte kurz warten und nochmal tippen.",1)}}
 /* Antwort anzeigen + sprechen. A = {q, say:[Sätze], rows:[{l,r,pk?,ret?,cls?}], acts:[{l,fn}]} */
 function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;
  box.innerHTML='<div class="jvaq2">„'+esc(A.q)+'“</div><div class="jvat">'+A.say.map(esc).join(" ")+'</div>'+
