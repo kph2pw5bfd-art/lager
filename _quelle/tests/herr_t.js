@@ -16,6 +16,7 @@ const seed=[{col:"pack",id:"20260714",data:{ord:"260111401",ps:"20260714",ev:"Wi
  console.log("Version",await p.evaluate(()=>APPV));
  await p.click('[data-g="pack"]');await p.waitForTimeout(200);await p.click('[data-pk="20260714"]');await p.waitForTimeout(300);
  console.log("Start:",await prog());
+ console.log("Gruppen-Überschriften:",await p.evaluate(()=>[...document.querySelectorAll(".pkl .pkg, .pkl .pkp .pkt")].map(e=>e.classList.contains("pkg")?"["+e.textContent+"]":e.childNodes[0].textContent.trim()).join(" → ")));
  console.log("Namen (Artikelliste vor Packschein):",await p.evaluate(()=>[...document.querySelectorAll(".pkp .pkt")].map(e=>e.childNodes[0].textContent).join(" | ")));
  await p.click('[data-pe="2"]');await p.waitForTimeout(150);console.log("Dialog-Kopf:",await p.evaluate(()=>document.querySelector(".ov .card").innerText.split("\n").slice(0,3).join(" / ")));await p.click("#pex");await p.waitForTimeout(100);
  await p.click('[data-pc="0"]');await p.waitForTimeout(250);console.log("Pos 1 abgehakt:",await prog());
