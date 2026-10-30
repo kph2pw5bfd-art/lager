@@ -219,7 +219,7 @@ function pkMailText(P){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[];
   else if(st.s==="part")L.push("- "+nm2+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q));
   if(st.alt.length)st.alt.forEach(a=>L.push((st.s==="part"||st.s==="open"?"  ":"- "+nm2+":\n  ")+"Alternative: "+pkNum(a.n)+"× "+a.t+(a.a?" ("+a.a+")":"")));
   if(h&&h.fm==="lager"&&x.f>0)L.push("- "+nm2+": aus dem Lager statt Fremdmiete ("+pkNum(x.f)+u+")")});
- const vn=String(P.pl||"").split(" ")[0],me1=String(nm(me)||"");
+ const vn=String(P.pl||"").split(" ")[0],me1=String(meName()||"");
  return{subj:"Packliste "+(P.ord||"")+" – "+(P.ev||"")+": Abweichungen beim Herrichten",
   body:"Hallo"+(vn?" "+vn:"")+",\n\nbeim Herrichten von "+(P.ev||"")+" (Auftrag "+(P.ord||"–")+", Packschein "+(P.ps||"–")+") gab es folgende Abweichungen:\n\n"+(L.length?L.join("\n"):"- keine")+"\n\nHergerichtet von "+(H.fin&&H.fin.by?nm(H.fin.by):me1)+(H.fin&&H.fin.t?", "+fmt(H.fin.t):"")+".\n\nLG\n"+me1}}
 function pkMail(P){const m=pkMailText(P),o=document.createElement("div");o.className="ov";

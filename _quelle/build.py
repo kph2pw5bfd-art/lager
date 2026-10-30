@@ -1,6 +1,6 @@
 import re,json
 s=open("/home/claude/lager_app.html",encoding="utf-8").read()
-shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()
+shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/tablet.js",encoding="utf-8").read()
 def rep(a,b,c=1):
     global s
     n=s.count(a); assert n==c,(a[:80],n); s=s.replace(a,b)
@@ -106,6 +106,14 @@ exec(open("/home/claude/gh/splashpatch.py",encoding="utf-8").read())
 # boot
 rep('\ninit();\n</script>','\nboot();\n</script>')
 rep('<script>\nlet db,user,me,','<script>'+shim+'</script>\n<script>\nlet db,user,me,')
+# Lager-Tablet (ab 1.66): gewählten Namen mitschreiben und anzeigen
+import re as _re
+_n0=len(_re.findall(r'([{,])(by|mod|readBy|closedBy|doneBy|chkBy):me(?=[,}])',s))
+s=_re.sub(r'([{,])(by|mod|readBy|closedBy|doneBy|chkBy):me(?=[,}])',lambda m:m.group(1)+m.group(2)+':me,...tabAs("'+m.group(2)+'")',s)
+_n1=len(_re.findall(r'nm\(([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\.(by|mod|readBy|closedBy|doneBy|chkBy)\)',s))
+s=_re.sub(r'nm\(([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\.(by|mod|readBy|closedBy|doneBy|chkBy)\)',lambda m:'nmA('+m.group(1)+',"'+m.group(2)+'")',s)
+s=s.replace('$("#who").textContent=names[me]||"";','tabHead();')
+print("Tablet: Schreibstellen",_n0,"Anzeigestellen",_n1)
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},

@@ -1,4 +1,4 @@
-const APPV="1.65";
+const APPV="1.66";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -266,7 +266,7 @@ async function rlogRetXl(r,btn){const lbl=btn&&btn.textContent;try{const dl=awai
   let all=[],off=0;for(;;){const {data,error}=await SB.from("docs").select("id,data").eq("col","rlog").range(off,off+999);if(error)throw error;all=all.concat(data||[]);if(!data||data.length<1000)break;off+=1000}
   const rows=all.map(x=>x.data||{}).filter(x=>x.rid===r.id&&x.t!==undefined);
   if(!rows.length)return errBox("Für diesen Retourschein gibt es noch keine Protokoll-Einträge.");
-  const days={},who=[];rows.slice().sort((a,b)=>(a.t||0)-(b.t||0)).forEach(x=>{if(x.by&&!who.includes(x.by))who.push(x.by);const day=rlDay(x.t||0),D=days[day]=days[day]||{items:{},first:null,last:null};
+  const days={},who=[];rows.slice().sort((a,b)=>(a.t||0)-(b.t||0)).forEach(x=>{const wk=x.by_as?"as:"+x.by_as:x.by;if(wk&&!who.includes(wk))who.push(wk);const day=rlDay(x.t||0),D=days[day]=days[day]||{items:{},first:null,last:null};
    if(!x.nt){if(D.first===null||x.t<D.first)D.first=x.t;if(D.last===null||x.t>D.last)D.last=x.t}
    const key=String(x.k||x.nr||x.name),it=D.items[key]=D.items[key]||{nr:x.nr,name:x.name,g:x.g,q:0};it.q+=(+x.d||0);if(x.name)it.name=x.name;if(x.nr)it.nr=x.nr;if(x.g)it.g=x.g});
   if(!who.length&&r.by)who.push(r.by);
@@ -277,7 +277,7 @@ async function rlogRetXl(r,btn){const lbl=btn&&btn.textContent;try{const dl=awai
   const thin={style:"thin",color:{argb:"FFD5DBE5"}},bd={top:thin,left:thin,bottom:thin,right:thin},fill=h=>({type:"pattern",pattern:"solid",fgColor:{argb:h}});
   ws.mergeCells("A1:E1");const ti=ws.getCell("A1");ti.value="Protokoll Retourschein";ti.font={size:18,bold:true,color:{argb:NAVY}};ws.getRow(1).height=28;
   ws.mergeCells("A2:E2");ws.getCell("A2").value=String(r.ev||"")+(r.ord?" · Auftragsnummer "+r.ord:"");ws.getCell("A2").font={size:13,bold:true};
-  ws.mergeCells("A3:E3");ws.getCell("A3").value="Bearbeitet von: "+who.map(nm).join(", ");
+  ws.mergeCells("A3:E3");ws.getCell("A3").value="Bearbeitet von: "+who.map(k=>String(k).startsWith("as:")?k.slice(3)+" (Tablet)":nm(k)).join(", ");
   ws.mergeCells("A4:E4");ws.getCell("A4").value="Menge = pro Tag verrechnet (dazugezählt minus abgezogen). Uhrzeit = erster und letzter Eintrag des Tages. Erstellt "+fmt(Date.now());ws.getCell("A4").font={size:9,italic:true,color:{argb:"FF667385"}};
   const hr=ws.getRow(6);hr.values=["Datum","Artikelnr.","Artikel","Gruppe","Menge"];hr.height=22;hr.eachCell(c=>{c.fill=fill(NAVY);c.font={bold:true,color:{argb:"FFFFFFFF"}};c.alignment={vertical:"middle",horizontal:"left"};c.border=bd});hr.getCell(5).alignment={vertical:"middle",horizontal:"right"};
   let rw=6,tot=0;const gO=g=>g==="Zubehör"?2:g==="Manuell"?1:0;
@@ -298,7 +298,7 @@ async function rlogRetXl(r,btn){const lbl=btn&&btn.textContent;try{const dl=awai
 const JV_ICON='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-dasharray="5 2.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>';
 let jvPrev=null,jvSpeaking=false;
 function jvLS(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
-function jvGreet(){const h=new Date().getHours();return (h<11?"Guten Morgen":h<18?"Guten Tag":"Guten Abend")+", "+String(names[me]||"").split(" ")[0]}
+function jvGreet(){const h=new Date().getHours();return (h<11?"Guten Morgen":h<18?"Guten Tag":"Guten Abend")+", "+String(meName()).split(" ")[0]}
 function jvData(){const rs=can("ret_s");
  const open=!rs?[]:rets.filter(r=>!r.closed).sort((a,b)=>(b.modT||b.t||0)-(a.modT||a.t||0));
  const od=defs.filter(d=>!d.done).sort((a,b)=>(b.urg?1:0)-(a.urg?1:0)||b.t-a.t),urg=od.filter(d=>d.urg).length;
@@ -350,7 +350,7 @@ const jvStyle=()=>{const v=jvLS("tpc_jv_style");return v==="sachlich"||v==="frec
 const jvPick=a=>a[Math.floor(Math.random()*a.length)];
 const jvCap=s=>String(s).replace(/^./,c=>c.toUpperCase());
 function jvText(D){return jvStyle()==="sachlich"?jvTextSachlich(D):jvTextFrech(D)}
-function jvHiFrech(){const h=new Date().getHours(),n=String(names[me]||"").split(" ")[0];
+function jvHiFrech(){const h=new Date().getHours(),n=String(meName()).split(" ")[0];
  const hi=jvPick(["Servus"+(n?" "+n:""),(h<11?"Guten Morgen":h<18?"Guten Tag":"Guten Abend")+(n?", "+n:"")]);
  const q=["Das Lager hat dich vermisst. Ich nicht so sehr, aber das Lager schon.","Schön, dass du da bist. Dann schauen wir mal, was heute so los ist."];
  if(h<11)q.push("Kaffee schon da? Gut, dann fangen wir an.","Kaffee schon da? Gut, dann fangen wir an.");
@@ -476,7 +476,7 @@ async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="
 /* Betreff und Text für den Mailversand */
 function rMailSubj(r){return "Retourschein "+r.ev+(r.ord?" – Auftragsnummer "+r.ord:"")}
 function rMailBody(r){const it=rIt(r),n=Object.keys(it).length,st=r.closed?"Abgeschlossen":"In Bearbeitung";
- return "Hallo,\n\nanbei der Retourschein für folgende Veranstaltung:\n\nVeranstaltung: "+r.ev+"\nAuftragsnummer: "+(r.ord||"–")+"\nStatus: "+st+"\nPositionen: "+n+" ("+rTot(it)+" Stück)"+(r.rem?"\nBemerkungen: "+r.rem:"")+"\n\nDie vollständige Liste ist als Excel-Datei im Anhang.\n\nLiebe Grüße\n"+(names[me]||"")}
+ return "Hallo,\n\nanbei der Retourschein für folgende Veranstaltung:\n\nVeranstaltung: "+r.ev+"\nAuftragsnummer: "+(r.ord||"–")+"\nStatus: "+st+"\nPositionen: "+n+" ("+rTot(it)+" Stück)"+(r.rem?"\nBemerkungen: "+r.rem:"")+"\n\nDie vollständige Liste ist als Excel-Datei im Anhang.\n\nLiebe Grüße\n"+meName()}
 
 /* Versand per Mail vermerken */
 const RTO="tpc_mail_empf";
@@ -634,7 +634,7 @@ const rightsReady=()=>Object.keys(TIT).length>0;
 const matReady=()=>Object.values(TIT).some(t=>t.r&&(t.r.mat_b||t.r.mat_l))||Object.values(ROL).some(x=>x.x&&(x.x.mat_b||x.x.mat_l));
 function can(k){if(owner)return true;if(k.startsWith("mat_")&&!matReady())return k==="mat_b"&&can("def_b");if(!rightsReady()){if(k.startsWith("def_"))return k!=="def_l"&&!!werk[me];if(k.startsWith("ret_"))return !!lagr[me];return false}return !!uRights(me)[k]}
 function rightsSub(){packSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
-function rightsChanged(){const k=JSON.stringify(uRights(me));if(rkLast!==null&&k!==rkLast&&!owner)DBX.reloadAll();rkLast=k;draw()}
+function rightsChanged(){const k=JSON.stringify(uRights(me));if(rkLast!==null&&k!==rkLast&&!owner)DBX.reloadAll();rkLast=k;draw();tabCheck()}
 const titList=()=>Object.keys(TIT).map(id=>({id,...TIT[id]})).sort((a,b)=>(a.o||0)-(b.o||0)||String(a.name).localeCompare(String(b.name),"de"));
 /* Retourschein: Knöpfe ohne Recht ausblenden */
 function rLock(){if(!can("ret_b"))document.querySelectorAll('#radd,#red,#rclose,#rreo,#rhed,#rphadd,#rmail,#rscan,[data-rv="new"],.rph .thx').forEach(e=>e.remove());if(!can("ret_l")){const d=$("#rdel");if(d)d.remove()}}
@@ -656,13 +656,15 @@ function rightsBlock(){if(!rightsReady()){$("#app").insertAdjacentHTML("beforeen
  $("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Titel der Benutzer</h3><p class="mute" style="margin:0 0 8px">Der Titel bestimmt die Rechte. Unter „Extra-Rechte“ kannst du einer Person zusätzlich etwas erlauben. Administratoren dürfen immer alles.</p>'+
   U.map(p=>{const x=ROL[p.id]||{},adm=p.role==="admin",t=TIT[x.t],xr=rNormR(x.x),nx=Object.keys(xr).length;
    return '<div class="card ttl"><div class="fl" style="flex-wrap:wrap"><div style="min-width:0;flex:1"><b>'+esc(p.name||"Ohne Namen")+'</b>'+(p.id===me?' <span class="mute">(du)</span>':'')+(adm?' <span class="tag">Admin</span>':'')+'</div>'+(adm?'<span class="mute" style="font-size:14px">darf immer alles</span>':'<select class="tsel" data-ut="'+p.id+'">'+opt(x.t||"")+'</select>')+'</div>'+
-   (adm?'':'<details class="rxd" data-xu="'+p.id+'"'+(rxOpen.has(p.id)?' open':'')+'><summary>Extra-Rechte'+(nx?' <span class="rxn">'+nx+'</span>':'')+'</summary><div data-xbox="'+p.id+'">'+rMx(xr,t?rNormR(t.r):{},'data-xc="'+p.id+'"')+'</div><p class="mute" style="font-size:12px;margin:6px 0 0">Grau = kommt schon vom Titel'+(t?' „'+esc(t.name)+'“':'')+'.</p></details>')+'</div>'}).join("")+
+   (adm?'':'<details class="rxd" data-xu="'+p.id+'"'+(rxOpen.has(p.id)?' open':'')+'><summary>Extra-Rechte'+(nx?' <span class="rxn">'+nx+'</span>':'')+'</summary><div data-xbox="'+p.id+'">'+rMx(xr,t?rNormR(t.r):{},'data-xc="'+p.id+'"')+'</div><p class="mute" style="font-size:12px;margin:6px 0 0">Grau = kommt schon vom Titel'+(t?' „'+esc(t.name)+'“':'')+'.</p></details>')+
+   '<div class="tabopt"><label><input type="checkbox" data-tl="'+p.id+'"'+(x.tl===true?' checked':'')+'> am Lager-Tablet <small>(Namenskachel)</small></label>'+(adm?'':'<label><input type="checkbox" data-tab="'+p.id+'"'+(x.tab===true?' checked':'')+'> Gemeinsames Gerät (Lager-Tablet) <small>fragt beim Start, wer arbeitet</small></label>')+'</div></div>'}).join("")+
   '<h3 style="margin:22px 0 4px">Titel und ihre Rechte</h3><p class="mute" style="margin:0 0 8px">Titel antippen, um seine Rechte zu ändern. Gilt sofort für alle mit diesem Titel. Materiallisten erstellen und scannen, eigene Defekte melden und Infos ans Lager schicken darf jeder.</p>'+
   T.map(t=>{const n=Object.values(ROL).filter(x=>x.t===t.id).length;return '<details class="card ttl tdet" data-tbox="'+esc(t.id)+'"'+(tOpen.has(t.id)?' open':'')+'><summary><div class="fl"><b style="font-size:17px">'+esc(t.name)+'</b><span class="mute" style="font-size:13px;white-space:nowrap">'+(n===1?"1 Person":n+" Personen")+'</span></div><div class="mute tsum">'+esc(rSum(t.r))+'</div></summary>'+rMx(rNormR(t.r),{},'data-tc="'+esc(t.id)+'"')+'<div class="ubt" style="margin-top:10px"><button class="btn ghost s" data-tren="'+esc(t.id)+'">Umbenennen</button><button class="btn ghost s" data-tdel="'+esc(t.id)+'" style="color:var(--bad)">Titel löschen</button></div></details>'}).join("")+
   '<button class="mbtn" id="tnew" type="button">+ Neuer Titel</button>');
  document.querySelectorAll("[data-ut]").forEach(sel=>sel.onchange=()=>{const id=sel.dataset.ut,v=sel.value;rSave(()=>ROL[id]?db.doc("rolle/"+id).update({t:v}):db.doc("rolle/"+id).set({t:v,x:{}}),"Titel gespeichert")});
  document.querySelectorAll("details[data-xu]").forEach(d=>d.ontoggle=()=>{d.open?rxOpen.add(d.dataset.xu):rxOpen.delete(d.dataset.xu)});
  document.querySelectorAll("details[data-tbox]").forEach(d=>d.ontoggle=()=>{d.open?tOpen.add(d.dataset.tbox):tOpen.delete(d.dataset.tbox)});
+ document.querySelectorAll("[data-tl],[data-tab]").forEach(c=>c.onchange=()=>{const id=c.dataset.tl||c.dataset.tab,k=c.dataset.tl?"tl":"tab",v=c.checked;rSave(()=>ROL[id]?db.doc("rolle/"+id).update({[k]:v}):db.doc("rolle/"+id).set({t:"",x:{},[k]:v}),k==="tab"?(v?"Als Lager-Tablet markiert":"Kein Lager-Tablet mehr"):(v?"Kachel am Lager-Tablet an":"Kachel am Lager-Tablet aus"))});
  document.querySelectorAll("[data-xc]").forEach(c=>c.onchange=()=>{const id=c.dataset.xc,box=document.querySelector('[data-xbox="'+id+'"]'),x=rMxRead(box,c);rSave(()=>ROL[id]?db.doc("rolle/"+id).update({x}):db.doc("rolle/"+id).set({t:"",x}))});
  document.querySelectorAll("[data-tc]").forEach(c=>c.onchange=()=>{const id=c.dataset.tc,box=document.querySelector('[data-tbox="'+id+'"]'),r=rMxRead(box,c);rSave(()=>db.doc("titel/"+id).update({r}))});
  document.querySelectorAll("[data-tren]").forEach(b=>b.onclick=()=>{const id=b.dataset.tren;tDlg("Titel umbenennen",TIT[id]&&TIT[id].name,v=>rSave(()=>db.doc("titel/"+id).update({name:v})))});
