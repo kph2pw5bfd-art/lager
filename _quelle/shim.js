@@ -1,4 +1,4 @@
-const APPV="1.67";
+const APPV="1.68";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -399,7 +399,7 @@ function jvTextSachlich(D){const S=[jvGreet()+"."].concat(jvPkText(D,false));
  if(D.fixed.length===1)S.push("Gute Nachricht: "+jvSay(D.fixed[0].art)+" ist repariert und wieder einsatzbereit.");
  else if(D.fixed.length>1)S.push("Gute Nachricht: "+jvList(D.fixed.slice(0,4).map(d=>jvSay(d.art)))+" sind repariert und wieder einsatzbereit.");
  return S}
-function jvTalk(on){jvSpeaking=on;const j=$("#jv"),b=$("#jvsp");if(j)j.classList.toggle("talk",on);if(b)b.textContent=on?"Briefing stoppen":"Briefing vorlesen"}
+function jvTalk(on){jvSpeaking=on;const j=$("#jv"),b=$("#jvsp");if(j)j.classList.toggle("talk",on);if(b)b.textContent=on?(jvMode==="ask"?"Antwort stoppen":"Briefing stoppen"):"Briefing vorlesen"}
 function jvSpeakDevice(lines,done){if(!("speechSynthesis" in window)){jvTalk(false);toast("Sprachausgabe geht auf diesem Gerät nicht.");return}
  speechSynthesis.cancel();const v=jvVoice();let i=0,stop=false;jvTalk(true);
  const next=()=>{if(stop||!jvSpeaking||i>=lines.length){jvTalk(false);if(done)done();return}
@@ -431,7 +431,7 @@ function jvSpeakLines(lines,done){jvTalk(true);
    if(!jvSpeaking)return;toast("Thorsten ging nicht ("+String(e&&e.message||e).slice(0,80)+"). Ich spreche mit der Gerätestimme.");jvSpeakDevice(lines,done)});return}
  jvSpeakDevice(lines,done)}
 function jvStop(){jvSpeaking=false;try{speechSynthesis.cancel()}catch(e){}if(jvAud){try{jvAud.pause()}catch(e){}}jvTalk(false)}
-function jvSpeak(){if(jvSpeaking)return jvStop();jvSpeakLines(jvText(jvData()))}
+function jvSpeak(){if(jvSpeaking)return jvStop();jvMode="brief";jvSpeakLines(jvText(jvData()))}
 /* Stimmen-Einstellung mit Probe-Hören */
 function jvVoiceDlg(){const L=jvVoices(),cur=jvVoice(),o=document.createElement("div");o.className="ov";
  const best=L[0];o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b>Stimme von Jarvis</b><p class="mute" style="margin:4px 0 10px">Gilt nur für dieses Gerät.</p>'+
@@ -457,9 +457,9 @@ function jarvisView(){$("#t").textContent="Jarvis";const D=jvData(),P=jvPanels(D
  if(jvPrev===null){jvPrev=+jvLS("tpc_jv_last")||0;jvLS("tpc_jv_last",String(Date.now()))}
  const light=jvLS("tpc_jv_light")==="1";
  $("#app").innerHTML='<div class="jv'+(light?' light':'')+'" id="jv"><div class="jvtop"><b>System · Lager-Assistent</b><span><span class="jvdot" aria-hidden="true"></span>Online · <button class="jvlink" id="jvvc" type="button">Stimme</button> · <button class="jvlink" id="jvth" type="button">'+(light?"Dunkel":"Hell")+'</button></span></div>'+
-  '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcenter"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div><div class="jvreactor">'+jvReactor()+'</div><div class="jvgreet" id="jvg">'+jvGreet()+'</div><button class="jvbtn" id="jvsp" type="button">Briefing vorlesen</button></div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
+  '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcenter"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div><div class="jvreactor">'+jvReactor()+'</div><div class="jvgreet" id="jvg">'+jvGreet()+'</div><button class="jvbtn" id="jvsp" type="button">Briefing vorlesen</button>'+jvAskHtml()+'</div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
   (owner?'<p class="jvnote">Wer Jarvis sieht, stellst du in der Benutzerverwaltung ein (Recht „Jarvis“). Herrichten, Heute zurück und Überfällig kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
- jvClock();jvBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvth").onclick=()=>{const l=!$("#jv").classList.contains("light");jvLS("tpc_jv_light",l?"1":"0");$("#jv").classList.toggle("light",l);$("#jvth").textContent=l?"Dunkel":"Hell"}}
+ jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvth").onclick=()=>{const l=!$("#jv").classList.contains("light");jvLS("tpc_jv_light",l?"1":"0");$("#jv").classList.toggle("light",l);$("#jvth").textContent=l?"Dunkel":"Hell"}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');

@@ -38,3 +38,20 @@ body.jvon:has(.jv.light){background:#EEF6FA}
 @keyframes jvcore{0%,100%{opacity:.75}50%{opacity:1}}@keyframes jvtalk{0%,100%{transform:scale(.9);opacity:.8}50%{transform:scale(1.18);opacity:1}}
 @media (max-width:900px){.jvgrid{grid-template-columns:minmax(0,1fr)}.jvcenter{order:-1}.jvreactor{width:min(70vw,300px)}}
 @media (prefers-reduced-motion:reduce){.jv *{animation:none!important}}
+
+/* Frag Jarvis (ab 1.68) */
+.jvask{width:100%;max-width:520px;margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.jvaskrow{display:flex;gap:8px;align-items:stretch}
+.jvaskrow input{flex:1;min-width:0;margin:0;background:transparent;border:1px solid var(--jv-line);color:var(--jv-ice);font:inherit;padding:10px 12px;border-radius:0}
+.jvaskrow input::placeholder{color:var(--jv-mute)}
+.jvaskrow input:focus{outline:none;border-color:var(--jv-cyan);box-shadow:0 0 0 1px var(--jv-cyan)}
+.jvmic{flex:0 0 46px;display:grid;place-items:center;background:transparent;border:1px solid var(--jv-cyan);color:var(--jv-cyan);cursor:pointer}
+.jvmic.on{background:var(--jv-cyan);color:var(--jv-bg);animation:jvpulse 1s infinite}
+@keyframes jvpulse{50%{box-shadow:0 0 0 6px rgba(95,224,255,.25)}}
+.jvgo{margin:0;padding:10px 14px}
+.jvans:empty{display:none}
+.jvans{border:1px solid var(--jv-line);background:var(--jv-panel);padding:12px 14px;text-align:left;display:flex;flex-direction:column;gap:8px}
+.jvaq2{font-size:12px;color:var(--jv-mute);letter-spacing:.04em}
+.jvat{color:var(--jv-ice);line-height:1.45}
+.jvarows{display:flex;flex-direction:column}
+.jvacts{display:flex;gap:8px;flex-wrap:wrap}.jvacts .jvbtn{margin:0;padding:8px 12px;font-size:12px}
