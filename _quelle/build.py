@@ -115,6 +115,8 @@ _n1=len(_re.findall(r'nm\(([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\.(by|mod|rea
 s=_re.sub(r'nm\(([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\.(by|mod|readBy|closedBy|doneBy|chkBy)\)',lambda m:'nmA('+m.group(1)+',"'+m.group(2)+'")',s)
 s=s.replace('$("#who").textContent=names[me]||"";','tabHead();')
 print("Tablet: Schreibstellen",_n0,"Anzeigestellen",_n1)
+# 1.74: Kachel auf der Hauptseite heißt „Material vor Ort erfassen“ (Begriff „Materialliste“ bleibt sonst überall)
+rep("'Materialliste erstellen',ol+","'Material vor Ort erfassen',ol+")
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},

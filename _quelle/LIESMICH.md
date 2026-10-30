@@ -101,3 +101,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Hilfe-Bildschirm `jvHelpOpen` (Link „Was kann ich fragen?“ oder Frage „Hilfe“): Suche, Gruppen nach Rechten, Antippen stellt die Frage; Fragen mit X/Y/A kommen ins Eingabefeld mit markiertem Platzhalter.
 - Sprachausgabe: `jvGen` verhindert, dass ein abgebrochenes Briefing weiterläuft, wenn gleich eine neue Antwort gesprochen wird.
 - Tests: `tests/frag_t.js` (alle Fragen + Aktionen + Hilfe). ask_t/mic_t/mic2_t schließen den Hilfe-Bildschirm automatisch.
+
+## Version 1.74
+- Kachel auf der Hauptseite heißt „Material vor Ort erfassen“ statt „Materialliste erstellen“ (Jürgens Wahl, Variante 1: nur der Knopf). Der Begriff „Materialliste“ bleibt überall sonst (Überschriften, Recht, Meldungen, Assistent). Umsetzung als `rep` am Ende von build.py.
