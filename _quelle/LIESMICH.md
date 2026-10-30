@@ -65,3 +65,4 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Abschließen: bei offenen Positionen Rückfrage; bei Abweichungen (Fehlmenge, Alternative, offen, „aus dem Lager statt Fremdmiete“) Frage „Info an <PL>?“ → `pkMail`: fertiger Text, Mail öffnen (mailto ohne Adresse) / Teilen / Kopieren, setzt `info`. Danach gesperrt, „Wieder öffnen“ und „Info an Projektleiter“.
 - Status/Jarvis: heute herzurichtende zeigen „Herrichten 4/24“ bzw. „Hergerichtet“; Jarvis zählt nur nicht abgeschlossene, Briefing nennt Fortschritt bzw. „Heute ist alles hergerichtet“.
 - Test `tests/herr_t.js`.
+- Ab 1.59: Artikelname in der Packliste = Name aus der Artikelliste (`pkName`: Artikelnummer über `artCode` mit `rkat` verglichen), sonst Bezeichnung aus dem Packschein. Im Bearbeiten-Dialog steht darunter „Im Packschein: …“, wenn es abweicht. Die Info-Mail an den Projektleiter nutzt bewusst die Packschein-Bezeichnung (wie in epirent) + Artikelnummer.
