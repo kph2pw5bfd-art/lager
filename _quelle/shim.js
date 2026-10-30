@@ -1,4 +1,4 @@
-const APPV="1.70";
+const APPV="1.71";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -456,10 +456,10 @@ function jarvisView(){$("#t").textContent="Jarvis";const D=jvData(),P=jvPanels(D
  if($("#jv")){$("#jvl").innerHTML=P.left;$("#jvr").innerHTML=P.right;$("#jvg").textContent=jvGreet();jvBind();return}
  if(jvPrev===null){jvPrev=+jvLS("tpc_jv_last")||0;jvLS("tpc_jv_last",String(Date.now()))}
  const light=jvLS("tpc_jv_light")==="1";
- $("#app").innerHTML='<div class="jv'+(light?' light':'')+'" id="jv"><div class="jvtop"><b>System · Lager-Assistent</b><span><span class="jvdot" aria-hidden="true"></span>Online · <button class="jvlink" id="jvvc" type="button">Stimme</button> · <button class="jvlink" id="jvth" type="button">'+(light?"Dunkel":"Hell")+'</button></span></div>'+
+ $("#app").innerHTML='<div class="jv'+(light?' light':'')+'" id="jv"><div class="jvtop"><b>System · Lager-Assistent</b><span><span class="jvdot" aria-hidden="true"></span>Online · <button class="jvlink" id="jvvc" type="button">Stimme</button> · <button class="jvlink" id="jvrd" type="button">'+(jvReadOn()?"Vorlesen an":"Vorlesen aus")+'</button> · <button class="jvlink" id="jvth" type="button">'+(light?"Dunkel":"Hell")+'</button></span></div>'+
   '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcenter"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div><div class="jvreactor">'+jvReactor()+'</div><div class="jvgreet" id="jvg">'+jvGreet()+'</div><button class="jvbtn" id="jvsp" type="button">Briefing vorlesen</button>'+jvAskHtml()+'</div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
   (owner?'<p class="jvnote">Wer Jarvis sieht, stellst du in der Benutzerverwaltung ein (Recht „Jarvis“). Herrichten, Heute zurück und Überfällig kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
- jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvth").onclick=()=>{const l=!$("#jv").classList.contains("light");jvLS("tpc_jv_light",l?"1":"0");$("#jv").classList.toggle("light",l);$("#jvth").textContent=l?"Dunkel":"Hell"}}
+ jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvrd").onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");$("#jvrd").textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()};$("#jvth").onclick=()=>{const l=!$("#jv").classList.contains("light");jvLS("tpc_jv_light",l?"1":"0");$("#jv").classList.toggle("light",l);$("#jvth").textContent=l?"Dunkel":"Hell"}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');

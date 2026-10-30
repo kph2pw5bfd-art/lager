@@ -1,7 +1,10 @@
 /* ===== Frag Jarvis (ab 1.68) – feste Fragen ohne KI =====
    Mikrofon (Spracherkennung des Browsers) oder Eingabefeld. Stichwort-Erkennung, Antworten aus den Daten der App
    (nur was die Person sehen darf). Antwort als Text + gesprochen (eingestellte Stimme/Sprechart), Knöpfe zum Öffnen. */
-let jvMode="brief",jvRec=null,jvRecOn=false,jvLast=null;
+let jvMode="brief",jvRec=null,jvRecOn=false,jvLast=null,jvMicDead=false;
+const jvIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+/* Antworten vorlesen an/aus (pro Gerät) */
+const jvReadOn=()=>jvLS("tpc_jv_askread")!=="0";
 const JV_STOP=new Set("wo ist sind die der das den dem des ein eine einen artikel gerade eigentlich denn noch bitte mal jarvis hey zeig zeige mir mich uns was mit auftrag auftragsnummer packliste veranstaltung ist's gibt es vom von".split(" "));
 const jvNorm=s=>String(s||"").toLowerCase().replace(/[„“”"'!?.,;:()]/g," ").replace(/\s+/g," ").trim();
 const jvToks=s=>jvNorm(s).split(" ").filter(w=>w&&!JV_STOP.has(w));
@@ -21,13 +24,15 @@ let jvRecTxt="",jvRecT=null;
 function jvRecUi(on){const mb=$("#jvmic"),q=$("#jvaq");if(mb)mb.classList.toggle("on",on);if(q)q.placeholder=on?"Ich höre zu …":"Frag Jarvis … z. B. „Hilfe“"}
 function jvRecKill(){const r=jvRec;jvRec=null;jvRecOn=false;clearTimeout(jvRecT);if(r){r.onresult=r.onerror=r.onend=null;try{r.abort()}catch(e){}}}
 function jvRecDone(){if(!jvRecOn&&!jvRecTxt)return;const t=jvRecTxt.trim();jvRecTxt="";jvRecKill();jvRecUi(false);jvAudioBack();jvMs("");if(t)setTimeout(()=>jvAsk(t),150)}
+let jvRecUsed=false;const jvRecGot=()=>{jvRecUsed=true};
 /* Status-Zeile unter dem Eingabefeld: was das Mikrofon meldet (zur Fehlersuche am iPhone) */
 function jvMs(t){const m=$("#jvms");if(m)m.textContent=t||""}
 /* Ton freigeben, bevor das Mikrofon startet: iPhone blockiert das Mikrofon, solange noch ein Audio-Element "spielt" oder geladen ist */
 function jvFreeAudio(){try{speechSynthesis.cancel()}catch(e){}if(jvAud){try{jvAud.pause();jvAud.removeAttribute("src");jvAud.load()}catch(e){}}
  try{if(navigator.audioSession)navigator.audioSession.type="play-and-record"}catch(e){}}
 function jvAudioBack(){try{if(navigator.audioSession)navigator.audioSession.type="auto"}catch(e){}}
-function jvListen(SR){if(jvRecOn){if(jvRecTxt)return jvRecDone();jvRecKill();jvRecUi(false);jvMs("");return}
+function jvKbdMic(){const q=$("#jvaq");if(q){q.value="";q.focus()}jvMs("Am iPhone geht das Mikrofon der App nur einmal pro Start. Jetzt auf der Tastatur das Mikrofon (unten rechts) antippen, sprechen, dann „Fragen“.")}
+function jvListen(SR){if(jvIOS&&jvMicDead&&!jvRecOn)return jvKbdMic();if(jvRecOn){if(jvRecTxt)return jvRecDone();jvRecKill();jvRecUi(false);jvMs("");return}
  jvSpeaking=false;jvTalk(false);jvFreeAudio();jvRecKill();
  /* start() muss direkt im Antippen passieren (iPhone) – kein verzögerter zweiter Versuch, sondern sofort mit neuer Erkennung */
  const mk=()=>{const r=new SR();r.lang="de-AT";r.interimResults=true;r.continuous=false;r.maxAlternatives=1;return r};
@@ -37,11 +42,12 @@ function jvListen(SR){if(jvRecOn){if(jvRecTxt)return jvRecDone();jvRecKill();jvR
  const off=()=>{jvRecUi(false);jvAudioBack()};
  r.onaudiostart=()=>{if(jvRec===r)jvMs("Mikrofon an – sprich jetzt.")};
  r.onresult=e=>{if(jvRec!==r)return;let t="",fin=false;for(const x of e.results){t+=x[0].transcript;if(x.isFinal)fin=true}jvRecTxt=t;if(q)q.value=t;
-  if(fin){try{r.stop()}catch(x){}clearTimeout(jvRecT);jvRecT=setTimeout(jvRecDone,1200)}};
+  if(fin){jvRecGot();try{r.stop()}catch(x){}clearTimeout(jvRecT);jvRecT=setTimeout(jvRecDone,1200)}};
  r.onerror=e=>{if(jvRec!==r)return;const er=(e&&e.error)||"unbekannt";const t=jvRecTxt;jvRecKill();off();if(t){jvMs("");return setTimeout(()=>jvAsk(t),150)}
   jvMs(er==="not-allowed"||er==="service-not-allowed"?"Mikrofon nicht erlaubt ("+er+"). Bitte in den Einstellungen erlauben oder eintippen.":er==="no-speech"?"Ich habe nichts gehört. Nochmal aufs Mikrofon tippen.":"Mikrofon-Fehler: "+er+". Bitte nochmal tippen oder eintippen.")};
- r.onend=()=>{if(jvRec!==r)return;if(jvRecTxt){jvMs("");jvRecDone()}else{jvRecKill();off();jvMs("Mikrofon wurde beendet, ohne etwas zu hören. Nochmal tippen.")}};
- jvRecT=setTimeout(()=>{if(jvRec===r&&!jvRecTxt){jvRecKill();off();jvMs("Nichts gehört. Nochmal aufs Mikrofon tippen.")}},12000)}
+ const dead=m=>{jvRecKill();off();if(jvIOS&&jvRecUsed){jvMicDead=true;jvMs("Das iPhone liefert dem Mikrofon der App keinen Ton mehr (geht nur einmal pro Start). Tippe nochmal aufs Mikrofon – dann nehmen wir das Tastatur-Mikrofon.")}else jvMs(m)};
+ r.onend=()=>{if(jvRec!==r)return;if(jvRecTxt){jvMs("");jvRecGot();jvRecDone()}else dead("Mikrofon wurde beendet, ohne etwas zu hören. Nochmal tippen.")};
+ jvRecT=setTimeout(()=>{if(jvRec===r&&!jvRecTxt)dead("Nichts gehört. Nochmal aufs Mikrofon tippen.")},12000)}
 /* Antwort anzeigen + sprechen. A = {q, say:[Sätze], rows:[{l,r,pk?,ret?,cls?}], acts:[{l,fn}]} */
 function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;
  box.innerHTML='<div class="jvaq2">„'+esc(A.q)+'“</div><div class="jvat">'+A.say.map(esc).join(" ")+'</div>'+
@@ -49,7 +55,7 @@ function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;
   (A.acts&&A.acts.length?'<div class="jvacts">'+A.acts.map((a,i)=>'<button class="jvbtn" type="button" data-jact="'+i+'">'+esc(a.l)+'</button>').join("")+'</div>':'');
  box.querySelectorAll("[data-ja]").forEach(b=>b.onclick=()=>{const r=A.rows[+b.dataset.ja];if(r.pk){curPack=r.pk;go("packopen")}else if(r.ret){curRet=r.ret;go("retopen")}else if(r.def){curDef=r.def;go("defopen")}});
  box.querySelectorAll("[data-jact]").forEach(b=>b.onclick=()=>A.acts[+b.dataset.jact].fn());
- if(speak){jvMode="ask";jvSpeakLines(A.say.slice(0,6))}}
+ if(speak&&jvReadOn()){jvMode="ask";jvSpeakLines(A.say.slice(0,6))}}
 /* ---- Hilfen ---- */
 const jvDayName=t=>{const d=pkDay(Date.now()),x=Math.round((t-d)/864e5);return x===0?"heute":x===1?"morgen":x===-1?"gestern":PK_WD[new Date(t).getDay()]+" "+pkDM(t)};
 function jvPacksVisible(){return can("pk_s")?packs:[]}
