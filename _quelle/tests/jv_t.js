@@ -1,4 +1,4 @@
-const {chromium}=require("playwright");const fs=require("fs");const S="/tmp/claude-0/-home-claude/a6efebc1-256e-5874-b05e-dc76785976da/scratchpad/";
+const {chromium}=require("playwright");const fs=require("fs");const S=process.env.SP+"/";
 const now=Date.now();
 const seed="const T={docs:["+JSON.stringify([
  {col:"retour",id:"r1",data:{ev:"Stadtfest Linz",ord:"2601080-01",itemsJson:JSON.stringify({"7009":{nr:"7009",name:"16A 100m",g:"Kabel",q:12}}),by:"u1",t:now-2*864e5,modT:now-3600e3,draft:true}},
@@ -25,6 +25,7 @@ const seed="const T={docs:["+JSON.stringify([
    /* Hell/Dunkel gibt es ab 1.72 nicht mehr */
    await p.click('[data-jd="d1"]');await p.waitForTimeout(300);console.log("  Tippen Defekt ->",await p.textContent("#t"),"| body jvon:",await p.evaluate(()=>document.body.classList.contains("jvon")));
    await p.click("#bk");await p.waitForTimeout(300);console.log("  Zurück ->",await p.textContent("#t"));
+   await p.evaluate(()=>{const m=document.querySelector("#jvmore");if(m)m.open=true});/* ab 1.76 unter „Mehr anzeigen“ */
    await p.click('[data-jr="r1"]');await p.waitForTimeout(300);console.log("  Tippen Retourschein ->",await p.textContent("#t"));
   }
   console.log("  Fehler:",errs);await ctx.close()}

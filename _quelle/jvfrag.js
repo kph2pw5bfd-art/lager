@@ -378,7 +378,7 @@ function jvHelpOpen(){const old=document.querySelector(".jvhelp");if(old)old.rem
 function jvFin(A,q){A.q=q;A.say=(A.say||[]).filter(Boolean).map(x=>String(x).replace(/\.\.(\s|$)/g,".$1"));return A}
 function jvShowRes(A){jvFin(A,A.q||"");if(view==="jarvis")jvShow(A,!A.quiet);else jvLast=A}
 function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;const R=A.rows||[];
- box.innerHTML='<div class="jvaq2">„'+esc(A.q)+'“</div><div class="jvat">'+A.say.map(esc).join(" ")+'</div>'+
+ box.innerHTML='<button class="jvax" type="button" aria-label="Antwort schließen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="jvaq2">„'+esc(A.q)+'“</div><div class="jvat">'+A.say.map(esc).join(" ")+'</div>'+
   (R.length?'<div class="jvarows">'+R.map((r,i)=>r.hd?'<div class="jvahd">'+esc(r.l)+'</div>':r.sum?'<div class="jvrow jvsum"><span>'+esc(r.l)+'</span><span>'+esc(r.r||"")+'</span></div>':
    '<button class="jvrow" type="button" data-ja="'+i+'"><span>'+esc(r.l)+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</span><span class="'+(r.cls||"ok")+'">'+esc(r.r||"")+'</span></button>').join("")+'</div>':'')+
   (A.acts&&A.acts.length?'<div class="jvacts">'+A.acts.map((a,i)=>'<button class="jvact" type="button" data-jact="'+i+'">'+esc(a.l)+'</button>').join("")+'</div>':'');
@@ -386,6 +386,7 @@ function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;const R=A
   if(r.fn){const B=r.fn();if(B){B.q=A.q;jvShowRes(B)}}else if(r.pk){curPack=r.pk;go("packopen")}else if(r.ret){curRet=r.ret;go("retopen")}else if(r.def){curDef=r.def;go("defopen")}
   else if(r.inf){curInfo=r.inf;go("infoopen")}else if(r.ml&&typeof lists!=="undefined"&&lists.some(c=>c.id===r.ml)){cur=r.ml;go("scan")}});
  box.querySelectorAll("[data-jact]").forEach(b=>b.onclick=()=>A.acts[+b.dataset.jact].fn());
+ box.querySelector(".jvax").onclick=()=>{jvStop();jvLast=null;box.innerHTML=""};
  if(speak&&jvReadOn()){jvMode="ask";jvSpeakLines((A.speak||A.say).slice(0,A.speak?80:6))}}
 /* ---------- Erkennen ---------- */
 function jvAnswer(q){const n=jvNorm(q),raw=String(q);

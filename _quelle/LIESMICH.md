@@ -111,3 +111,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Titel: in „Titel und ihre Rechte“ unter den Häkchen „Reihenfolge auf der Hauptseite“ mit ↑/↓ (`hoTitleBlock`/`hoTitleBind`), „Vorschlag wiederherstellen“ setzt `ho` auf null.
 - Einstellungen: Abschnitt „Hauptseite“ (`hoMineBlock`/`hoMineBind`), „Zurück zur Reihenfolge vom Titel“ löscht `hord/<id>`. Lager-Tablet: gilt für das Tablet-Konto.
 - Kein SQL nötig (`hord` fällt unter die Standardregel). Test `tests/home_t.js`.
+
+## Version 1.76 – Übersicht neu (Entwurf „Variante A“ mit blauen Rahmen, von Jürgen freigegeben)
+- `jvPanels` in shim.js neu: fällige Erinnerungen als roter Streifen (`.jverb`), eine Karte mit Reitern (`jvTabs`: Überfällig, Heute herrichten, Heute zurück, Defekte dringend; ohne Packlisten-Recht: Defekte dringend, Defekte offen, ggf. Retourscheine offen) und darunter die Liste zum gewählten Reiter (`jvTabList`, Zeilen `jvLine` mit Unterzeile). Gewählter Reiter in `jvTab` (startet beim ersten Reiter mit Einträgen), „Mehr anzeigen“ (`#jvmore`, Zustand in `jvMoreOpen`) mit spätere Erinnerungen, Offene Retourscheine, weitere Defekte, Wieder einsatzbereit, Letzte Retouren – nur was es gibt.
+- Rechte Spalte gibt es nicht mehr (`right:""`, `#jvr:empty` ausgeblendet). `jvPkPanel`/`jvErinPanel` sind ungenutzt (stehen noch drin).
+- Antwort des Assistenten hat ein „×“ (`.jvax`): stoppt das Vorlesen und leert die Antwort.
+- Blaue Rahmen: `.jvhead`, `.jvcard`, `.jvtab`, `.jvlist`. Entwurf: Artboard „Variante A“ in https://claude.ai/artifact/4w3L6yTj57wKfFwGc4gSLZ. Test `tests/uebs_t.js`; jv_t.js klappt „Mehr anzeigen“ vor dem Retourschein-Tipp auf.

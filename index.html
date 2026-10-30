@@ -188,6 +188,37 @@ body.jvhopen{overflow:hidden}
 .hoh{margin:14px 0 4px}.hoh b{display:block;font-size:15px}.hoh small{display:block;color:var(--mute);font-size:12px}
 .hors{margin-top:6px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hob{color:#8fb0ea}}:root[data-theme="dark"] .hob{color:#8fb0ea}
+/* 1.76: Übersicht Variante A – blaue Rahmen, Reiter, „Mehr anzeigen“ */
+.jvhead{border:1.5px solid var(--navy)}
+.jvgrid{display:flex;flex-direction:column;gap:10px}
+#jvr:empty{display:none}
+.jvcol{gap:10px}
+.jvcard{background:var(--card);border:1.5px solid var(--navy);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.jverb{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;background:#fbebeb;border:1.5px solid var(--bad);border-radius:12px;padding:8px 12px;font:inherit;color:#7c1f19;text-align:left;cursor:pointer}
+.jverb svg{flex:none;color:var(--bad)}.jverb span{flex:1;min-width:0;font-size:14px;overflow-wrap:anywhere}.jverb small{flex:none;font-size:12.5px;font-weight:700}
+.jvtabs{display:grid;gap:6px}
+.jvtab{min-height:72px;border:1.5px solid var(--navy);background:var(--card);border-radius:10px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;color:var(--ink);cursor:pointer}
+.jvtab b{font-size:26px;font-weight:800;line-height:1.1;color:var(--navy);font-variant-numeric:tabular-nums}
+.jvtab span{font-size:11.5px;line-height:1.2;color:var(--mute);text-align:center}
+.jvtab.red{border-color:var(--bad);background:#fbebeb}.jvtab.red b{color:var(--bad)}.jvtab.red span{color:#7c1f19}
+.jvtab.on{border-width:2.5px;border-color:var(--navy);background:#dbe9f8}.jvtab.on span{color:var(--ink);font-weight:600}
+.jvtab.on.red b{color:var(--bad)}
+.jvlist{border:1.5px solid var(--navy);border-radius:10px;padding:2px 10px}
+.jvlh{font-size:13px;font-weight:700;color:var(--navy);padding:8px 0 6px}
+.jvln{display:flex;gap:10px;align-items:center;width:100%;min-height:52px;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:8px 0;font:inherit;color:var(--ink);cursor:pointer}
+.jvlt{flex:1;min-width:0;display:flex;flex-direction:column}.jvlt b{font-size:14.5px;overflow-wrap:anywhere}.jvlt small{font-size:12.5px;color:var(--mute)}
+.jvlr{flex:none;font-size:12.5px;text-align:right;color:var(--mute)}.jvlr.warn{color:var(--bad);font-weight:700}
+.jvlist .jvempty{padding:4px 0 10px}
+.jvmore{padding:0 12px;gap:0}
+.jvmore>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:52px}
+.jvmore>summary::-webkit-details-marker{display:none}
+.jvmore>summary b{font-size:15px;flex:none}.jvmore>summary small{flex:1;min-width:0;text-align:right;font-size:12px;color:var(--mute)}
+.jvmore>summary svg{flex:none;color:var(--mute);transition:transform .15s}.jvmore[open]>summary svg{transform:rotate(180deg)}
+.jvmore[open]{padding-bottom:6px}
+.jvans{position:relative;padding-right:44px}
+.jvax{position:absolute;top:2px;right:2px;width:44px;height:44px;border:0;background:none;color:var(--ink);display:grid;place-items:center;cursor:pointer}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .jvtab.on{background:#1d3550}:root:not([data-theme="light"]) .jvtab.red,:root:not([data-theme="light"]) .jverb{background:#3d1d1d}:root:not([data-theme="light"]) .jverb{color:#ffb4ad}:root:not([data-theme="light"]) .jvtab.red span{color:#ffb4ad}:root:not([data-theme="light"]) .jvlh{color:#8fb0ea}}
+:root[data-theme="dark"] .jvtab.on{background:#1d3550}:root[data-theme="dark"] .jvtab.red,:root[data-theme="dark"] .jverb{background:#3d1d1d}:root[data-theme="dark"] .jverb{color:#ffb4ad}:root[data-theme="dark"] .jvtab.red span{color:#ffb4ad}:root[data-theme="dark"] .jvlh{color:#8fb0ea}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -213,7 +244,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.75";
+<script>const APPV="1.76";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -528,24 +559,44 @@ function jvPkPanel(D){const P=D.pk;if(!P)return"";const now=pkDay(Date.now());
  const sd=t=>{const d=Math.round((now-pkDay(t))/864e5);return d<=1?"seit gestern":"seit "+d+" Tagen"};
  const rows=P.over.map(p=>[p,"überfällig "+sd(p.de),"warn"]).concat(P.herr.map(p=>{const g=pkProg(p);return[p,"herrichten"+(g.d?" "+g.d+"/"+g.n:"")+(pkF(p).length?" · "+pkF(p).length+" Fremd":""),"ok"]}),(P.herrDone||[]).map(p=>[p,"hergerichtet ✓","ok"]),P.back.map(p=>[p,"zurück "+pkD(p.de).slice(-5),"ok"])).slice(0,8);
  return '<section class="jvpn'+(P.over.length?' al':'')+'"><div class="jvlb">Packlisten <span>heute</span></div>'+st+(rows.length?rows.map(([p,r,c])=>jvRow('data-jp="'+esc(p.id)+'"',esc((p.ord?p.ord+" · ":"")+p.ev),esc(r),c)).join(""):'<div class="jvempty">Heute nichts herzurichten, nichts zurück, nichts überfällig.</div>')+'</section>'}
-function jvPanels(D){
- const st='<section class="jvpn"><div class="jvlb">Status <span>live</span></div><div class="jvstats">'+
-  (D.rs?'<div class="jvstat"><div class="n">'+String(D.open.length).padStart(2,"0")+'</div><div class="t">Retourscheine offen</div></div>':'')+
-  '<div class="jvstat'+(D.urg?' al':'')+'"><div class="n">'+String(D.od.length).padStart(2,"0")+'</div><div class="t">Defekte offen'+(D.urg?', '+D.urg+' dringend':'')+'</div></div>'+
-  '<div class="jvstat"><div class="n">'+String(D.fixed.length).padStart(2,"0")+'</div><div class="t">Repariert</div></div></div></section>';
- const ret='<section class="jvpn"><div class="jvlb">Offene Retourscheine <span>'+D.open.length+'</span></div>'+(D.open.length?D.open.slice(0,8).map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),rTot(rIt(r))+" Stk · "+jvAgo(r.modT||r.t))).join(""):'<div class="jvempty">Keine offenen Retourscheine.</div>')+'</section>';
- const soon='<section class="jvpn dim"><div class="jvlb">Herrichten · Heute zurück · Überfällig <span>bald</span></div><div class="jvempty">Kommt, sobald der Assistent die Packlisten aus dem Lager-Postfach lesen darf.</div></section>';
- const def='<section class="jvpn'+(D.urg?' al':'')+'"><div class="jvlb">'+(can("def_s")?"Offene Defekte":"Deine offenen Defekte")+' <span>'+D.od.length+'</span></div>'+(D.od.length?D.od.slice(0,8).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art+(d.ev?" · "+d.ev:"")),d.urg?"dringend":jvAgo(d.t),d.urg?"warn":"ok")).join(""):'<div class="jvempty">Keine offenen Defekte.</div>')+'</section>';
- const fx='<section class="jvpn"><div class="jvlb">Wieder einsatzbereit <span>seit '+(jvPrev?"letztem Briefing":"24 Std.")+'</span></div>'+(D.fixed.length?D.fixed.slice(0,6).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art),"repariert "+fmt(d.doneT).slice(0,6)+" "+fmt(d.doneT).slice(-5))).join(""):'<div class="jvempty">Nichts Neues repariert.</div>')+'</section>';
- const lr='<section class="jvpn"><div class="jvlb">Letzte Retouren <span>abgeschlossen</span></div>'+(D.last.length?D.last.map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),jvAgo(r.closedT||r.t))).join(""):'<div class="jvempty">Noch keine abgeschlossenen Retourscheine.</div>')+'</section>';
- const pkp=jvPkPanel(D);
- const er=typeof jvErinPanel==="function"?jvErinPanel():"";
- return D.rs?{left:er+st+pkp+ret,right:def+fx+lr}:{left:er+st+pkp,right:def+fx}}
+/* ab 1.76: Übersicht „Variante A“ – fällige Erinnerungen als Streifen, eine Reihe Reiter (Überfällig / Heute herrichten / Heute zurück / Defekte dringend),
+   darunter die Liste zum gewählten Reiter, Seltenes eingeklappt unter „Mehr anzeigen“. Leere Bereiche entfallen. */
+let jvTab=null,jvMoreOpen=false;
+function jvLine(attr,l,sub,r,cls){return '<button class="jvln" type="button" '+attr+'><span class="jvlt"><b>'+esc(l)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><span class="jvlr '+(cls||"")+'">'+esc(r||"")+'</span></button>'}
+function jvTabs(D){const P=D.pk,urg=D.od.filter(d=>d.urg),T=[];
+ if(P){T.push({k:"over",n:P.over.length,l:"Überfällig",red:true});T.push({k:"herr",n:P.herr.length,l:"Heute herrichten"});T.push({k:"back",n:P.back.length,l:"Heute zurück"})}
+ T.push({k:"urg",n:urg.length,l:"Defekte dringend",red:true});
+ if(!P){T.push({k:"def",n:D.od.length,l:can("def_s")?"Defekte offen":"Deine Defekte"});if(D.rs)T.push({k:"ret",n:D.open.length,l:"Retourscheine offen"})}
+ return T}
+function jvTabList(k,D){const P=D.pk,sd=t=>{const d=Math.round((pkDay(Date.now())-pkDay(t))/864e5);return d<=1?"seit gestern":"seit "+d+" Tagen"},pr=p=>"Auftrag "+(p.ord||"–")+(p.pl?" · "+shortName(p.pl):"");
+ if(k==="over")return{h:"Überfällig",e:jvF()?"Nichts überfällig. So soll's sein.":"Nichts überfällig.",L:P.over.map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste",pr(p),sd(p.de),"warn"))};
+ if(k==="herr")return{h:"Heute herrichten",e:"Heute ist nichts herzurichten.",L:P.herr.map(p=>{const g=pkProg(p),f=pkF(p).length;return jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste","Auftrag "+(p.ord||"–")+(f?" · "+f+" mit Fremdmiete":""),g.d?g.d+" von "+g.n:"offen","")}).concat((P.herrDone||[]).map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste","Auftrag "+(p.ord||"–"),"hergerichtet ✓","ok")))};
+ if(k==="back")return{h:"Heute zurück",e:"Heute kommt laut Packlisten nichts zurück.",L:P.back.map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste",pr(p),"bis "+pkD(p.de).slice(-5),""))};
+ if(k==="urg"){const L=D.od.filter(d=>d.urg);return{h:"Defekte dringend",e:"Keine dringenden Defekte."+(D.od.length?" "+D.od.length+" offene stehen unter „Mehr anzeigen“.":""),L:L.map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,(d.ev?d.ev+" · ":"")+"gemeldet "+jvAgo(d.t),"dringend","warn"))}}
+ if(k==="def")return{h:can("def_s")?"Offene Defekte":"Deine offenen Defekte",e:"Keine offenen Defekte.",L:D.od.map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,(d.ev?d.ev+" · ":"")+"gemeldet "+jvAgo(d.t),d.urg?"dringend":"offen",d.urg?"warn":""))};
+ return{h:"Offene Retourscheine",e:"Keine offenen Retourscheine.",L:D.open.map(r=>jvLine('data-jr="'+esc(r.id)+'"',r.ev||"Retourschein","Auftrag "+(r.ord||"–"),rTot(rIt(r))+" Stk · "+jvAgo(r.modT||r.t),""))}}
+function jvPanels(D){const T=jvTabs(D);if(!jvTab||!T.some(t=>t.k===jvTab))jvTab=(T.find(t=>t.n>0)||T[0]).k;
+ const E=typeof jvErinMine==="function"?jvErinMine():[],due=E.filter(x=>x.due<=Date.now()),later=E.filter(x=>x.due>Date.now());
+ const BELL='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
+ const er=due.map(x=>'<button class="jverb" type="button" data-jer="'+esc(x.id)+'">'+BELL+'<span><b>Erinnerung:</b> '+esc(x.txt)+'</span><small>fällig '+jvTime(x.due)+'</small></button>').join("");
+ const L=jvTabList(jvTab,D);
+ const tabs='<section class="jvcard"><div class="jvtabs" role="tablist" style="grid-template-columns:repeat('+T.length+',minmax(0,1fr))">'+T.map(t=>'<button class="jvtab'+(t.k===jvTab?' on':'')+(t.red&&t.n?' red':'')+'" type="button" role="tab" aria-selected="'+(t.k===jvTab)+'" data-jt="'+t.k+'"><b>'+t.n+'</b><span>'+t.l+'</span></button>').join("")+'</div>'+
+  '<div class="jvlist"><div class="jvlh">'+esc(L.h)+(L.L.length?' · '+L.L.length:'')+'</div>'+(L.L.length?L.L.join(""):'<div class="jvempty">'+esc(L.e)+'</div>')+'</div></section>';
+ /* eingeklappt: nur, was es gibt */
+ const M=[];
+ if(later.length)M.push(['Erinnerungen',later.map(x=>jvLine('data-jer="'+esc(x.id)+'"',x.txt,"",(pkDay(x.due)===pkDay(Date.now())?"heute":pkWd(x.due))+" "+jvTime(x.due),""))]);
+ if(D.rs&&D.open.length&&D.pk)M.push(['Offene Retourscheine',D.open.slice(0,8).map(r=>jvLine('data-jr="'+esc(r.id)+'"',r.ev||"Retourschein","Auftrag "+(r.ord||"–"),rTot(rIt(r))+" Stk · "+jvAgo(r.modT||r.t),""))]);
+ const odn=D.od.filter(d=>!d.urg);if(odn.length&&jvTab!=="def")M.push([can("def_s")?'Weitere offene Defekte':'Deine weiteren Defekte',odn.slice(0,8).map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,d.ev||"","gemeldet "+jvAgo(d.t),""))]);
+ if(D.fixed.length)M.push(['Wieder einsatzbereit',D.fixed.slice(0,6).map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,d.ev||"","repariert "+jvAgo(d.doneT),"ok"))]);
+ if(D.last.length)M.push(['Letzte Retouren',D.last.map(r=>jvLine('data-jr="'+esc(r.id)+'"',r.ev||"Retourschein","Auftrag "+(r.ord||"–"),"abgeschlossen "+jvAgo(r.closedT||r.t),""))]);
+ const SH={"Erinnerungen":"Erinnerungen","Offene Retourscheine":"Retourscheine","Weitere offene Defekte":"Defekte","Deine weiteren Defekte":"Defekte","Wieder einsatzbereit":"Repariert","Letzte Retouren":"Retouren"},sum=M.map(m=>(SH[m[0]]||m[0])+" "+m[1].length).join(" · ");
+ const more=M.length?'<details class="jvcard jvmore" id="jvmore"'+(jvMoreOpen?' open':'')+'><summary><b>Mehr anzeigen</b><small>'+esc(sum)+'</small><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>'+M.map(m=>'<div class="jvlh">'+esc(m[0])+' · '+m[1].length+'</div>'+m[1].join("")).join("")+'</details>':'';
+ return{left:er+tabs+more,right:""}}
 function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i%6===0,r1=86,r2=r1+(big?12:5);t+='<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'" stroke="var(--jv-tick'+(big?'b':'')+')" stroke-width="1.2"/>'}
  return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
 function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+", "+d.toLocaleDateString("de-AT",{day:"numeric",month:"long",year:"numeric"})}
 setInterval(jvClock,1000);
-function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});if(typeof jvErinBind==="function")jvErinBind()}
+function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});document.querySelectorAll("[data-jt]").forEach(b=>b.onclick=()=>{jvTab=b.dataset.jt;jarvisView()});const mo=$("#jvmore");if(mo)mo.ontoggle=()=>{jvMoreOpen=mo.open};if(typeof jvErinBind==="function")jvErinBind()}
 /* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
 const JV_MALE=/conrad|killian|florian|christoph|kasper|ralf|bernd|klaus|jonas|markus|martin|yannick|viktor|stefan|hans|thomas|männlich|male/i;
 const jvVK=v=>v.voiceURI||v.name;
@@ -1795,7 +1846,7 @@ function jvHelpOpen(){const old=document.querySelector(".jvhelp");if(old)old.rem
 function jvFin(A,q){A.q=q;A.say=(A.say||[]).filter(Boolean).map(x=>String(x).replace(/\.\.(\s|$)/g,".$1"));return A}
 function jvShowRes(A){jvFin(A,A.q||"");if(view==="jarvis")jvShow(A,!A.quiet);else jvLast=A}
 function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;const R=A.rows||[];
- box.innerHTML='<div class="jvaq2">„'+esc(A.q)+'“</div><div class="jvat">'+A.say.map(esc).join(" ")+'</div>'+
+ box.innerHTML='<button class="jvax" type="button" aria-label="Antwort schließen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="jvaq2">„'+esc(A.q)+'“</div><div class="jvat">'+A.say.map(esc).join(" ")+'</div>'+
   (R.length?'<div class="jvarows">'+R.map((r,i)=>r.hd?'<div class="jvahd">'+esc(r.l)+'</div>':r.sum?'<div class="jvrow jvsum"><span>'+esc(r.l)+'</span><span>'+esc(r.r||"")+'</span></div>':
    '<button class="jvrow" type="button" data-ja="'+i+'"><span>'+esc(r.l)+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</span><span class="'+(r.cls||"ok")+'">'+esc(r.r||"")+'</span></button>').join("")+'</div>':'')+
   (A.acts&&A.acts.length?'<div class="jvacts">'+A.acts.map((a,i)=>'<button class="jvact" type="button" data-jact="'+i+'">'+esc(a.l)+'</button>').join("")+'</div>':'');
@@ -1803,6 +1854,7 @@ function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;const R=A
   if(r.fn){const B=r.fn();if(B){B.q=A.q;jvShowRes(B)}}else if(r.pk){curPack=r.pk;go("packopen")}else if(r.ret){curRet=r.ret;go("retopen")}else if(r.def){curDef=r.def;go("defopen")}
   else if(r.inf){curInfo=r.inf;go("infoopen")}else if(r.ml&&typeof lists!=="undefined"&&lists.some(c=>c.id===r.ml)){cur=r.ml;go("scan")}});
  box.querySelectorAll("[data-jact]").forEach(b=>b.onclick=()=>A.acts[+b.dataset.jact].fn());
+ box.querySelector(".jvax").onclick=()=>{jvStop();jvLast=null;box.innerHTML=""};
  if(speak&&jvReadOn()){jvMode="ask";jvSpeakLines((A.speak||A.say).slice(0,A.speak?80:6))}}
 /* ---------- Erkennen ---------- */
 function jvAnswer(q){const n=jvNorm(q),raw=String(q);

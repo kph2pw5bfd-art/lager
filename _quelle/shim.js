@@ -1,4 +1,4 @@
-const APPV="1.75";
+const APPV="1.76";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -313,24 +313,44 @@ function jvPkPanel(D){const P=D.pk;if(!P)return"";const now=pkDay(Date.now());
  const sd=t=>{const d=Math.round((now-pkDay(t))/864e5);return d<=1?"seit gestern":"seit "+d+" Tagen"};
  const rows=P.over.map(p=>[p,"überfällig "+sd(p.de),"warn"]).concat(P.herr.map(p=>{const g=pkProg(p);return[p,"herrichten"+(g.d?" "+g.d+"/"+g.n:"")+(pkF(p).length?" · "+pkF(p).length+" Fremd":""),"ok"]}),(P.herrDone||[]).map(p=>[p,"hergerichtet ✓","ok"]),P.back.map(p=>[p,"zurück "+pkD(p.de).slice(-5),"ok"])).slice(0,8);
  return '<section class="jvpn'+(P.over.length?' al':'')+'"><div class="jvlb">Packlisten <span>heute</span></div>'+st+(rows.length?rows.map(([p,r,c])=>jvRow('data-jp="'+esc(p.id)+'"',esc((p.ord?p.ord+" · ":"")+p.ev),esc(r),c)).join(""):'<div class="jvempty">Heute nichts herzurichten, nichts zurück, nichts überfällig.</div>')+'</section>'}
-function jvPanels(D){
- const st='<section class="jvpn"><div class="jvlb">Status <span>live</span></div><div class="jvstats">'+
-  (D.rs?'<div class="jvstat"><div class="n">'+String(D.open.length).padStart(2,"0")+'</div><div class="t">Retourscheine offen</div></div>':'')+
-  '<div class="jvstat'+(D.urg?' al':'')+'"><div class="n">'+String(D.od.length).padStart(2,"0")+'</div><div class="t">Defekte offen'+(D.urg?', '+D.urg+' dringend':'')+'</div></div>'+
-  '<div class="jvstat"><div class="n">'+String(D.fixed.length).padStart(2,"0")+'</div><div class="t">Repariert</div></div></div></section>';
- const ret='<section class="jvpn"><div class="jvlb">Offene Retourscheine <span>'+D.open.length+'</span></div>'+(D.open.length?D.open.slice(0,8).map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),rTot(rIt(r))+" Stk · "+jvAgo(r.modT||r.t))).join(""):'<div class="jvempty">Keine offenen Retourscheine.</div>')+'</section>';
- const soon='<section class="jvpn dim"><div class="jvlb">Herrichten · Heute zurück · Überfällig <span>bald</span></div><div class="jvempty">Kommt, sobald der Assistent die Packlisten aus dem Lager-Postfach lesen darf.</div></section>';
- const def='<section class="jvpn'+(D.urg?' al':'')+'"><div class="jvlb">'+(can("def_s")?"Offene Defekte":"Deine offenen Defekte")+' <span>'+D.od.length+'</span></div>'+(D.od.length?D.od.slice(0,8).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art+(d.ev?" · "+d.ev:"")),d.urg?"dringend":jvAgo(d.t),d.urg?"warn":"ok")).join(""):'<div class="jvempty">Keine offenen Defekte.</div>')+'</section>';
- const fx='<section class="jvpn"><div class="jvlb">Wieder einsatzbereit <span>seit '+(jvPrev?"letztem Briefing":"24 Std.")+'</span></div>'+(D.fixed.length?D.fixed.slice(0,6).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art),"repariert "+fmt(d.doneT).slice(0,6)+" "+fmt(d.doneT).slice(-5))).join(""):'<div class="jvempty">Nichts Neues repariert.</div>')+'</section>';
- const lr='<section class="jvpn"><div class="jvlb">Letzte Retouren <span>abgeschlossen</span></div>'+(D.last.length?D.last.map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),jvAgo(r.closedT||r.t))).join(""):'<div class="jvempty">Noch keine abgeschlossenen Retourscheine.</div>')+'</section>';
- const pkp=jvPkPanel(D);
- const er=typeof jvErinPanel==="function"?jvErinPanel():"";
- return D.rs?{left:er+st+pkp+ret,right:def+fx+lr}:{left:er+st+pkp,right:def+fx}}
+/* ab 1.76: Übersicht „Variante A“ – fällige Erinnerungen als Streifen, eine Reihe Reiter (Überfällig / Heute herrichten / Heute zurück / Defekte dringend),
+   darunter die Liste zum gewählten Reiter, Seltenes eingeklappt unter „Mehr anzeigen“. Leere Bereiche entfallen. */
+let jvTab=null,jvMoreOpen=false;
+function jvLine(attr,l,sub,r,cls){return '<button class="jvln" type="button" '+attr+'><span class="jvlt"><b>'+esc(l)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><span class="jvlr '+(cls||"")+'">'+esc(r||"")+'</span></button>'}
+function jvTabs(D){const P=D.pk,urg=D.od.filter(d=>d.urg),T=[];
+ if(P){T.push({k:"over",n:P.over.length,l:"Überfällig",red:true});T.push({k:"herr",n:P.herr.length,l:"Heute herrichten"});T.push({k:"back",n:P.back.length,l:"Heute zurück"})}
+ T.push({k:"urg",n:urg.length,l:"Defekte dringend",red:true});
+ if(!P){T.push({k:"def",n:D.od.length,l:can("def_s")?"Defekte offen":"Deine Defekte"});if(D.rs)T.push({k:"ret",n:D.open.length,l:"Retourscheine offen"})}
+ return T}
+function jvTabList(k,D){const P=D.pk,sd=t=>{const d=Math.round((pkDay(Date.now())-pkDay(t))/864e5);return d<=1?"seit gestern":"seit "+d+" Tagen"},pr=p=>"Auftrag "+(p.ord||"–")+(p.pl?" · "+shortName(p.pl):"");
+ if(k==="over")return{h:"Überfällig",e:jvF()?"Nichts überfällig. So soll's sein.":"Nichts überfällig.",L:P.over.map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste",pr(p),sd(p.de),"warn"))};
+ if(k==="herr")return{h:"Heute herrichten",e:"Heute ist nichts herzurichten.",L:P.herr.map(p=>{const g=pkProg(p),f=pkF(p).length;return jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste","Auftrag "+(p.ord||"–")+(f?" · "+f+" mit Fremdmiete":""),g.d?g.d+" von "+g.n:"offen","")}).concat((P.herrDone||[]).map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste","Auftrag "+(p.ord||"–"),"hergerichtet ✓","ok")))};
+ if(k==="back")return{h:"Heute zurück",e:"Heute kommt laut Packlisten nichts zurück.",L:P.back.map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste",pr(p),"bis "+pkD(p.de).slice(-5),""))};
+ if(k==="urg"){const L=D.od.filter(d=>d.urg);return{h:"Defekte dringend",e:"Keine dringenden Defekte."+(D.od.length?" "+D.od.length+" offene stehen unter „Mehr anzeigen“.":""),L:L.map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,(d.ev?d.ev+" · ":"")+"gemeldet "+jvAgo(d.t),"dringend","warn"))}}
+ if(k==="def")return{h:can("def_s")?"Offene Defekte":"Deine offenen Defekte",e:"Keine offenen Defekte.",L:D.od.map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,(d.ev?d.ev+" · ":"")+"gemeldet "+jvAgo(d.t),d.urg?"dringend":"offen",d.urg?"warn":""))};
+ return{h:"Offene Retourscheine",e:"Keine offenen Retourscheine.",L:D.open.map(r=>jvLine('data-jr="'+esc(r.id)+'"',r.ev||"Retourschein","Auftrag "+(r.ord||"–"),rTot(rIt(r))+" Stk · "+jvAgo(r.modT||r.t),""))}}
+function jvPanels(D){const T=jvTabs(D);if(!jvTab||!T.some(t=>t.k===jvTab))jvTab=(T.find(t=>t.n>0)||T[0]).k;
+ const E=typeof jvErinMine==="function"?jvErinMine():[],due=E.filter(x=>x.due<=Date.now()),later=E.filter(x=>x.due>Date.now());
+ const BELL='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
+ const er=due.map(x=>'<button class="jverb" type="button" data-jer="'+esc(x.id)+'">'+BELL+'<span><b>Erinnerung:</b> '+esc(x.txt)+'</span><small>fällig '+jvTime(x.due)+'</small></button>').join("");
+ const L=jvTabList(jvTab,D);
+ const tabs='<section class="jvcard"><div class="jvtabs" role="tablist" style="grid-template-columns:repeat('+T.length+',minmax(0,1fr))">'+T.map(t=>'<button class="jvtab'+(t.k===jvTab?' on':'')+(t.red&&t.n?' red':'')+'" type="button" role="tab" aria-selected="'+(t.k===jvTab)+'" data-jt="'+t.k+'"><b>'+t.n+'</b><span>'+t.l+'</span></button>').join("")+'</div>'+
+  '<div class="jvlist"><div class="jvlh">'+esc(L.h)+(L.L.length?' · '+L.L.length:'')+'</div>'+(L.L.length?L.L.join(""):'<div class="jvempty">'+esc(L.e)+'</div>')+'</div></section>';
+ /* eingeklappt: nur, was es gibt */
+ const M=[];
+ if(later.length)M.push(['Erinnerungen',later.map(x=>jvLine('data-jer="'+esc(x.id)+'"',x.txt,"",(pkDay(x.due)===pkDay(Date.now())?"heute":pkWd(x.due))+" "+jvTime(x.due),""))]);
+ if(D.rs&&D.open.length&&D.pk)M.push(['Offene Retourscheine',D.open.slice(0,8).map(r=>jvLine('data-jr="'+esc(r.id)+'"',r.ev||"Retourschein","Auftrag "+(r.ord||"–"),rTot(rIt(r))+" Stk · "+jvAgo(r.modT||r.t),""))]);
+ const odn=D.od.filter(d=>!d.urg);if(odn.length&&jvTab!=="def")M.push([can("def_s")?'Weitere offene Defekte':'Deine weiteren Defekte',odn.slice(0,8).map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,d.ev||"","gemeldet "+jvAgo(d.t),""))]);
+ if(D.fixed.length)M.push(['Wieder einsatzbereit',D.fixed.slice(0,6).map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,d.ev||"","repariert "+jvAgo(d.doneT),"ok"))]);
+ if(D.last.length)M.push(['Letzte Retouren',D.last.map(r=>jvLine('data-jr="'+esc(r.id)+'"',r.ev||"Retourschein","Auftrag "+(r.ord||"–"),"abgeschlossen "+jvAgo(r.closedT||r.t),""))]);
+ const SH={"Erinnerungen":"Erinnerungen","Offene Retourscheine":"Retourscheine","Weitere offene Defekte":"Defekte","Deine weiteren Defekte":"Defekte","Wieder einsatzbereit":"Repariert","Letzte Retouren":"Retouren"},sum=M.map(m=>(SH[m[0]]||m[0])+" "+m[1].length).join(" · ");
+ const more=M.length?'<details class="jvcard jvmore" id="jvmore"'+(jvMoreOpen?' open':'')+'><summary><b>Mehr anzeigen</b><small>'+esc(sum)+'</small><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>'+M.map(m=>'<div class="jvlh">'+esc(m[0])+' · '+m[1].length+'</div>'+m[1].join("")).join("")+'</details>':'';
+ return{left:er+tabs+more,right:""}}
 function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i%6===0,r1=86,r2=r1+(big?12:5);t+='<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'" stroke="var(--jv-tick'+(big?'b':'')+')" stroke-width="1.2"/>'}
  return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
 function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+", "+d.toLocaleDateString("de-AT",{day:"numeric",month:"long",year:"numeric"})}
 setInterval(jvClock,1000);
-function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});if(typeof jvErinBind==="function")jvErinBind()}
+function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});document.querySelectorAll("[data-jt]").forEach(b=>b.onclick=()=>{jvTab=b.dataset.jt;jarvisView()});const mo=$("#jvmore");if(mo)mo.ontoggle=()=>{jvMoreOpen=mo.open};if(typeof jvErinBind==="function")jvErinBind()}
 /* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
 const JV_MALE=/conrad|killian|florian|christoph|kasper|ralf|bernd|klaus|jonas|markus|martin|yannick|viktor|stefan|hans|thomas|männlich|male/i;
 const jvVK=v=>v.voiceURI||v.name;
