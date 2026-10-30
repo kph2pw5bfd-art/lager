@@ -39,3 +39,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Begrüßung frech: mal „Servus <Name>“, mal „Guten Morgen/Tag/Abend, <Name>“ + Spruch (morgens Kaffee, abends „Noch so spät da?“).
 - Umschalter „Art zu sprechen: Frech / Sachlich“ im Stimmen-Dialog; „Auf Standard zurücksetzen“ setzt auf frech zurück.
 - Test `tests/jvfr_t.js` (Pfad zur fakesb.js über Umgebungsvariable SP).
+
+## Jarvis-Freigabe (ab 1.55)
+- Recht `jv_s` („Jarvis – Sehen“) in RK, erste Zeile im Rechte-Raster (Titel + Extra-Rechte). Karte und Ansicht nur mit `can("jv_s")`. Datenbank braucht dafür nichts (Rechte als jsonb, Jarvis liest nur, was can_read erlaubt).
+- Ohne `ret_s`: keine Retourschein-Felder/-Sätze in Jarvis. Ohne `def_s`: Feld heißt „Deine offenen Defekte“.
+- Thorsten nur für den Admin (`jvEngine()` gibt sonst immer "device"; Umschalter im Dialog ausgeblendet). Sprechart-Standard: Admin frech, alle anderen sachlich.
+- Test `tests/jvrecht_t.js` (SP-Umgebungsvariable).
