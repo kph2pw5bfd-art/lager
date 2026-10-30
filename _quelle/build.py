@@ -1,6 +1,6 @@
 import re,json
 s=open("/home/claude/lager_app.html",encoding="utf-8").read()
-shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()
+shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()
 def rep(a,b,c=1):
     global s
     n=s.count(a); assert n==c,(a[:80],n); s=s.replace(a,b)
@@ -100,6 +100,7 @@ exec(open("/home/claude/gh/defordpatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/matpatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/rlogpatch.py",encoding="utf-8").read())
 exec(open("/home/claude/gh/jarvispatch.py",encoding="utf-8").read())
+exec(open("/home/claude/gh/packpatch.py",encoding="utf-8").read())
 rep("</style>","\n"+open("/home/claude/gh/jarvis.css",encoding="utf-8").read()+"</style>",1)
 exec(open("/home/claude/gh/splashpatch.py",encoding="utf-8").read())
 # boot

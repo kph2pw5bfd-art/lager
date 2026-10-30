@@ -100,6 +100,7 @@ textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:6px;
 .rtile.sel{border-color:var(--navy);background:var(--tint);box-shadow:0 0 0 1px var(--navy) inset}
 @media (min-width:700px){.rgrid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}}
 
+.pkh{margin:16px 0 6px;font-size:16px}.pkh .mute{font-weight:400;font-size:14px}.pkfr{color:var(--bad);font-weight:600;font-style:normal}.tag.pkwarn{background:var(--bad);color:#fff;border-color:var(--bad)}.tag.pkhot{background:var(--navy);color:#fff;border-color:var(--navy)}.tag.pkok{background:var(--ok);color:#fff;border-color:var(--ok)}.pkkv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin-top:8px;font-size:14px}.pkkv span{color:var(--mute)}.pkkv b{font-weight:600;min-width:0;overflow-wrap:anywhere}.pkold{background:#fff6dc;border:1px solid #f2c200;border-radius:8px;padding:8px;font-size:14px;color:#5c4700}.pkl{padding:4px 12px}.pkp{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.pkp:first-child{border-top:0}.pkn{flex:0 0 64px;font-weight:700;white-space:nowrap}.pkt{flex:1;min-width:0}.pkt small{color:var(--mute);margin-left:4px}.pkt em{display:block;font-size:13px}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pkold{background:#3a3110;color:#f5dd8a}}:root[data-theme="dark"] .pkold{background:#3a3110;color:#f5dd8a}
 body.jvon{background:#050E16}body.jvon main{max-width:1180px}
 .jv{--jv-bg:#050E16;--jv-panel:#071824;--jv-line:#1F6F8F;--jv-line-dim:#143E52;--jv-cyan:#5FE0FF;--jv-mid:#2BA7CF;--jv-pale:#9FF0FF;--jv-ice:#BFF4FF;--jv-core:#E8FCFF;--jv-mute:#4F9DB8;--jv-alert:#FF7A8C;--jv-alert-line:#7A2E3A;--jv-tick:#2BA7CF;--jv-tickb:#BFF4FF;--jv-glow:rgba(95,224,255,.6);
  margin:-12px;padding:16px max(14px,env(safe-area-inset-left,0px)) 24px;min-height:calc(100vh - 70px);background:var(--jv-bg);color:var(--jv-ice);font-family:"Share Tech Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;color-scheme:dark;
@@ -165,7 +166,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.56";
+<script>const APPV="1.57";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -471,9 +472,15 @@ function jvData(){const rs=can("ret_s");
  const od=defs.filter(d=>!d.done).sort((a,b)=>(b.urg?1:0)-(a.urg?1:0)||b.t-a.t),urg=od.filter(d=>d.urg).length;
  const since=jvPrev||Date.now()-864e5,fixed=defs.filter(d=>d.done&&(d.doneT||0)>since).sort((a,b)=>b.doneT-a.doneT);
  const last=!rs?[]:rets.filter(r=>r.closed).sort((a,b)=>(b.closedT||0)-(a.closedT||0)).slice(0,5);
- return{open,od,urg,fixed,last,since,rs}}
+ const pk=typeof pkJarvis==="function"?pkJarvis():null;
+ return{open,od,urg,fixed,last,since,rs,pk}}
 function jvRow(attr,l,r,cls){return '<button class="jvrow" '+attr+'><span>'+l+'</span><span class="'+(cls||"ok")+'">'+r+'</span></button>'}
 function jvAgo(t){const d=Math.floor((Date.now()-t)/864e5);return d<=0?"heute":d===1?"gestern":"vor "+d+" Tagen"}
+function jvPkPanel(D){const P=D.pk;if(!P)return"";const now=pkDay(Date.now());
+ const st='<div class="jvstats"><div class="jvstat"><div class="n">'+String(P.herr.length).padStart(2,"0")+'</div><div class="t">Heute herrichten</div></div><div class="jvstat"><div class="n">'+String(P.back.length).padStart(2,"0")+'</div><div class="t">Heute zurück</div></div><div class="jvstat'+(P.over.length?' al':'')+'"><div class="n">'+String(P.over.length).padStart(2,"0")+'</div><div class="t">Überfällig</div></div></div>';
+ const sd=t=>{const d=Math.round((now-pkDay(t))/864e5);return d<=1?"seit gestern":"seit "+d+" Tagen"};
+ const rows=P.over.map(p=>[p,"überfällig "+sd(p.de),"warn"]).concat(P.herr.map(p=>[p,"herrichten"+(pkF(p).length?" · "+pkF(p).length+" Fremd":""),"ok"]),P.back.map(p=>[p,"zurück "+pkD(p.de).slice(-5),"ok"])).slice(0,8);
+ return '<section class="jvpn'+(P.over.length?' al':'')+'"><div class="jvlb">Packlisten <span>heute</span></div>'+st+(rows.length?rows.map(([p,r,c])=>jvRow('data-jp="'+esc(p.id)+'"',esc((p.ord?p.ord+" · ":"")+p.ev),esc(r),c)).join(""):'<div class="jvempty">Heute nichts herzurichten, nichts zurück, nichts überfällig.</div>')+'</section>'}
 function jvPanels(D){
  const st='<section class="jvpn"><div class="jvlb">Status <span>live</span></div><div class="jvstats">'+
   (D.rs?'<div class="jvstat"><div class="n">'+String(D.open.length).padStart(2,"0")+'</div><div class="t">Retourscheine offen</div></div>':'')+
@@ -484,12 +491,13 @@ function jvPanels(D){
  const def='<section class="jvpn'+(D.urg?' al':'')+'"><div class="jvlb">'+(can("def_s")?"Offene Defekte":"Deine offenen Defekte")+' <span>'+D.od.length+'</span></div>'+(D.od.length?D.od.slice(0,8).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art+(d.ev?" · "+d.ev:"")),d.urg?"dringend":jvAgo(d.t),d.urg?"warn":"ok")).join(""):'<div class="jvempty">Keine offenen Defekte.</div>')+'</section>';
  const fx='<section class="jvpn"><div class="jvlb">Wieder einsatzbereit <span>seit '+(jvPrev?"letztem Briefing":"24 Std.")+'</span></div>'+(D.fixed.length?D.fixed.slice(0,6).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art),"repariert "+fmt(d.doneT).slice(0,6)+" "+fmt(d.doneT).slice(-5))).join(""):'<div class="jvempty">Nichts Neues repariert.</div>')+'</section>';
  const lr='<section class="jvpn"><div class="jvlb">Letzte Retouren <span>abgeschlossen</span></div>'+(D.last.length?D.last.map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),jvAgo(r.closedT||r.t))).join(""):'<div class="jvempty">Noch keine abgeschlossenen Retourscheine.</div>')+'</section>';
- return D.rs?{left:st+ret+soon,right:def+fx+lr}:{left:st+soon,right:def+fx}}
+ const pkp=jvPkPanel(D);
+ return D.rs?{left:st+pkp+ret,right:def+fx+lr}:{left:st+pkp,right:def+fx}}
 function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i%6===0,r1=86,r2=r1+(big?12:5);t+='<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'" stroke="var(--jv-tick'+(big?'b':'')+')" stroke-width="1.2"/>'}
  return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
 function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+" · "+d.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"})}
 setInterval(jvClock,1000);
-function jvBind(){document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")})}
+function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")})}
 /* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
 const JV_MALE=/conrad|killian|florian|christoph|kasper|ralf|bernd|klaus|jonas|markus|martin|yannick|viktor|stefan|hans|thomas|männlich|male/i;
 const jvVK=v=>v.voiceURI||v.name;
@@ -516,7 +524,20 @@ function jvHiFrech(){const h=new Date().getHours(),n=String(names[me]||"").split
  if(h<11)q.push("Kaffee schon da? Gut, dann fangen wir an.","Kaffee schon da? Gut, dann fangen wir an.");
  if(h>=18)q.push("Noch so spät da? Respekt. Oder schlechte Planung.","Noch so spät da? Respekt. Oder schlechte Planung.");
  return hi+". "+jvPick(q)}
-function jvTextFrech(D){const S=[jvHiFrech()],h=new Date().getHours(),k=D.open.length,N=jvCap(jvN(k));
+function jvWhen(t){const d=Math.round((pkDay(Date.now())-pkDay(t))/864e5);return d<=1?"gestern":"vor "+jvN(d)+" Tagen"}
+function jvPkFremd(a,frech){const n=a.reduce((s,p)=>s+pkF(p).length,0);if(!n)return"";const t=n===1?"eine Position":jvN(n)+" Positionen";
+ return frech?jvPick([" Achtung, "+t+" davon "+(n===1?"ist":"sind")+" Fremdmiete. Nur so als Hinweis."," "+jvCap(t)+" davon "+(n===1?"kommt":"kommen")+" nicht von uns, Fremdmiete."]):" Davon "+t+" mit Fremdmiete."}
+function jvPkText(D,frech){const P=D.pk,S=[];if(!P)return S;const ev=p=>jvSay(p.ev||("Auftrag "+p.ord)),H=P.herr,B=P.back,O=P.over;
+ if(!H.length)S.push(frech?jvPick(["Herrichten heute: nichts. Verdächtig ruhig.","Heute muss nichts hergerichtet werden. Genieß es."]):"Heute ist nichts herzurichten.");
+ else if(H.length===1)S.push((frech?jvPick(["Heute wird "+ev(H[0])+" hergerichtet.","Heute ist "+ev(H[0])+" dran. Ab ins Lager."]):"Heute herzurichten: "+ev(H[0])+".")+jvPkFremd(H,frech));
+ else S.push((H.length<=3?"Heute sind "+jvN(H.length)+" Aufträge herzurichten: "+jvList(H.map(ev))+".":"Heute sind "+jvN(H.length)+" Aufträge herzurichten. Zuerst "+ev(H[0])+".")+jvPkFremd(H,frech)+(frech?jvPick([" Das wird ein Tag."," Kaffee nachfüllen empfohlen."]):""));
+ if(B.length===1)S.push(frech?jvPick(["Heute kommt "+ev(B[0])+" zurück. Hoffentlich vollständig.","Zurück kommt heute "+ev(B[0])+". Ich zähl mit."]):"Heute sollte "+ev(B[0])+" zurückkommen.");
+ else if(B.length>1)S.push((frech?"Heute kommen ":"Heute sollten ")+jvN(B.length)+" Aufträge zurück"+(frech?"":"kommen")+": "+jvList(B.slice(0,3).map(ev))+(B.length>3?" und weitere":"")+"."+(frech?" Hoffentlich vollständig.":""));
+ if(!O.length)S.push(frech?jvPick(["Überfällig ist nichts. Respekt.","Überfällig: nichts. So soll's sein."]):"Überfällig ist nichts.");
+ else if(O.length===1){const p=O[0],w=jvWhen(p.de),ro=pkRets(p).length?" Ein Retourschein ist schon angefangen.":"";S.push((frech?jvPick([ev(p)+" ist überfällig, Dispo-Ende war "+w+". Das Material macht offenbar noch Urlaub.",ev(p)+" hätte "+w+" zurück sein sollen. Ich sag ja nur."]):ev(p)+" ist überfällig, Dispo-Ende war "+w+".")+ro)}
+ else S.push(jvCap(jvN(O.length))+" Aufträge sind überfällig. Am längsten "+ev(O[0])+", Dispo-Ende "+jvWhen(O[0].de)+"."+(frech?jvPick([" Die suchen wir besser mal."," Das Material macht offenbar noch Urlaub."]):""));
+ return S}
+function jvTextFrech(D){const S=[jvHiFrech()].concat(jvPkText(D,true)),h=new Date().getHours(),k=D.open.length,N=jvCap(jvN(k));
  if(!D.rs);else if(!k)S.push(jvPick(["Alle Retourscheine abgeschlossen. Ich bin fast ein bisschen enttäuscht.","Retourscheine: nichts offen. Genieß es, das bleibt nicht lange so."]));
  else if(k===1){const e=jvSay(D.open[0].ev);S.push(jvPick(["Ein Retourschein ist noch offen: "+e+". Der fühlt sich schon ein bisschen vernachlässigt.","Einer ist noch offen: "+e+". Nur einer. "+(h<11?"Das schaffst du vor dem Mittagessen.":"Das schaffst du heute noch.")]))}
  else if(k<=3){const l=jvList(D.open.map(r=>jvSay(r.ev)));S.push(jvPick([N+" Retourscheine sind offen: "+l+". Ich nehme an, die erledigen sich nicht von selbst.",N+" offene Retourscheine: "+l+". Die warten schon geduldig. Noch."]))}
@@ -529,9 +550,9 @@ function jvTextFrech(D){const S=[jvHiFrech()],h=new Date().getHours(),k=D.open.l
  const F=D.fixed.slice(0,4).map(d=>jvSay(d.art));
  if(F.length===1)S.push(jvPick(["Gute Nachricht: "+F[0]+" ist wieder einsatzbereit. Die Werkstatt hat geliefert.",jvCap(F[0])+" ist repariert. Wer hätte das gedacht."]));
  else if(F.length>1)S.push(jvPick(["Gute Nachricht: "+jvList(F)+" sind wieder einsatzbereit. Die Werkstatt hat geliefert.",jvCap(jvList(F))+" sind repariert. Wer hätte das gedacht."]));
- S.push(jvPick(["Was heute herzurichten ist, sag ich dir, sobald man mich die Packlisten lesen lässt. Ich warte. Geduldig. Wie immer.","Was heute herzurichten ist und was überfällig ist, sag ich dir, sobald ich die Packlisten lesen darf. Ich hab ja sonst nichts zu tun."]));
+ S.push(jvPick(["Das war's von mir. Ich bin dann wieder im Standby.","So, genug geredet. Ab an die Arbeit."]));
  return S}
-function jvTextSachlich(D){const S=[jvGreet()+"."];
+function jvTextSachlich(D){const S=[jvGreet()+"."].concat(jvPkText(D,false));
  if(!D.rs);else if(!D.open.length)S.push("Bei den Retourscheinen ist gerade alles abgeschlossen.");
  else if(D.open.length===1)S.push("Ein Retourschein ist noch offen: "+jvSay(D.open[0].ev)+".");
  else if(D.open.length<=3)S.push(jvN(D.open.length).replace(/^./,c=>c.toUpperCase())+" Retourscheine sind noch offen: "+jvList(D.open.map(r=>jvSay(r.ev)))+".");
@@ -543,7 +564,6 @@ function jvTextSachlich(D){const S=[jvGreet()+"."];
   else if(U.length>1)S.push("Dringend sind "+jvList(U.slice(0,3).map(d=>jvSay(d.art)))+".")}
  if(D.fixed.length===1)S.push("Gute Nachricht: "+jvSay(D.fixed[0].art)+" ist repariert und wieder einsatzbereit.");
  else if(D.fixed.length>1)S.push("Gute Nachricht: "+jvList(D.fixed.slice(0,4).map(d=>jvSay(d.art)))+" sind repariert und wieder einsatzbereit.");
- S.push("Was heute herzurichten ist und was überfällig ist, sage ich dir, sobald ich die Packlisten lesen darf.");
  return S}
 function jvTalk(on){jvSpeaking=on;const j=$("#jv"),b=$("#jvsp");if(j)j.classList.toggle("talk",on);if(b)b.textContent=on?"Briefing stoppen":"Briefing vorlesen"}
 function jvSpeakDevice(lines,done){if(!("speechSynthesis" in window)){jvTalk(false);toast("Sprachausgabe geht auf diesem Gerät nicht.");return}
@@ -604,7 +624,7 @@ function jarvisView(){$("#t").textContent="Jarvis";const D=jvData(),P=jvPanels(D
  const light=jvLS("tpc_jv_light")==="1";
  $("#app").innerHTML='<div class="jv'+(light?' light':'')+'" id="jv"><div class="jvtop"><b>System · Lager-Assistent</b><span><span class="jvdot" aria-hidden="true"></span>Online · <button class="jvlink" id="jvvc" type="button">Stimme</button> · <button class="jvlink" id="jvth" type="button">'+(light?"Dunkel":"Hell")+'</button></span></div>'+
   '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcenter"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div><div class="jvreactor">'+jvReactor()+'</div><div class="jvgreet" id="jvg">'+jvGreet()+'</div><button class="jvbtn" id="jvsp" type="button">Briefing vorlesen</button></div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
-  '<p class="jvnote">Vorschau nur für dich als Admin. Herrichten, Heute zurück und Überfällig kommen mit den Packlisten.</p></div>';
+  (owner?'<p class="jvnote">Wer Jarvis sieht, stellst du in der Benutzerverwaltung ein (Recht „Jarvis“). Herrichten, Heute zurück und Überfällig kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
  jvClock();jvBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvth").onclick=()=>{const l=!$("#jv").classList.contains("light");jvLS("tpc_jv_light",l?"1":"0");$("#jv").classList.toggle("light",l);$("#jvth").textContent=l?"Dunkel":"Hell"}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
@@ -765,20 +785,21 @@ async function rXlPhotos(wb,r,ws,last){const f=r.fotos||[];if(!f.length||!ws)ret
    docs 'titel': {name, o (Reihenfolge), r:{Recht:true}}   docs 'rolle' (id = Benutzer-ID): {t: Titel-ID, x:{Extra-Rechte}}
    Rechte: def_/ret_/inf_ + s (sehen) b (bearbeiten) l (löschen); v_user, v_rights, v_app. Der Admin darf immer alles.
    Die Datenbank prüft dieselben Rechte (rechte.sql). */
-const RK=["jv_s","mat_b","mat_l","def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","v_user","v_rights","v_app"];
+const RK=["jv_s","pk_s","pk_b","pk_l","mat_b","mat_l","def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","v_user","v_rights","v_app"];
 const RMAT=[["mat_b","Abschließen / Wieder öffnen"],["mat_l","Löschen"]];
-const RAREA=[["def","Defekte","Alle Defekte, nicht nur die eigenen"],["ret","Retourscheine",""],["inf","Infos an das Lager",""]],RLVL=[["s","Sehen"],["b","Bearbeiten"],["l","Löschen"]];
+const RAREA=[["def","Defekte","Alle Defekte, nicht nur die eigenen"],["ret","Retourscheine",""],["pk","Packlisten","PDF hochladen, ansehen, löschen"],["inf","Infos an das Lager",""]],RLVL=[["s","Sehen"],["b","Bearbeiten"],["l","Löschen"]];
+const rLv=(a,l,t)=>a==="pk"&&l==="b"?"Hochladen":t;
 const RVW=[["v_user","Benutzer freigeben/sperren"],["v_rights","Titel und Rechte"],["v_app","App-Verwaltung (inkl. Artikelliste)"]];
 let TIT={},ROL={},rkLast=null,rxOpen=new Set(),tOpen=new Set();
-function rSum(r){r=rNormR(r);const jv=r.jv_s?["Jarvis"]:[];const mt=RMAT.filter(([k])=>r[k]).map(([,t])=>t.toLowerCase());const L=jv.concat(mt.length?["Materialliste: "+mt.join(", ")]:[]).concat(RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([,t])=>t.toLowerCase());return l.length?n+": "+l.join(", "):""})).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
-function rNormR(o){o=o||{};const r={};RK.forEach(k=>{if(o[k]===true)r[k]=true});["def","ret","inf"].forEach(a=>{if(r[a+"_b"]||r[a+"_l"])r[a+"_s"]=true});return r}
+function rSum(r){r=rNormR(r);const jv=r.jv_s?["Jarvis"]:[];const mt=RMAT.filter(([k])=>r[k]).map(([,t])=>t.toLowerCase());const L=jv.concat(mt.length?["Materialliste: "+mt.join(", ")]:[]).concat(RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([x,t])=>rLv(a,x,t).toLowerCase());return l.length?n+": "+l.join(", "):""})).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
+function rNormR(o){o=o||{};const r={};RK.forEach(k=>{if(o[k]===true)r[k]=true});["def","ret","inf","pk"].forEach(a=>{if(r[a+"_b"]||r[a+"_l"])r[a+"_s"]=true});return r}
 function uRights(uid){const x=ROL[uid]||{},t=TIT[x.t]||{};return rNormR({...(t.r||{}),...Object.fromEntries(Object.entries(x.x||{}).filter(([,v])=>v===true))})}
 /* Solange die Datenbank-Änderung (rechte.sql) fehlt, gibt es keine Titel: dann gelten die alten Häkchen Werkstatt/Lager */
 const rightsReady=()=>Object.keys(TIT).length>0;
 /* Materialliste-Recht: solange noch kein Titel mat_* hat (Datenbank-Update fehlt), gilt wie früher Defekte-Bearbeiten fürs Abschließen */
 const matReady=()=>Object.values(TIT).some(t=>t.r&&(t.r.mat_b||t.r.mat_l))||Object.values(ROL).some(x=>x.x&&(x.x.mat_b||x.x.mat_l));
 function can(k){if(owner)return true;if(k.startsWith("mat_")&&!matReady())return k==="mat_b"&&can("def_b");if(!rightsReady()){if(k.startsWith("def_"))return k!=="def_l"&&!!werk[me];if(k.startsWith("ret_"))return !!lagr[me];return false}return !!uRights(me)[k]}
-function rightsSub(){db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
+function rightsSub(){packSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
 function rightsChanged(){const k=JSON.stringify(uRights(me));if(rkLast!==null&&k!==rkLast&&!owner)DBX.reloadAll();rkLast=k;draw()}
 const titList=()=>Object.keys(TIT).map(id=>({id,...TIT[id]})).sort((a,b)=>(a.o||0)-(b.o||0)||String(a.name).localeCompare(String(b.name),"de"));
 /* Retourschein: Knöpfe ohne Recht ausblenden */
@@ -788,10 +809,10 @@ function infoDelBtn(i){if(!can("inf_l")||$("#idel"))return;$("#app").insertAdjac
  $("#idel").onclick=()=>ask("Nachricht wirklich löschen?",async()=>{try{await db.doc("infos/"+i.id).delete();for(let k=0;k<(i.fn||0);k++){try{await db.doc("fotos/"+i.id+"-"+k).delete()}catch(e){}}view="info";hist=hist.filter(v=>v!=="infoopen");draw();toast("Nachricht gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
 /* Kästchen-Raster: cur = eigene Häkchen, inh = vom Titel geerbt (grau, nicht änderbar) */
 function rMx(cur,inh,attr){cur=cur||{};inh=inh||{};const cb=(k,l)=>{const i=!!inh[k],c=i||!!cur[k];return '<label class="rmc'+(i?' inh':'')+'"><input type="checkbox" '+attr+' data-k="'+k+'"'+(c?' checked':'')+(i?' disabled':'')+'><span>'+l+'</span></label>'};
- return '<div class="rmx"><div class="rmr"><div class="rmh"><b>Jarvis</b><small>Briefing und Übersicht (zeigt nur, was die Person sehen darf)</small></div><div class="rml">'+cb("jv_s","Sehen")+'</div></div><div class="rmr"><div class="rmh"><b>Materialliste</b><small>Erstellen und scannen darf jeder</small></div><div class="rml rmm">'+RMAT.map(([k,t])=>cb(k,t)).join("")+'</div></div>'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,t)).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
+ return '<div class="rmx"><div class="rmr"><div class="rmh"><b>Jarvis</b><small>Briefing und Übersicht (zeigt nur, was die Person sehen darf)</small></div><div class="rml">'+cb("jv_s","Sehen")+'</div></div><div class="rmr"><div class="rmh"><b>Materialliste</b><small>Erstellen und scannen darf jeder</small></div><div class="rml rmm">'+RMAT.map(([k,t])=>cb(k,t)).join("")+'</div></div>'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,rLv(a,l,t))).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
 /* Häkchen lesen + Regeln: Bearbeiten/Löschen schließt Sehen ein, ohne Sehen kein Bearbeiten/Löschen */
 function rMxRead(box,changed){const g=k=>box.querySelector('[data-k="'+k+'"]');const k=changed&&changed.dataset.k;
- if(k){const [a,l]=k.split("_");if(["def","ret","inf"].includes(a)){if((l==="b"||l==="l")&&changed.checked){const s=g(a+"_s");if(s&&!s.disabled)s.checked=true}if(l==="s"&&!changed.checked)["b","l"].forEach(x=>{const e=g(a+"_"+x);if(e&&!e.disabled)e.checked=false})}}
+ if(k){const [a,l]=k.split("_");if(["def","ret","inf","pk"].includes(a)){if((l==="b"||l==="l")&&changed.checked){const s=g(a+"_s");if(s&&!s.disabled)s.checked=true}if(l==="s"&&!changed.checked)["b","l"].forEach(x=>{const e=g(a+"_"+x);if(e&&!e.disabled)e.checked=false})}}
  const o={};box.querySelectorAll("[data-k]").forEach(c=>{if(c.checked&&!c.disabled)o[c.dataset.k]=true});return o}
 function tDlg(title,val,ok){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>'+esc(title)+'</b><div style="height:8px"></div><input id="tdn" maxlength="40" autocomplete="off"><div class="row"><button class="btn ghost" id="tdc">Abbrechen</button><button class="btn" id="tdo">Speichern</button></div></div>';
  document.body.appendChild(o);const i=o.querySelector("#tdn");i.value=val||"";o.querySelector("#tdc").onclick=()=>o.remove();o.querySelector("#tdo").onclick=()=>{const v=i.value.trim().replace(/\s+/g," ");if(!v){i.classList.add("bad");return}o.remove();ok(v)};setTimeout(()=>i.focus(),60)}
@@ -828,6 +849,124 @@ async function torchUI(track,before,btn){try{if(!track)return;await new Promise(
  if(!btn){btn=document.createElement("button");btn.className="btn ghost torchb";btn.id="torchb";btn.type="button";btn.style.cssText="margin-top:6px;color:#fff;border-color:#888";if(before&&before.parentNode)before.parentNode.insertBefore(btn,before);TORCH=btn}
  btn.hidden=false;torchLbl(btn,on);btn.onclick=async()=>{on=!on;try{await track.applyConstraints({advanced:[{torch:on}]})}catch(e){on=!on}torchLbl(btn,on)}}catch(e){}}
 function torchRemove(){if(TORCH){TORCH.remove();TORCH=null}}
+
+/* Packliste (epirent) auslesen: aus den Textstücken des PDFs (pdf.js) die Kopfdaten und Positionen holen.
+   Gespeichert wird nur: Auftragsnummer, Packscheinnummer, Veranstaltung, Projektleiter, Zeiten, Positionen (Anzahl, Bezeichnung, Artikelnummer, Fremd).
+   Kunde/Adresse (links oben) und Fußzeile werden bewusst NICHT übernommen.
+   Eingabe: [{p:Seite, x, y, s:Text}]  (y wächst nach oben, wie im PDF) */
+function pkParse(items){
+ const L=[];
+ items.filter(i=>i&&String(i.s).trim()).slice().sort((a,b)=>a.p-b.p||b.y-a.y).forEach(i=>{const r=L[L.length-1],t={x:i.x,s:String(i.s).replace(/\s+/g," ").trim()};
+  if(r&&r.p===i.p&&Math.abs(r.y-i.y)<=2.5)r.it.push(t);else L.push({p:i.p,y:i.y,it:[t]})});
+ L.forEach(r=>r.it.sort((a,b)=>a.x-b.x));
+ const lab=(r,re)=>{const i=r.it.findIndex(t=>re.test(t.s));return i<0?null:i};
+ const val=(re,minX)=>{for(const r of L){const i=lab(r,re);if(i===null)continue;const rest=r.it.slice(i+1).filter(t=>t.x>=(minX||0)&&!/:$/.test(t.s));if(rest.length)return rest[0].s}return ""};
+ const P={ord:"",ps:"",ev:"",pl:"",db:0,de:0,pk:0,an:0,eb:0,ee:0,sa:"",pos:[]};
+ if(!L.some(r=>r.it.some(t=>/^PACKLISTE$/i.test(t.s)))&&!L.some(r=>r.it.some(t=>/^Packliste\/Jobinfo/i.test(t.s))))throw new Error("Keine Packliste");
+ /* Veranstaltung kann über mehrere Zeilen gehen: Folgezeilen ohne eigenes Etikett dazunehmen */
+ const evIdx=L.findIndex(r=>r.it.some(t=>/^Veranstaltung:?$/.test(t.s)));
+ if(evIdx>=0){const r=L[evIdx],i=lab(r,/^Veranstaltung:?$/),x0=r.it[i+1]?r.it[i+1].x:120;let ev=r.it.slice(i+1).map(t=>t.s).join(" ");
+  for(let j=evIdx+1;j<L.length&&L[j].p===r.p&&r.y-L[j].y<20;j++){const q=L[j];if(q.it.some(t=>/:$/.test(t.s)))break;ev+=" "+q.it.filter(t=>t.x>=x0-5).map(t=>t.s).join(" ")}
+  P.ev=ev.trim()}
+ P.pl=val(/^Projektleiter:?$/);P.ord=(val(/^Auftragsnummer:?$/).match(/[\d-]+/)||[""])[0];P.ps=(val(/^Packscheinnummer:?$/).match(/\d+/)||[""])[0];P.sa=val(/^Selbstabholer:?$/);
+ /* Zeiten nur aus dem Block "Vorrausichtliche Zeiten" (oben rechts steht Dispo Ende nochmal) */
+ const zt=L.findIndex(r=>r.it.some(t=>/voraus|vorraus/i.test(t.s)));
+ const tm=re=>{for(let j=Math.max(0,zt);j<L.length;j++){const r=L[j];const i=lab(r,re);if(i===null)continue;const m=r.it.slice(i+1).map(t=>t.s).join(" ").match(/(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s*\/\s*(\d{1,2}):(\d{2}))?/);return m?new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0)).getTime():0}return 0};
+ P.db=tm(/^Dispo Beginn:?$/);P.de=tm(/^Dispo Ende:?$/);P.pk=tm(/^Packen:?$/);P.an=tm(/^Anlieferung:?$/);P.eb=tm(/^Event Beginn:?$/);P.ee=tm(/^Event Ende:?$/);
+ /* Positionen: Zeile mit Pos.-Nr. (z. B. 1.18) + Anzahl, darunter Zeile mit "Fremd" + ArtikelNr. – auch über den Seitenumbruch */
+ let cur=null,inTab=false;
+ for(const r of L){const s0=r.it[0]?r.it[0].s:"";
+  if(r.it.some(t=>/^Pos\.?$/.test(t.s))&&r.it.some(t=>/^Bezeichnung$/.test(t.s))){inTab=true;continue}
+  if(!inTab)continue;
+  if(r.it.some(t=>/^Gesamt$/.test(t.s))){inTab=false;continue}
+  if(r.y<70||r.it.some(t=>/^Packliste\/Jobinfo|^Seite \d+ von|Power Company.*GmbH|^Tel\.:|^Fax:|IBAN|Bankverbindung/.test(t.s)))continue;
+  const fi=r.it.findIndex(t=>/^Fremd$/.test(t.s));
+  if(fi>=0){const n=r.it.slice(0,fi).map(t=>t.s).join(" ").match(/(\d+(?:[.,]\d+)?)/);const an=r.it.slice(fi+1).map(t=>t.s).join(" ").match(/ArtikelNr\.?:?\s*([^/]*)\//i);
+   if(cur){cur.f=n?+String(n[1]).replace(",","."):0;cur.a=an?an[1].trim():"";P.pos.push(cur);cur=null}continue}
+  if(/^\d+(\.\d+)*$/.test(s0)&&r.it[1]&&/^\d+(?:[.,]\d+)?(\s+\S+)?$/.test(r.it[1].s)){
+   if(cur)P.pos.push(cur);
+   const m=r.it[1].s.match(/^(\d+(?:[.,]\d+)?)(?:\s+(\S+))?$/);const rest=r.it.slice(2).filter(t=>t.s!=="⃝"&&t.s!=="○"&&!/^[\d.,]*\s*(kg|m³|m3)$/.test(t.s));
+   cur={p:s0,n:+m[1].replace(",","."),u:m[2]||"",t:rest.filter(t=>t.x<380).map(t=>t.s).join(" ").trim(),a:"",f:0};continue}
+  /* umgebrochene Bezeichnung */
+  if(cur&&!/^\d/.test(s0)){const add=r.it.filter(t=>t.x>110&&t.x<380&&!/^(kg|m³)$/.test(t.s)).map(t=>t.s).join(" ");if(add)cur.t=(cur.t+" "+add).trim()}}
+ if(cur)P.pos.push(cur);
+ if(!P.ord&&!P.ps)throw new Error("Keine Auftragsnummer gefunden");
+ if(!P.pos.length)throw new Error("Keine Positionen gefunden");
+ return P}
+if(typeof module!=="undefined")module.exports={pkParse};
+
+/* ===== Packlisten (ab 1.57) =====
+   PDF (epirent-Packliste) in der App hochladen -> im Gerät mit pdf.js lesen (pkparse.js) -> nur das Ausgelesene speichern (docs 'pack', id = Packscheinnummer).
+   Kein PDF, keine Kundendaten. Kein automatisches Abrufen aus dem Postfach.
+   Rechte: pk_s Sehen, pk_b Hochladen, pk_l Löschen (packliste.sql).
+   Status: Herrichten heute = Dispo-Beginn heute · Heute zurück = Dispo-Ende heute · Überfällig = Dispo-Ende vor heute und kein abgeschlossener
+   Retourschein mit derselben Auftragsnummer (Ziffern verglichen, 2601114-01 = 260111401). Materialgenauer Abgleich kommt später. */
+let packs=[],curPack=null,pkf="aktuell";
+const PK_ICON='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>';
+const PDFJS_SRC=["https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/","https://unpkg.com/pdfjs-dist@4.10.38/legacy/build/"];
+let pdfLib=null;
+async function pkLib(){if(pdfLib)return pdfLib;let err=null;for(const b of (window.__PDFJS_SRC||PDFJS_SRC)){try{const m=await import(b+"pdf.min.mjs");m.GlobalWorkerOptions.workerSrc=b+"pdf.worker.min.mjs";pdfLib=m;return m}catch(e){err=e}}throw err||new Error("PDF-Leser nicht gefunden")}
+async function pkRead(file){const lib=await pkLib();const buf=new Uint8Array(await file.arrayBuffer());const doc=await lib.getDocument({data:buf}).promise;const it=[];
+ for(let p=1;p<=doc.numPages;p++){const tc=await (await doc.getPage(p)).getTextContent();tc.items.forEach(i=>{if(i&&typeof i.str==="string")it.push({p,x:i.transform[4],y:i.transform[5],s:i.str})})}
+ try{doc.destroy()}catch(e){}return pkParse(it)}
+function packSub(){db.collection("pack").onSnapshot(s=>{packs=s.docs.map(d=>({id:d.id,...d.data()}));draw()})}
+const pkDig=s=>String(s||"").replace(/\D/g,"");
+const pkDay=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()};
+function pkRets(p){const o=pkDig(p.ord);return o?rets.filter(r=>pkDig(r.ord)===o):[]}
+function pkState(p){const t0=pkDay(Date.now()),R=pkRets(p),done=R.some(r=>r.closed);
+ if(done)return{k:"done",l:"Retoure abgeschlossen",c:"ok"};
+ if(p.de&&pkDay(p.de)<t0)return{k:"over",l:R.length?"Überfällig · Retourschein offen":"Überfällig",c:"warn"};
+ if(p.db&&pkDay(p.db)===t0)return{k:"herr",l:"Heute herrichten",c:"hot"};
+ if(p.de&&pkDay(p.de)===t0)return{k:"back",l:"Heute zurück",c:"hot"};
+ if(p.db&&pkDay(p.db)>t0)return{k:"next",l:"Kommt noch",c:""};
+ return{k:"out",l:"Unterwegs",c:""}}
+const pkD=t=>t?new Date(t).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"})+(new Date(t).getHours()||new Date(t).getMinutes()?" "+new Date(t).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"}):""):"–";
+const pkPosN=n=>n+(n===1?" Position":" Positionen");
+const pkF=p=>(p.pos||[]).filter(x=>x.f>0);
+function pkGroups(){const G={over:[],herr:[],back:[],out:[],next:[],done:[]};packs.forEach(p=>G[pkState(p).k].push(p));
+ G.over.sort((a,b)=>(a.de||0)-(b.de||0));G.herr.sort((a,b)=>(a.db||0)-(b.db||0));G.back.sort((a,b)=>(a.de||0)-(b.de||0));G.out.sort((a,b)=>(a.de||0)-(b.de||0));G.next.sort((a,b)=>(a.db||0)-(b.db||0));G.done.sort((a,b)=>(b.de||0)-(a.de||0));return G}
+function pkRow(p){const s=pkState(p),f=pkF(p).length;
+ return '<div class="card pkr" data-pk="'+esc(p.id)+'"><div class="row" style="align-items:center"><b style="flex:1;min-width:0">'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(s.c?'<span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>':'')+'</div>'+
+  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div><div class="mute">'+pkPosN((p.pos||[]).length)+(f?' · <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div></div>'}
+function packView(){$("#t").textContent="Packlisten";const G=pkGroups();
+ const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
+ const cur=sec("Überfällig",G.over)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
+ $("#app").innerHTML=(can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden><p class="mute" style="font-size:13px;margin:6px 0 12px">Die PDF wird nur im Gerät gelesen. Gespeichert werden Auftrag, Veranstaltung, Projektleiter, Zeiten und Material – keine Kundendaten.</p>':'')+
+  chips([["aktuell","Aktuell"],["done","Erledigt"],["alle","Alle"]],pkf,"data-pkf")+
+  (pkf==="aktuell"?(cur||'<div class="card mute">Keine aktuellen Packlisten.</div>'):pkf==="done"?(sec("Retoure abgeschlossen",G.done)||'<div class="card mute">Noch keine erledigten Packlisten.</div>'):(packs.length?cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute">Noch keine Packlisten hochgeladen.</div>'));
+ document.querySelectorAll("[data-pkf]").forEach(b=>b.onclick=()=>{pkf=b.dataset.pkf;packView()});
+ document.querySelectorAll("[data-pk]").forEach(e=>e.onclick=()=>{curPack=e.dataset.pk;go("packopen")});
+ if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)}}}
+async function pkUpload(files){for(const f of files){let P;const b=$("#pkup");if(b){b.disabled=true;b.textContent="Wird gelesen …"}
+  try{P=await pkRead(f)}catch(e){console.warn("Packliste",e);if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}
+   errBox(/Packliste|Auftragsnummer|Positionen/.test(String(e&&e.message))?"„"+f.name+"“ sieht nicht wie eine epirent-Packliste aus.":"Die PDF konnte nicht gelesen werden ("+String(e&&e.message||e).slice(0,80)+"). Bitte Internetverbindung prüfen und nochmal versuchen.");continue}
+  if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}
+  const ok=await pkConfirm(P);if(!ok)continue;
+  const id=P.ps||("A"+pkDig(P.ord));
+  try{await db.doc("pack/"+id).set({...P,by:me,t:Date.now()});toast("Packliste gespeichert",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}}}
+function pkConfirm(P){return new Promise(res=>{const id=P.ps||("A"+pkDig(P.ord)),old=packs.find(x=>x.id===id),f=P.pos.filter(x=>x.f>0).length,o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0;max-height:90vh;overflow:auto"><b>Packliste erkannt</b>'+
+  '<div class="pkkv"><span>Veranstaltung</span><b>'+esc(P.ev||"–")+'</b><span>Auftrag</span><b>'+esc(P.ord||"–")+'</b><span>Packschein</span><b>'+esc(P.ps||"–")+'</b><span>Projektleiter</span><b>'+esc(P.pl||"–")+'</b><span>Dispo Beginn</span><b>'+pkD(P.db)+'</b><span>Dispo Ende</span><b>'+pkD(P.de)+'</b></div>'+
+  '<p style="margin:8px 0">'+pkPosN(P.pos.length)+(f?', davon <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</p>'+
+  (old?'<p class="pkold">Diese Packliste ist schon da (hochgeladen '+fmt(old.t)+' von '+esc(nm(old.by))+'). Beim Speichern wird sie ersetzt.</p>':'')+
+  '<div class="row"><button class="btn ghost" id="pkcn">Abbrechen</button><button class="btn" id="pkok">'+(old?'Ersetzen':'Speichern')+'</button></div></div>';
+ document.body.appendChild(o);o.querySelector("#pkcn").onclick=()=>{o.remove();res(false)};o.querySelector("#pkok").onclick=()=>{o.remove();res(true)}})}
+function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack";return packView()}
+ $("#t").textContent="Packliste";const s=pkState(p),R=pkRets(p),f=pkF(p);
+ $("#app").innerHTML='<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;min-width:0;font-size:18px">'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span></div>'+
+  '<div class="pkkv"><span>Auftrag</span><b>'+esc(p.ord||"–")+'</b><span>Packschein</span><b>'+esc(p.ps||"–")+'</b><span>Projektleiter</span><b>'+esc(p.pl||"–")+'</b>'+(p.sa?'<span>Selbstabholer</span><b>'+esc(p.sa)+'</b>':'')+'</div>'+
+  '<div class="pkkv"><span>Dispo Beginn</span><b>'+pkD(p.db)+'</b><span>Dispo Ende</span><b>'+pkD(p.de)+'</b>'+(p.pk?'<span>Packen</span><b>'+pkD(p.pk)+'</b>':'')+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+(p.eb?'<span>Event</span><b>'+pkD(p.eb)+' – '+pkD(p.ee)+'</b>':'')+'</div>'+
+  '<div class="mute" style="font-size:13px;margin-top:6px">Hochgeladen '+fmt(p.t)+' von '+esc(nm(p.by))+'</div>'+
+  (R.length&&can("ret_s")?R.map(r=>'<button class="btn ghost" data-pkr="'+esc(r.id)+'" style="margin-top:8px">Retourschein öffnen'+(r.closed?' (abgeschlossen)':' (offen)')+'</button>').join(""):'')+'</div>'+
+  '<h3 class="pkh">Material <span class="mute">'+pkPosN((p.pos||[]).length)+(f.length?' · <span class="pkfr">'+f.length+' mit Fremdmiete</span>':'')+'</span></h3>'+
+  '<div class="card pkl" style="cursor:default">'+(p.pos||[]).map(x=>'<div class="pkp"><span class="pkn">'+esc(String(x.n).replace(".",","))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt">'+esc(x.t)+(x.a?' <small>'+esc(x.a)+'</small>':'')+(x.f>0?'<em class="pkfr">davon '+esc(String(x.f).replace(".",","))+' Fremdmiete</em>':'')+'</span></div>').join("")+'</div>'+
+  (can("pk_l")?'<button class="btn ghost" id="pkdel" style="color:var(--bad);margin-top:12px">Packliste löschen</button>':'');
+ document.querySelectorAll("[data-pkr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.pkr;go("retopen")});
+ if($("#pkdel"))$("#pkdel").onclick=()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{await db.doc("pack/"+p.id).delete();view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
+/* Für Jarvis */
+function pkJarvis(){if(!can("pk_s"))return null;const G=pkGroups();return{herr:G.herr,back:G.back,over:G.over}}
+function pkSub(){const G=pkGroups(),a=[];if(G.over.length)a.push(G.over.length+" überfällig");if(G.herr.length)a.push(G.herr.length+" heute herrichten");if(G.back.length)a.push(G.back.length+" heute zurück");return a.length?a.join(", "):"PDF hochladen und ansehen"}
+function pkHot(){const n=pkGroups().over.length;return n?String(n):""}
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -858,6 +997,9 @@ function draw(){if(!db)return;document.body.classList.toggle("jvon",view==="jarv
  if(view.startsWith("ret")){const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&$("#app").contains(ae))return;return retDraw()}
  if(view==="jarvis"&&can("jv_s"))return jarvisView();
  if(view==="jarvis"){view="start";hist=[]}
+ if(view==="pack"&&can("pk_s"))return packView();
+ if(view==="packopen"&&can("pk_s"))return packOpenView();
+ if(view.startsWith("pack")){view="start";hist=[]}
  if(view==="start")return startView();
  if(view==="scan"&&c)return scanView(c);
  if(view==="new")return newView();
@@ -1018,7 +1160,7 @@ function startView(){$("#t").textContent="Hauptseite";
   T("new",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/></svg>','Materialliste erstellen',ol+(ol===1?' offene Liste':' offene Listen'),ol)+
   T("defnew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>','Defekt melden',od.length+(od.length===1?' offener Defekt':' offene Defekte')+(ou?', davon '+ou+' dringend':''),ou?'!':'')+
   T("infonew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14h4"/></svg>','Info an das Lager',can("inf_s")?ui+' ungelesen':'Nachricht mit Foto ans Lager',can("inf_s")&&ui?ui:'')+
-  (canLager()?T("ret",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h12a5 5 0 0 1 0 10h-3"/><path d="M7 6l-4 4 4 4"/></svg>','Retourschein',rets.length+(rets.length===1?' gespeicherter Schein':' gespeicherte Scheine'),''):'')+(can("jv_s")?T("jarvis",JV_ICON,'Jarvis','Briefing und Übersicht',''):'')+
+  (canLager()?T("ret",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h12a5 5 0 0 1 0 10h-3"/><path d="M7 6l-4 4 4 4"/></svg>','Retourschein',rets.length+(rets.length===1?' gespeicherter Schein':' gespeicherte Scheine'),''):'')+(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+(can("jv_s")?T("jarvis",JV_ICON,'Jarvis','Briefing und Übersicht',''):'')+
  '</div>'+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px"><button class="btn ghost s" data-g="art">Einstellungen</button>'+(can("v_app")?'<button class="btn ghost s" data-g="appv">App-Verwaltung</button>':'')+(can("v_user")||can("v_rights")?'<button class="btn ghost s" data-g="users">Benutzerverwaltung'+(can("v_user")&&pendingN()?' <span class="hc" style="display:inline-grid;margin-left:6px">'+pendingN()+'</span>':'')+'</button>':'')+'</div>'+'<div style="text-align:center;margin-top:10px"><button class="btn ghost s" id="lgo">Abmelden</button></div><div class="mute" style="text-align:center;font-size:12px;margin-top:14px">Version '+APPV+'</div>';
  document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const v=b.dataset.g;if(v==="defnew")dpho=null;if(v==="infonew")ipho=null;go(v)});$("#lgo").onclick=()=>ask("Wirklich abmelden?",()=>SB.auth.signOut())}
 function editList(c){const w=c.mode==="weiter",o=document.createElement("div");o.className="ov";

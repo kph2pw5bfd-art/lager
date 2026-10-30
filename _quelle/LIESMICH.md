@@ -45,3 +45,13 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Ohne `ret_s`: keine Retourschein-Felder/-Sätze in Jarvis. Ohne `def_s`: Feld heißt „Deine offenen Defekte“.
 - Thorsten nur für den Admin (`jvEngine()` gibt sonst immer "device"; Umschalter im Dialog ausgeblendet). Sprechart-Standard: Admin frech, alle anderen sachlich.
 - Test `tests/jvrecht_t.js` (SP-Umgebungsvariable).
+
+## Packlisten (ab 1.57)
+- PDF (epirent-Packliste) wird in der App hochgeladen und **im Gerät** gelesen: `pack.js` lädt pdf.js (`pdfjs-dist@4.10.38` legacy, jsDelivr, Rückfall unpkg), `pkparse.js` holt aus den Textstücken Kopfdaten + Positionen (auch über Seitenumbruch). Kein automatisches Abrufen aus dem Postfach (IT-Freigabe offen).
+- Gespeichert in docs `pack` (id = Packscheinnummer): ord, ps, ev, pl, db/de/pk/an/eb/ee (ms), sa, pos[{p,n,u,t,a,f}], by, t. **Keine Kundendaten, kein PDF.** Gleiche Packscheinnummer nochmal → „Ersetzen“.
+- Status: Herrichten heute = Dispo-Beginn heute; Heute zurück = Dispo-Ende heute; Überfällig = Dispo-Ende vor heute und kein abgeschlossener Retourschein mit gleicher Auftragsnummer (nur Ziffern verglichen: 2601114-01 = 260111401). Materialgenauer Abgleich kommt später.
+- Recht „Packlisten“: pk_s Sehen, pk_b Hochladen, pk_l Löschen (Rechte-Raster, `rLv` benennt Bearbeiten → Hochladen). Datenbank: `packliste.sql` (definiert can_read/can_write/can_delete vollständig neu – ab jetzt die letzte Version).
+- Jarvis: Panel „Packlisten“ (Herrichten heute / Heute zurück / Überfällig + Liste, Tipp öffnet Packliste), Briefing-Sätze frech/sachlich in `jvPkText`. Der alte Platzhalter-Satz „sobald ich die Packlisten lesen darf“ ist raus; frech endet jetzt mit „Das war's von mir …“ / „So, genug geredet …“.
+- Tests: `tests/pack_t.js` (braucht in $SP `fakesb.js`, `pk_beispiel.pdf` = echte Packliste, `kaputt.pdf`; pdf.js lokal aus /opt/npm-tools/node_modules/pdfjs-dist 6.x), `tests/pg/sql_packliste_test.py`. Die Beispiel-PDF NICHT ins Repo (Kundenadresse, Repo ist öffentlich) – Jürgen schickt sie bei Bedarf neu.
+- Test-Postgres neu aufsetzen: `useradd -m postgres; mkdir -p /home/postgres/pgt; cp tests/pg/mock.sql /home/postgres/pgt/`, als postgres `initdb -D /home/postgres/pgt/data -A trust -U postgres` und `pg_ctl -D … -o '-p 5499 -k /home/postgres/pgt -c listen_addresses=' start`, dann `create role anon nologin; create role authenticated nologin;`.
+- npm ist in der Sitzung ggf. gesperrt (403) – pdf.js liegt lokal unter /opt/npm-tools.
