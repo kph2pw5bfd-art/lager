@@ -28,7 +28,7 @@ function pkState(p){const t0=pkDay(Date.now()),R=pkRets(p),done=R.some(r=>r.clos
  if(p.de&&pkDay(p.de)<t0)return{k:"over",l:R.length?"Überfällig · Retourschein offen":"Überfällig",c:"warn"};
  if(hd&&hd===t0){const g=pkProg(p);return g.fin?{k:"herr",l:"Hergerichtet",c:"ok"}:{k:"herr",l:g.d?"Herrichten "+g.d+"/"+g.n:"Heute herrichten",c:"hot"}}
  if(p.de&&pkDay(p.de)===t0)return{k:"back",l:"Heute zurück",c:"hot"};
- if(hd&&hd<t0&&!pkProg(p).fin)return{k:"late",l:"Nicht hergerichtet",c:"warn"};
+ if(hd&&hd<t0&&!pkProg(p).fin){const g=pkProg(p);return g.d?{k:"late",l:"Teilweise hergerichtet "+g.d+"/"+g.n,c:"part"}:{k:"late",l:"Nicht hergerichtet",c:"warn"}}
  if(hd&&hd>t0)return{k:"next",l:pkShifted(p)?"Verschoben":"Kommt noch",c:pkShifted(p)?"hot":""};
  return{k:"out",l:"Unterwegs",c:""}}
 const pkD=t=>t?new Date(t).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"})+(new Date(t).getHours()||new Date(t).getMinutes()?" "+new Date(t).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"}):""):"–";
@@ -37,7 +37,7 @@ const pkF=p=>pkPosAll(p).filter(x=>x.f>0);
 function pkGroups(){const G={over:[],late:[],herr:[],back:[],out:[],next:[],done:[]};packs.forEach(p=>G[pkState(p).k].push(p));
  G.over.sort((a,b)=>(a.de||0)-(b.de||0));G.herr.sort((a,b)=>(a.db||0)-(b.db||0));G.back.sort((a,b)=>(a.de||0)-(b.de||0));G.out.sort((a,b)=>(a.de||0)-(b.de||0));G.next.sort((a,b)=>pkHDay(a)-pkHDay(b));G.late.sort((a,b)=>pkHDay(a)-pkHDay(b));G.done.sort((a,b)=>(b.de||0)-(a.de||0));return G}
 function pkHint(p){const s=pkState(p),h=pkHd(p),out=[];
- if(s.k==="late")out.push('<div class="pkhint warn">⚠ Noch nicht hergerichtet – '+(pkShifted(p)?'verschoben auf '+pkWd(pkHDay(p))+', ':'')+'Dispo-Beginn war '+pkWd(p.db)+'</div>');
+ if(s.k==="late")out.push('<div class="pkhint '+(s.c==="part"?'part">◐ Teilweise hergerichtet':'warn">⚠ Nicht hergerichtet')+' – '+(pkShifted(p)?'verschoben auf '+pkWd(pkHDay(p))+', ':'')+'Dispo-Beginn war '+pkWd(p.db)+'</div>');
  else if(pkShifted(p))out.push('<div class="pkhint">↻ Herrichten verschoben auf '+pkWd(pkHDay(p))+' (Dispo-Beginn '+pkWd(p.db)+')'+(h.why?' – '+esc(h.why):'')+(h.by?' · '+esc(String(nm(h.by)).split(" ")[0]):'')+'</div>');
  const H=packh[p.id]||{};
  if(H.reo&&H.reo.t&&!(H.fin&&H.fin.t))out.push('<div class="pkhint warn">↺ Wieder geöffnet – '+esc(H.reo.why||"Zusatz-Packschein")+' ('+fmt(H.reo.t).slice(0,6)+'), Zusatz noch herrichten</div>');
@@ -46,15 +46,17 @@ function pkHint(p){const s=pkState(p),h=pkHd(p),out=[];
 function pkRow(p){const s=pkState(p),f=pkF(p).length;
  return '<div class="card pkr" data-pk="'+esc(p.id)+'"><div class="row" style="align-items:center"><b style="flex:1;min-width:0">'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(s.c?'<span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>':'')+'</div>'+
   '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div><div class="mute">'+(()=>{const g=pkProg(p);return g.fin?'Hergerichtet ✓ · ':g.d?g.d+' von '+g.n+' hergerichtet · ':''})()+pkPosN(pkPosAll(p).length)+((p.zus||[]).length?' · '+(p.zus.length===1?'1 Zusatz':p.zus.length+' Zusätze'):'')+(f?' · <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div>'+pkHint(p)+'</div>'}
-function packView(){$("#t").textContent="Packlisten";const G=pkGroups();
+function pkUpHtml(){return can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden>':''}
+function pkUpBind(){if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)}}}
+function packView(){$("#t").textContent="Alle Packlisten";const G=pkGroups();
  const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
- const cur=sec("Überfällig",G.over)+sec("Noch nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
- $("#app").innerHTML=(can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden><p class="mute" style="font-size:13px;margin:6px 0 12px">Die PDF wird nur im Gerät gelesen. Gespeichert werden Auftrag, Veranstaltung, Projektleiter, Zeiten und Material – keine Kundendaten.</p>':'')+
+ const cur=sec("Überfällig",G.over)+sec("Nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
+ $("#app").innerHTML=(can("pk_b")?pkUpHtml()+'<p class="mute" style="font-size:13px;margin:6px 0 12px">Die PDF wird nur im Gerät gelesen. Gespeichert werden Auftrag, Veranstaltung, Projektleiter, Zeiten und Material – keine Kundendaten.</p>':'')+
   chips([["aktuell","Aktuell"],["done","Erledigt"],["alle","Alle"]],pkf,"data-pkf")+
   (pkf==="aktuell"?(cur||'<div class="card mute">Keine aktuellen Packlisten.</div>'):pkf==="done"?(sec("Retoure abgeschlossen",G.done)||'<div class="card mute">Noch keine erledigten Packlisten.</div>'):(packs.length?cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute">Noch keine Packlisten hochgeladen.</div>'));
  document.querySelectorAll("[data-pkf]").forEach(b=>b.onclick=()=>{pkf=b.dataset.pkf;packView()});
  document.querySelectorAll("[data-pk]").forEach(e=>e.onclick=()=>{curPack=e.dataset.pk;go("packopen")});
- if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)}}}
+ pkUpBind()}
 async function pkUpload(files){for(const f of files){let P;const b=$("#pkup");if(b){b.disabled=true;b.textContent="Wird gelesen …"}
   try{P=await pkRead(f)}catch(e){console.warn("Packliste",e);if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}
    errBox(/Packliste|Auftragsnummer|Positionen/.test(String(e&&e.message))?"„"+f.name+"“ sieht nicht wie eine epirent-Packliste aus.":"Die PDF konnte nicht gelesen werden ("+String(e&&e.message||e).slice(0,80)+"). Bitte Internetverbindung prüfen und nochmal versuchen.");continue}
@@ -234,3 +236,70 @@ function pkMail(P){const m=pkMailText(P),o=document.createElement("div");o.class
 function pkJarvis(){if(!can("pk_s"))return null;const G=pkGroups();return{herr:G.herr.filter(p=>!pkProg(p).fin),herrDone:G.herr.filter(p=>pkProg(p).fin),back:G.back,over:G.over}}
 function pkSub(){const G=pkGroups(),a=[];if(G.over.length)a.push(G.over.length+" überfällig");const hh=G.herr.filter(p=>!pkProg(p).fin).length;if(hh)a.push(hh+" heute herrichten");if(G.back.length)a.push(G.back.length+" heute zurück");return a.length?a.join(", "):"PDF hochladen und ansehen"}
 function pkHot(){const n=pkGroups().over.length;return n?String(n):""}
+/* ===== Übersicht (ab 1.65) – wie die Wand im Lager: Diese Woche / Nächste Woche / Später, je 5 Fächer Mo–Fr.
+   Jede Packliste liegt im Fach ihres Herricht-Tags (Dispo-Beginn oder verschoben); Samstag/Sonntag -> Freitag davor.
+   Schmal (Handy): Umschalter + Fächer (Vorschlag A). Breit ab 900 px (Tablet quer, PC): zweispaltige Tagesliste (Vorschlag C).
+   Vergangene Herricht-Tage, nicht abgeschlossen -> oben "Nicht hergerichtet" (0 abgehakt) bzw. "Teilweise hergerichtet". */
+let pkTab="w0",pkOpenDays=new Set(),pkWideLast=null;
+const PK_WD=["So","Mo","Di","Mi","Do","Fr","Sa"];
+const pkMon=t=>{const d=new Date(t);d.setHours(0,0,0,0);const w=(d.getDay()+6)%7;return d.getTime()-w*864e5};
+const pkAddD=(t,n)=>{const d=new Date(t);d.setDate(d.getDate()+n);return d.getTime()};
+function pkKW(t){const d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()+3-(d.getDay()+6)%7);const w1=new Date(d.getFullYear(),0,4);return 1+Math.round(((d-w1)/864e5-3+(w1.getDay()+6)%7)/7)}
+const pkDM=t=>{const d=new Date(t);return d.getDate()+"."+(d.getMonth()+1)+"."};
+/* Fach-Tag: Herricht-Tag, Wochenende auf Freitag davor */
+function pkSlot(p){const h=pkHDay(p);if(!h)return{t:0,we:""};const w=new Date(h).getDay();return w===6?{t:pkAddD(h,-1),we:"Sa"}:w===0?{t:pkAddD(h,-2),we:"So"}:{t:h,we:""}}
+function pkOvData(){const t0=pkDay(Date.now()),m0=pkMon(t0),m1=pkAddD(m0,7),m2=pkAddD(m0,14);
+ const L=packs.filter(p=>p.db||pkHd(p)).filter(p=>pkState(p).k!=="done").map(p=>({p,s:pkSlot(p),g:pkProg(p)}));
+ const late=L.filter(o=>pkHDay(o.p)<t0&&!o.g.fin).sort((a,b)=>pkHDay(a.p)-pkHDay(b.p));
+ const day=(m,i)=>{const t=pkAddD(m,i);return{t,items:L.filter(o=>o.s.t===t).sort((a,b)=>(a.g.fin?1:0)-(b.g.fin?1:0)||(a.p.db||0)-(b.p.db||0))}};
+ const w0=[0,1,2,3,4].map(i=>day(m0,i)),w1=[0,1,2,3,4].map(i=>day(m1,i));
+ const later=L.filter(o=>o.s.t>=m2).sort((a,b)=>a.s.t-b.s.t);
+ const kw=[0,1,2,3].map(k=>{const a=pkAddD(m2,7*k),b=pkAddD(a,7);return{lab:"KW "+pkKW(a)+" · "+pkDM(a)+"–"+pkDM(pkAddD(a,4)),items:later.filter(o=>o.s.t>=a&&o.s.t<b)}});
+ const after=pkAddD(m2,28);kw.push({lab:"Danach",items:later.filter(o=>o.s.t>=after)});
+ return{t0,m0,m1,m2,late,w0,w1,kw}}
+const pkOpenN=a=>a.filter(o=>!o.g.fin).length;
+function pkBadges(o,withShift){const p=o.p,f=pkF(p).length,b=[];
+ if(f&&!o.g.fin)b.push('<span class="pkb fr">'+f+' Fremd</span>');
+ if((p.zus||[]).length)b.push('<span class="pkb zu">+ Zusatz</span>');
+ if(o.s.we)b.push('<span class="pkb we">'+(o.s.we==="Sa"?"Samstag":"Sonntag")+'</span>');
+ if(withShift&&pkShifted(p))b.push('<span class="pkb sh">↻ '+(pkHDay(p)<pkDay(p.db)?'vorgezogen':'verschoben')+' (Dispo '+pkWd(p.db)+')</span>');
+ return b.length?'<div class="pkbs">'+b.join("")+'</div>':''}
+const pkTime=p=>p.db&&pkHDay(p)===pkDay(p.db)&&(new Date(p.db).getHours()||new Date(p.db).getMinutes())?new Date(p.db).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"}):"";
+function pkBar(g){return '<div class="pkmb"><div class="pkbar"><i style="width:'+(g.n?Math.round(g.d*100/g.n):0)+'%"></i></div><b>'+g.d+'/'+g.n+'</b></div>'}
+/* Karte (Handy) */
+function pkCard(o){const p=o.p,g=o.g;
+ if(g.fin)return '<button class="pkcard fin" type="button" data-pk="'+esc(p.id)+'"><b>'+esc(p.ev||p.ord)+'</b><span class="pkok">Hergerichtet ✓</span></button>';
+ return '<button class="pkcard" type="button" data-pk="'+esc(p.id)+'"><span class="pkct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(pkTime(p)?'<small>'+pkTime(p)+'</small>':'')+'</span><span class="pkcs">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</span>'+pkBar(g)+pkBadges(o,true)+'</button>'}
+/* Zeile (breit) */
+function pkLine(o,lab){const p=o.p,g=o.g;
+ return '<button class="pkline'+(g.fin?' fin':'')+'" type="button" data-pk="'+esc(p.id)+'"><span class="pkl1">'+esc(lab||pkTime(p)||"")+'</span><span class="pkl2"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</small>'+(g.fin?'':pkBadges(o,true))+'</span><span class="pkl3">'+(g.fin?'<span class="pkok">✓</span>':g.n?g.d+'/'+g.n:'')+'</span></button>'}
+function pkLateHtml(D,wide){if(!D.late.length)return"";
+ return '<section class="pklate"><h3>Nicht hergerichtet <span>'+D.late.length+'</span></h3>'+D.late.map(o=>{const part=o.g.d>0;
+  return '<button class="pklc" type="button" data-pk="'+esc(o.p.id)+'"><span class="pkct"><b>'+esc(o.p.ev||o.p.ord)+'</b><small class="'+(part?'part':'warn')+'">'+(part?'Teilweise hergerichtet':'Nicht hergerichtet')+'</small></span><span class="pkcs">seit '+pkWd(pkHDay(o.p))+' · Auftrag '+esc(o.p.ord||"–")+'</span>'+(part?pkBar(o.g):'')+'</button>'}).join("")+'</section>'}
+function pkDayLabel(t,t0){return PK_WD[new Date(t).getDay()]+" "+pkDM(t)+(t===t0?" · Heute":"")}
+/* vergangener Tag: zusammengeklappt, antippen klappt auf */
+function pkPastSum(d){const n=d.items.length,f=d.items.filter(o=>o.g.fin).length,o2=n-f;
+ return n?(f?'<span class="ok">'+f+' hergerichtet ✓</span>':'')+(f&&o2?' · ':'')+(o2?'<b class="warn">'+o2+' nicht fertig</b>':''):'<span class="mute">leer</span>'}
+function packOverView(){$("#t").textContent="Übersicht";const D=pkOvData(),wide=window.innerWidth>=900;pkWideLast=wide;document.body.classList.toggle("pkovw",wide);
+ const top='<div class="pkovtop">'+pkUpHtml()+'<button class="btn ghost" id="pkall" type="button">Alle Packlisten</button></div>';
+ if(!wide){
+  const tabs=[["w0","Diese Woche",pkDM(D.m0)+"–"+pkDM(pkAddD(D.m0,4)),D.w0.reduce((n,d)=>n+pkOpenN(d.items),0)],["w1","Nächste Woche",pkDM(D.m1)+"–"+pkDM(pkAddD(D.m1,4)),D.w1.reduce((n,d)=>n+pkOpenN(d.items),0)],["sp","Später","ab "+pkDM(D.m2),D.kw.reduce((n,k)=>n+pkOpenN(k.items),0)]];
+  const tabH='<div class="pktabs" role="tablist">'+tabs.map(([k,a,b,n])=>'<button type="button" role="tab" aria-selected="'+(pkTab===k)+'" class="'+(pkTab===k?'on':'')+'" data-pkt="'+k+'">'+a+'<small>'+b+(n?' · '+n:'')+'</small></button>').join("")+'</div>';
+  let body="";
+  if(pkTab==="sp")body=D.kw.map(k=>'<section class="pktray"><div class="pktl"><span>'+esc(k.lab)+'</span><small>'+(k.items.length||'')+'</small></div>'+(k.items.length?k.items.map(o=>pkCard(o).replace('<span class="pkct"><b>','<span class="pkct"><span class="pkdt">'+pkDayLabel(o.s.t,0)+'</span><b>')).join(""):'<div class="pkempty">leer</div>')+'</section>').join("");
+  else body=(pkTab==="w0"?D.w0:D.w1).map(d=>{const past=d.t<D.t0,today=d.t===D.t0,open=pkOpenDays.has(d.t);
+   if(past&&!open)return '<button class="pktray past" type="button" data-pkd="'+d.t+'"><span class="pktl"><span>'+pkDayLabel(d.t,D.t0)+'</span></span><span class="pksum">'+pkPastSum(d)+'</span></button>';
+   return '<section class="pktray'+(today?' today':'')+(past?' past open':'')+'"'+(past?' data-pkd="'+d.t+'"':'')+'><div class="pktl"><span>'+pkDayLabel(d.t,D.t0)+'</span><small>'+(d.items.length?d.items.length+(d.items.length===1?' Packliste':' Packlisten'):'')+'</small></div>'+(d.items.length?d.items.map(pkCard).join(""):'<div class="pkempty">leer</div>')+'</section>'}).join("");
+  $("#app").innerHTML=top+tabH+(pkTab==="w0"?pkLateHtml(D,false):'')+'<div class="pktrays">'+body+'</div>';
+ }else{
+  const week=(lab,sub,days,isNow)=>'<div class="pkwh"><span>'+lab+'</span><small>'+sub+'</small></div>'+days.map(d=>{const past=d.t<D.t0,open=pkOpenDays.has(d.t);
+   if(past&&!open)return '<button class="pkdrow past" type="button" data-pkd="'+d.t+'"><span class="pkl1">'+pkDayLabel(d.t,D.t0)+'</span><span class="pksum">'+pkPastSum(d)+'</span></button>';
+   return '<div class="pkdh'+(d.t===D.t0?' today':'')+'"'+(past?' data-pkd="'+d.t+'"':'')+'>'+pkDayLabel(d.t,D.t0)+(d.items.length?'':' <small>leer</small>')+'</div>'+d.items.map(o=>pkLine(o)).join("")}).join("");
+  const left=pkLateHtml(D,true)+week("Diese Woche","KW "+pkKW(D.m0)+" · "+pkDM(D.m0)+"–"+pkDM(pkAddD(D.m0,4)),D.w0);
+  const right=week("Nächste Woche","KW "+pkKW(D.m1)+" · "+pkDM(D.m1)+"–"+pkDM(pkAddD(D.m1,4)),D.w1)+'<div class="pkwh later"><span>Später</span><small>nach Kalenderwoche</small></div>'+D.kw.map(k=>'<div class="pkdh">'+esc(k.lab)+(k.items.length?'':' <small>leer</small>')+'</div>'+k.items.map(o=>pkLine(o,pkDayLabel(o.s.t,0))).join("")).join("");
+  $("#app").innerHTML=top+'<div class="pkwide"><div>'+left+'</div><div>'+right+'</div></div>'}
+ document.querySelectorAll("[data-pkt]").forEach(b=>b.onclick=()=>{pkTab=b.dataset.pkt;packOverView()});
+ document.querySelectorAll("[data-pkd]").forEach(b=>b.onclick=e=>{if(e.target.closest("[data-pk]"))return;const t=+b.dataset.pkd;pkOpenDays.has(t)?pkOpenDays.delete(t):pkOpenDays.add(t);packOverView()});
+ document.querySelectorAll("[data-pk]").forEach(e=>e.onclick=ev=>{ev.stopPropagation();curPack=e.dataset.pk;go("packopen")});
+ $("#pkall").onclick=()=>go("packall");pkUpBind()}
+window.addEventListener("resize",()=>{if(typeof view!=="undefined"&&view==="pack"&&pkWideLast!==null&&(window.innerWidth>=900)!==pkWideLast)packOverView()});

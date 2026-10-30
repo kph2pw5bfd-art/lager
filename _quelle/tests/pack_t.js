@@ -22,7 +22,7 @@ const seed=[
  await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(195,420);await p.waitForTimeout(400);
  console.log("Version:",await p.evaluate(()=>APPV));
  console.log("Karte Hauptseite:",(await p.textContent('[data-g="pack"]')).replace(/\s+/g," ").trim());
- await p.click('[data-g="pack"]');await p.waitForTimeout(300);
+ await p.click('[data-g="pack"]');await p.waitForTimeout(300);await p.click("#pkall");await p.waitForTimeout(200);
  console.log("Liste Aktuell:",(await p.$$eval(".pkh",l=>l.map(x=>x.textContent.replace(/\s+/g," ")))).join(" | "));
  await p.setInputFiles("#pkfile",S+"kaputt.pdf");await p.waitForTimeout(2500);console.log("Falsche PDF →",await p.evaluate(()=>{const e=document.querySelector(".eov");const t=e&&e.textContent.replace(/\s+/g," ").trim();if(e)e.remove();return t}));
  await p.setInputFiles("#pkfile",S+"pk_beispiel.pdf");await p.waitForSelector("#pkok",{timeout:15000});
