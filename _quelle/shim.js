@@ -1,4 +1,4 @@
-const APPV="1.66";
+const APPV="1.67";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -277,7 +277,7 @@ async function rlogRetXl(r,btn){const lbl=btn&&btn.textContent;try{const dl=awai
   const thin={style:"thin",color:{argb:"FFD5DBE5"}},bd={top:thin,left:thin,bottom:thin,right:thin},fill=h=>({type:"pattern",pattern:"solid",fgColor:{argb:h}});
   ws.mergeCells("A1:E1");const ti=ws.getCell("A1");ti.value="Protokoll Retourschein";ti.font={size:18,bold:true,color:{argb:NAVY}};ws.getRow(1).height=28;
   ws.mergeCells("A2:E2");ws.getCell("A2").value=String(r.ev||"")+(r.ord?" · Auftragsnummer "+r.ord:"");ws.getCell("A2").font={size:13,bold:true};
-  ws.mergeCells("A3:E3");ws.getCell("A3").value="Bearbeitet von: "+who.map(k=>String(k).startsWith("as:")?k.slice(3)+" (Tablet)":nm(k)).join(", ");
+  ws.mergeCells("A3:E3");ws.getCell("A3").value="Bearbeitet von: "+who.map(k=>String(k).startsWith("as:")?shortName(k.slice(3))+" (Tablet)":nm(k)).join(", ");
   ws.mergeCells("A4:E4");ws.getCell("A4").value="Menge = pro Tag verrechnet (dazugezählt minus abgezogen). Uhrzeit = erster und letzter Eintrag des Tages. Erstellt "+fmt(Date.now());ws.getCell("A4").font={size:9,italic:true,color:{argb:"FF667385"}};
   const hr=ws.getRow(6);hr.values=["Datum","Artikelnr.","Artikel","Gruppe","Menge"];hr.height=22;hr.eachCell(c=>{c.fill=fill(NAVY);c.font={bold:true,color:{argb:"FFFFFFFF"}};c.alignment={vertical:"middle",horizontal:"left"};c.border=bd});hr.getCell(5).alignment={vertical:"middle",horizontal:"right"};
   let rw=6,tot=0;const gO=g=>g==="Zubehör"?2:g==="Manuell"?1:0;
@@ -510,12 +510,12 @@ function rRemote(){if(!rs||!rs.id)return;const r=rets.find(x=>x.id===rs.id);if(!
  if(rs.h0)["ev","ord","rem"].forEach(f=>{const loc=String(rs[f]||""),rem=String(r[f]||"");if(loc===String(rs.h0[f]||"")&&rem!==loc)rs[f]=rem});
  rs.h0={ev:r.ev||"",ord:r.ord||"",rem:r.rem||""}}
 /* Hinweis: wer arbeitet gerade noch an diesem Schein */
-function rWhoL(r){const n=Date.now();return r?Object.keys(r).filter(k=>k.startsWith("ed_")&&k!=="ed_"+me&&n-(+r[k]||0)<90000).map(k=>nm(k.slice(3))):[]}
+function rWhoL(r){const n=Date.now();return r?Object.keys(r).filter(k=>k.startsWith("ed_")&&k!=="ed_"+me&&n-(+r[k]||0)<90000).map(k=>r["edn_"+k.slice(3)]?shortName(r["edn_"+k.slice(3)])+" (Tablet)":nm(k.slice(3))):[]}
 function rWho(){const L=rWhoL(rs&&rs.id&&rets.find(x=>x.id===rs.id));return L.length?'<div class="rwho"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.8"/><path d="M17 14.5c2.5.2 4.1 1.9 4.5 5"/></svg><span>'+esc(L.join(", "))+(L.length>1?" arbeiten":" arbeitet")+' gerade auch an diesem Schein. Eure Mengen werden zusammengezählt.</span></div>':""}
 let rHbId=null,rHbLast=0;
 function rHb(){const id=rs&&rs.id&&view==="retedit"&&document.visibilityState==="visible"&&rets.find(x=>x.id===rs.id)?rs.id:null;
  if(rHbId&&rHbId!==id){db.doc("retour/"+rHbId).update({["ed_"+me]:0}).catch(()=>{});rHbLast=0}
- if(id&&(id!==rHbId||Date.now()-rHbLast>30000)){rHbLast=Date.now();db.doc("retour/"+id).update({["ed_"+me]:Date.now()}).catch(()=>{})}
+ if(id&&(id!==rHbId||Date.now()-rHbLast>30000)){rHbLast=Date.now();db.doc("retour/"+id).update({["ed_"+me]:Date.now(),...(tabOn()&&TAB.act?{["edn_"+me]:TAB.act.name}:{})}).catch(()=>{})}
  rHbId=id}
 setInterval(()=>{if(typeof db!=="undefined"&&db&&me)rHb()},4000);
 document.addEventListener("visibilitychange",()=>{if(typeof db!=="undefined"&&db&&me)rHb()});

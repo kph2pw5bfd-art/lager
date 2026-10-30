@@ -31,6 +31,7 @@ async function ctxFor(b,role,extra){const ctx=await b.newContext({viewport:{widt
  await p.reload();await p.waitForTimeout(900);await p.mouse.click(512,600);await p.waitForTimeout(600);console.log("Nach 31 Min.: Auswahl da:",await p.isVisible("#tabov"),"| Helfer-Kachel gemerkt:",await p.evaluate(()=>[...document.querySelectorAll("#tabov .tabt.hlp b")].map(e=>e.textContent).join(",")));
  await p.click('[data-tbu="u3"]');await p.waitForTimeout(300);
  await p.evaluate(()=>{TAB.last=Date.now()-31*60e3});await p.evaluate(()=>tabCheck());await p.waitForTimeout(300);console.log("Pause im Betrieb → Auswahl:",await p.isVisible("#tabov"));
+ console.log("Mitarbeit-Hinweis:",await p.evaluate(()=>JSON.stringify(rWhoL({ed_u9:Date.now(),edn_u9:"Karl Tablettmann",ed_u2:Date.now()}))));
  console.log("Fehler Tablet:",errs);await ctx.close();
  /* normales Handy (kein Tablet) */
  const c2=await ctxFor(b,"user",[{col:"rolle",id:"u1",data:{t:"lagerarbeiter",x:{}}}]);const p2=await c2.newPage();const e2=[];p2.on("pageerror",e=>e2.push(e.message));

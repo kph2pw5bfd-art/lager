@@ -38,14 +38,14 @@ function pkGroups(){const G={over:[],late:[],herr:[],back:[],out:[],next:[],done
  G.over.sort((a,b)=>(a.de||0)-(b.de||0));G.herr.sort((a,b)=>(a.db||0)-(b.db||0));G.back.sort((a,b)=>(a.de||0)-(b.de||0));G.out.sort((a,b)=>(a.de||0)-(b.de||0));G.next.sort((a,b)=>pkHDay(a)-pkHDay(b));G.late.sort((a,b)=>pkHDay(a)-pkHDay(b));G.done.sort((a,b)=>(b.de||0)-(a.de||0));return G}
 function pkHint(p){const s=pkState(p),h=pkHd(p),out=[];
  if(s.k==="late")out.push('<div class="pkhint '+(s.c==="part"?'part">◐ Teilweise hergerichtet':'warn">⚠ Nicht hergerichtet')+' – '+(pkShifted(p)?'verschoben auf '+pkWd(pkHDay(p))+', ':'')+'Dispo-Beginn war '+pkWd(p.db)+'</div>');
- else if(pkShifted(p))out.push('<div class="pkhint">↻ Herrichten verschoben auf '+pkWd(pkHDay(p))+' (Dispo-Beginn '+pkWd(p.db)+')'+(h.why?' – '+esc(h.why):'')+(h.by?' · '+esc(String(nm(h.by)).split(" ")[0]):'')+'</div>');
+ else if(pkShifted(p))out.push('<div class="pkhint">↻ Herrichten verschoben auf '+pkWd(pkHDay(p))+' (Dispo-Beginn '+pkWd(p.db)+')'+(h.why?' – '+esc(h.why):'')+(h.by?' · '+esc(nm(h.by)):'')+'</div>');
  const H=packh[p.id]||{};
  if(H.reo&&H.reo.t&&!(H.fin&&H.fin.t))out.push('<div class="pkhint warn">↺ Wieder geöffnet – '+esc(H.reo.why||"Zusatz-Packschein")+' ('+fmt(H.reo.t).slice(0,6)+'), Zusatz noch herrichten</div>');
  else if((p.zus||[]).length)out.push('<div class="pkhint">＋ '+(p.zus.length===1?'Zusatz-Packschein '+esc(p.zus[0].ps)+' angehängt':p.zus.length+' Zusatz-Packscheine angehängt')+'</div>');
  return out.join("")}
 function pkRow(p){const s=pkState(p),f=pkF(p).length;
  return '<div class="card pkr" data-pk="'+esc(p.id)+'"><div class="row" style="align-items:center"><b style="flex:1;min-width:0">'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(s.c?'<span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>':'')+'</div>'+
-  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div><div class="mute">'+(()=>{const g=pkProg(p);return g.fin?'Hergerichtet ✓ · ':g.d?g.d+' von '+g.n+' hergerichtet · ':''})()+pkPosN(pkPosAll(p).length)+((p.zus||[]).length?' · '+(p.zus.length===1?'1 Zusatz':p.zus.length+' Zusätze'):'')+(f?' · <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div>'+pkHint(p)+'</div>'}
+  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div><div class="mute">'+(()=>{const g=pkProg(p);return g.fin?'Hergerichtet ✓ · ':g.d?g.d+' von '+g.n+' hergerichtet · ':''})()+pkPosN(pkPosAll(p).length)+((p.zus||[]).length?' · '+(p.zus.length===1?'1 Zusatz':p.zus.length+' Zusätze'):'')+(f?' · <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div>'+pkHint(p)+'</div>'}
 function pkUpHtml(){return can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden>':''}
 function pkUpBind(){if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)}}}
 function packView(){$("#t").textContent="Alle Packlisten";const G=pkGroups();
@@ -76,7 +76,7 @@ function pkMainFor(P,id){const o=pkDig(P.ord);if(!o||packs.some(x=>x.id===id))re
 function pkConfirm(P,main){return new Promise(res=>{const id=P.ps||("A"+pkDig(P.ord)),old=packs.find(x=>x.id===id),f=P.pos.filter(x=>x.f>0).length,o=document.createElement("div");o.className="ov";
  const mf=main&&(packh[main.id]||{}).fin,again=main&&(main.zus||[]).some(q=>String(q.ps)===String(P.ps));
  o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0;max-height:90vh;overflow:auto"><b>'+(main?'Zusatz-Packschein erkannt':'Packliste erkannt')+'</b>'+
-  '<div class="pkkv"><span>Veranstaltung</span><b>'+esc(P.ev||"–")+'</b><span>Auftrag</span><b>'+esc(P.ord||"–")+'</b><span>Packschein</span><b>'+esc(P.ps||"–")+'</b><span>Projektleiter</span><b>'+esc(P.pl||"–")+'</b><span>Dispo Beginn</span><b>'+pkD(P.db)+'</b><span>Dispo Ende</span><b>'+pkD(P.de)+'</b></div>'+
+  '<div class="pkkv"><span>Veranstaltung</span><b>'+esc(P.ev||"–")+'</b><span>Auftrag</span><b>'+esc(P.ord||"–")+'</b><span>Packschein</span><b>'+esc(P.ps||"–")+'</b><span>Projektleiter</span><b>'+esc(shortName(P.pl)||"–")+'</b><span>Dispo Beginn</span><b>'+pkD(P.db)+'</b><span>Dispo Ende</span><b>'+pkD(P.de)+'</b></div>'+
   '<p style="margin:8px 0">'+pkPosN(P.pos.length)+(f?', davon <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</p>'+
   (old?'<p class="pkold">Diese Packliste ist schon da (hochgeladen '+fmt(old.t)+' von '+esc(nm(old.by))+'). Beim Speichern wird sie ersetzt.</p>':'')+
   (main?'<p class="pkzinfo">Zum Auftrag '+esc(P.ord)+' gibt es schon die Packliste <b>'+esc(main.ev||"")+'</b> (Packschein '+esc(main.ps||main.id)+'). '+(again?'Dieser Zusatz ist dort schon angehängt und wird ersetzt. ':'Der Zusatz wird unten angehängt. ')+'Die Dispo-Zeiten bleiben die vom ersten Packschein.'+(mf&&mf.t?' <b>Die Packliste ist schon hergerichtet und wird wieder geöffnet.</b>':'')+'</p>':'')+
@@ -120,7 +120,7 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
  const pct=pr.n?Math.round(pr.d*100/pr.n):0;
  const IT=pkItems(p),rows=pkSortIdx(p).map(i=>{const x=IT[i].x,h=H[K[i]],st=pkPS(x,h);return{x,i,h,st,z:IT[i].z}}).filter(r=>pkHf==="alle"||r.st.s!=="ok");
  $("#app").innerHTML='<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;min-width:0;font-size:18px">'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span></div>'+
-  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+
+  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+
   '<div class="pkhday"><span>Herrichten: <b>'+pkWd(pkHDay(p))+'</b>'+(pkShifted(p)?' <span class="mute">(verschoben)</span>':'')+'</span>'+(fin?'':'<button class="btn ghost s" id="pkmv" type="button">Verschieben</button>')+'</div>'+pkHint(p)+
   '<details class="pkmore"><summary>Alle Angaben</summary><div class="pkkv"><span>Packschein</span><b>'+esc(p.ps||"–")+'</b>'+(p.sa?'<span>Selbstabholer</span><b>'+esc(p.sa)+'</b>':'')+(p.pk?'<span>Packen</span><b>'+pkD(p.pk)+'</b>':'')+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+(p.eb?'<span>Event</span><b>'+pkD(p.eb)+' – '+pkD(p.ee)+'</b>':'')+'</div><div class="mute" style="font-size:13px;margin-top:6px">Hochgeladen '+fmt(p.t)+' von '+esc(nm(p.by))+'</div></details>'+
   (R.length&&can("ret_s")?R.map(r=>'<button class="btn ghost" data-pkr="'+esc(r.id)+'" style="margin-top:8px">Retourschein öffnen'+(r.closed?' (abgeschlossen)':' (offen)')+'</button>').join(""):'')+'</div>'+
@@ -135,7 +135,7 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
    (fm?'<em class="'+(h&&h.fm?'pkfm':'pkfr')+'">'+esc(fm)+'</em>':'')+
    (st.s==="part"?'<em class="pkpart">'+pkNum(st.q)+' von '+pkNum(st.need)+' da – fehlen '+pkNum(st.need-st.q)+'</em>':'')+
    st.alt.map(a=>'<em class="pkalt">+ '+esc(pkNum(a.n))+'× '+esc(a.t)+(a.a?' ('+esc(a.a)+')':'')+'</em>').join("")+
-   (h&&h.by&&st.s!=="open"?'<small class="pkby">'+esc(String(nm(h.by)).split(" ")[0])+', '+fmt(h.t).slice(-5)+'</small>':'')+'</span></div>'}).join(""):'<div class="mute" style="padding:10px 0">Alles hergerichtet.</div>')+'</div>'+
+   (h&&h.by&&st.s!=="open"?'<small class="pkby">'+esc(nm(h.by))+', '+fmt(h.t).slice(-5)+'</small>':'')+'</span></div>'}).join(""):'<div class="mute" style="padding:10px 0">Alles hergerichtet.</div>')+'</div>'+
   (fin?'<button class="btn ghost" id="pkinfo" style="margin-top:12px">Info an Projektleiter</button><button class="btn ghost" id="pkreo" style="margin-top:8px">Wieder öffnen</button>':'<button class="btn" id="pkfin" style="margin-top:12px">Herrichten abschließen</button>')+
   (can("pk_l")?'<button class="btn ghost" id="pkdel" style="color:var(--bad);margin-top:12px">Packliste löschen</button>':'');
  document.querySelectorAll("[data-pkhf]").forEach(b=>b.onclick=()=>{pkHf=b.dataset.pkhf;packOpenView()});
@@ -211,7 +211,7 @@ function pkEdit(P,i){const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k]||{};let f
   pkHSet(P,{[k]:{ok:q!==null&&q>=need()&&!alt.length,q,alt,fm,by:me,t:Date.now()}})}}
 /* Abschließen + Info an Projektleiter */
 function pkFinish(P){const pr=pkProg(P),open=pr.n-pr.d;
- const go2=()=>pkHSet(P,{fin:{by:me,t:Date.now()},reo:null}).then(()=>{toast("Herrichten abgeschlossen",1);const pp=pkProg(P);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(P.pl||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P))});
+ const go2=()=>pkHSet(P,{fin:{by:me,t:Date.now()},reo:null}).then(()=>{toast("Herrichten abgeschlossen",1);const pp=pkProg(P);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(shortName(P.pl)||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P))});
  if(open>0)ask("Noch "+open+(open===1?" Position ist":" Positionen sind")+" nicht hergerichtet. Trotzdem abschließen?",go2);else go2()}
 function pkMailText(P){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[];
  pkPosAll(P).forEach((x,i)=>{const h=H[K[i]],st=pkPS(x,h),nm2=x.t+(x.a?" ("+x.a+")":"")+(IT[i].z?" [Zusatz "+IT[i].z+"]":""),u=x.u?" "+x.u:"";
@@ -223,7 +223,7 @@ function pkMailText(P){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[];
  return{subj:"Packliste "+(P.ord||"")+" – "+(P.ev||"")+": Abweichungen beim Herrichten",
   body:"Hallo"+(vn?" "+vn:"")+",\n\nbeim Herrichten von "+(P.ev||"")+" (Auftrag "+(P.ord||"–")+", Packschein "+(P.ps||"–")+") gab es folgende Abweichungen:\n\n"+(L.length?L.join("\n"):"- keine")+"\n\nHergerichtet von "+(H.fin&&H.fin.by?nm(H.fin.by):me1)+(H.fin&&H.fin.t?", "+fmt(H.fin.t):"")+".\n\nLG\n"+me1}}
 function pkMail(P){const m=pkMailText(P),o=document.createElement("div");o.className="ov";
- o.innerHTML='<div class="card" style="width:100%;max-width:460px;margin:0;max-height:92vh;overflow:auto"><b>Info an '+esc(P.pl||"Projektleiter")+'</b><p class="mute" style="margin:4px 0 8px">Betreff: '+esc(m.subj)+'</p><textarea id="kpmt" style="min-height:220px"></textarea>'+
+ o.innerHTML='<div class="card" style="width:100%;max-width:460px;margin:0;max-height:92vh;overflow:auto"><b>Info an '+esc(shortName(P.pl)||"Projektleiter")+'</b><p class="mute" style="margin:4px 0 8px">Betreff: '+esc(m.subj)+'</p><textarea id="kpmt" style="min-height:220px"></textarea>'+
   '<div class="row" style="margin-top:8px"><a class="btn" id="kpmm" href="#">Mail öffnen</a><button class="btn ghost" id="kpms" type="button" hidden>Teilen</button></div><div class="row" style="margin-top:8px"><button class="btn ghost" id="kpmc" type="button">Text kopieren</button><button class="btn ghost" id="kpmx" type="button">Schließen</button></div></div>';
  document.body.appendChild(o);const g=id=>o.querySelector("#"+id),ta=g("kpmt");ta.value=m.body;
  const mark=()=>pkHSet(P,{info:{by:me,t:Date.now()}});
@@ -269,10 +269,10 @@ function pkBar(g){return '<div class="pkmb"><div class="pkbar"><i style="width:'
 /* Karte (Handy) */
 function pkCard(o){const p=o.p,g=o.g;
  if(g.fin)return '<button class="pkcard fin" type="button" data-pk="'+esc(p.id)+'"><b>'+esc(p.ev||p.ord)+'</b><span class="pkok">Hergerichtet ✓</span></button>';
- return '<button class="pkcard" type="button" data-pk="'+esc(p.id)+'"><span class="pkct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(pkTime(p)?'<small>'+pkTime(p)+'</small>':'')+'</span><span class="pkcs">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</span>'+pkBar(g)+pkBadges(o,true)+'</button>'}
+ return '<button class="pkcard" type="button" data-pk="'+esc(p.id)+'"><span class="pkct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(pkTime(p)?'<small>'+pkTime(p)+'</small>':'')+'</span><span class="pkcs">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</span>'+pkBar(g)+pkBadges(o,true)+'</button>'}
 /* Zeile (breit) */
 function pkLine(o,lab){const p=o.p,g=o.g;
- return '<button class="pkline'+(g.fin?' fin':'')+'" type="button" data-pk="'+esc(p.id)+'"><span class="pkl1">'+esc(lab||pkTime(p)||"")+'</span><span class="pkl2"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(p.pl):'')+'</small>'+(g.fin?'':pkBadges(o,true))+'</span><span class="pkl3">'+(g.fin?'<span class="pkok">✓</span>':g.n?g.d+'/'+g.n:'')+'</span></button>'}
+ return '<button class="pkline'+(g.fin?' fin':'')+'" type="button" data-pk="'+esc(p.id)+'"><span class="pkl1">'+esc(lab||pkTime(p)||"")+'</span><span class="pkl2"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</small>'+(g.fin?'':pkBadges(o,true))+'</span><span class="pkl3">'+(g.fin?'<span class="pkok">✓</span>':g.n?g.d+'/'+g.n:'')+'</span></button>'}
 function pkLateHtml(D,wide){if(!D.late.length)return"";
  return '<section class="pklate"><h3>Nicht hergerichtet <span>'+D.late.length+'</span></h3>'+D.late.map(o=>{const part=o.g.d>0;
   return '<button class="pklc" type="button" data-pk="'+esc(o.p.id)+'"><span class="pkct"><b>'+esc(o.p.ev||o.p.ord)+'</b><small class="'+(part?'part':'warn')+'">'+(part?'Teilweise hergerichtet':'Nicht hergerichtet')+'</small></span><span class="pkcs">seit '+pkWd(pkHDay(o.p))+' · Auftrag '+esc(o.p.ord||"–")+'</span>'+(part?pkBar(o.g):'')+'</button>'}).join("")+'</section>'}

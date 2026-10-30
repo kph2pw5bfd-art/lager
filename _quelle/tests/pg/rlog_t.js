@@ -32,12 +32,12 @@ const q=s=>execFileSync("psql",["-h","/home/postgres/pgt","-p","5499","-U","post
  X.rows.forEach(([i,v])=>console.log("   Zeile",i,JSON.stringify(v)));
  const R=X.rows.map(r=>r[1]);
  ok("Kopf: Veranstaltung + Auftragsnummer",R.some(v=>v&&v[0]==="Messe Wels · Auftragsnummer 2601234"));
- ok("Bearbeitet von: Max + Jürgen",R.some(v=>v&&v[0]==="Bearbeitet von: Max Monteur, Jürgen Hartmann"));
+ ok("Bearbeitet von: Max + Jürgen",R.some(v=>v&&v[0]==="Bearbeitet von: Max M., Jürgen H."));
  const day=R.find(v=>v&&/erster Eintrag/.test(v[1]||""));ok("Tageszeile mit erstem/letztem Eintrag + Summe 11",!!day&&day[4]===11,JSON.stringify(day));
  ok("16A netto 5 (Max 4 + Jürgen 1), 32A 4, Testlampe 2",R.some(v=>v&&v[2]==="16A 100m"&&v[4]===5)&&R.some(v=>v&&v[2]==="32A 50m"&&v[4]===4)&&R.some(v=>v&&v[2]==="Testlampe"&&v[3]==="Manuell"&&v[4]===2));
  ok("Anderer Schein (32A 9) NICHT enthalten",!R.some(v=>v&&v[4]===9));
  const tot=(await A.evaluate(id=>rTot(rIt(rets.find(x=>x.id===id))),rid));ok("Gesamt = Summe im Schein ("+tot+")",R.some(v=>v&&v[0]==="Gesamt"&&v[4]===tot));
  // alter, nachgetragener Schein
  await A.evaluate(()=>{curRet="alt1";view="retopen";draw()});await A.waitForTimeout(300);({name,X}=await dlx(A,__dirname+"/p2.xlsx"));const R2=X.rows.map(r=>r[1]);
- ok("Alter Schein: nachgetragen ohne Uhrzeit, Ersteller als Bearbeiter, 32A 7",R2.some(v=>v&&/nachgetragen, ohne Uhrzeit/.test(v[1]||"")&&v[4]===7)&&R2.some(v=>v&&v[0]==="Bearbeitet von: Jürgen Hartmann"),JSON.stringify(R2.slice(0,4)));
+ ok("Alter Schein: nachgetragen ohne Uhrzeit, Ersteller als Bearbeiter, 32A 7",R2.some(v=>v&&/nachgetragen, ohne Uhrzeit/.test(v[1]||"")&&v[4]===7)&&R2.some(v=>v&&v[0]==="Bearbeitet von: Jürgen H."),JSON.stringify(R2.slice(0,4)));
  console.log("Seitenfehler:",[M,A].flatMap(p=>p.__errs));console.log("FEHLER GESAMT:",F);await b.close()})();
