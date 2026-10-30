@@ -22,7 +22,7 @@ const seed="const T={docs:["+JSON.stringify([
    console.log("  Text:",(await p.evaluate(()=>jvText(jvData()))).slice(0,260));
    await p.screenshot({path:S+"jv_"+w+".png",fullPage:true});
    const ov=await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth);console.log("  quer scrollbar:",ov);
-   await p.click("#jvth");await p.waitForTimeout(300);await p.screenshot({path:S+"jv_"+w+"_hell.png",fullPage:false});
+   /* Hell/Dunkel gibt es ab 1.72 nicht mehr */
    await p.click('[data-jd="d1"]');await p.waitForTimeout(300);console.log("  Tippen Defekt ->",await p.textContent("#t"),"| body jvon:",await p.evaluate(()=>document.body.classList.contains("jvon")));
    await p.click("#bk");await p.waitForTimeout(300);console.log("  Zurück ->",await p.textContent("#t"));
    await p.click('[data-jr="r1"]');await p.waitForTimeout(300);console.log("  Tippen Retourschein ->",await p.textContent("#t"));

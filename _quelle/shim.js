@@ -1,4 +1,4 @@
-const APPV="1.71";
+const APPV="1.72";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -319,7 +319,7 @@ function jvPanels(D){
   '<div class="jvstat'+(D.urg?' al':'')+'"><div class="n">'+String(D.od.length).padStart(2,"0")+'</div><div class="t">Defekte offen'+(D.urg?', '+D.urg+' dringend':'')+'</div></div>'+
   '<div class="jvstat"><div class="n">'+String(D.fixed.length).padStart(2,"0")+'</div><div class="t">Repariert</div></div></div></section>';
  const ret='<section class="jvpn"><div class="jvlb">Offene Retourscheine <span>'+D.open.length+'</span></div>'+(D.open.length?D.open.slice(0,8).map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),rTot(rIt(r))+" Stk · "+jvAgo(r.modT||r.t))).join(""):'<div class="jvempty">Keine offenen Retourscheine.</div>')+'</section>';
- const soon='<section class="jvpn dim"><div class="jvlb">Herrichten · Heute zurück · Überfällig <span>bald</span></div><div class="jvempty">Kommt, sobald Jarvis die Packlisten aus dem Lager-Postfach lesen darf.</div></section>';
+ const soon='<section class="jvpn dim"><div class="jvlb">Herrichten · Heute zurück · Überfällig <span>bald</span></div><div class="jvempty">Kommt, sobald der Assistent die Packlisten aus dem Lager-Postfach lesen darf.</div></section>';
  const def='<section class="jvpn'+(D.urg?' al':'')+'"><div class="jvlb">'+(can("def_s")?"Offene Defekte":"Deine offenen Defekte")+' <span>'+D.od.length+'</span></div>'+(D.od.length?D.od.slice(0,8).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art+(d.ev?" · "+d.ev:"")),d.urg?"dringend":jvAgo(d.t),d.urg?"warn":"ok")).join(""):'<div class="jvempty">Keine offenen Defekte.</div>')+'</section>';
  const fx='<section class="jvpn"><div class="jvlb">Wieder einsatzbereit <span>seit '+(jvPrev?"letztem Briefing":"24 Std.")+'</span></div>'+(D.fixed.length?D.fixed.slice(0,6).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art),"repariert "+fmt(d.doneT).slice(0,6)+" "+fmt(d.doneT).slice(-5))).join(""):'<div class="jvempty">Nichts Neues repariert.</div>')+'</section>';
  const lr='<section class="jvpn"><div class="jvlb">Letzte Retouren <span>abgeschlossen</span></div>'+(D.last.length?D.last.map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),jvAgo(r.closedT||r.t))).join(""):'<div class="jvempty">Noch keine abgeschlossenen Retourscheine.</div>')+'</section>';
@@ -327,7 +327,7 @@ function jvPanels(D){
  return D.rs?{left:st+pkp+ret,right:def+fx+lr}:{left:st+pkp,right:def+fx}}
 function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i%6===0,r1=86,r2=r1+(big?12:5);t+='<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'" stroke="var(--jv-tick'+(big?'b':'')+')" stroke-width="1.2"/>'}
  return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
-function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+" · "+d.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"})}
+function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+", "+d.toLocaleDateString("de-AT",{day:"numeric",month:"long",year:"numeric"})}
 setInterval(jvClock,1000);
 function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")})}
 /* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
@@ -376,7 +376,7 @@ function jvTextFrech(D){const S=[jvHiFrech()].concat(jvPkText(D,true)),h=new Dat
  else if(k===1){const e=jvSay(D.open[0].ev);S.push(jvPick(["Ein Retourschein ist noch offen: "+e+". Der fühlt sich schon ein bisschen vernachlässigt.","Einer ist noch offen: "+e+". Nur einer. "+(h<11?"Das schaffst du vor dem Mittagessen.":"Das schaffst du heute noch.")]))}
  else if(k<=3){const l=jvList(D.open.map(r=>jvSay(r.ev)));S.push(jvPick([N+" Retourscheine sind offen: "+l+". Ich nehme an, die erledigen sich nicht von selbst.",N+" offene Retourscheine: "+l+". Die warten schon geduldig. Noch."]))}
  else{const e=jvSay(D.open[0].ev);S.push(jvPick([N+" Retourscheine sind offen. Ich nehme an, die erledigen sich nicht von selbst. Der jüngste ist "+e+".",N+" offene Retourscheine. Der jüngste ist "+e+". Die anderen warten schon geduldig. Noch."]))}
- const U=D.od.filter(d=>d.urg),m=D.od.length,M=jvCap(jvN(m)),tail=()=>jvPick([" Nur so als Hinweis."," Ich würde das nicht ignorieren. Aber ich bin ja nur Jarvis."]);
+ const U=D.od.filter(d=>d.urg),m=D.od.length,M=jvCap(jvN(m)),tail=()=>jvPick([" Nur so als Hinweis."," Ich würde das nicht ignorieren. Aber ich bin ja nur der Assistent."]);
  if(!m)S.push(jvPick(["Keine offenen Defekte. Entweder läuft alles, oder keiner hat's gemeldet.","Defekte: null. Die Werkstatt langweilt sich vermutlich."]));
  else if(U.length===1){const a=jvSay(U[0].art)+(U[0].ev?" von "+jvSay(U[0].ev):"");S.push((m===1?"Ein Defekt ist offen, und der ist dringend: ":M+" Defekte warten, und einer davon ist dringend: ")+a+"."+tail())}
  else if(U.length>1)S.push(M+" Defekte sind offen, dringend davon: "+jvList(U.slice(0,3).map(d=>jvSay(d.art)))+"."+tail());
@@ -399,7 +399,7 @@ function jvTextSachlich(D){const S=[jvGreet()+"."].concat(jvPkText(D,false));
  if(D.fixed.length===1)S.push("Gute Nachricht: "+jvSay(D.fixed[0].art)+" ist repariert und wieder einsatzbereit.");
  else if(D.fixed.length>1)S.push("Gute Nachricht: "+jvList(D.fixed.slice(0,4).map(d=>jvSay(d.art)))+" sind repariert und wieder einsatzbereit.");
  return S}
-function jvTalk(on){jvSpeaking=on;const j=$("#jv"),b=$("#jvsp");if(j)j.classList.toggle("talk",on);if(b)b.textContent=on?(jvMode==="ask"?"Antwort stoppen":"Briefing stoppen"):"Briefing vorlesen"}
+function jvTalk(on){jvSpeaking=on;const j=$("#jv"),b=$("#jvsp");if(j)j.classList.toggle("talk",on);if(b)b.textContent=on?"Stopp":"Briefing"}
 function jvSpeakDevice(lines,done){if(!("speechSynthesis" in window)){jvTalk(false);toast("Sprachausgabe geht auf diesem Gerät nicht.");return}
  speechSynthesis.cancel();const v=jvVoice();let i=0,stop=false;jvTalk(true);
  const next=()=>{if(stop||!jvSpeaking||i>=lines.length){jvTalk(false);if(done)done();return}
@@ -423,7 +423,7 @@ async function jvThReady(){const m=await jvThLib();let have=[];try{have=(await m
 async function jvThSpeak(lines){const m=await jvThReady();if(!jvSpeaking)return;jvBtn("Thorsten überlegt …");const a=jvAudio();
  let next=m.predict({text:lines[0],voiceId:JV_TH_ID});
  for(let i=0;i<lines.length&&jvSpeaking;i++){const blob=await next;if(i+1<lines.length)next=m.predict({text:lines[i+1],voiceId:JV_TH_ID});if(!jvSpeaking)break;
-  if(i===0)jvBtn("Briefing stoppen");const u=URL.createObjectURL(blob);a.src=u;a.playbackRate=jvRate();
+  if(i===0)jvBtn("Stopp");const u=URL.createObjectURL(blob);a.src=u;a.playbackRate=jvRate();
   await new Promise(res=>{a.onended=res;a.onerror=res;a.onpause=()=>{if(!jvSpeaking)res()};try{const p=a.play();if(p&&p.catch)p.catch(res)}catch(e){res()}});
   URL.revokeObjectURL(u);if(jvSpeaking)await new Promise(r=>setTimeout(r,180))}}
 function jvSpeakLines(lines,done){jvTalk(true);
@@ -434,7 +434,7 @@ function jvStop(){jvSpeaking=false;try{speechSynthesis.cancel()}catch(e){}if(jvA
 function jvSpeak(){if(jvSpeaking)return jvStop();jvMode="brief";jvSpeakLines(jvText(jvData()))}
 /* Stimmen-Einstellung mit Probe-Hören */
 function jvVoiceDlg(){const L=jvVoices(),cur=jvVoice(),o=document.createElement("div");o.className="ov";
- const best=L[0];o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b>Stimme von Jarvis</b><p class="mute" style="margin:4px 0 10px">Gilt nur für dieses Gerät.</p>'+
+ const best=L[0];o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b>Stimme des Lager Assistenten</b><p class="mute" style="margin:4px 0 10px">Gilt nur für dieses Gerät.</p>'+
   '<div class="row seg" style="margin-bottom:10px'+(owner?'':';display:none')+'"><button type="button" id="jvet" class="'+(jvEngine()==="thorsten"?"on":"")+'">Thorsten</button><button type="button" id="jved" class="'+(jvEngine()==="device"?"on":"")+'">Gerätestimme</button></div>'+
   '<p class="mute" id="jvthi" style="font-size:13px;margin:0 0 8px">Freie deutsche Männerstimme, wird im Gerät berechnet. Beim ersten Mal einmalig ca. 60 MB laden (am besten im WLAN), danach geht es auch offline. Test nur für dich – für den Firmeneinsatz Lizenz noch prüfen.</p><div id="jvdev">'+
   (L.length?'<label class="mute" for="jvvs">Stimme</label><select id="jvvs">'+L.map(v=>'<option value="'+esc(jvVK(v))+'"'+(cur&&jvVK(v)===jvVK(cur)?' selected':'')+'>'+esc(jvVLabel(v))+(v===best?' – empfohlen':'')+'</option>').join("")+'</select>':'<p class="mute">Auf diesem Gerät ist keine deutsche Stimme installiert.</p>')+
@@ -452,14 +452,19 @@ function jvVoiceDlg(){const L=jvVoices(),cur=jvVoice(),o=document.createElement(
  g("jvvo").onclick=()=>{if(jvSpeaking)jvStop();o.remove()};
  o.addEventListener("click",e=>{if(e.target===o)g("jvvo").click()})}
 if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.addEventListener&&speechSynthesis.addEventListener("voiceschanged",()=>{})}
-function jarvisView(){$("#t").textContent="Jarvis";const D=jvData(),P=jvPanels(D);
+function jarvisView(){$("#t").textContent="Lager Assistent";const D=jvData(),P=jvPanels(D);
  if($("#jv")){$("#jvl").innerHTML=P.left;$("#jvr").innerHTML=P.right;$("#jvg").textContent=jvGreet();jvBind();return}
  if(jvPrev===null){jvPrev=+jvLS("tpc_jv_last")||0;jvLS("tpc_jv_last",String(Date.now()))}
- const light=jvLS("tpc_jv_light")==="1";
- $("#app").innerHTML='<div class="jv'+(light?' light':'')+'" id="jv"><div class="jvtop"><b>System · Lager-Assistent</b><span><span class="jvdot" aria-hidden="true"></span>Online · <button class="jvlink" id="jvvc" type="button">Stimme</button> · <button class="jvlink" id="jvrd" type="button">'+(jvReadOn()?"Vorlesen an":"Vorlesen aus")+'</button> · <button class="jvlink" id="jvth" type="button">'+(light?"Dunkel":"Hell")+'</button></span></div>'+
-  '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcenter"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div><div class="jvreactor">'+jvReactor()+'</div><div class="jvgreet" id="jvg">'+jvGreet()+'</div><button class="jvbtn" id="jvsp" type="button">Briefing vorlesen</button>'+jvAskHtml()+'</div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
-  (owner?'<p class="jvnote">Wer Jarvis sieht, stellst du in der Benutzerverwaltung ein (Recht „Jarvis“). Herrichten, Heute zurück und Überfällig kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
- jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvrd").onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");$("#jvrd").textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()};$("#jvth").onclick=()=>{const l=!$("#jv").classList.contains("light");jvLS("tpc_jv_light",l?"1":"0");$("#jv").classList.toggle("light",l);$("#jvth").textContent=l?"Dunkel":"Hell"}}
+ $("#app").innerHTML='<div class="jv" id="jv"><section class="jvhead"><div class="jvhrow">'+
+  '<span class="jvmini" aria-hidden="true"><svg viewBox="0 0 52 52" width="44" height="44"><g class="r1"><circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 4"/></g><g class="r2"><circle cx="26" cy="26" r="18" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="10 4" opacity=".55"/></g><circle cx="26" cy="26" r="11" fill="none" stroke="currentColor" stroke-width="2"/><circle class="core" cx="26" cy="26" r="5" fill="currentColor"/></svg></span>'+
+  '<div class="jvtime"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div></div>'+
+  '<button class="jvbrief" id="jvsp" type="button">Briefing</button></div>'+
+  '<div class="jvgreet" id="jvg">'+jvGreet()+'</div>'+jvAskHtml()+
+  '<div class="jvopts"><button class="jvlink" id="jvvc" type="button">Stimme</button><span aria-hidden="true">·</span><button class="jvlink" id="jvrd" type="button">'+(jvReadOn()?"Vorlesen an":"Vorlesen aus")+'</button></div></section>'+
+  '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
+  (owner?'<p class="jvnote">Wer die Lager Übersicht sieht, stellst du in der Benutzerverwaltung ein (Recht „Lager Übersicht“). Herrichten, Heute zurück und Überfällig kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
+ jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;
+ $("#jvrd").onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");$("#jvrd").textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}
 async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Fehlende Artikel</h3><p class="mute" style="margin:0 0 8px">Artikel, die manuell in Retourscheine eingetragen wurden, weil sie in der Artikelliste fehlen.</p><div id="fbx"><div class="card mute">Lade …</div></div>');
@@ -625,7 +630,7 @@ const RAREA=[["def","Defekte","Alle Defekte, nicht nur die eigenen"],["ret","Ret
 const rLv=(a,l,t)=>a==="pk"&&l==="b"?"Hochladen":t;
 const RVW=[["v_user","Benutzer freigeben/sperren"],["v_rights","Titel und Rechte"],["v_app","App-Verwaltung (inkl. Artikelliste)"]];
 let TIT={},ROL={},rkLast=null,rxOpen=new Set(),tOpen=new Set();
-function rSum(r){r=rNormR(r);const jv=r.jv_s?["Jarvis"]:[];const mt=RMAT.filter(([k])=>r[k]).map(([,t])=>t.toLowerCase());const L=jv.concat(mt.length?["Materialliste: "+mt.join(", ")]:[]).concat(RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([x,t])=>rLv(a,x,t).toLowerCase());return l.length?n+": "+l.join(", "):""})).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
+function rSum(r){r=rNormR(r);const jv=r.jv_s?["Lager Übersicht"]:[];const mt=RMAT.filter(([k])=>r[k]).map(([,t])=>t.toLowerCase());const L=jv.concat(mt.length?["Materialliste: "+mt.join(", ")]:[]).concat(RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([x,t])=>rLv(a,x,t).toLowerCase());return l.length?n+": "+l.join(", "):""})).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
 function rNormR(o){o=o||{};const r={};RK.forEach(k=>{if(o[k]===true)r[k]=true});["def","ret","inf","pk"].forEach(a=>{if(r[a+"_b"]||r[a+"_l"])r[a+"_s"]=true});return r}
 function uRights(uid){const x=ROL[uid]||{},t=TIT[x.t]||{};return rNormR({...(t.r||{}),...Object.fromEntries(Object.entries(x.x||{}).filter(([,v])=>v===true))})}
 /* Solange die Datenbank-Änderung (rechte.sql) fehlt, gibt es keine Titel: dann gelten die alten Häkchen Werkstatt/Lager */
@@ -643,7 +648,7 @@ function infoDelBtn(i){if(!can("inf_l")||$("#idel"))return;$("#app").insertAdjac
  $("#idel").onclick=()=>ask("Nachricht wirklich löschen?",async()=>{try{await db.doc("infos/"+i.id).delete();for(let k=0;k<(i.fn||0);k++){try{await db.doc("fotos/"+i.id+"-"+k).delete()}catch(e){}}view="info";hist=hist.filter(v=>v!=="infoopen");draw();toast("Nachricht gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
 /* Kästchen-Raster: cur = eigene Häkchen, inh = vom Titel geerbt (grau, nicht änderbar) */
 function rMx(cur,inh,attr){cur=cur||{};inh=inh||{};const cb=(k,l)=>{const i=!!inh[k],c=i||!!cur[k];return '<label class="rmc'+(i?' inh':'')+'"><input type="checkbox" '+attr+' data-k="'+k+'"'+(c?' checked':'')+(i?' disabled':'')+'><span>'+l+'</span></label>'};
- return '<div class="rmx"><div class="rmr"><div class="rmh"><b>Jarvis</b><small>Briefing und Übersicht (zeigt nur, was die Person sehen darf)</small></div><div class="rml">'+cb("jv_s","Sehen")+'</div></div><div class="rmr"><div class="rmh"><b>Materialliste</b><small>Erstellen und scannen darf jeder</small></div><div class="rml rmm">'+RMAT.map(([k,t])=>cb(k,t)).join("")+'</div></div>'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,rLv(a,l,t))).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
+ return '<div class="rmx"><div class="rmr"><div class="rmh"><b>Lager Übersicht</b><small>Lager Assistent mit Briefing (zeigt nur, was die Person sehen darf)</small></div><div class="rml">'+cb("jv_s","Sehen")+'</div></div><div class="rmr"><div class="rmh"><b>Materialliste</b><small>Erstellen und scannen darf jeder</small></div><div class="rml rmm">'+RMAT.map(([k,t])=>cb(k,t)).join("")+'</div></div>'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,rLv(a,l,t))).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
 /* Häkchen lesen + Regeln: Bearbeiten/Löschen schließt Sehen ein, ohne Sehen kein Bearbeiten/Löschen */
 function rMxRead(box,changed){const g=k=>box.querySelector('[data-k="'+k+'"]');const k=changed&&changed.dataset.k;
  if(k){const [a,l]=k.split("_");if(["def","ret","inf","pk"].includes(a)){if((l==="b"||l==="l")&&changed.checked){const s=g(a+"_s");if(s&&!s.disabled)s.checked=true}if(l==="s"&&!changed.checked)["b","l"].forEach(x=>{const e=g(a+"_"+x);if(e&&!e.disabled)e.checked=false})}}

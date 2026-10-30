@@ -11,9 +11,9 @@ const jvToks=s=>jvNorm(s).split(" ").filter(w=>w&&!JV_STOP.has(w));
 const jvF=()=>jvStyle()==="frech";
 const jvStk=n=>(String(n).replace(".",","))+(n===1?" Stück":" Stück");
 function jvAskHtml(){return '<div class="jvask"><div class="jvaskrow">'+
- '<button class="jvmic" id="jvmic" type="button" aria-label="Frag Jarvis per Sprache" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>'+
- '<input id="jvaq" type="search" enterkeyhint="send" autocomplete="off" placeholder="Frag Jarvis … z. B. „Hilfe“" aria-label="Frage an Jarvis">'+
- '<button class="jvbtn jvgo" id="jvgo" type="button">Fragen</button></div><div class="jvms" id="jvms" aria-live="polite"></div><div class="jvans" id="jvans" aria-live="polite"></div></div>'}
+ '<button class="jvmic" id="jvmic" type="button" aria-label="Frage sprechen" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>'+
+ '<input id="jvaq" type="search" enterkeyhint="send" autocomplete="off" placeholder="Frag mich … z. B. „Hilfe“" aria-label="Frage an den Lager Assistenten">'+
+ '<button class="jvgo" id="jvgo" type="button">Fragen</button></div><div class="jvms" id="jvms" aria-live="polite"></div><div class="jvans" id="jvans" aria-live="polite"></div></div>'}
 function jvAskBind(){const q=$("#jvaq"),go=()=>{const v=q.value.trim();if(v)jvAsk(v)};$("#jvgo").onclick=go;q.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();go()}};
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition,mb=$("#jvmic");if(SR&&mb){mb.hidden=false;mb.onclick=()=>jvListen(SR)}
  if(jvLast)jvShow(jvLast,false)}
@@ -21,7 +21,7 @@ function jvAskBind(){const q=$("#jvaq"),go=()=>{const v=q.value.trim();if(v)jvAs
    Neustart. Darum: alte Erkennung immer hart beenden (abort), nach dem Endergebnis selbst stoppen, Frage erst nach dem Ende
    (oder spätestens nach 1,2 s) stellen, bei "läuft noch" einmal neu versuchen. */
 let jvRecTxt="",jvRecT=null;
-function jvRecUi(on){const mb=$("#jvmic"),q=$("#jvaq");if(mb)mb.classList.toggle("on",on);if(q)q.placeholder=on?"Ich höre zu …":"Frag Jarvis … z. B. „Hilfe“"}
+function jvRecUi(on){const mb=$("#jvmic"),q=$("#jvaq");if(mb)mb.classList.toggle("on",on);if(q)q.placeholder=on?"Ich höre zu …":"Frag mich … z. B. „Hilfe“"}
 function jvRecKill(){const r=jvRec;jvRec=null;jvRecOn=false;clearTimeout(jvRecT);if(r){r.onresult=r.onerror=r.onend=null;try{r.abort()}catch(e){}}}
 function jvRecDone(){if(!jvRecOn&&!jvRecTxt)return;const t=jvRecTxt.trim();jvRecTxt="";jvRecKill();jvRecUi(false);jvAudioBack();jvMs("");if(t)setTimeout(()=>jvAsk(t),150)}
 let jvRecUsed=false;const jvRecGot=()=>{jvRecUsed=true};
@@ -52,7 +52,7 @@ function jvListen(SR){if(jvIOS&&jvMicDead&&!jvRecOn)return jvKbdMic();if(jvRecOn
 function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;
  box.innerHTML='<div class="jvaq2">„'+esc(A.q)+'“</div><div class="jvat">'+A.say.map(esc).join(" ")+'</div>'+
   (A.rows&&A.rows.length?'<div class="jvarows">'+A.rows.map((r,i)=>'<button class="jvrow" type="button" data-ja="'+i+'"><span>'+esc(r.l)+'</span><span class="'+(r.cls||"ok")+'">'+esc(r.r||"")+'</span></button>').join("")+'</div>':'')+
-  (A.acts&&A.acts.length?'<div class="jvacts">'+A.acts.map((a,i)=>'<button class="jvbtn" type="button" data-jact="'+i+'">'+esc(a.l)+'</button>').join("")+'</div>':'');
+  (A.acts&&A.acts.length?'<div class="jvacts">'+A.acts.map((a,i)=>'<button class="jvact" type="button" data-jact="'+i+'">'+esc(a.l)+'</button>').join("")+'</div>':'');
  box.querySelectorAll("[data-ja]").forEach(b=>b.onclick=()=>{const r=A.rows[+b.dataset.ja];if(r.pk){curPack=r.pk;go("packopen")}else if(r.ret){curRet=r.ret;go("retopen")}else if(r.def){curDef=r.def;go("defopen")}});
  box.querySelectorAll("[data-jact]").forEach(b=>b.onclick=()=>A.acts[+b.dataset.jact].fn());
  if(speak&&jvReadOn()){jvMode="ask";jvSpeakLines(A.say.slice(0,6))}}
@@ -141,3 +141,5 @@ function jvAnswer(q){const n=jvNorm(q);
  return{say:[jvF()?jvPick(["Das habe ich nicht verstanden. Sag „Hilfe“, dann verrate ich dir, was ich kann.","Hm. Das ist mir zu hoch. Sag „Hilfe“ für meine Liste."]):"Das habe ich nicht verstanden. Sag „Hilfe“, dann zeige ich dir, was ich kann."]}}
 function jvAsk(q){q=String(q||"").trim();if(!q)return;jvStop();let A;try{A=jvAnswer(q)}catch(e){console.error(e);A={say:["Da ist bei mir etwas schiefgegangen. Bitte nochmal versuchen."]}}
  A.q=q;A.say=A.say.map(x=>String(x).replace(/\.\.(\s|$)/g,".$1"));const inp=$("#jvaq");if(inp)inp.value="";if(view==="jarvis")jvShow(A,!A.quiet);else jvLast=A}
+/* Zähler auf der Kachel „Lager Übersicht“: überfällige Retouren + dringende Defekte */
+function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length}catch(e){}return n?String(n):""}
