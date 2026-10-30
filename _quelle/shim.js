@@ -1,4 +1,4 @@
-const APPV="1.57";
+const APPV="1.58";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -311,7 +311,7 @@ function jvAgo(t){const d=Math.floor((Date.now()-t)/864e5);return d<=0?"heute":d
 function jvPkPanel(D){const P=D.pk;if(!P)return"";const now=pkDay(Date.now());
  const st='<div class="jvstats"><div class="jvstat"><div class="n">'+String(P.herr.length).padStart(2,"0")+'</div><div class="t">Heute herrichten</div></div><div class="jvstat"><div class="n">'+String(P.back.length).padStart(2,"0")+'</div><div class="t">Heute zurück</div></div><div class="jvstat'+(P.over.length?' al':'')+'"><div class="n">'+String(P.over.length).padStart(2,"0")+'</div><div class="t">Überfällig</div></div></div>';
  const sd=t=>{const d=Math.round((now-pkDay(t))/864e5);return d<=1?"seit gestern":"seit "+d+" Tagen"};
- const rows=P.over.map(p=>[p,"überfällig "+sd(p.de),"warn"]).concat(P.herr.map(p=>[p,"herrichten"+(pkF(p).length?" · "+pkF(p).length+" Fremd":""),"ok"]),P.back.map(p=>[p,"zurück "+pkD(p.de).slice(-5),"ok"])).slice(0,8);
+ const rows=P.over.map(p=>[p,"überfällig "+sd(p.de),"warn"]).concat(P.herr.map(p=>{const g=pkProg(p);return[p,"herrichten"+(g.d?" "+g.d+"/"+g.n:"")+(pkF(p).length?" · "+pkF(p).length+" Fremd":""),"ok"]}),(P.herrDone||[]).map(p=>[p,"hergerichtet ✓","ok"]),P.back.map(p=>[p,"zurück "+pkD(p.de).slice(-5),"ok"])).slice(0,8);
  return '<section class="jvpn'+(P.over.length?' al':'')+'"><div class="jvlb">Packlisten <span>heute</span></div>'+st+(rows.length?rows.map(([p,r,c])=>jvRow('data-jp="'+esc(p.id)+'"',esc((p.ord?p.ord+" · ":"")+p.ev),esc(r),c)).join(""):'<div class="jvempty">Heute nichts herzurichten, nichts zurück, nichts überfällig.</div>')+'</section>'}
 function jvPanels(D){
  const st='<section class="jvpn"><div class="jvlb">Status <span>live</span></div><div class="jvstats">'+
@@ -360,8 +360,10 @@ function jvWhen(t){const d=Math.round((pkDay(Date.now())-pkDay(t))/864e5);return
 function jvPkFremd(a,frech){const n=a.reduce((s,p)=>s+pkF(p).length,0);if(!n)return"";const t=n===1?"eine Position":jvN(n)+" Positionen";
  return frech?jvPick([" Achtung, "+t+" davon "+(n===1?"ist":"sind")+" Fremdmiete. Nur so als Hinweis."," "+jvCap(t)+" davon "+(n===1?"kommt":"kommen")+" nicht von uns, Fremdmiete."]):" Davon "+t+" mit Fremdmiete."}
 function jvPkText(D,frech){const P=D.pk,S=[];if(!P)return S;const ev=p=>jvSay(p.ev||("Auftrag "+p.ord)),H=P.herr,B=P.back,O=P.over;
- if(!H.length)S.push(frech?jvPick(["Herrichten heute: nichts. Verdächtig ruhig.","Heute muss nichts hergerichtet werden. Genieß es."]):"Heute ist nichts herzurichten.");
- else if(H.length===1)S.push((frech?jvPick(["Heute wird "+ev(H[0])+" hergerichtet.","Heute ist "+ev(H[0])+" dran. Ab ins Lager."]):"Heute herzurichten: "+ev(H[0])+".")+jvPkFremd(H,frech));
+ const HD=P.herrDone||[];
+ if(!H.length&&HD.length)S.push(frech?jvPick(["Heute ist schon alles hergerichtet. Sauber.","Herrichten für heute: erledigt. Ich bin beeindruckt."]):"Heute ist alles hergerichtet.");
+ else if(!H.length)S.push(frech?jvPick(["Herrichten heute: nichts. Verdächtig ruhig.","Heute muss nichts hergerichtet werden. Genieß es."]):"Heute ist nichts herzurichten.");
+ else if(H.length===1){const g=pkProg(H[0]);S.push((frech?jvPick(["Heute wird "+ev(H[0])+" hergerichtet.","Heute ist "+ev(H[0])+" dran. Ab ins Lager."]):"Heute herzurichten: "+ev(H[0])+".")+(g.d?(frech?" "+g.d+" von "+g.n+" Positionen sind schon fertig. Weiter so.":" "+g.d+" von "+g.n+" Positionen sind fertig."):jvPkFremd(H,frech)))}
  else S.push((H.length<=3?"Heute sind "+jvN(H.length)+" Aufträge herzurichten: "+jvList(H.map(ev))+".":"Heute sind "+jvN(H.length)+" Aufträge herzurichten. Zuerst "+ev(H[0])+".")+jvPkFremd(H,frech)+(frech?jvPick([" Das wird ein Tag."," Kaffee nachfüllen empfohlen."]):""));
  if(B.length===1)S.push(frech?jvPick(["Heute kommt "+ev(B[0])+" zurück. Hoffentlich vollständig.","Zurück kommt heute "+ev(B[0])+". Ich zähl mit."]):"Heute sollte "+ev(B[0])+" zurückkommen.");
  else if(B.length>1)S.push((frech?"Heute kommen ":"Heute sollten ")+jvN(B.length)+" Aufträge zurück"+(frech?"":"kommen")+": "+jvList(B.slice(0,3).map(ev))+(B.length>3?" und weitere":"")+"."+(frech?" Hoffentlich vollständig.":""));
@@ -619,7 +621,7 @@ async function rXlPhotos(wb,r,ws,last){const f=r.fotos||[];if(!f.length||!ws)ret
    Die Datenbank prüft dieselben Rechte (rechte.sql). */
 const RK=["jv_s","pk_s","pk_b","pk_l","mat_b","mat_l","def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","v_user","v_rights","v_app"];
 const RMAT=[["mat_b","Abschließen / Wieder öffnen"],["mat_l","Löschen"]];
-const RAREA=[["def","Defekte","Alle Defekte, nicht nur die eigenen"],["ret","Retourscheine",""],["pk","Packlisten","PDF hochladen, ansehen, löschen"],["inf","Infos an das Lager",""]],RLVL=[["s","Sehen"],["b","Bearbeiten"],["l","Löschen"]];
+const RAREA=[["def","Defekte","Alle Defekte, nicht nur die eigenen"],["ret","Retourscheine",""],["pk","Packlisten","Sehen = ansehen und herrichten"],["inf","Infos an das Lager",""]],RLVL=[["s","Sehen"],["b","Bearbeiten"],["l","Löschen"]];
 const rLv=(a,l,t)=>a==="pk"&&l==="b"?"Hochladen":t;
 const RVW=[["v_user","Benutzer freigeben/sperren"],["v_rights","Titel und Rechte"],["v_app","App-Verwaltung (inkl. Artikelliste)"]];
 let TIT={},ROL={},rkLast=null,rxOpen=new Set(),tOpen=new Set();

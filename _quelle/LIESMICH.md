@@ -55,3 +55,13 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Tests: `tests/pack_t.js` (braucht in $SP `fakesb.js`, `pk_beispiel.pdf` = echte Packliste, `kaputt.pdf`; pdf.js lokal aus /opt/npm-tools/node_modules/pdfjs-dist 6.x), `tests/pg/sql_packliste_test.py`. Die Beispiel-PDF NICHT ins Repo (Kundenadresse, Repo ist öffentlich) – Jürgen schickt sie bei Bedarf neu.
 - Test-Postgres neu aufsetzen: `useradd -m postgres; mkdir -p /home/postgres/pgt; cp tests/pg/mock.sql /home/postgres/pgt/`, als postgres `initdb -D /home/postgres/pgt/data -A trust -U postgres` und `pg_ctl -D … -o '-p 5499 -k /home/postgres/pgt -c listen_addresses=' start`, dann `create role anon nologin; create role authenticated nologin;`.
 - npm ist in der Sitzung ggf. gesperrt (403) – pdf.js liegt lokal unter /opt/npm-tools.
+
+## Herrichten (ab 1.58)
+- Packliste öffnen = Herricht-Ansicht (`packOpenView` in pack.js): Fortschritt „x von y Positionen“ + Balken, Filter Alle / Noch offen, keine Positionsnummern.
+- Kreis antippen: offen → komplett (✓ grün); nochmal → wieder offen. Fremdmiete ungeklärt → zuerst Dialog „Aus dem Lager“ (zählt voll) / „Wird zugemietet“ (Soll = Anzahl − Fremd).
+- Text antippen → `pkEdit`: Vorhanden (−/+/Alles da), Alternativen (Anzahl + Artikel aus `rkat`-Suche oder freier Text), Fremdmiete umstellen, Zurücksetzen. Weniger als Soll → orange „!“ „15 von 16 da – fehlen 1“.
+- Stand in docs `packh` (id = Packlisten-id), pro Position eigenes Feld `h_<Pos>` ({ok,q,alt,fm,by,t}), dazu `fin` {by,t} und `info` {by,t}. doc_update führt Felder zusammen → mehrere Kollegen gleichzeitig. Ersetzen der PDF behält den Stand (Schlüssel = Pos.-Nr.).
+- Herrichten darf, wer Packlisten sehen darf (Jürgens Wahl). `packh` hat noch keine eigene Datenbank-Regel → Standard „jeder freigegebene Benutzer“ (lesen/schreiben); die App zeigt es nur mit pk_s. Optional später SQL: packh an app_see('pk') binden.
+- Abschließen: bei offenen Positionen Rückfrage; bei Abweichungen (Fehlmenge, Alternative, offen, „aus dem Lager statt Fremdmiete“) Frage „Info an <PL>?“ → `pkMail`: fertiger Text, Mail öffnen (mailto ohne Adresse) / Teilen / Kopieren, setzt `info`. Danach gesperrt, „Wieder öffnen“ und „Info an Projektleiter“.
+- Status/Jarvis: heute herzurichtende zeigen „Herrichten 4/24“ bzw. „Hergerichtet“; Jarvis zählt nur nicht abgeschlossene, Briefing nennt Fortschritt bzw. „Heute ist alles hergerichtet“.
+- Test `tests/herr_t.js`.
