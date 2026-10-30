@@ -11,7 +11,7 @@ const {chromium}=require("playwright");const fs=require("fs");const S=(process.e
      setTimeout(()=>{this.onresult&&this.onresult({results:[Object.assign([{transcript:q}],{isFinal:true})]})},120)}
     stop(){if(mode==="haengt")return;setTimeout(()=>{window.__active=false;this.onend&&this.onend()},50)}abort(){window.__active=false}};
    window.SpeechRecognition=window.webkitSpeechRecognition=C},mode);
-  const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
+  /* ab 1.73 öffnet „Hilfe“ den Hilfe-Bildschirm – für diese Tests gleich wieder schließen */await ctx.addInitScript(()=>{new MutationObserver(()=>document.querySelectorAll(".jvhelp").forEach(o=>o.remove())).observe(document,{childList:true,subtree:true})});const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
   await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js","utf8"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
   await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(195,420);await p.waitForTimeout(300);
   await p.evaluate(()=>{view="jarvis";hist=["start"];draw()});await p.waitForTimeout(300);

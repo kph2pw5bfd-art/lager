@@ -1,4 +1,4 @@
-const APPV="1.72";
+const APPV="1.73";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -324,12 +324,13 @@ function jvPanels(D){
  const fx='<section class="jvpn"><div class="jvlb">Wieder einsatzbereit <span>seit '+(jvPrev?"letztem Briefing":"24 Std.")+'</span></div>'+(D.fixed.length?D.fixed.slice(0,6).map(d=>jvRow('data-jd="'+esc(d.id)+'"',esc(d.art),"repariert "+fmt(d.doneT).slice(0,6)+" "+fmt(d.doneT).slice(-5))).join(""):'<div class="jvempty">Nichts Neues repariert.</div>')+'</section>';
  const lr='<section class="jvpn"><div class="jvlb">Letzte Retouren <span>abgeschlossen</span></div>'+(D.last.length?D.last.map(r=>jvRow('data-jr="'+esc(r.id)+'"',esc((r.ord?r.ord+" · ":"")+r.ev),jvAgo(r.closedT||r.t))).join(""):'<div class="jvempty">Noch keine abgeschlossenen Retourscheine.</div>')+'</section>';
  const pkp=jvPkPanel(D);
- return D.rs?{left:st+pkp+ret,right:def+fx+lr}:{left:st+pkp,right:def+fx}}
+ const er=typeof jvErinPanel==="function"?jvErinPanel():"";
+ return D.rs?{left:er+st+pkp+ret,right:def+fx+lr}:{left:er+st+pkp,right:def+fx}}
 function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i%6===0,r1=86,r2=r1+(big?12:5);t+='<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'" stroke="var(--jv-tick'+(big?'b':'')+')" stroke-width="1.2"/>'}
  return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
 function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+", "+d.toLocaleDateString("de-AT",{day:"numeric",month:"long",year:"numeric"})}
 setInterval(jvClock,1000);
-function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")})}
+function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});if(typeof jvErinBind==="function")jvErinBind()}
 /* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
 const JV_MALE=/conrad|killian|florian|christoph|kasper|ralf|bernd|klaus|jonas|markus|martin|yannick|viktor|stefan|hans|thomas|männlich|male/i;
 const jvVK=v=>v.voiceURI||v.name;
@@ -349,7 +350,8 @@ function jvSay(s){return String(s||"").replace(/\s+/g," ").replace(/(\d)\s*[-–
 const jvStyle=()=>{const v=jvLS("tpc_jv_style");return v==="sachlich"||v==="frech"?v:(owner?"frech":"sachlich")};
 const jvPick=a=>a[Math.floor(Math.random()*a.length)];
 const jvCap=s=>String(s).replace(/^./,c=>c.toUpperCase());
-function jvText(D){return jvStyle()==="sachlich"?jvTextSachlich(D):jvTextFrech(D)}
+function jvText(D){const S=jvStyle()==="sachlich"?jvTextSachlich(D):jvTextFrech(D),E=typeof jvErinDue==="function"?jvErinDue():[];
+ if(E.length)S.splice(1,0,(E.length===1?"Erinnerung: ":E.length+" Erinnerungen: ")+jvList(E.slice(0,3).map(x=>x.txt))+".");return S}
 function jvHiFrech(){const h=new Date().getHours(),n=String(meName()).split(" ")[0];
  const hi=jvPick(["Servus"+(n?" "+n:""),(h<11?"Guten Morgen":h<18?"Guten Tag":"Guten Abend")+(n?", "+n:"")]);
  const q=["Das Lager hat dich vermisst. Ich nicht so sehr, aber das Lager schon.","Schön, dass du da bist. Dann schauen wir mal, was heute so los ist."];
@@ -401,8 +403,8 @@ function jvTextSachlich(D){const S=[jvGreet()+"."].concat(jvPkText(D,false));
  return S}
 function jvTalk(on){jvSpeaking=on;const j=$("#jv"),b=$("#jvsp");if(j)j.classList.toggle("talk",on);if(b)b.textContent=on?"Stopp":"Briefing"}
 function jvSpeakDevice(lines,done){if(!("speechSynthesis" in window)){jvTalk(false);toast("Sprachausgabe geht auf diesem Gerät nicht.");return}
- speechSynthesis.cancel();const v=jvVoice();let i=0,stop=false;jvTalk(true);
- const next=()=>{if(stop||!jvSpeaking||i>=lines.length){jvTalk(false);if(done)done();return}
+ speechSynthesis.cancel();const v=jvVoice(),gen=++jvGen;let i=0,stop=false;jvTalk(true);
+ const next=()=>{if(gen!==jvGen)return;if(stop||!jvSpeaking||i>=lines.length){jvTalk(false);if(done)done();return}
   const u=new SpeechSynthesisUtterance(lines[i++]);u.lang=v?v.lang:"de-DE";if(v)u.voice=v;u.pitch=jvPitch();u.rate=jvRate();
   u.onend=()=>setTimeout(next,260);u.onerror=e=>{if(e&&e.error==="interrupted"){stop=true}jvTalk(false)};speechSynthesis.speak(u)};
  setTimeout(next,60)}
@@ -430,7 +432,8 @@ function jvSpeakLines(lines,done){jvTalk(true);
  if(jvEngine()==="thorsten"){jvUnlock();jvThSpeak(lines).then(()=>{jvTalk(false);if(done)done()}).catch(e=>{console.warn("Thorsten",e);
    if(!jvSpeaking)return;toast("Thorsten ging nicht ("+String(e&&e.message||e).slice(0,80)+"). Ich spreche mit der Gerätestimme.");jvSpeakDevice(lines,done)});return}
  jvSpeakDevice(lines,done)}
-function jvStop(){jvSpeaking=false;try{speechSynthesis.cancel()}catch(e){}if(jvAud){try{jvAud.pause()}catch(e){}}jvTalk(false)}
+let jvGen=0;
+function jvStop(){jvGen++;jvSpeaking=false;try{speechSynthesis.cancel()}catch(e){}if(jvAud){try{jvAud.pause()}catch(e){}}jvTalk(false)}
 function jvSpeak(){if(jvSpeaking)return jvStop();jvMode="brief";jvSpeakLines(jvText(jvData()))}
 /* Stimmen-Einstellung mit Probe-Hören */
 function jvVoiceDlg(){const L=jvVoices(),cur=jvVoice(),o=document.createElement("div");o.className="ov";
@@ -460,10 +463,10 @@ function jarvisView(){$("#t").textContent="Lager Assistent";const D=jvData(),P=j
   '<div class="jvtime"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div></div>'+
   '<button class="jvbrief" id="jvsp" type="button">Briefing</button></div>'+
   '<div class="jvgreet" id="jvg">'+jvGreet()+'</div>'+jvAskHtml()+
-  '<div class="jvopts"><button class="jvlink" id="jvvc" type="button">Stimme</button><span aria-hidden="true">·</span><button class="jvlink" id="jvrd" type="button">'+(jvReadOn()?"Vorlesen an":"Vorlesen aus")+'</button></div></section>'+
+  '<div class="jvopts"><button class="jvlink" id="jvvc" type="button">Stimme</button><span aria-hidden="true">·</span><button class="jvlink" id="jvrd" type="button">'+(jvReadOn()?"Vorlesen an":"Vorlesen aus")+'</button><span aria-hidden="true">·</span><button class="jvlink" id="jvhl" type="button">Was kann ich fragen?</button></div></section>'+
   '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
   (owner?'<p class="jvnote">Wer die Lager Übersicht sieht, stellst du in der Benutzerverwaltung ein (Recht „Lager Übersicht“). Herrichten, Heute zurück und Überfällig kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
- jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;
+ jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvhl").onclick=jvHelpOpen;
  $("#jvrd").onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");$("#jvrd").textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
  await ref.set({name,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+q,first:o.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlartikel nicht gespeichert",e)}}

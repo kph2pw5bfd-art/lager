@@ -6,7 +6,7 @@ const {chromium}=require("playwright");const fs=require("fs");const S=(process.e
   Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{getVoices:()=>[{name:"G",lang:"de-DE",voiceURI:"g"}],addEventListener(){},cancel(){},speak(u){__said.push(u.text);setTimeout(()=>u.onend&&u.onend(),5)}}});
   window.__n=0;const C=class{start(){const n=window.__n++;if(n===0){setTimeout(()=>{this.onresult&&this.onresult({results:[Object.assign([{transcript:"Was ist überfällig"}],{isFinal:true})]})},80)}else{setTimeout(()=>{this.onend&&this.onend()},300)}}stop(){setTimeout(()=>{this.onend&&this.onend()},30)}abort(){}};
   window.SpeechRecognition=window.webkitSpeechRecognition=C});
- const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
+ /* ab 1.73 öffnet „Hilfe“ den Hilfe-Bildschirm – für diese Tests gleich wieder schließen */await ctx.addInitScript(()=>{new MutationObserver(()=>document.querySelectorAll(".jvhelp").forEach(o=>o.remove())).observe(document,{childList:true,subtree:true})});const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js","utf8"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(195,420);await p.waitForTimeout(300);
  await p.evaluate(()=>{view="jarvis";hist=["start"];draw()});await p.waitForTimeout(300);
