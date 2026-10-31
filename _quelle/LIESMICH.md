@@ -152,3 +152,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.82
 - Retourscheine, Filter „Alle“: oben Überschrift „Offen“ (mit Anzahl), dann blauer Trennstrich, unten „Abgeschlossen“ (`rGroupList` in shim.js, rep am Ende von build.py). Filter „Offen“/„Abgeschlossen“ unverändert. Test `tests/rgrp_t.js`.
+
+## Version 1.83
+- Fehler behoben: Zwei Defektmeldungen zum selben Artikel erschienen im Wochenbericht („Achtung“) und beim Assistenten doppelt, jeweils „wird gebraucht“. Jetzt `wbDefNeed(von,bis)` in wb.js: pro Artikel (Artikelnummer aus `anr` vor dem Bindestrich, sonst Name) eine Zeile „x Stück defekt (davon y dringend) – gebraucht Mo für … (n Stück)“ mit der Menge aus der Packliste. `jvDefNeed` nutzt dieselbe Funktion.

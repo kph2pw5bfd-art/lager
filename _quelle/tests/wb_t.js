@@ -13,13 +13,14 @@ const seed=kat.concat([
  pk("B","260140001","Adventmarkt Baden",at(-6,8),at(10,18)),fin("B",at(-5,11),{hd:{d:new Date(at(-5)).toISOString().slice(0,10).replace(/(\d+)-(\d+)-(\d+)/,(m,y,mo,d)=>y+"-"+mo+"-"+d),why:"Kunde später",by:"u1",t:at(-6)}}),
  pk("C","260150001","Ice Magic",at(-9,8),at(-6,18)),fin("C",at(-9,9)),
  pk("D","260160001","Stadtfest Graz",at(-12,8),at(-4,18)),fin("D",at(-12,9)),
- pk("E","260170001","Kirtag Mödling",at(0,8),at(2,18)),
+ {col:"pack",id:"E",data:{ord:"260170001",ps:"E",ev:"Kirtag Mödling",pl:"Max Muster",db:at(0,8),de:at(2,18),pos:[{p:"1",n:1,u:"Stk",t:"Kabel CEE 32A 50m",a:"1098",f:0}],by:"u1",t:at(-1)}},
  pk("F","260180001","Christkindlmarkt Wien",at(3,8),at(30,18)),
  pk("G","260190001","Eislaufplatz Mödling",at(5,8),at(40,18)),
  {col:"retour",id:"rA",data:{ev:"Gala Wien",ord:"260130001",itemsJson:J({"1098":{nr:"1098",name:"32A Kabel 50m",q:4,g:"Kabel"},"1081":{nr:"1081",name:"Schuko 20m",q:1,g:"Kabel"}}),by:"u1",t:at(-6),closed:true,art:"end",closedBy:"u1",closedT:at(-6,15)}},
  {col:"retour",id:"rC",data:{ev:"Ice Magic",ord:"260150001",itemsJson:J({"1098":{nr:"1098",name:"32A Kabel 50m",q:2,g:"Kabel"}}),by:"u1",t:at(-3),closed:true,art:"end",closedBy:"u1",closedT:at(-3,14)}},
  {col:"retour",id:"rB",data:{ev:"Adventmarkt Baden",ord:"260140001",itemsJson:J({"1098":{nr:"1098",name:"32A Kabel 50m",q:2,g:"Kabel"}}),by:"u1",t:at(-2),closed:true,art:"teil",closedBy:"u1",closedT:at(-2,16)}},
  {col:"defekte",id:"d1",data:{art:"32A Kabel 50m",anr:"1098",ev:"Gala Wien",by:"u1",t:at(-4),done:false,urg:true}},
+ {col:"defekte",id:"d2",data:{art:"32A Kabel 50m",anr:"1098-07",ev:"Ice Magic",by:"u1",t:at(-3),done:false,urg:false}},
  {col:"wbnote",id:"n1",data:{txt:"Urlaubsplanung Dezember",by:"u1",t:at(-14),done:null}},
  {col:"wbnote",id:"n2",data:{txt:"Neue Gitterboxen für 32A-Kabel bestellen?",by:"u1",t:at(-4),done:null}},
  {col:"wbnote",id:"n3",data:{txt:"Schon erledigt",by:"u1",t:at(-10),done:{by:"u1",t:at(-7)}}}]);
@@ -34,6 +35,7 @@ const seed=kat.concat([
  for(const s of [".wbpaper .wbl"]){const L=await p.$$eval(".wbpaper:not(.wbprint) .wbl",l=>l.map(x=>x.innerText.replace(/\s+/g," ")));L.forEach(x=>console.log("  ",x.slice(0,330)))}
  console.log("  Noch offen:",await T(".wbpaper:not(.wbprint) .wboff"));
  console.log("  Diese Woche:",(await T(".wbpaper:not(.wbprint) .wbt")).slice(0,500));console.log("  Achtung:",await T(".wbpaper:not(.wbprint) .wbach"));
+ await p.evaluate(()=>{view="jarvis";draw()});await p.fill("#jvaq","Wird ein defekter Artikel diese Woche gebraucht?");await p.click("#jvgo");await p.waitForTimeout(250);console.log("  Assistent:",await p.textContent(".jvat"));await p.evaluate(()=>{view="wb";draw()});await p.waitForTimeout(200);
  console.log("  Punkte:",await T(".wbpaper:not(.wbprint) .wbn"));
  await p.screenshot({path:S+"wb_app.png",fullPage:true});
  /* Punkt eintragen + abhaken */

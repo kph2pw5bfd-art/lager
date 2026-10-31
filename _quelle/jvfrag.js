@@ -234,12 +234,10 @@ function jvDefEv(q){const n=jvNorm(q).replace(/^.*?\b(von|bei|auf)\b\s*(der |dem
 function jvDefWeek(){const m=pkMon(jvToday()),L=defs.filter(d=>d.done&&(d.doneT||0)>=m).sort((a,b)=>b.doneT-a.doneT);
  if(!L.length)return{say:["Diese Woche wurde noch nichts repariert."]};
  return{say:["Diese Woche "+(L.length===1?"wurde ein Defekt":"wurden "+L.length+" Defekte")+" repariert"+(L.length<=4?": "+jvList(L.map(d=>d.art))+".":".")],rows:L.map(jvDefRow)}}
-function jvDefNeed(){if(!can("pk_s"))return JV_NOPK;const t0=jvToday(),e=pkAddD(pkMon(t0),6),P=packs.filter(p=>{const k=pkState(p).k;return k!=="done"&&pkHDay(p)>=t0&&pkHDay(p)<=e}),L=[];
- defs.filter(d=>!d.done).forEach(d=>{const A={code:artCode(String(d.anr||"").split(/[-–]/)[0]),toks:jvATok(d.art).filter(w=>!/^\d{1,2}$/.test(w)),label:d.art},m=jvMatcher(A);
-  P.forEach(p=>{const c=jvArtCnt(p,m);if(c.out+c.plan)L.push({d,p,q:c.out+c.plan})})});
- if(!L.length)return{say:["Kein defekter Artikel wird diese Woche in einer Packliste gebraucht."]};
- return{say:[(L.length===1?"Ja, einmal:":"Ja, "+L.length+"-mal:")].concat(L.slice(0,4).map(o=>o.d.art+" wird "+jvDayName(pkHDay(o.p))+" für "+jvEv(o.p)+" gebraucht ("+jvStk(o.q)+").")),
-  rows:L.map(o=>({l:o.d.art,sub:jvEv(o.p)+" · "+jvStk(o.q),r:pkWd(pkHDay(o.p)),cls:o.d.urg?"warn":"ok",pk:o.p.id}))}}
+function jvDefNeed(){if(!can("pk_s"))return JV_NOPK;const t0=jvToday(),G=wbDefNeed(t0,pkAddD(pkMon(t0),7));
+ if(!G.length)return{say:["Kein defekter Artikel wird diese Woche in einer Packliste gebraucht."]};
+ return{say:[(G.length===1?"Ja, ein Artikel:":"Ja, "+G.length+" Artikel:")].concat(G.slice(0,4).map(g=>g.name+": "+g.n+" Stück defekt"+(g.urg?", "+g.urg+" dringend":"")+", gebraucht "+g.use.map(u=>jvDayName(u.t)+" für "+u.ev+" ("+jvStk(u.q)+")").join(" und ")+".")),
+  rows:G.flatMap(g=>g.use.map(u=>({l:g.name,sub:u.ev+" · "+jvStk(u.q)+" gebraucht · "+g.n+" defekt",r:pkWd(u.t),cls:g.urg?"warn":"ok",pk:u.p.id})))}}
 /* ---------- Retourscheine ---------- */
 function jvRetOpen(q){if(!can("ret_s"))return JV_NORET;const L=jvRetFind(q);
  if(L===null)return{say:["Welchen Retourschein? Sag die Auftragsnummer oder die Veranstaltung."]};

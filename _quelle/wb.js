@@ -24,14 +24,16 @@ function wbData(){const M=wbMeet(),L0=pkAddD(M,-7),L1=M,N1=pkAddD(M,7),t0=pkDay(
  const days=[0,1,2,3,4].map(i=>{const t=pkAddD(M,i);return{t,h:[],z:[]}});const slot=t=>{const w=new Date(t).getDay();return w===6?pkAddD(t,-1):w===0?pkAddD(t,-2):t};
  if(okPk)packs.forEach(p=>{const s=pkSlot(p),dh=days.find(d=>d.t===s.t);if(dh&&wbIn(s.t,M,N1))dh.h.push({p,we:s.we});
   if(p.de&&pkState(p).k!=="done"){const de=pkDay(p.de),dz=days.find(d=>d.t===slot(de));if(dz&&wbIn(de,M,N1))dz.z.push({p,we:[ "So","","","","","","Sa"][new Date(de).getDay()]})}});
- const ach=[];if(okPk){const D=defs.filter(d=>!d.done);D.forEach(d=>{const A={code:artCode(String(d.anr||"").split(/[-–]/)[0]),toks:jvATok(d.art).filter(w=>!/^\d{1,2}$/.test(w)),label:d.art},m=jvMatcher(A);
-   const hit=packs.filter(p=>{const t=pkHDay(p);return t>=M&&t<N1&&pkState(p).k!=="done"}).find(p=>{const c=jvArtCnt(p,m);return c.out+c.plan>0});
-   if(hit)ach.push((d.urg?"dringend: ":"")+d.art+" ist defekt (gemeldet "+pkDM(d.t)+") – wird "+wbWd(pkHDay(hit)).split(" ")[0]+" für "+(hit.ev||hit.ord)+" gebraucht")})}
+ const ach=[];if(okPk){wbDefNeed(M,N1).forEach(g=>ach.push(g.name+": "+g.n+(g.n===1?" Stück":" Stück")+" defekt"+(g.urg?(g.n>1?" (davon "+g.urg+" dringend)":" (dringend)"):"")+" – gebraucht "+g.use.map(u=>wbWd(u.t).split(" ")[0]+" für "+u.ev+" ("+u.q+(u.q===1?" Stück)":" Stück)")).join(", ")))}
  if(okRet&&typeof abgToCheck==="function"&&can("abg_p")){const n=abgToCheck().length;if(n)ach.push(n+(n===1?" Endretoure":" Endretouren")+" noch zu prüfen")}
  /* Punkte */
  const notes=WBN.filter(n=>!n.done).sort((a,b)=>(a.t||0)-(b.t||0)).map(n=>({...n,old:(n.t||0)<L0}));
  const doneN=WBN.filter(n=>n.done&&n.done.t>=pkAddD(M,-28)).sort((a,b)=>b.done.t-a.done.t);
  return{M,L0,N1,herr,zur,over,dis,offen,days,ach,notes,doneN}}
+/* Offene Defekte, deren Artikel in Packlisten der Woche gebraucht werden – pro Artikel zusammengefasst (ab 1.83: zwei Meldungen zum selben Artikel = eine Zeile) */
+function wbDefNeed(a,b){const G={};defs.filter(d=>!d.done).forEach(d=>{const code=artCode(String(d.anr||"").split(/[-–]/)[0]),k=code?"c:"+code:"n:"+jvATok(d.art).join(" ");
+  const g=G[k]=G[k]||{k,name:d.art,A:{code,toks:jvATok(d.art).filter(w=>!/^\d{1,2}$/.test(w)),label:d.art},n:0,urg:0,ids:[]};g.n++;if(d.urg)g.urg++;g.ids.push(d.id)});
+ return Object.values(G).map(g=>{const m=jvMatcher(g.A);g.use=packs.filter(p=>{const t=pkHDay(p);return t>=a&&t<b&&pkState(p).k!=="done"}).map(p=>{const c=jvArtCnt(p,m);return{p,t:pkHDay(p),ev:p.ev||p.ord,q:c.out+c.plan}}).filter(u=>u.q>0).sort((x,y)=>x.t-y.t);return g}).filter(g=>g.use.length).sort((x,y)=>y.urg-x.urg||x.use[0].t-y.use[0].t)}
 /* ---------- Bericht (Bildschirm und Druck) ---------- */
 function wbList(title,rows,red,empty){return '<div class="wbl"><div class="wblh'+(red?' red':'')+'"><b>'+esc(title)+'</b><b>'+rows.length+'</b></div>'+(rows.length?rows.map(r=>'<div class="wbr"><b>'+esc(r.n)+'</b><span>'+esc(r.d)+'</span>'+(r.r?'<em class="'+(r.cls||"")+'">'+esc(r.r)+'</em>':'')+'</div>').join(""):'<div class="wbe">'+esc(empty)+'</div>')+'</div>'}
 function wbPaper(D,print){const kwL=pkKW(D.L0),kwN=pkKW(D.M),y=new Date(D.M).getFullYear();
