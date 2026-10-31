@@ -354,7 +354,7 @@ const JV_FRAGEN=[
  {g:"Retourschein",r:"ret_s",q:["Öffne den Retourschein für Auftrag X.","Neuen Retourschein erstellen.","Welche Retourscheine sind angefangen?","Was muss ich prüfen?","Was fehlt bei Retourschein X gegenüber der Packliste?","Füge 3 Stück Kabel A zu Retourschein X hinzu."]},
  {g:"Info an das Lager",q:["Gibt es ungelesene Nachrichten?","Was hat Monteur X geschrieben?","Lies mir die neueste Nachricht vor."]},
  {g:"Rückblick & Auswertung",r:"ret_s",q:["War bei Auftrag X alles zurück?","Welche Veranstaltung hatte zuletzt Fehlmaterial?","Welche Artikel fehlen am häufigsten?","Welche Aufträge waren diesen Monat unvollständig?","Wie viele Retouren gab es diese Woche?"]},
- {g:"Aktionen",q:["Briefing noch einmal.","Erinnere mich morgen um 9 an Auftrag X.","Markiere Auftrag X als geklärt.","Notiere zu Auftrag X: …","Melde Defekt: Kabel 32A 25 m, Stecker gebrochen.","Auftrag X alles zurück, schreib Retoure an Projektleiter A.","Schick Projektleiter A eine Nachfrage zu Auftrag X."]}];
+ {g:"Aktionen",q:["Briefing noch einmal.","Zeig mir den Wochenbericht.","Erinnere mich morgen um 9 an Auftrag X.","Markiere Auftrag X als geklärt.","Notiere zu Auftrag X: …","Melde Defekt: Kabel 32A 25 m, Stecker gebrochen.","Auftrag X alles zurück, schreib Retoure an Projektleiter A.","Schick Projektleiter A eine Nachfrage zu Auftrag X."]}];
 function jvHelpOpen(){const old=document.querySelector(".jvhelp");if(old)old.remove();const o=document.createElement("div");o.className="jvhelp";o.setAttribute("role","dialog");o.setAttribute("aria-label","Hilfe");
  const G=JV_FRAGEN.filter(g=>!g.r||can(g.r));
  o.innerHTML='<header class="jvhh"><button class="jvhb" type="button" aria-label="Zurück"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><div><b>Hilfe</b><small>Was kann ich fragen?</small></div></header>'+
@@ -415,6 +415,7 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
   return jvDef(q)}
  if(/(muss|soll) ich .*prüf|zu prüfen|was ist zu prüfen|prüfen\?$/.test(n)){if(!can("abg_p"))return{say:["Dafür brauchst du das Recht „Abgleich prüfen“."]};const L=abgToCheck();if(!L.length)return{say:[jvF()?"Nichts zu prüfen. Kaffeepause verdient.":"Es ist nichts zu prüfen."]};
   return{say:[(L.length===1?"Ein Auftrag wartet":L.length+" Aufträge warten")+" auf deine Prüfung: "+jvList(L.slice(0,4).map(x=>x.p?x.p.ev||x.p.ord:x.r.ev))+"."],rows:L.map(x=>({l:x.p?x.p.ev||"–":x.r.ev||"–",sub:"Endretoure von "+nmA(x.r,"closedBy")+", "+pkDM(x.r.closedT),r:x.B?(x.B.fehlt?x.B.fehlt+" fehlen":x.B.zuviel?x.B.zuviel+" zu viel":"alles zurück"):"ohne Packliste",cls:x.B&&(x.B.fehlt||x.B.zuviel)?"warn":"ok",fn:()=>{if(x.p){curPack=x.p.id;go("pkabg")}else{curRet=x.r.id;go("retopen")}}}))}}
+ if(/wochenbericht|besprechung/.test(n)){go("wb");return{say:["Ich öffne den Wochenbericht."],quiet:true}}
  /* Rückblick */
  if(/alles zurück|vollständig zurück|komplett zurück/.test(n)&&/^(war|ist|kam)\b/.test(n))return jvRetBal(raw,"all");
  if(/zuletzt fehlmaterial|fehlmaterial/.test(n))return jvLastMissing();

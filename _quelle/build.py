@@ -1,6 +1,6 @@
 import re,json
 s=open("/home/claude/lager_app.html",encoding="utf-8").read()
-shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/tablet.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvask.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvfrag.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/home.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/abg.js",encoding="utf-8").read()
+shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/tablet.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvask.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvfrag.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/home.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/abg.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/wb.js",encoding="utf-8").read()
 def rep(a,b,c=1):
     global s
     n=s.count(a); assert n==c,(a[:80],n); s=s.replace(a,b)
@@ -118,7 +118,7 @@ print("Tablet: Schreibstellen",_n0,"Anzeigestellen",_n1)
 # 1.74: Kachel auf der Hauptseite heißt „Material vor Ort erfassen“ (Begriff „Materialliste“ bleibt sonst überall)
 rep("'Materialliste erstellen',ol+","'Material vor Ort erfassen',ol+")
 # 1.77: Abgleich Ausgang ↔ Eingang (abg.js)
-rep('if(view==="pack"&&can("pk_s"))return packOverView();','if(view==="pkabg"&&can("pk_s")&&can("ret_s"))return pkAbgView();\n if(view==="abgzv"&&can("pk_s")&&can("ret_s"))return abgZvView();\n if(view==="abgpr"&&can("abg_p"))return abgPrView();\n if(view==="pack"&&can("pk_s"))return packOverView();')
+rep('if(view==="pack"&&can("pk_s"))return packOverView();','if(view==="wb"&&can("jv_s"))return wbView();\n if(view==="pkabg"&&can("pk_s")&&can("ret_s"))return pkAbgView();\n if(view==="abgzv"&&can("pk_s")&&can("ret_s"))return abgZvView();\n if(view==="abgpr"&&can("abg_p"))return abgPrView();\n if(view==="pack"&&can("pk_s"))return packOverView();')
 rep('''$("#rclose").onclick=()=>ask("Retourschein abschließen? Danach kann er nur noch angesehen werden. Bei Bedarf kann man ihn wieder öffnen.",async()=>{try{await db.doc("retour/"+r.id).update({closed:true,closedBy:me,...tabAs("closedBy"),closedT:Date.now(),draft:false});toast("Retourschein abgeschlossen",1)}''',
     '''$("#rclose").onclick=()=>rCloseDlg(r,async art=>{try{await db.doc("retour/"+r.id).update({closed:true,art,closedBy:me,...tabAs("closedBy"),closedT:Date.now(),draft:false});toast(art==="teil"?"Als Teilretoure abgeschlossen":"Als Endretoure abgeschlossen",1)}''')
 rep('function retEdit(){rPersist();','function retEdit(){rPersist();setTimeout(rAbgInject,0);')

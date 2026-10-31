@@ -279,6 +279,49 @@ button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:va
 .pknokat{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff1e3;border:1px solid #e67e22;border-radius:10px;padding:8px 10px;margin:0 0 12px}
 .pknokat span{flex:1;min-width:120px;font-size:13.5px;font-weight:600;color:#9a4d00}.pknokat .btn{width:auto;margin:0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pknokat{background:#3d2410}:root:not([data-theme="light"]) .pknokat span{color:#f5b878}}
+/* 1.81: Wochenbericht */
+.wbnav{display:flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--navy);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.wbnav>div{flex:1;text-align:center;display:flex;flex-direction:column}.wbnav small{font-size:12.5px;color:var(--mute)}.wbnav .lnk{padding:0 2px;font-size:12.5px}
+.wbarr{flex:none;width:44px;height:44px;border:1.5px solid var(--navy);border-radius:8px;background:var(--card);color:var(--navy);display:grid;place-items:center;cursor:pointer}
+.wbedit{background:var(--card);border:1.5px solid var(--navy);border-radius:12px;padding:12px;margin-bottom:12px;display:flex;flex-direction:column;gap:6px}
+.wbedit>b{font-size:15px}.wbei{display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding-top:8px}
+.wbei input{width:22px;height:22px;margin:0;flex:none}.wbei>span{flex:1;min-width:0;display:flex;flex-direction:column}.wbei small{font-size:12px;color:var(--mute)}.wbei .lnk{padding:0}
+.wbadd{display:flex;gap:8px;margin-top:4px}.wbadd label{flex:1;display:flex;min-width:0}.wbadd input{flex:1;min-width:0;margin:0}.wbadd .btn{width:auto;margin:0;flex:none}
+.sr{position:absolute;left:-9999px}
+.wbdone>summary{cursor:pointer;font-size:13px;color:var(--mute);padding:6px 0}
+.wbopen{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.wbopen span{flex:1}.wbopen small{display:block;font-size:12px;color:var(--mute)}.wbopen svg{flex:none;color:var(--navy)}
+/* Papier – auch im Dunkelmodus hell */
+.wbpaper{background:#fff;color:#17212f;border:1px solid #d5dbe5;border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:12px;font-size:13.5px;line-height:1.4;box-shadow:0 2px 6px rgba(20,40,75,.12)}
+.wbpaper .wbhd{display:flex;background:none;color:#17212f;align-items:flex-end;gap:12px;border-bottom:1px solid #9aa5b5;padding-bottom:8px}.wbhd>div{flex:1}
+.wbhd span{display:block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#114a97}.wbhd h1{margin:0;font-size:24px;line-height:1.15}.wbhd em{font-style:normal;font-size:12.5px;color:#4a5568}
+.wbsec{border:2px solid #114a97;border-radius:10px;overflow:hidden}
+.wbbar{background:#114a97;color:#fff;padding:7px 14px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.wbbar b{flex:1;font-size:16px}.wbbar span{font-size:13px}
+.wbin{padding:10px 14px;display:flex;flex-direction:column;gap:10px;font-size:12.5px;line-height:1.35}
+.wbl{display:flex;flex-direction:column}.wblh{display:flex;border-bottom:1.5px solid #114a97;padding-bottom:2px;margin-bottom:2px;color:#114a97}.wblh b:first-child{flex:1}.wblh.red{border-color:#b8322a;color:#b8322a}
+.wbr{display:flex;align-items:baseline;gap:10px;padding:2px 0;border-bottom:1px solid #e3e8ef;break-inside:avoid}
+.wbr>b{flex:0 0 200px;font-weight:600;min-width:0}.wbr>span{flex:1;min-width:0;font-size:11.5px;color:#4a5568}.wbr>em{font-style:normal;font-size:12px;font-weight:700;color:#4a5568;white-space:nowrap}
+.wbr>em.red{color:#b8322a}.wbr>em.ok{color:#1f6b41}.wbe{font-size:12px;color:#4a5568;padding:2px 0}
+.wb2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.wb2 .wbr{flex-direction:column;gap:0;align-items:stretch}.wb2 .wbr>b,.wb2 .wbr>span{flex:none}.wb2 .wbr>em{align-self:flex-start}
+.wboff{background:#fbebeb;border-radius:6px;padding:5px 10px}.wboff b{color:#b8322a}
+.wbt{border-collapse:collapse;width:100%}.wbt th,.wbt td{border:1px solid #9aa5b5;padding:4px 10px;text-align:left;vertical-align:top}.wbt th{background:#eef3fa}.wbt td:first-child{width:70px;white-space:nowrap}.wbt td:last-child{width:34%}
+.wbt small{color:#4a5568}.wbm{color:#4a5568}.wbsum td{font-weight:700;background:#eef3fa}.wbt tr{break-inside:avoid}
+.wbach{border:1.5px solid #b8322a;border-radius:8px;padding:6px 12px;display:flex;flex-direction:column;gap:2px;break-inside:avoid}.wbach b{color:#b8322a}
+.wbn{display:flex;gap:8px;padding:3px 0;border-bottom:1px solid #e3e8ef;align-items:baseline;break-inside:avoid}.wbbox{flex:none;width:11px;height:11px;border:1.5px solid #17212f;border-radius:2px}.wbnt{flex:1}.wbn small{color:#4a5568;font-size:11.5px}
+.wbline{border-bottom:1px solid #9aa5b5;height:26px}
+.wbft{display:flex;gap:12px;font-size:11.5px;color:#4a5568}.wbft span:first-child{flex:1}
+@media (max-width:560px){.wbpaper{padding:12px}.wbr{flex-wrap:wrap}.wbr>b{flex:1 1 100%}.wb2{grid-template-columns:minmax(0,1fr)}}
+#wbprintbox{display:none}
+@media print{
+ @page{size:A4 portrait;margin:11mm 12mm}
+ body.wbprinting>*:not(#wbprintbox){display:none!important}
+ body.wbprinting #wbprintbox{display:block!important}
+ body.wbprinting{background:#fff!important}
+ #wbprintbox .wbpaper{border:0;box-shadow:none;padding:0;border-radius:0}
+ #wbprintbox .wbr>b{flex:0 0 200px}#wbprintbox .wbr{flex-wrap:nowrap}#wbprintbox .wb2 .wbr>b{flex:none}#wbprintbox .wb2{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #wbprintbox .wbsec,#wbprintbox .wbbar,#wbprintbox .wboff,#wbprintbox .wbt th,#wbprintbox .wbsum td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ #wbprintbox .wbbar{break-after:avoid}#wbprintbox .wbnotes{break-inside:avoid}
+}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -304,7 +347,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.80";
+<script>const APPV="1.81";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -655,12 +698,14 @@ function jvPanels(D){const T=jvTabs(D);if(!jvTab||!T.some(t=>t.k===jvTab))jvTab=
  const SH={"Erinnerungen":"Erinnerungen","Offene Retourscheine":"Retourscheine","Weitere offene Defekte":"Defekte","Deine weiteren Defekte":"Defekte","Wieder einsatzbereit":"Repariert","Letzte Retouren":"Retouren"},sum=M.map(m=>(SH[m[0]]||m[0])+" "+m[1].length).join(" · ");
  const more=M.length?'<details class="jvcard jvmore" id="jvmore"'+(jvMoreOpen?' open':'')+'><summary><b>Mehr anzeigen</b><small>'+esc(sum)+'</small><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>'+M.map(m=>'<div class="jvlh">'+esc(m[0])+' · '+m[1].length+'</div>'+m[1].join("")).join("")+'</details>':'';
  const ps=typeof abgPrStrip==="function"?abgPrStrip():"";
- return{left:er+ps+tabs+more,right:""}}
+ const wbn=typeof WBN!=="undefined"?WBN.filter(n=>!n.done).length:0;
+ const wb='<button class="jvcard wbopen" type="button" id="jvwb"><span><b>Wochenbericht</b><small>Für die Besprechung, zum Drucken'+(wbn?' · '+wbn+(wbn===1?' Punkt':' Punkte')+' eingetragen':'')+'</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>';
+ return{left:er+ps+tabs+more+wb,right:""}}
 function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i%6===0,r1=86,r2=r1+(big?12:5);t+='<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'" stroke="var(--jv-tick'+(big?'b':'')+')" stroke-width="1.2"/>'}
  return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
 function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+", "+d.toLocaleDateString("de-AT",{day:"numeric",month:"long",year:"numeric"})}
 setInterval(jvClock,1000);
-function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});document.querySelectorAll("[data-jt]").forEach(b=>b.onclick=()=>{jvTab=b.dataset.jt;jarvisView()});const mo=$("#jvmore");if(mo)mo.ontoggle=()=>{jvMoreOpen=mo.open};if(typeof abgJvBind==="function")abgJvBind();if(typeof jvErinBind==="function")jvErinBind()}
+function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});document.querySelectorAll("[data-jt]").forEach(b=>b.onclick=()=>{jvTab=b.dataset.jt;jarvisView()});const mo=$("#jvmore");if(mo)mo.ontoggle=()=>{jvMoreOpen=mo.open};if(typeof abgJvBind==="function")abgJvBind();const wbb=$("#jvwb");if(wbb)wbb.onclick=()=>go("wb");if(typeof jvErinBind==="function")jvErinBind()}
 /* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
 const JV_MALE=/conrad|killian|florian|christoph|kasper|ralf|bernd|klaus|jonas|markus|martin|yannick|viktor|stefan|hans|thomas|männlich|male/i;
 const jvVK=v=>v.voiceURI||v.name;
@@ -975,7 +1020,7 @@ const rightsReady=()=>Object.keys(TIT).length>0;
 /* Materialliste-Recht: solange noch kein Titel mat_* hat (Datenbank-Update fehlt), gilt wie früher Defekte-Bearbeiten fürs Abschließen */
 const matReady=()=>Object.values(TIT).some(t=>t.r&&(t.r.mat_b||t.r.mat_l))||Object.values(ROL).some(x=>x.x&&(x.x.mat_b||x.x.mat_l));
 function can(k){if(owner)return true;if(k.startsWith("mat_")&&!matReady())return k==="mat_b"&&can("def_b");if(!rightsReady()){if(k.startsWith("def_"))return k!=="def_l"&&!!werk[me];if(k.startsWith("ret_"))return !!lagr[me];return false}return !!uRights(me)[k]}
-function rightsSub(){packSub();if(typeof abgSub==="function")abgSub();if(typeof hoSub==="function")hoSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
+function rightsSub(){packSub();if(typeof abgSub==="function")abgSub();if(typeof wbSub==="function")wbSub();if(typeof hoSub==="function")hoSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
 function rightsChanged(){const k=JSON.stringify(uRights(me));if(rkLast!==null&&k!==rkLast&&!owner)DBX.reloadAll();rkLast=k;draw();tabCheck()}
 const titList=()=>Object.keys(TIT).map(id=>({id,...TIT[id]})).sort((a,b)=>(a.o||0)-(b.o||0)||String(a.name).localeCompare(String(b.name),"de"));
 /* Retourschein: Knöpfe ohne Recht ausblenden */
@@ -1911,7 +1956,7 @@ const JV_FRAGEN=[
  {g:"Retourschein",r:"ret_s",q:["Öffne den Retourschein für Auftrag X.","Neuen Retourschein erstellen.","Welche Retourscheine sind angefangen?","Was muss ich prüfen?","Was fehlt bei Retourschein X gegenüber der Packliste?","Füge 3 Stück Kabel A zu Retourschein X hinzu."]},
  {g:"Info an das Lager",q:["Gibt es ungelesene Nachrichten?","Was hat Monteur X geschrieben?","Lies mir die neueste Nachricht vor."]},
  {g:"Rückblick & Auswertung",r:"ret_s",q:["War bei Auftrag X alles zurück?","Welche Veranstaltung hatte zuletzt Fehlmaterial?","Welche Artikel fehlen am häufigsten?","Welche Aufträge waren diesen Monat unvollständig?","Wie viele Retouren gab es diese Woche?"]},
- {g:"Aktionen",q:["Briefing noch einmal.","Erinnere mich morgen um 9 an Auftrag X.","Markiere Auftrag X als geklärt.","Notiere zu Auftrag X: …","Melde Defekt: Kabel 32A 25 m, Stecker gebrochen.","Auftrag X alles zurück, schreib Retoure an Projektleiter A.","Schick Projektleiter A eine Nachfrage zu Auftrag X."]}];
+ {g:"Aktionen",q:["Briefing noch einmal.","Zeig mir den Wochenbericht.","Erinnere mich morgen um 9 an Auftrag X.","Markiere Auftrag X als geklärt.","Notiere zu Auftrag X: …","Melde Defekt: Kabel 32A 25 m, Stecker gebrochen.","Auftrag X alles zurück, schreib Retoure an Projektleiter A.","Schick Projektleiter A eine Nachfrage zu Auftrag X."]}];
 function jvHelpOpen(){const old=document.querySelector(".jvhelp");if(old)old.remove();const o=document.createElement("div");o.className="jvhelp";o.setAttribute("role","dialog");o.setAttribute("aria-label","Hilfe");
  const G=JV_FRAGEN.filter(g=>!g.r||can(g.r));
  o.innerHTML='<header class="jvhh"><button class="jvhb" type="button" aria-label="Zurück"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><div><b>Hilfe</b><small>Was kann ich fragen?</small></div></header>'+
@@ -1972,6 +2017,7 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
   return jvDef(q)}
  if(/(muss|soll) ich .*prüf|zu prüfen|was ist zu prüfen|prüfen\?$/.test(n)){if(!can("abg_p"))return{say:["Dafür brauchst du das Recht „Abgleich prüfen“."]};const L=abgToCheck();if(!L.length)return{say:[jvF()?"Nichts zu prüfen. Kaffeepause verdient.":"Es ist nichts zu prüfen."]};
   return{say:[(L.length===1?"Ein Auftrag wartet":L.length+" Aufträge warten")+" auf deine Prüfung: "+jvList(L.slice(0,4).map(x=>x.p?x.p.ev||x.p.ord:x.r.ev))+"."],rows:L.map(x=>({l:x.p?x.p.ev||"–":x.r.ev||"–",sub:"Endretoure von "+nmA(x.r,"closedBy")+", "+pkDM(x.r.closedT),r:x.B?(x.B.fehlt?x.B.fehlt+" fehlen":x.B.zuviel?x.B.zuviel+" zu viel":"alles zurück"):"ohne Packliste",cls:x.B&&(x.B.fehlt||x.B.zuviel)?"warn":"ok",fn:()=>{if(x.p){curPack=x.p.id;go("pkabg")}else{curRet=x.r.id;go("retopen")}}}))}}
+ if(/wochenbericht|besprechung/.test(n)){go("wb");return{say:["Ich öffne den Wochenbericht."],quiet:true}}
  /* Rückblick */
  if(/alles zurück|vollständig zurück|komplett zurück/.test(n)&&/^(war|ist|kam)\b/.test(n))return jvRetBal(raw,"all");
  if(/zuletzt fehlmaterial|fehlmaterial/.test(n))return jvLastMissing();
@@ -2276,6 +2322,78 @@ function abgMissTab(){const G=abgMissing(),Z=abgAllMore().length;
   L:G.map(g=>{const a=g.at[0];return '<button class="jvln" type="button" data-'+(g.hint?'abgzv="1"':'jp="'+esc(a.p.id)+'" data-jpa="1"')+'><span class="jvlt"><b>'+esc(g.name)+'</b><small>'+(g.hint?'<span class="or">Vielleicht: '+g.hint.q+' kamen bei '+esc(g.hint.from.ev||g.hint.from.ord)+' zu viel zurück</span>':'am ehesten bei '+esc(a.p.ev||a.p.ord)+(a.over?', überfällig':', Endretoure'))+'</small></span><span class="jvlr warn">'+g.n+(g.n===1?' fehlt':' fehlen')+'</span></button>'}),
   foot:Z?'<button class="jvln abgzvl" type="button" data-abgzv="1"><span class="jvlt"><b>Zu viel zurück: '+Z+' offen zum Klären</b></span><span class="jvlr">›</span></button>':""}}
 function abgJvBind(){const s=$("#abgstrip");if(s)s.onclick=()=>go("abgpr");document.querySelectorAll("#jv [data-abgzv]").forEach(b=>b.onclick=()=>go("abgzv"));document.querySelectorAll("#jv [data-jpa]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("pkabg")})}
+
+/* ===== Wochenbericht (ab 1.81) – für die Montagsbesprechung, zum Drucken =====
+   Besprechung = Montag der „diesen Woche“ (Sa/So → nächster Montag). Block 1 letzte Woche (Mo–So davor), Block 2 diese Woche (Mo–Fr, Sa/So beim Freitag),
+   Block 3 Punkte zur Besprechung (docs „wbnote“ {txt,by,t,done:{by,t}|null}) – eintragen darf jeder mit „Lager Übersicht“. Alle betroffenen Aufträge werden angeführt. */
+let wbOff=0,WBN=[],wbOn=false;
+function wbSub(){if(wbOn)return;wbOn=true;try{db.collection("wbnote").onSnapshot(s=>{WBN=s.docs.map(d=>({id:d.id,...d.data()}));if(view==="wb")wbView()})}catch(e){console.warn(e)}}
+const wbWd=t=>PK_WD[new Date(t).getDay()]+" "+pkDM(t);
+function wbMeet(){const t0=pkDay(Date.now()),w=new Date(t0).getDay();let m=pkMon(t0);if(w===6||w===0)m=pkAddD(m,7);return pkAddD(m,7*wbOff)}
+const wbIn=(t,a,b)=>t&&t>=a&&t<b;
+function wbData(){const M=wbMeet(),L0=pkAddD(M,-7),L1=M,N1=pkAddD(M,7),t0=pkDay(Date.now());
+ const okPk=can("pk_s"),okRet=can("ret_s");
+ /* letzte Woche */
+ const herr=okPk?packs.filter(p=>{const H=pkH(p);return H.fin&&wbIn(H.fin.t,L0,L1)}).sort((a,b)=>pkH(a).fin.t-pkH(b).fin.t).map(p=>{const H=pkH(p),g=pkProg(p),f=pkF(p).length;
+  return{n:p.ev||"Packliste",d:(p.ord||"–")+" · "+wbWd(H.fin.t)+" · "+g.n+(g.n===1?" Position":" Positionen")+(f?", "+f+" Fremdmiete":"")+(g.l55?", "+g.l55+" Lager 55":"")+" · "+nmA(H.fin,"by"),pk:p.id}}):[];
+ const zur=okRet?rets.filter(r=>r.closed&&wbIn(r.closedT,L0,L1)).sort((a,b)=>a.closedT-b.closedT).map(r=>{const p=okPk&&typeof abgPackOf==="function"?abgPackOf(r.ord):null,B=p?abgBal(p):null,lb=r.art==="teil"?"Teilretoure":r.art==="end"?"Endretoure":"Retoure";
+  let rt="",cls="";if(!B){rt="ohne Packliste"}else if(r.art==="teil"){rt="Teil"}else if(B.fehlt){rt=B.fehlt+(B.fehlt===1?" fehlt":" fehlen");cls="red"}else{rt="vollständig";cls="ok"}
+  return{n:r.ev||"Retourschein",d:(r.ord||"–")+" · "+lb+" "+wbWd(r.closedT)+(B?" · "+B.zur+" von "+B.raus+(B.zuviel?" · "+B.zuviel+" zu viel":""):"")+" · "+nmA(r,"closedBy"),r:rt,cls,ret:r.id}}):[];
+ const over=okPk?pkGroups().over.map(p=>{const d=Math.round((t0-pkDay(p.de))/864e5);return{n:p.ev||"Packliste",d:(p.ord||"–")+(p.pl?" · "+shortName(p.pl):"")+" · Dispo-Ende "+wbWd(p.de),r:d<=1?"seit gestern":"seit "+d+" Tagen",cls:"red",pk:p.id}}):[];
+ const dis=[];if(okPk){packs.forEach(p=>{const h=pkHd(p);
+  if(h&&pkShifted(p)&&(wbIn(pkDay(p.db||0),L0,L1)||wbIn(pkHDay(p),L0,L1)))dis.push({n:p.ev||"Packliste",d:"Herrichten verschoben "+wbWd(p.db)+" → "+wbWd(pkHDay(p))+(h.why?" · „"+h.why+"“":"")+(h.by?" · "+nmA(h,"by"):""),pk:p.id,t:pkHDay(p)});
+  if(okRet&&p.de){const E=pkRets(p).filter(r=>r.closed&&r.art==="end"&&wbIn(r.closedT,L0,L1)).sort((a,b)=>b.closedT-a.closedT)[0];if(E){const x=Math.round((pkDay(E.closedT)-pkDay(p.de))/864e5);
+   if(x)dis.push({n:p.ev||"Packliste",d:"Endretoure "+Math.abs(x)+(Math.abs(x)===1?" Tag ":" Tage ")+(x>0?"nach":"vor")+" Dispo-Ende ("+pkDM(p.de)+" → "+pkDM(E.closedT)+")",pk:p.id,t:E.closedT})}}});dis.sort((a,b)=>a.t-b.t)}
+ let offen=null;if(okPk&&okRet&&typeof abgMissing==="function"){const G=abgMissing(),P=new Set();let n=0;G.forEach(g=>{n+=g.n;g.at.forEach(a=>P.add(a.p.id))});offen={n,a:P.size}}
+ /* diese Woche */
+ const days=[0,1,2,3,4].map(i=>{const t=pkAddD(M,i);return{t,h:[],z:[]}});const slot=t=>{const w=new Date(t).getDay();return w===6?pkAddD(t,-1):w===0?pkAddD(t,-2):t};
+ if(okPk)packs.forEach(p=>{const s=pkSlot(p),dh=days.find(d=>d.t===s.t);if(dh&&wbIn(s.t,M,N1))dh.h.push({p,we:s.we});
+  if(p.de&&pkState(p).k!=="done"){const de=pkDay(p.de),dz=days.find(d=>d.t===slot(de));if(dz&&wbIn(de,M,N1))dz.z.push({p,we:[ "So","","","","","","Sa"][new Date(de).getDay()]})}});
+ const ach=[];if(okPk){const D=defs.filter(d=>!d.done);D.forEach(d=>{const A={code:artCode(String(d.anr||"").split(/[-–]/)[0]),toks:jvATok(d.art).filter(w=>!/^\d{1,2}$/.test(w)),label:d.art},m=jvMatcher(A);
+   const hit=packs.filter(p=>{const t=pkHDay(p);return t>=M&&t<N1&&pkState(p).k!=="done"}).find(p=>{const c=jvArtCnt(p,m);return c.out+c.plan>0});
+   if(hit)ach.push((d.urg?"dringend: ":"")+d.art+" ist defekt (gemeldet "+pkDM(d.t)+") – wird "+wbWd(pkHDay(hit)).split(" ")[0]+" für "+(hit.ev||hit.ord)+" gebraucht")})}
+ if(okRet&&typeof abgToCheck==="function"&&can("abg_p")){const n=abgToCheck().length;if(n)ach.push(n+(n===1?" Endretoure":" Endretouren")+" noch zu prüfen")}
+ /* Punkte */
+ const notes=WBN.filter(n=>!n.done).sort((a,b)=>(a.t||0)-(b.t||0)).map(n=>({...n,old:(n.t||0)<L0}));
+ const doneN=WBN.filter(n=>n.done&&n.done.t>=pkAddD(M,-28)).sort((a,b)=>b.done.t-a.done.t);
+ return{M,L0,N1,herr,zur,over,dis,offen,days,ach,notes,doneN}}
+/* ---------- Bericht (Bildschirm und Druck) ---------- */
+function wbList(title,rows,red,empty){return '<div class="wbl"><div class="wblh'+(red?' red':'')+'"><b>'+esc(title)+'</b><b>'+rows.length+'</b></div>'+(rows.length?rows.map(r=>'<div class="wbr"><b>'+esc(r.n)+'</b><span>'+esc(r.d)+'</span>'+(r.r?'<em class="'+(r.cls||"")+'">'+esc(r.r)+'</em>':'')+'</div>').join(""):'<div class="wbe">'+esc(empty)+'</div>')+'</div>'}
+function wbPaper(D,print){const kwL=pkKW(D.L0),kwN=pkKW(D.M),y=new Date(D.M).getFullYear();
+ const day=(d,k)=>{const L=d[k];return L.length?L.map(o=>esc(o.p.ev||o.p.ord||"–")+(o.we?' <small>('+o.we+')</small>':'')).join(", "):'<span class="wbm">–</span>'};
+ const nh=D.days.reduce((a,d)=>a+d.h.length,0),nz=D.days.reduce((a,d)=>a+d.z.length,0);
+ return '<div class="wbpaper'+(print?' wbprint':'')+'"><div class="wbhd"><div><span>The Power Company · Lager</span><h1>Wochenbericht</h1></div><em>Besprechung '+wbWd(D.M)+y+'</em></div>'+
+  '<section class="wbsec"><div class="wbbar"><b>1 · Letzte Woche</b><span>KW '+kwL+' · '+pkDM(D.L0)+'–'+pkDM(pkAddD(D.M,-1))+new Date(pkAddD(D.M,-1)).getFullYear()+'</span></div><div class="wbin">'+
+   wbList("Hergerichtet",D.herr,false,"Nichts hergerichtet.")+wbList("Zurückgekommen",D.zur,false,"Nichts zurückgekommen.")+
+   '<div class="wb2">'+wbList("Überfällig",D.over,true,"Nichts überfällig.")+wbList("Dispodaten stimmten nicht",D.dis,false,"Keine Abweichungen.")+'</div>'+
+   (D.offen?'<div class="wboff">'+(D.offen.n?'<b>Noch offen insgesamt:</b> '+D.offen.n+' Stück Fehlmaterial bei '+D.offen.a+(D.offen.a===1?' Auftrag':' Aufträgen')+' (auch aus früheren Wochen)':'<b>Noch offen insgesamt:</b> kein Fehlmaterial')+'</div>':'')+'</div></section>'+
+  '<section class="wbsec"><div class="wbbar"><b>2 · Diese Woche</b><span>KW '+kwN+' · '+pkDM(D.M)+'–'+pkDM(pkAddD(D.M,4))+y+'</span></div><div class="wbin">'+
+   '<table class="wbt"><thead><tr><th>Tag</th><th>Herrichten</th><th>Kommt zurück</th></tr></thead><tbody>'+D.days.map(d=>'<tr><td><b>'+wbWd(d.t)+'</b></td><td>'+day(d,"h")+'</td><td>'+day(d,"z")+'</td></tr>').join("")+
+   '<tr class="wbsum"><td>Summe</td><td>'+nh+(nh===1?' Packliste':' Packlisten')+'</td><td>'+nz+(nz===1?' Rücklauf':' Rückläufe')+'</td></tr></tbody></table>'+
+   (D.ach.length?'<div class="wbach"><b>Achtung</b>'+D.ach.map(a=>'<span>· '+esc(a)+'</span>').join("")+'</div>':'')+'</div></section>'+
+  '<section class="wbsec wbnotes"><div class="wbbar"><b>3 · Sonstiges zur Besprechung</b></div><div class="wbin">'+
+   D.notes.map(n=>'<div class="wbn"><span class="wbbox"></span><span class="wbnt">'+esc(n.txt)+'</span><small>'+esc(nmA(n,"by"))+', '+wbWd(n.t)+(n.old?' · noch offen':'')+'</small></div>').join("")+
+   '<div class="wbline"></div><div class="wbline"></div></div></section>'+
+  '<div class="wbft"><span>Erstellt aus der TPC Lager App · '+fmt(Date.now())+' · '+esc(meName())+'</span><span>Einzelheiten in der App</span></div></div>'}
+/* ---------- Ansicht ---------- */
+function wbView(){if(!can("jv_s")){view="start";return startView()}$("#t").textContent="Wochenbericht";const D=wbData(),kwL=pkKW(D.L0),kwN=pkKW(D.M);
+ const ae=document.activeElement,keep=ae&&ae.id==="wbin"?ae.value:null;
+ $("#app").innerHTML='<section class="wbnav"><button type="button" class="wbarr" id="wbp" aria-label="Eine Woche zurück"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><div><b>Rückblick KW '+kwL+' · Ausblick KW '+kwN+'</b><small>Besprechung '+wbWd(D.M)+new Date(D.M).getFullYear()+(wbOff?' · <button type="button" class="lnk" id="wbnow">zur aktuellen</button>':'')+'</small></div><button type="button" class="wbarr" id="wbn" aria-label="Eine Woche vor"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></section>'+
+  '<button class="btn" id="wbpr" type="button" style="margin:0 0 10px">Drucken / als PDF speichern</button>'+
+  '<section class="wbedit"><b>Punkte für die Besprechung</b><small class="mute">'+wbWd(D.M)+' · wird mitgedruckt · nicht Erledigtes bleibt für die nächste Woche</small>'+
+   D.notes.map(n=>'<div class="wbei"><input type="checkbox" data-wbd="'+esc(n.id)+'" aria-label="Erledigt"><span><span>'+esc(n.txt)+'</span><small>'+esc(nmA(n,"by"))+', '+wbWd(n.t)+(n.old?' · noch offen':'')+'</small></span>'+(n.by===me||can("v_app")?'<button type="button" class="lnk" data-wbx="'+esc(n.id)+'" style="color:var(--bad)">Löschen</button>':'')+'</div>').join("")+
+   '<div class="wbadd"><label><span class="sr">Neuer Punkt</span><input id="wbin" maxlength="200" placeholder="Neuer Punkt …" autocomplete="off"></label><button class="btn s" id="wbadd" type="button">Hinzufügen</button></div>'+
+   (D.doneN.length?'<details class="wbdone"><summary>Erledigt · '+D.doneN.length+'</summary>'+D.doneN.map(n=>'<div class="wbei"><input type="checkbox" checked data-wbu="'+esc(n.id)+'" aria-label="Wieder offen"><span><span>'+esc(n.txt)+'</span><small>erledigt '+wbWd(n.done.t)+' · '+esc(nmA(n.done,"by"))+'</small></span></div>').join("")+'</details>':'')+'</section>'+
+  wbPaper(D,false);
+ const old=document.getElementById("wbprintbox");if(old)old.remove();document.body.insertAdjacentHTML("beforeend",'<div id="wbprintbox">'+wbPaper(D,true)+'</div>');
+ $("#wbp").onclick=()=>{wbOff--;wbView()};$("#wbn").onclick=()=>{wbOff++;wbView()};if($("#wbnow"))$("#wbnow").onclick=()=>{wbOff=0;wbView()};
+ $("#wbpr").onclick=()=>{document.body.classList.add("wbprinting");setTimeout(()=>{try{window.print()}catch(e){}setTimeout(()=>document.body.classList.remove("wbprinting"),500)},50)};
+ const add=()=>{const v=$("#wbin").value.trim();if(!v)return;$("#wbin").value="";rSave(()=>db.doc("wbnote/"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)).set({txt:v,by:me,...tabAs("by"),t:Date.now(),done:null}),"Punkt gespeichert")};
+ $("#wbadd").onclick=add;$("#wbin").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add()}};if(keep!==null){$("#wbin").value=keep;$("#wbin").focus()}
+ document.querySelectorAll("[data-wbd]").forEach(c=>c.onchange=()=>rSave(()=>db.doc("wbnote/"+c.dataset.wbd).update({done:{by:me,...tabAs("by"),t:Date.now()}}),"Als erledigt markiert"));
+ document.querySelectorAll("[data-wbu]").forEach(c=>c.onchange=()=>rSave(()=>db.doc("wbnote/"+c.dataset.wbu).update({done:null}),"Wieder offen"));
+ document.querySelectorAll("[data-wbx]").forEach(b=>b.onclick=()=>ask("Punkt löschen?",()=>rSave(()=>db.doc("wbnote/"+b.dataset.wbx).delete(),"Gelöscht")))}
+window.addEventListener("afterprint",()=>document.body.classList.remove("wbprinting"));
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -2306,6 +2424,7 @@ function draw(){if(!db)return;document.body.classList.toggle("jvon",view==="jarv
  if(view.startsWith("ret")){const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&$("#app").contains(ae))return;return retDraw()}
  if(view==="jarvis"&&can("jv_s"))return jarvisView();
  if(view==="jarvis"){view="start";hist=[]}
+ if(view==="wb"&&can("jv_s"))return wbView();
  if(view==="pkabg"&&can("pk_s")&&can("ret_s"))return pkAbgView();
  if(view==="abgzv"&&can("pk_s")&&can("ret_s"))return abgZvView();
  if(view==="abgpr"&&can("abg_p"))return abgPrView();

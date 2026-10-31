@@ -143,3 +143,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.80
 - `jvAgo` (Lager Assistent: „gemeldet heute/gestern/vor n Tagen“, Retourscheine „… · heute“ usw.) rechnet nach Kalendertagen statt 24-Stunden-Blöcken (Fehler: gestern Abend gemeldet zeigte „heute“).
+
+## Version 1.81 – Wochenbericht (Entwurf https://claude.ai/artifact/1Fc7wBfpfFUf522RQGg47N)
+- `wb.js` (von build.py nach abg.js angehängt), Ansicht `wb` (Recht `jv_s`), Karte „Wochenbericht“ unten in der Lager Übersicht, Frage „Wochenbericht“ im Assistenten.
+- Besprechung = Montag dieser Woche, am Sa/So der nächste Montag (`wbMeet`, Pfeile ±1 Woche über `wbOff`). Block 1 letzte Woche (Mo–So davor): Hergerichtet (`packh.fin.t` in der Woche), Zurückgekommen (abgeschlossene Retourscheine, `closedT`), Überfällig (aktuell, `pkGroups().over`), Dispodaten stimmten nicht (Herrichten verschoben `packh.hd` mit Grund; Endretoure ≠ Dispo-Ende-Tag) + „Noch offen insgesamt“ aus `abgMissing` (ohne Defekte). Block 2 diese Woche: Tabelle Mo–Fr (Herrichten nach `pkSlot`, Sa/So beim Freitag; Rücklauf nach Dispo-Ende, ohne erledigte) + „Achtung“ (offene Defekte, die eine Packliste der Woche braucht; Zu prüfen nur mit `abg_p`). Block 3 „Sonstiges“: docs `wbnote` {txt,by,t,done} – jeder mit Lager Übersicht trägt ein, abhaken = done, nicht Erledigtes bleibt stehen („noch offen“, wenn älter als die letzte Woche), löschen: eigene oder Admin.
+- Alle betroffenen Aufträge werden angeführt (Jürgen) – zu lang → zweite Seite. Druck: `#wbprintbox` (eigene Kopie des Berichts) + `body.wbprinting` + `@media print` (A4, 11/12 mm Rand), `window.print()`; „Als PDF speichern“ über das Druckfenster. Papier-Stile `.wbpaper` immer hell. Wichtig: im Bericht keine `<header>`/`<footer>`-Elemente (App-CSS färbt `header` blau).
+- Test `tests/wb_t.js` (erzeugt eine PDF zum Prüfen).
