@@ -134,3 +134,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Abgleich: zählen nicht als „raus“ (`e.l55`), kommen meist zum Lager 55 zurück; kommt doch etwas bei uns zurück → kein „zu viel“, Hinweis „kam über uns statt Lager 55 zurück“ (`e.via55`). Excel-Bemerkung entsprechend.
 - Assistent „Wo ist …“: zählt Lager-55-Mengen bei laufenden Aufträgen mit, Zusatz „über Lager 55“. „Was fehlt beim Packschein“ ohne Lager 55.
 - Test `tests/l55_t.js`.
+
+## Version 1.79 – Artikel aus dem Packschein in die Artikelliste übernehmen
+- Bearbeiten-Dialog einer Position ohne Artikelliste-Eintrag (`!pkKat(x)`): oranger Kasten „Nicht in der Artikelliste“. Mit Recht `v_app`: „Zur Artikelliste hinzufügen“ → `alEdit(null,{nr,name,g,hint,done})` (Name/Nummer aus dem Packschein, Hauptgruppe per `alGuessG` vorgeschlagen, alles änderbar). Ohne Nummer im Packschein: Hinweis, dass die Position nicht zugeordnet werden kann. Nach dem Speichern wird ein passender Eintrag in `fehlartikel` gelöscht; die Packliste ordnet die Position über `rkat`-Snapshot sofort ein.
+- Ohne `v_app`: „Fehlt in der Artikelliste – melden“ (`pkKatMeld`) → docs `fehlartikel` (wie manuelle Retourschein-Artikel, zusätzlich `src:"Packliste"`, ev/ord der Packliste).
+- App-Verwaltung → „Fehlende Artikel“: Knopf „Übernehmen“ öffnet `alEdit` vorbelegt und löscht danach den Eintrag.
+- `alEdit(a, pre)` hat jetzt einen zweiten Parameter für die Vorbelegung. Test `tests/kat_t.js`.
