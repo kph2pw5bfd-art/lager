@@ -322,6 +322,10 @@ button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:va
  #wbprintbox .wbsec,#wbprintbox .wbbar,#wbprintbox .wboff,#wbprintbox .wbt th,#wbprintbox .wbsum td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
  #wbprintbox .wbbar{break-after:avoid}#wbprintbox .wbnotes{break-inside:avoid}
 }
+/* 1.82: Retourscheine Offen / Abgeschlossen */
+.rgh{display:flex;align-items:baseline;gap:8px;margin:12px 2px 6px}.rgh b{flex:1;font-size:17px}.rgh span{font-size:13px;color:var(--mute)}
+.rgsep{border:0;border-top:3px solid var(--navy);margin:18px 0 6px;opacity:1}
+.rge{padding:4px 2px 8px}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -347,7 +351,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.81";
+<script>const APPV="1.82";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -866,6 +870,10 @@ function rMailBody(r){const it=rIt(r),n=Object.keys(it).length,st=r.closed?"Abge
 /* Versand per Mail vermerken */
 const RTO="tpc_mail_empf";
 function rRecent(){let a=[];try{a=JSON.parse(localStorage.getItem(RTO)||"[]")}catch(e){}rets.forEach(r=>(r.sent||[]).forEach(x=>{if(x.to)a.push(x.to)}));return [...new Set(a.map(x=>String(x).trim()).filter(Boolean))].slice(0,30)}
+/* Retourscheine, Filter „Alle“: oben „Offen“, unten „Abgeschlossen“, blauer Trennstrich dazwischen (ab 1.82) */
+function rGroupList(L,card){if(typeof rf==="undefined"||rf!=="alle")return L.map(card).join("");const O=L.filter(r=>!r.closed),Z=L.filter(r=>r.closed);
+ return '<div class="rgh"><b>Offen</b><span>'+O.length+'</span></div>'+(O.length?O.map(card).join(""):'<div class="mute rge">Keine offenen Retourscheine.</div>')+
+  '<hr class="rgsep">'+'<div class="rgh"><b>Abgeschlossen</b><span>'+Z.length+'</span></div>'+(Z.length?Z.map(card).join(""):'<div class="mute rge">Keine abgeschlossenen Retourscheine.</div>')}
 function rMailAsk(r){const o=document.createElement("div");o.className="ov";const rec=rRecent();
  o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Per Mail senden</b><p class="mute" style="margin:4px 0 10px">An wen geht der Retourschein? Wird in der Übersicht vermerkt. Die Adresse gibst du danach im Mailprogramm ein.</p><label class="mute" for="mto">Empfänger (Name oder E-Mail, optional)</label><input id="mto" list="mtol" autocomplete="off"><datalist id="mtol">'+rec.map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist>'+(typeof abgMailOpt==="function"?abgMailOpt(r):"")+'<div class="row"><button class="btn ghost" id="mtc">Abbrechen</button><button class="btn" id="mtg">Weiter zum Mailprogramm</button></div></div>';
  document.body.appendChild(o);o.querySelector("#mto").value=(r.sent&&r.sent.length&&r.sent[r.sent.length-1].to)||"";o.querySelector("#mtc").onclick=()=>o.remove();
@@ -2694,7 +2702,7 @@ function retList(){$("#t").textContent="Retourscheine";
  if(!$("#rsq")||!$("#rlist")){$("#app").innerHTML=rTabs()+'<div class="srow"><input id="rsq" type="search" placeholder="Suchen (Veranstaltung oder Auftragsnummer)" value="'+esc(rqv)+'" autocomplete="off"><button class="btn grey scb" id="rscan" aria-label="Etikett fotografieren und Retourschein öffnen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button></div><input type="file" id="rscanf" accept="image/*" capture="environment" hidden><div id="rlist"></div>';rBindTabs();rScanBind();const s=$("#rsq");s.oninput=()=>{rqv=s.value;rListBody()}}
  rListBody()}
 function rListBody(){const q=rqv.toLowerCase(),L=rets.filter(r=>(!q||[r.ev,r.ord].join(" ").toLowerCase().includes(q))&&(rf==="alle"||(rf==="zu")===!!r.closed));
- $("#rlist").innerHTML=chips([["alle","Alle"],["offen","Offen"],["zu","Abgeschlossen"]],rf,"data-rf")+(L.length?L.map(r=>{const it=rIt(r);return '<div class="card'+(r.closed?' rdone':'')+'" data-ro="'+r.id+'" style="cursor:pointer"><b>'+esc(r.ev)+'</b>'+(r.closed?' <span class="tag tdone">Abgeschlossen</span>':r.draft?' <span class="tag" style="background:#f2c200;color:#1f2a33">In Arbeit</span>':'')+'<div class="mute">'+(r.ord?"Auftragsnummer "+esc(r.ord)+" · ":"")+rTot(it)+" Stück · "+Object.keys(it).length+' Positionen</div><div class="mute">Erstellt: '+esc(nmA(r,"by"))+", "+fmt(r.t)+'</div>'+(r.mod?'<div class="mute">Letzte Änderung: '+esc(nmA(r,"mod"))+", "+fmt(r.modT)+'</div>':"")+rSentLine(r)+((r.fotos||[]).length?'<div class="mute">📷 '+r.fotos.length+(r.fotos.length===1?' Foto':' Fotos')+'</div>':'')+'</div>'}).join(""):'<div class="card mute">'+(rets.length?"Kein Retourschein passt zur Suche oder zum Filter.":"Noch kein Retourschein. Starte mit „Neuer Retourschein“.")+'</div>');
+ $("#rlist").innerHTML=chips([["alle","Alle"],["offen","Offen"],["zu","Abgeschlossen"]],rf,"data-rf")+(L.length?rGroupList(L,r=>{const it=rIt(r);return '<div class="card'+(r.closed?' rdone':'')+'" data-ro="'+r.id+'" style="cursor:pointer"><b>'+esc(r.ev)+'</b>'+(r.closed?' <span class="tag tdone">Abgeschlossen</span>':r.draft?' <span class="tag" style="background:#f2c200;color:#1f2a33">In Arbeit</span>':'')+'<div class="mute">'+(r.ord?"Auftragsnummer "+esc(r.ord)+" · ":"")+rTot(it)+" Stück · "+Object.keys(it).length+' Positionen</div><div class="mute">Erstellt: '+esc(nmA(r,"by"))+", "+fmt(r.t)+'</div>'+(r.mod?'<div class="mute">Letzte Änderung: '+esc(nmA(r,"mod"))+", "+fmt(r.modT)+'</div>':"")+rSentLine(r)+((r.fotos||[]).length?'<div class="mute">📷 '+r.fotos.length+(r.fotos.length===1?' Foto':' Fotos')+'</div>':'')+'</div>'}):'<div class="card mute">'+(rets.length?"Kein Retourschein passt zur Suche oder zum Filter.":"Noch kein Retourschein. Starte mit „Neuer Retourschein“.")+'</div>');
  document.querySelectorAll("[data-rf]").forEach(b=>b.onclick=()=>{rf=b.dataset.rf;rListBody()});document.querySelectorAll("[data-ro]").forEach(e=>e.onclick=()=>{curRet=e.dataset.ro;go("retopen")})}
 
 function rBar(){const n=Object.keys(rs.items).length;return '<div style="height:84px"></div><div class="rbar"><div><div style="flex:1"><b style="font-size:19px">'+rTot(rs.items)+'</b> Stück<div class="mute">'+n+' Positionen</div></div><button class="btn" id="rsum" style="width:auto">Schein ansehen</button></div></div>'}

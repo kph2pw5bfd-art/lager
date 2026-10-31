@@ -1,4 +1,4 @@
-const APPV="1.81";
+const APPV="1.82";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -517,6 +517,10 @@ function rMailBody(r){const it=rIt(r),n=Object.keys(it).length,st=r.closed?"Abge
 /* Versand per Mail vermerken */
 const RTO="tpc_mail_empf";
 function rRecent(){let a=[];try{a=JSON.parse(localStorage.getItem(RTO)||"[]")}catch(e){}rets.forEach(r=>(r.sent||[]).forEach(x=>{if(x.to)a.push(x.to)}));return [...new Set(a.map(x=>String(x).trim()).filter(Boolean))].slice(0,30)}
+/* Retourscheine, Filter „Alle“: oben „Offen“, unten „Abgeschlossen“, blauer Trennstrich dazwischen (ab 1.82) */
+function rGroupList(L,card){if(typeof rf==="undefined"||rf!=="alle")return L.map(card).join("");const O=L.filter(r=>!r.closed),Z=L.filter(r=>r.closed);
+ return '<div class="rgh"><b>Offen</b><span>'+O.length+'</span></div>'+(O.length?O.map(card).join(""):'<div class="mute rge">Keine offenen Retourscheine.</div>')+
+  '<hr class="rgsep">'+'<div class="rgh"><b>Abgeschlossen</b><span>'+Z.length+'</span></div>'+(Z.length?Z.map(card).join(""):'<div class="mute rge">Keine abgeschlossenen Retourscheine.</div>')}
 function rMailAsk(r){const o=document.createElement("div");o.className="ov";const rec=rRecent();
  o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Per Mail senden</b><p class="mute" style="margin:4px 0 10px">An wen geht der Retourschein? Wird in der Übersicht vermerkt. Die Adresse gibst du danach im Mailprogramm ein.</p><label class="mute" for="mto">Empfänger (Name oder E-Mail, optional)</label><input id="mto" list="mtol" autocomplete="off"><datalist id="mtol">'+rec.map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist>'+(typeof abgMailOpt==="function"?abgMailOpt(r):"")+'<div class="row"><button class="btn ghost" id="mtc">Abbrechen</button><button class="btn" id="mtg">Weiter zum Mailprogramm</button></div></div>';
  document.body.appendChild(o);o.querySelector("#mto").value=(r.sent&&r.sent.length&&r.sent[r.sent.length-1].to)||"";o.querySelector("#mtc").onclick=()=>o.remove();

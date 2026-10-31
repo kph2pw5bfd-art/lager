@@ -219,3 +219,7 @@ button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:va
  #wbprintbox .wbsec,#wbprintbox .wbbar,#wbprintbox .wboff,#wbprintbox .wbt th,#wbprintbox .wbsum td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
  #wbprintbox .wbbar{break-after:avoid}#wbprintbox .wbnotes{break-inside:avoid}
 }
+/* 1.82: Retourscheine Offen / Abgeschlossen */
+.rgh{display:flex;align-items:baseline;gap:8px;margin:12px 2px 6px}.rgh b{flex:1;font-size:17px}.rgh span{font-size:13px;color:var(--mute)}
+.rgsep{border:0;border-top:3px solid var(--navy);margin:18px 0 6px;opacity:1}
+.rge{padding:4px 2px 8px}
