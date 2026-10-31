@@ -1,4 +1,4 @@
-const APPV="1.79";
+const APPV="1.80";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -307,7 +307,8 @@ function jvData(){const rs=can("ret_s");
  const pk=typeof pkJarvis==="function"?pkJarvis():null;
  return{open,od,urg,fixed,last,since,rs,pk}}
 function jvRow(attr,l,r,cls){return '<button class="jvrow" '+attr+'><span>'+l+'</span><span class="'+(cls||"ok")+'">'+r+'</span></button>'}
-function jvAgo(t){const d=Math.floor((Date.now()-t)/864e5);return d<=0?"heute":d===1?"gestern":"vor "+d+" Tagen"}
+/* nach Kalendertagen (ab 1.80): gestern 23:00 ist „gestern“, auch wenn erst 2 Stunden vergangen sind */
+function jvAgo(t){const a=new Date(t),b=new Date();a.setHours(0,0,0,0);b.setHours(0,0,0,0);const d=Math.round((b-a)/864e5);return d<=0?"heute":d===1?"gestern":"vor "+d+" Tagen"}
 function jvPkPanel(D){const P=D.pk;if(!P)return"";const now=pkDay(Date.now());
  const st='<div class="jvstats"><div class="jvstat"><div class="n">'+String(P.herr.length).padStart(2,"0")+'</div><div class="t">Heute herrichten</div></div><div class="jvstat"><div class="n">'+String(P.back.length).padStart(2,"0")+'</div><div class="t">Heute zurück</div></div><div class="jvstat'+(P.over.length?' al':'')+'"><div class="n">'+String(P.over.length).padStart(2,"0")+'</div><div class="t">Überfällig</div></div></div>';
  const sd=t=>{const d=Math.round((now-pkDay(t))/864e5);return d<=1?"seit gestern":"seit "+d+" Tagen"};

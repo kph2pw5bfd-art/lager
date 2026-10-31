@@ -140,3 +140,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Ohne `v_app`: „Fehlt in der Artikelliste – melden“ (`pkKatMeld`) → docs `fehlartikel` (wie manuelle Retourschein-Artikel, zusätzlich `src:"Packliste"`, ev/ord der Packliste).
 - App-Verwaltung → „Fehlende Artikel“: Knopf „Übernehmen“ öffnet `alEdit` vorbelegt und löscht danach den Eintrag.
 - `alEdit(a, pre)` hat jetzt einen zweiten Parameter für die Vorbelegung. Test `tests/kat_t.js`.
+
+## Version 1.80
+- `jvAgo` (Lager Assistent: „gemeldet heute/gestern/vor n Tagen“, Retourscheine „… · heute“ usw.) rechnet nach Kalendertagen statt 24-Stunden-Blöcken (Fehler: gestern Abend gemeldet zeigte „heute“).
