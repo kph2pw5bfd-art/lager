@@ -176,3 +176,12 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.87
 - Meine Aufträge: alle Mengen mit Einheit (Jürgen: „Bitte immer die Einheit dazu schreiben“). `auUnit(p,k)` holt die Einheit aus der Packliste (Position mit gleichem Artikel-Schlüssel), sonst „Stk“; `auQ(n,u)` schreibt „4 Stk“. Gilt für Material, Fehlt noch, Noch draußen, Mehr zurück, Antwort-Dialog, Antworten-Liste beim Lager (Einheit wird in `plaw.u` mitgespeichert), Abweichungen beim Herrichten und Fremdmiete.
+
+## Version 1.88 – Zusatz-Packscheine mit eigenem Herricht-Tag
+- Hintergrund (Jürgen): epirent gibt jedem Zusatz den Dispo-Beginn des ersten Packscheins. Darum fragt die App beim Anhängen „Wann wird der Zusatz hergerichtet?“ (`pkZAskDay`: Heute/Morgen/Übermorgen/Datum) und speichert `packh.zd_<ps>` = {d, why, by, t}. Rücklauf bleibt gemeinsam (Dispo-Ende).
+- Eigener Abschluss: `packh.zf_<ps>` = {by,t} (`{t:0}` = offen/wieder geöffnet). Anhängen öffnet die Haupt-Packliste NICHT mehr. Neue Zusätze haben `v:2` in `pack.zus[]`.
+- Alte Zusätze (ohne `v`): Tag = Hochlade-Tag (`z.t`), hergerichtet = Haupt-`fin.t` ≥ `z.t` (`pkZFin`). In der Info-Mail der Haupt-Packliste bleiben sie enthalten.
+- `pkProg(P)` zählt nur noch den Haupt-Packschein (`pkProgOf(P,null)`); `pkZProg(P,ps)` den Zusatz. `pkRowFin(P,i)` sperrt pro Zeile (Tippen/Bearbeiten).
+- Zusatz als eigener Eintrag: `pkZPseudo(P,z)` (id = Packliste, `_z`, ev „Zusatz <ps> zu <Veranstaltung>“) – `pkHDay/pkHd/pkShifted/pkProg` kennen `_z`. `pkZTasks()` = alle Zusätze nicht erledigter Aufträge. Eingebunden in: Wand-Übersicht (Fach + „Nicht hergerichtet“, Abzeichen „Zusatz“), `pkJarvis` (Heute herrichten, Briefing, Kachel-Untertitel `pkSub`), Assistent `jvHerr` (heute/morgen/Woche, nicht hergerichtet), Wochenbericht (Tabelle + „Hergerichtet“ letzte Woche).
+- Herricht-Ansicht: pro Zusatz Kasten „Zusatz herrichten: <Tag>“ + Verschieben (`pkZMove`, mit Grund) + Fortschritt; unten „Zusatz abschließen“ bzw. „Info an Projektleiter“ (`pkMail(P,ps)`, nur Zusatz-Positionen, `packh.zi_<ps>`) / „Zusatz wieder öffnen“. `pkHint` zeigt pro Zusatz „herrichten <Tag>“ / „⚠ noch nicht hergerichtet“ / „hergerichtet“.
+- Meine Aufträge: Zeitleiste mit „Nachlieferung (Zusatz <ps>)“, Karte mit Hinweis „Nachlieferung herrichten <Tag>“ (rot, wenn überfällig). Test `tests/zus_t.js`.

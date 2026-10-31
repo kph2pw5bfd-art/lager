@@ -10,7 +10,8 @@ function wbData(){const M=wbMeet(),L0=pkAddD(M,-7),L1=M,N1=pkAddD(M,7),t0=pkDay(
  const okPk=can("pk_s"),okRet=can("ret_s");
  /* letzte Woche */
  const herr=okPk?packs.filter(p=>{const H=pkH(p);return H.fin&&wbIn(H.fin.t,L0,L1)}).sort((a,b)=>pkH(a).fin.t-pkH(b).fin.t).map(p=>{const H=pkH(p),g=pkProg(p),f=pkF(p).length;
-  return{n:p.ev||"Packliste",d:(p.ord||"–")+" · "+wbWd(H.fin.t)+" · "+g.n+(g.n===1?" Position":" Positionen")+(f?", "+f+" Fremdmiete":"")+(g.l55?", "+g.l55+" Lager 55":"")+" · "+nmA(H.fin,"by"),pk:p.id}}):[];
+  return{n:p.ev||"Packliste",d:(p.ord||"–")+" · "+wbWd(H.fin.t)+" · "+g.n+(g.n===1?" Position":" Positionen")+(f?", "+f+" Fremdmiete":"")+(g.l55?", "+g.l55+" Lager 55":"")+" · "+nmA(H.fin,"by"),pk:p.id}}).concat(packs.flatMap(p=>(p.zus||[]).filter(z=>z.v).map(z=>({p,z,f:pkZFin(p,z)}))).filter(o=>o.f&&wbIn(o.f.t,L0,L1)).sort((a,b)=>a.f.t-b.f.t).map(o=>{const g=pkZProg(o.p,o.z.ps);
+  return{n:"Zusatz "+o.z.ps+" zu "+(o.p.ev||"Packliste"),d:(o.p.ord||"–")+" · "+wbWd(o.f.t)+" · "+g.n+(g.n===1?" Position":" Positionen")+" · "+nmA(o.f,"by"),pk:o.p.id}})):[];
  const zur=okRet?rets.filter(r=>r.closed&&wbIn(r.closedT,L0,L1)).sort((a,b)=>a.closedT-b.closedT).map(r=>{const p=okPk&&typeof abgPackOf==="function"?abgPackOf(r.ord):null,B=p?abgBal(p):null,lb=r.art==="teil"?"Teilretoure":r.art==="end"?"Endretoure":"Retoure";
   let rt="",cls="";if(!B){rt="ohne Packliste"}else if(r.art==="teil"){rt="Teil"}else if(B.fehlt){rt=B.fehlt+(B.fehlt===1?" fehlt":" fehlen");cls="red"}else{rt="vollständig";cls="ok"}
   return{n:r.ev||"Retourschein",d:(r.ord||"–")+" · "+lb+" "+wbWd(r.closedT)+(B?" · "+B.zur+" von "+B.raus+(B.zuviel?" · "+B.zuviel+" zu viel":""):"")+" · "+nmA(r,"closedBy"),r:rt,cls,ret:r.id}}):[];
@@ -22,6 +23,7 @@ function wbData(){const M=wbMeet(),L0=pkAddD(M,-7),L1=M,N1=pkAddD(M,7),t0=pkDay(
  let offen=null;if(okPk&&okRet&&typeof abgMissing==="function"){const G=abgMissing(),P=new Set();let n=0;G.forEach(g=>{n+=g.n;g.at.forEach(a=>P.add(a.p.id))});offen={n,a:P.size}}
  /* diese Woche */
  const days=[0,1,2,3,4].map(i=>{const t=pkAddD(M,i);return{t,h:[],z:[]}});const slot=t=>{const w=new Date(t).getDay();return w===6?pkAddD(t,-1):w===0?pkAddD(t,-2):t};
+ if(okPk)pkZTasks().forEach(p=>{const s=pkSlot(p),dh=days.find(d=>d.t===s.t);if(dh&&wbIn(s.t,M,N1))dh.h.push({p,we:s.we})});
  if(okPk)packs.forEach(p=>{const s=pkSlot(p),dh=days.find(d=>d.t===s.t);if(dh&&wbIn(s.t,M,N1))dh.h.push({p,we:s.we});
   if(p.de&&pkState(p).k!=="done"){const de=pkDay(p.de),dz=days.find(d=>d.t===slot(de));if(dz&&wbIn(de,M,N1))dz.z.push({p,we:[ "So","","","","","","Sa"][new Date(de).getDay()]})}});
  const ach=[];if(okPk){wbDefNeed(M,N1).forEach(g=>ach.push(g.name+": "+g.n+(g.n===1?" Stück":" Stück")+" defekt"+(g.urg?(g.n>1?" (davon "+g.urg+" dringend)":" (dringend)"):"")+" – gebraucht "+g.use.map(u=>wbWd(u.t).split(" ")[0]+" für "+u.ev+" ("+u.q+(u.q===1?" Stück)":" Stück)")).join(", ")))}

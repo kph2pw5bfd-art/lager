@@ -260,3 +260,12 @@ button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:va
 :root[data-theme="dark"] .aug,:root[data-theme="dark"] .ausec:not(.red),:root[data-theme="dark"] .aumat>summary b{color:#8fb0ea}:root[data-theme="dark"] .auans,:root[data-theme="dark"] .auopt.on,:root[data-theme="dark"] .abtag.blue{background:#1d3550}
 .aucd .aun{color:var(--ink)}#aumsg{margin-bottom:10px}
 .aurow .auq{min-width:62px;white-space:nowrap}.aurow .auq small{font-size:12px;font-weight:600}
+/* Zusatz-Packscheine (1.88) */
+.pkzday{margin:4px 0 6px;padding:8px 10px;border-radius:8px;background:#fff6ea;border:1px solid #f0c48a;display:flex;flex-direction:column;gap:6px}
+.pkzday.late{background:#fbebeb;border-color:var(--bad)}.pkzday.fin{background:#e3f3e9;border-color:#9fdcb4}
+.pkzdl{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}.pkzdl em{color:var(--bad);font-style:normal;font-weight:700}.pkzdl small{color:var(--mute)}.pkzdl .btn{width:auto;flex:none}
+.pkzdp{font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pkzdp .pkmb{flex:1;min-width:140px}.pkzdp .ok{color:#1f6b41}
+.pkzfoot{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.pkzfoot .btn{width:auto;flex:1}
+.pkzq{margin-bottom:8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pkzday{background:#3d2410;border-color:#7a4a1c}:root:not([data-theme="light"]) .pkzday.late{background:#3d1d1d}:root:not([data-theme="light"]) .pkzday.fin{background:#16402a;border-color:#2a6b45}}
+:root[data-theme="dark"] .pkzday{background:#3d2410;border-color:#7a4a1c}:root[data-theme="dark"] .pkzday.late{background:#3d1d1d}:root[data-theme="dark"] .pkzday.fin{background:#16402a;border-color:#2a6b45}

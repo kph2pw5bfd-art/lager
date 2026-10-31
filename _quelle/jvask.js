@@ -73,13 +73,13 @@ function jvOrder(q,open){const L=jvFindPacks(q),R=jvFindRets(q);
  const acts=[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}];RR.forEach(r=>acts.push({l:"Retourschein öffnen",fn:()=>{curRet=r.id;go("retopen")}}));
  return{say,acts}}
 function jvHerr(q){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const n=jvNorm(q),t0=pkDay(Date.now());
- if(/nicht hergerichtet|liegen|teilweise|vergessen/.test(n)){const L=pkGroups().late;
+ if(/nicht hergerichtet|liegen|teilweise|vergessen/.test(n)){const L=pkGroups().late.concat(pkZTasks().filter(z=>pkHDay(z)<t0&&!pkProg(z).fin));
   if(!L.length)return{say:[jvF()?"Nichts liegengeblieben. Vorbildlich.":"Es ist nichts liegengeblieben."]};
   return{say:[L.length===1?"Eine Packliste ist nicht fertig hergerichtet:":L.length+" Packlisten sind nicht fertig hergerichtet:"].concat(L.slice(0,4).map(p=>{const g=pkProg(p);return (p.ev||p.ord)+(g.d?", teilweise, "+g.d+" von "+g.n:", nicht angefangen")+"."})),rows:L.map(p=>jvPkRow(p,pkProg(p).d?"teilweise "+pkProg(p).d+"/"+pkProg(p).n:"nicht hergerichtet"))}}
  let a=t0,b=t0,lab="heute";const mon=pkMon(t0);
  if(/übermorgen/.test(n)){a=b=pkAddD(t0,2);lab="übermorgen"}else if(/morgen/.test(n)){a=b=pkAddD(t0,1);lab="morgen"}
  else if(/nächste woche/.test(n)){a=pkAddD(mon,7);b=pkAddD(mon,13);lab="nächste Woche"}else if(/diese woche|woche/.test(n)){a=t0;b=pkAddD(mon,6);lab="diese Woche"}
- const L=jvPacksVisible().filter(p=>pkState(p).k!=="done"&&pkHDay(p)>=a&&pkHDay(p)<=b).sort((x,y)=>pkHDay(x)-pkHDay(y));
+ const L=jvPacksVisible().filter(p=>pkState(p).k!=="done"&&pkHDay(p)>=a&&pkHDay(p)<=b).concat(pkZTasks().filter(z=>pkHDay(z)>=a&&pkHDay(z)<=b)).sort((x,y)=>pkHDay(x)-pkHDay(y));
  const open=L.filter(p=>!pkProg(p).fin);
  if(!L.length)return{say:[jvF()?jvPick(["Herrichten "+lab+": nichts. Verdächtig ruhig.","Für "+lab+" ist nichts herzurichten. Genieß es."]):"Für "+lab+" ist nichts herzurichten."]};
  const say=[(lab==="heute"?"Heute":lab.charAt(0).toUpperCase()+lab.slice(1))+" "+(L.length===1?"ist eine Packliste":"sind "+L.length+" Packlisten")+" dran"+(open.length<L.length?", "+(L.length-open.length)+" davon schon hergerichtet":"")+"."];
