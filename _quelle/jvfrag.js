@@ -60,17 +60,17 @@ function jvWithArt(q,fn,none){const R=jvArtFind(q);if(!R)return none?none():{say
  return{say:["Da passen "+R.list.length+" Artikel. Welchen meinst du?"],rows:L.map(A=>{const n=jvOutSum(A);return{l:A.label,r:n?jvStk(n)+" draußen":"",fn:()=>fn(A)}})}}
 /* ---------- Mengen pro Packliste ----------
    draußen = hergerichtet (bzw. bei laufender/abgelaufener Dispo laut Packschein), ohne Fremdmiete, + Alternativen, − schon im Retourschein */
-function jvArtCnt(p,m){const H=pkH(p),k=pkState(p).k,run=k==="over"||k==="out"||k==="back";let out=0,plan=0,back=0;
+function jvArtCnt(p,m){const H=pkH(p),k=pkState(p).k,run=k==="over"||k==="out"||k==="back";let out=0,plan=0,back=0,l55=0;
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),own=Math.max(0,(+x.n||0)-(h&&h.fm==="lager"?0:(+x.f||0)));
-  if(m(artCode(x.a),x.t+" "+pkName(x))){if(st.s==="open"){if(run)out+=own;else plan+=own}else out+=h&&h.ok?own:Math.min(own,+st.q||0)}
+  if(m(artCode(x.a),x.t+" "+pkName(x))){if(pkL55(x,h)){if(run){out+=own;l55+=own}else plan+=own}else if(st.s==="open"){if(run)out+=own;else plan+=own}else out+=h&&h.ok?own:Math.min(own,+st.q||0)}
   if(st.s!=="open")(st.alt||[]).forEach(a=>{if(m(artCode(a.a),a.t))out+=+a.n||0})});
  pkRets(p).forEach(r=>Object.values(rIt(r)).forEach(it=>{if(it.g!=="Zubehör"&&m(artCode(it.nr),it.name))back+=+it.q||0}));
- return{out,plan,back,rest:Math.max(0,out-back)}}
+ return{out,plan,back,l55,rest:Math.max(0,out-back)}}
 function jvOutSum(A){if(!can("pk_s"))return 0;const m=jvMatcher(A);let s=0;packs.forEach(p=>{if(pkState(p).k!=="done")s+=jvArtCnt(p,m).rest});return s}
 /* „Auf welcher Baustelle sind 50m 32A?“ / „Wo ist Artikel 1098?“ / „Wie viele … sind auf Baustellen?“ */
 function jvWhereA(A,count){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),L=[],P=[];let sum=0,sumP=0;
  packs.forEach(p=>{const s=pkState(p);if(s.k==="done")return;const c=jvArtCnt(p,m);
-  if(c.rest){L.push({p,q:c.rest,back:c.back,over:s.k==="over"});sum+=c.rest}
+  if(c.rest){L.push({p,q:c.rest,back:c.back,l55:c.l55,over:s.k==="over"});sum+=c.rest}
   if(c.plan){P.push({p,q:c.plan});sumP+=c.plan}});
  L.sort((a,b)=>(b.over-a.over)||((a.p.de||0)-(b.p.de||0)));
  if(!L.length&&!P.length)return{say:[jvF()?jvPick([A.label+": auf keiner Baustelle. Entweder im Lager, oder jemand hat's gut versteckt.",A.label+" ist auf keiner Baustelle. Alles daheim."]):A.label+" ist laut Packlisten auf keiner Baustelle."]};
@@ -80,7 +80,7 @@ function jvWhereA(A,count){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),L
   if(!count||L.length<=3){if(ov.length)say.push("Überfällig: "+jvList(ov.map(o=>jvStk(o.q)+" bei "+jvEv(o.p)))+".");
    L.filter(o=>!o.over).slice(0,4).forEach(o=>say.push(jvStk(o.q)+" bei "+jvEv(o.p)+", Dispo bis "+jvDayName(pkDay(o.p.de))+"."))}
   else if(ov.length)say.push("Davon "+jvStk(ov.reduce((a,o)=>a+o.q,0))+" überfällig.");
-  L.forEach(o=>rows.push({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–")+(o.back?" · "+jvStk(o.back)+" schon zurück":""),r:jvStk(o.q)+" · "+(o.over?"überfällig, ":"bis ")+pkWd(o.p.de),cls:o.over?"warn":"ok",pk:o.p.id}));
+  L.forEach(o=>rows.push({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–")+(o.l55?" · "+(o.l55>=o.q?"über Lager 55":"davon "+o.l55+" über Lager 55"):"")+(o.back?" · "+jvStk(o.back)+" schon zurück":""),r:jvStk(o.q)+" · "+(o.over?"überfällig, ":"bis ")+pkWd(o.p.de),cls:o.over?"warn":"ok",pk:o.p.id}));
   rows.push({sum:true,l:"Summe auf Baustellen",r:jvStk(sum)})}
  if(P.length){say.push((L.length?"Dazu geplant, noch nicht hergerichtet: ":A.label+": auf keiner Baustelle, aber geplant: ")+jvStk(sumP)+".");
   rows.push({hd:true,l:"Geplant, noch nicht hergerichtet"});
@@ -178,7 +178,7 @@ function jvRed(D){if(!can("pk_s"))return JV_NOPK;const L=packs.filter(p=>pkHDay(
 function jvPkStarted(){if(!can("pk_s"))return JV_NOPK;const L=packs.filter(p=>{const g=pkProg(p);return g.d>0&&!g.fin&&pkState(p).k!=="done"}).sort((a,b)=>pkHDay(a)-pkHDay(b));
  if(!L.length)return{say:["Es gibt keine angefangenen Packscheine."]};
  return{say:[(L.length===1?"Ein Packschein ist":L.length+" Packscheine sind")+" angefangen, aber nicht fertig:"].concat(L.slice(0,4).map(p=>{const g=pkProg(p);return jvEv(p)+", "+g.d+" von "+g.n+"."})),rows:L.map(p=>jvPkRow(p,pkProg(p).d+"/"+pkProg(p).n+" · "+pkWd(pkHDay(p))))}}
-function jvPkMissing(q){return jvOnePk(q,p=>{const H=pkH(p),L=[];pkItems(p).forEach(o=>{const st=pkPS(o.x,H[o.k]);if(st.s==="open")L.push({o,t:"offen",n:st.need});else if(st.s==="part")L.push({o,t:"fehlen "+pkNum(st.need-st.q),n:st.need-st.q,part:1})});
+function jvPkMissing(q){return jvOnePk(q,p=>{const H=pkH(p),L=[];pkItems(p).forEach(o=>{if(pkL55(o.x,H[o.k]))return;const st=pkPS(o.x,H[o.k]);if(st.s==="open")L.push({o,t:"offen",n:st.need});else if(st.s==="part")L.push({o,t:"fehlen "+pkNum(st.need-st.q),n:st.need-st.q,part:1})});
  const g=pkProg(p);if(!L.length)return{say:[jvEv(p)+": "+(g.fin?"hergerichtet, ":"")+"es fehlt nichts."],acts:[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}]};
  return{say:[jvEv(p)+": "+L.length+(L.length===1?" Position ist":" Positionen sind")+" noch nicht komplett."].concat(L.slice(0,5).map(x=>(x.part?pkNum(x.n)+" fehlen bei ":"Offen: "+pkNum(x.n)+" ")+pkName(x.o.x)+".")),
   rows:L.map(x=>({l:pkName(x.o.x),r:x.t,cls:x.part?"warn":"ok",pk:p.id})),acts:[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}]}})}

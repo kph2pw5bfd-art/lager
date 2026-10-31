@@ -127,3 +127,10 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Prüfen: neues Recht `abg_p` (Zeile „Abgleich · Prüfen“ im Rechte-Raster). Jede Endretoure mit `art:"end"` landet in „Zu prüfen“ bis „Geprüft“ → docs `abpr` (id = packId oder "r_"+retId für Retourscheine ohne Packliste) {by,t,end}. Zählt in jvHot und Briefing; Frage „Was muss ich prüfen?“.
 - Excel `abgXlMake`/`abgXl` (Blätter Übersicht / Verlauf / Zu viel – Zuordnungen), Knopf im Auftragskonto (Recht Retourscheine-Sehen). Retoure-Mail: Häkchen „Abgleich mit Packliste (Excel)“ (`abgMailOpt`), `retXl` teilt beide Dateien + Text „Fehlt noch / Mehr zurück“ (`abgXlFile`).
 - Kein SQL nötig (abzu/abno/abpr fallen unter die Standardregel). Test `tests/abg_t.js` (eigene ExcelJS-Attrappe im Test). herr_t/tab_t gehen über „Alle Packlisten“ (am Wochenende liegt „heute“ im zugeklappten Freitag-Fach) und wählen in der Übersicht den Reiter.
+
+## Version 1.78 – Lager 55
+- Artikel, die der LKW-Fahrer oder Monteur selbst vom anderen Lagerplatz („Lager 55“, ca. 300 m entfernt) mitnimmt. Häkchen „Lager 55“ in der Artikelliste (`rkat.l55`, Kennzeichen „L55“ in der Liste), pro Position umstellbar: `packh.h_<Pos>.l55 = true/false` (`pkL55(x,h)` in pack.js; ohne Eintrag gilt die Artikelliste).
+- Herrichten: Lager-55-Positionen als graue Gruppe „Lager 55“ am Ende (nur Filter „Alle“), ohne Kreis, Text „holt Fahrer/Monteur“; zählen nicht im Fortschritt (`pkProg` liefert n ohne sie + `l55`), blockieren Abschließen nicht, keine Abweichung in der Info-Mail. Antippen → „Packe ich doch selbst“; im normalen Bearbeiten-Dialog Knopf „Holt Fahrer/Monteur – Lager 55“.
+- Abgleich: zählen nicht als „raus“ (`e.l55`), kommen meist zum Lager 55 zurück; kommt doch etwas bei uns zurück → kein „zu viel“, Hinweis „kam über uns statt Lager 55 zurück“ (`e.via55`). Excel-Bemerkung entsprechend.
+- Assistent „Wo ist …“: zählt Lager-55-Mengen bei laufenden Aufträgen mit, Zusatz „über Lager 55“. „Was fehlt beim Packschein“ ohne Lager 55.
+- Test `tests/l55_t.js`.

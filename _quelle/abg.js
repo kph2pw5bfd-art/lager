@@ -15,21 +15,22 @@ const abgPackOf=ord=>{const o=pkDig(ord);if(!o)return null;return packs.find(p=>
 const abgN=n=>String(n);
 /* Konto eines Auftrags. ov = {id, items} ersetzt beim Zählen den eigenen, noch nicht gespeicherten Retourschein */
 function abgBal(p,ov){const H=pkH(p),M={};
- const get=(k,c,nm)=>M[k]=M[k]||{k,code:c||"",name:nm,raus:0,nach:0,fr:0,soll:0,back0:0,zin:0,zout:0,back:0};
+ const get=(k,c,nm)=>M[k]=M[k]||{k,code:c||"",name:nm,raus:0,nach:0,fr:0,l55:0,soll:0,back0:0,zin:0,zout:0,back:0,via55:0};
  const add=(c,nm,zus,q,f)=>{const e=get(abgKey(c,nm),c,nm);e.soll+=q;e.fr+=f;if(zus)e.nach+=q+f;else e.raus+=q+f};
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
+  if(pkL55(x,h)){get(abgKey(artCode(x.a),pkName(x)),artCode(x.a),pkName(x)).l55+=own;return}
   add(artCode(x.a),pkName(x),!!o.z,st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0),f);
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,!!o.z,+a.n||0,0)})});
  const R=pkRets(p);
  R.forEach(r=>{const it=ov&&ov.id&&r.id===ov.id?ov.items:rIt(r);Object.values(it||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0})});
  if(ov&&!ov.id)Object.values(ov.items||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0});
  ABZ.forEach(z=>{if(z.from===p.id)get(z.k,z.code,z.name).zout+=+z.q||0;if(z.to===p.id)get(z.k,z.code,z.name).zin+=+z.q||0});
- const L=Object.values(M).filter(e=>e.soll||e.back0||e.fr||e.zin||e.zout);L.forEach(e=>{e.back=Math.max(0,e.back0-e.zout+e.zin)});
- const miss=L.filter(e=>e.soll>e.back),more=L.filter(e=>e.back>e.soll+e.fr);
+ const L=Object.values(M).filter(e=>e.soll||e.back0||e.fr||e.zin||e.zout||e.l55);L.forEach(e=>{e.back=Math.max(0,e.back0-e.zout+e.zin);e.via55=Math.min(e.l55,Math.max(0,e.back-e.soll-e.fr))});
+ const miss=L.filter(e=>e.soll>e.back),more=L.filter(e=>e.back>e.soll+e.fr+e.l55);
  const ends=R.filter(rIsEnd),hasEnd=ends.length>0,endR=ends.sort((a,b)=>(b.closedT||0)-(a.closedT||0))[0]||null;
  return{p,L,R,miss,more,has:R.length>0||!!ov,closed:hasEnd,hasEnd,endR,
   raus:L.reduce((a,e)=>a+e.soll,0),zur:L.reduce((a,e)=>a+Math.min(e.back,e.soll),0),
-  fehlt:miss.reduce((a,e)=>a+e.soll-e.back,0),zuviel:more.reduce((a,e)=>a+e.back-e.soll-e.fr,0)}}
+  fehlt:miss.reduce((a,e)=>a+e.soll-e.back,0),zuviel:more.reduce((a,e)=>a+e.back-e.soll-e.fr-e.l55,0),l55:L.reduce((a,e)=>a+e.l55,0)}}
 /* für die Fragen im Assistenten (jvfrag.js) */
 function jvBal(p){return abgBal(p)}
 /* ---------- Vorschläge (nur anzeigen, nie selbst buchen) ---------- */
@@ -44,9 +45,9 @@ function abgCands(A,e,need){const out=[];packs.forEach(p=>{if(p.id===A.id)return
   out.push({p,fehlt,why,over:pkState(p).k==="over",end:B.hasEnd})});
  return out.sort((a,b)=>b.why.length-a.why.length||(b.over-a.over)||(b.end-a.end)||((a.p.de||0)-(b.p.de||0)))}
 /* Wo kam derselbe Artikel zu viel zurück? (für „fehlt“ bei Auftrag B) */
-function abgMoreElse(B0,e){const out=[];packs.forEach(p=>{if(p.id===B0.id)return;const m=abgBal(p).more.find(x=>x.k===e.k);if(m)out.push({p,q:m.back-m.soll-m.fr})});return out.sort((a,b)=>b.q-a.q)}
+function abgMoreElse(B0,e){const out=[];packs.forEach(p=>{if(p.id===B0.id)return;const m=abgBal(p).more.find(x=>x.k===e.k);if(m)out.push({p,q:m.back-m.soll-m.fr-m.l55})});return out.sort((a,b)=>b.q-a.q)}
 /* ---------- Listen über alle Aufträge ---------- */
-function abgAllMore(){const out=[];packs.forEach(p=>{const B=abgBal(p);B.more.forEach(e=>{const q=e.back-e.soll-e.fr;const last=B.R.slice().sort((a,b)=>(b.modT||b.closedT||b.t||0)-(a.modT||a.closedT||a.t||0))[0];out.push({p,e,q,last})})});
+function abgAllMore(){const out=[];packs.forEach(p=>{const B=abgBal(p);B.more.forEach(e=>{const q=e.back-e.soll-e.fr-e.l55;const last=B.R.slice().sort((a,b)=>(b.modT||b.closedT||b.t||0)-(a.modT||a.closedT||a.t||0))[0];out.push({p,e,q,last})})});
  return out.sort((a,b)=>((b.last&&(b.last.closedT||b.last.modT||b.last.t))||0)-((a.last&&(a.last.closedT||a.last.modT||a.last.t))||0))}
 function abgMissing(){/* Aufträge mit Endretoure oder überfällig, nicht geklärt; pro Artikel zusammengezählt */
  const G={};packs.forEach(p=>{const kl=(packh[p.id]||{}).klar;if(kl&&kl.t)return;const st=pkState(p).k,B=abgBal(p);if(!(B.hasEnd||st==="over"))return;
@@ -82,7 +83,7 @@ function rCloseDlg(r,fn){const p=abgOk()?abgPackOf(r.ord):null,o=document.create
  let pv="";if(p){const B=abgBal(p),mL=B.miss.slice(0,3),zL=B.more.slice(0,2);
   pv='<div class="abgbox"><b class="abglh">Abgleich mit der Packliste</b><div class="abgl"><span>Zurück insgesamt</span><b>'+B.zur+' von '+B.raus+'</b></div>'+
    mL.map(e=>{const h=abgMoreElse(p,e)[0];return '<div class="abgl"><span>'+esc(e.name)+(h?'<small class="or">Vorschlag: '+h.q+' zu viel bei '+esc(h.p.ev||h.p.ord)+'</small>':'')+'</span><b class="red">fehlt '+(e.soll-e.back)+'</b></div>'}).join("")+(B.miss.length>3?'<div class="abgl"><span class="mute">und '+(B.miss.length-3)+' weitere</span></div>':'')+
-   zL.map(e=>{const c=abgCands(p,e,e.back-e.soll-e.fr)[0];return '<div class="abgl"><span>'+esc(e.name)+(c?'<small class="or">Vorschlag: fehlen bei '+esc(c.p.ev||c.p.ord)+'</small>':'')+'</span><b class="or">'+(e.back-e.soll-e.fr)+' zu viel</b></div>'}).join("")+
+   zL.map(e=>{const zz=e.back-e.soll-e.fr-e.l55,c=abgCands(p,e,zz)[0];return '<div class="abgl"><span>'+esc(e.name)+(c?'<small class="or">Vorschlag: fehlen bei '+esc(c.p.ev||c.p.ord)+'</small>':'')+'</span><b class="or">'+zz+' zu viel</b></div>'}).join("")+
    (!B.miss.length&&!B.more.length?'<div class="abgl"><span>Alles da.</span><b class="ok">✓</b></div>':'')+
    '<small class="mute">Die App ordnet nichts selbst zu. Vorschläge klärst du unter „Zu viel zurück“.</small></div>'}
  o.innerHTML='<div class="card abgdlg"><b style="font-size:18px">Retourschein abschließen</b><div class="mute">'+esc(r.ev||"")+(r.ord?' · Auftrag '+esc(r.ord):'')+'</div>'+
@@ -102,19 +103,20 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
  const nums=[[B.raus,"Raus",""],[B.zur,"Zurück",""],[B.fehlt,"Fehlt",B.fehlt?"red":""]].concat(B.zuviel?[[B.zuviel,"Zu viel","or"]]:[]);
  const head='<section class="abgcard"><div class="abgh"><span><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+' · Dispo '+pkDM(p.db)+'–'+pkDM(p.de)+'</small></span><span class="abgpkb">'+abgBadge(B)+'</span></div>'+
   '<div class="abgnums" style="grid-template-columns:repeat('+nums.length+',minmax(0,1fr))">'+nums.map(([n,l,c])=>'<div class="'+c+'"><b>'+n+'</b><span>'+l+'</span></div>').join("")+'</div>'+
-  '<small class="mute">Ohne Fremdmiete. Zugeordnet wird nur, was jemand bestätigt hat – Vorschläge ändern nichts an den Zahlen.</small>'+(kl?'<div class="abgdone">✓ Mit Projektleiter geklärt · '+esc(nmA(kl,"by"))+', '+fmt(kl.t).slice(0,6)+'</div>':'')+'</section>';
+  '<small class="mute">Ohne Fremdmiete'+(B.l55?' und Lager 55':'')+'. Zugeordnet wird nur, was jemand bestätigt hat – Vorschläge ändern nichts an den Zahlen.</small>'+(kl?'<div class="abgdone">✓ Mit Projektleiter geklärt · '+esc(nmA(kl,"by"))+', '+fmt(kl.t).slice(0,6)+'</div>':'')+'</section>';
  const ev=[{t:p.db||p.t,l:"Packliste raus",s:"Packschein "+(p.ps||"–")+(pkProg(p).fin?" · hergerichtet von "+esc(nm(H.fin.by)):""),n:"↑ "+(B.raus-abgZusOut(p)),c:"out"}];
  (p.zus||[]).forEach(z=>ev.push({t:z.t||p.t,l:"Nachlieferung",s:"Zusatz-Packschein "+(z.ps||"–"),n:"↑ "+abgZusOut(p,z.ps),c:"out"}));
  B.R.forEach(r=>ev.push({t:abgRetT(r),l:abgRetLbl(r),s:esc(nmA(r,r.closed?"closedBy":"by")),n:"↓ "+abgRetN(r),c:"in",ret:r.id}));
  ABZ.filter(z=>z.from===p.id||z.to===p.id).forEach(z=>{const o=packs.find(x=>x.id===(z.from===p.id?z.to:z.from));ev.push({t:z.t,l:z.from===p.id?"Zugeordnet an "+(o?o.ev||o.ord:"anderen Auftrag"):"Zugeordnet von "+(o?o.ev||o.ord:"anderem Auftrag"),s:z.q+"× "+z.name+" · "+nmA(z,"by"),n:(z.from===p.id?"− ":"+ ")+z.q,c:"zu"})});
  ev.sort((a,b)=>(a.t||0)-(b.t||0));
  const verl='<section class="abgcard"><b class="abglh">Verlauf</b>'+ev.map(x=>'<'+(x.ret?'button type="button" data-abgr="'+esc(x.ret)+'"':'div')+' class="abgev"><span class="abgd">'+pkDM(x.t)+'</span><span class="abgt"><b>'+esc(x.l)+'</b><small>'+x.s+'</small></span><b class="abgn '+x.c+'">'+esc(x.n)+'</b></'+(x.ret?'button':'div')+'>').join("")+'</section>';
- const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr?1:2;
+ const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr+e.l55?1:2;
  const arts='<section class="abgcard"><div class="abglh" style="display:flex"><b style="flex:1">Artikel</b><small class="mute">raus · zurück</small></div>'+B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).map(e=>{
-  const f=e.soll-e.back,z=e.back-e.soll-e.fr,tag=f>0?abgTag("fehlt "+f,"red"):z>0?abgTag(z+" zu viel","or"):abgTag("passt ✓","ok"),sub=[];
+  const f=e.soll-e.back,z=e.back-e.soll-e.fr-e.l55,tag=f>0?abgTag("fehlt "+f,"red"):z>0?abgTag(z+" zu viel","or"):!e.soll&&e.l55&&!e.back?abgTag("Lager 55","grey"):abgTag("passt ✓","ok"),sub=[];
   if(f>0){const h=abgMoreElse(p,e)[0];if(h)sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>Vorschlag: bei '+esc(h.p.ev||h.p.ord)+' kamen '+h.q+' zu viel zurück</span><b>Klären ›</b></button>')}
   if(z>0){const c=abgCands(p,e,z)[0];sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>'+(c?'Vorschlag: fehlen bei '+esc(c.p.ev||c.p.ord):'Kein Vorschlag – fehlt derzeit nirgends')+'</span><b>Klären ›</b></button>')}
   if(e.fr)sub.push('<small class="mute">+ '+pkNum(e.fr)+' Fremdmiete – zählen hier nicht</small>');
+  if(e.l55)sub.push('<small class="mute">+ '+pkNum(e.l55)+' über Lager 55 – zählen hier nicht</small>');if(e.via55)sub.push('<small class="mute">'+e.via55+' kam über uns statt Lager 55 zurück</small>');
   if(e.zin)sub.push('<small class="mute">'+e.zin+' von anderem Auftrag zugeordnet</small>');if(e.zout)sub.push('<small class="mute">'+e.zout+' an anderen Auftrag zugeordnet</small>');
   return '<div class="abgart"><div class="abgar"><b>'+esc(e.name)+'</b><span>'+pkNum(e.soll)+' · '+pkNum(e.back)+'</span>'+tag+'</div>'+sub.join("")+'</div>'}).join("")+'</section>';
  $("#app").innerHTML=chk+head+verl+arts+'<div class="abgbtns"><button class="btn ghost" id="abgxl" type="button">Abgleich als Excel</button>'+
@@ -177,8 +179,8 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
  const ws=wb.addWorksheet("Übersicht",{pageSetup:{orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}});kopf(ws);
  ws.columns=[{width:11},{width:36},{width:9},{width:13},{width:12},{width:9},{width:11},{width:10},{width:46}];
  head(ws,["Art.-Nr.","Artikel","Raus","Nachlieferung","Fremdmiete","Zurück","Differenz","Status","Bemerkung / Zuordnung"]);
- const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr?1:2;let sr=0,sn=0,sf=0,sb=0;
- B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).forEach((e,i)=>{const f=e.soll-e.back,z=e.back-e.soll-e.fr,st=f>0?"fehlt":z>0?"zu viel":"passt",bm=[];
+ const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr+e.l55?1:2;let sr=0,sn=0,sf=0,sb=0;
+ B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).forEach((e,i)=>{const f=e.soll-e.back,z=e.back-e.soll-e.fr-e.l55,st=f>0?"fehlt":z>0?"zu viel":!e.soll&&e.l55&&!e.back?"Lager 55":"passt",bm=[];if(e.l55)bm.push(pkNum(e.l55)+" über Lager 55 zählen nicht");if(e.via55)bm.push(e.via55+" kam über uns statt Lager 55 zurück");
   if(f>0){const h=abgMoreElse(p,e)[0];if(h)bm.push("Vorschlag: "+h.q+" zu viel bei "+(h.p.ev||h.p.ord))}if(z>0){const c=abgCands(p,e,z)[0];bm.push(c?"Vorschlag: fehlen bei "+(c.p.ev||c.p.ord):"kein Vorschlag")}
   if(e.zin)bm.push(e.zin+" von anderem Auftrag zugeordnet");if(e.zout)bm.push(e.zout+" an anderen Auftrag zugeordnet");if(e.fr)bm.push(pkNum(e.fr)+" Fremdmiete zählen nicht");
   const r=ws.addRow([e.code||"",e.name,e.raus,e.nach||"",e.fr||"",e.back,f>0?-f:z>0?z:0,st,bm.join(" · ")]);sr+=e.raus;sn+=e.nach;sf+=e.fr;sb+=e.back;
@@ -196,7 +198,7 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
  ABZ.filter(z=>z.from===p.id||z.to===p.id).forEach(z=>{const o=packs.find(x=>x.id===(z.from===p.id?z.to:z.from));ev.push([z.t,z.from===p.id?"Zugeordnet an "+(o?o.ev||o.ord:"?"):"Zugeordnet von "+(o?o.ev||o.ord:"?"),z.name,z.from===p.id?+z.q:-z.q,nmA(z,"by")])});
  ev.sort((a,b)=>(a[0]||0)-(b[0]||0)).forEach((e,i)=>{const r=wv.addRow([fmt(e[0]),e[1],e[2],e[3]>0?"↑ "+e[3]:"↓ "+(-e[3]),e[4]]);r.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;if(i%2)c.fill=fill("FFF6F8FB");if(n===4)c.alignment={horizontal:"center"}})});
  const wz=wb.addWorksheet("Zu viel – Zuordnungen");wz.columns=[{width:30},{width:9},{width:28},{width:40},{width:22}];kopf(wz);head(wz,["Artikel","Menge","Status","Auftrag / Vorschlag","Wer / Wann"]);
- B.more.forEach(e=>{const z=e.back-e.soll-e.fr,C=abgCands(p,e,z);wz.addRow([e.name,z,"offen – zu viel hier",C.length?"Vorschlag: "+C.slice(0,3).map(c=>(c.p.ev||c.p.ord)+" (fehlen "+c.fehlt+")").join(", "):"kein Vorschlag",""]).eachCell(c=>c.border=bd)});
+ B.more.forEach(e=>{const z=e.back-e.soll-e.fr-e.l55,C=abgCands(p,e,z);wz.addRow([e.name,z,"offen – zu viel hier",C.length?"Vorschlag: "+C.slice(0,3).map(c=>(c.p.ev||c.p.ord)+" (fehlen "+c.fehlt+")").join(", "):"kein Vorschlag",""]).eachCell(c=>c.border=bd)});
  B.miss.forEach(e=>{const M=abgMoreElse(p,e);if(M.length)wz.addRow([e.name,e.soll-e.back,"fehlt hier – Vorschlag",M.slice(0,3).map(m=>m.q+" zu viel bei "+(m.p.ev||m.p.ord)).join(", "),""]).eachCell(c=>c.border=bd)});
  ABZ.filter(z=>z.from===p.id||z.to===p.id).forEach(z=>{const o=packs.find(x=>x.id===(z.from===p.id?z.to:z.from));wz.addRow([z.name,z.q,"bestätigt",(z.from===p.id?"an ":"von ")+(o?o.ev||o.ord:"?"),nmA(z,"by")+", "+fmt(z.t)]).eachCell(c=>c.border=bd)});
  if(wz.rowCount<=5)wz.addRow(["Nichts zu viel, keine Zuordnungen."]);
@@ -205,7 +207,7 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
 async function abgXl(p){const dl=await claude.use("downloads");if(!dl)return toast("Speichern ist hier nicht verfügbar.");try{const x=await abgXlMake(p);await dl.save({filename:x.fn,data:x.blob})}catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);toast("Excel konnte nicht erstellt werden.")}}
 /* für die Retoure-Mail: Datei + kurzer Text */
 async function abgXlFile(r){const p=abgOk()?abgPackOf(r.ord):null;if(!p)return null;try{const x=await abgXlMake(p),B=x.B;
- const t="\n\nAbgleich mit der Packliste (Auftrag "+(p.ord||"–")+"): "+B.zur+" von "+B.raus+" zurück."+(B.miss.length?"\nFehlt noch:\n"+B.miss.map(e=>"- "+(e.soll-e.back)+"× "+e.name).join("\n"):"\nEs fehlt nichts.")+(B.more.length?"\nMehr zurück:\n"+B.more.map(e=>"- "+(e.back-e.soll-e.fr)+"× "+e.name).join("\n"):"")+"\nDetails im Anhang (Abgleich-Excel).";
+ const t="\n\nAbgleich mit der Packliste (Auftrag "+(p.ord||"–")+"): "+B.zur+" von "+B.raus+" zurück."+(B.miss.length?"\nFehlt noch:\n"+B.miss.map(e=>"- "+(e.soll-e.back)+"× "+e.name).join("\n"):"\nEs fehlt nichts.")+(B.more.length?"\nMehr zurück:\n"+B.more.map(e=>"- "+(e.back-e.soll-e.fr-e.l55)+"× "+e.name).join("\n"):"")+"\nDetails im Anhang (Abgleich-Excel).";
  return{file:new File([x.blob],x.fn,{type:x.XT}),fn:x.fn,blob:x.blob,txt:t}}catch(e){console.warn(e);return null}}
 function abgMailOpt(r){const p=abgOk()?abgPackOf(r.ord):null;if(!p)return"";const B=abgBal(p);
  return '<div class="abgbox" style="margin:10px 0"><b class="abglh">Anhänge</b><label class="abgchkl"><input type="checkbox" checked disabled>Retourschein (Excel)</label><label class="abgchkl"><input type="checkbox" id="mtabg" checked><span>Abgleich mit Packliste (Excel)<small class="mute">'+(B.fehlt||B.zuviel?(B.fehlt?B.fehlt+" fehlen":"")+(B.fehlt&&B.zuviel?" · ":"")+(B.zuviel?B.zuviel+" zu viel":""):"alles zurück")+'</small></span></label></div>'}
