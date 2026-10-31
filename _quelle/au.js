@@ -13,9 +13,10 @@ function auMyName(){return (tabOn()&&TAB.act?TAB.act.name:(names[me]||""))||""}
 function auIsMine(p){const u=auToks(auMyName()),l=auToks(p&&p.pl);if(!u.length||!l.length)return false;
  if(u.length===1)return l.length===1&&l[0]===u[0];return u.every(w=>l.includes(w))}
 /* ---------- Stand eines Auftrags ---------- */
+const auOutDay=p=>Math.max(p.db?pkDay(p.db):0,pkHDay(p)||0);
 function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.klar&&H.klar.t),t0=pkDay(Date.now()),over=st.k==="over",late=st.k==="late";
  const missShow=(B.hasEnd||over)&&!kl&&B.fehlt>0;const done=kl||(B.hasEnd&&!B.fehlt);
- const out=B.R.length>0||(g.fin&&p.db&&pkDay(p.db)<=t0);
+ const out=B.R.length>0||(g.fin&&auOutDay(p)&&auOutDay(p)<=t0);
  const S=[{c:"d"},{c:g.fin?(g.dev?"w":"d"):g.d?"n":late?"r":""},{c:over?"r":out||B.R.length?"d":""},{c:B.hasEnd?(B.fehlt&&!kl?"r":"d"):B.R.length?"n":""},{c:done?"d":""}];
  let lab,cls;
  if(done){lab=kl?"Geklärt":"Erledigt ✓";cls="ok"}
@@ -26,7 +27,7 @@ function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.
  else if(g.fin&&out){lab="Draußen";cls="b"}
  else if(g.fin){lab="Hergerichtet";cls="b"}
  else if(g.d){lab=g.d+" / "+g.n;cls="b"}
- else{lab=st.k==="herr"?"Heute herrichten":"Kommt "+pkDM(pkHDay(p));cls="g"}
+ else{lab=st.k==="herr"?"Heute herrichten":"Herrichten "+pkDM(pkHDay(p));cls="g"}
  const hot=!done&&(missShow||over||late);
  return{p,g,st,B,kl,done,over,late,missShow,S,lab,cls,hot}}
 const auAns=(p,k)=>PLAW.filter(a=>a.pk===p.id&&a.k===k&&a.typ!=="msg");
@@ -69,8 +70,8 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const te=(c,t,s)=>'<div class="aute"><span class="audot '+c+'">'+(c==="d"?"✓":c==="r"||c==="w"?"!":"")+'</span><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+'</span></div>';
  const dev=auDevLines(p),hd=pkHd(p);
  const herr=g.fin?te(g.dev?"w":"d","Hergerichtet",fmt(H.fin.t).slice(0,6)+' von '+esc(nmA(H.fin,"by"))+(dev.length?'<span class="audev">'+dev.map(esc).join("<br>")+'</span>':'')):
-  g.d?te("n","Wird hergerichtet",g.d+" von "+g.n+" Positionen"):I.late?te("r","Noch nicht hergerichtet","geplant war "+pkWd(pkHDay(p))):te("","Herrichten","geplant "+pkWd(pkHDay(p))+(hd&&hd.why?" – "+esc(hd.why):""));
- const outT=I.over?te("r","Überfällig","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Draußen","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Draußen","ab "+pkWd(p.db));
+  g.d?te("n","Wird hergerichtet",g.d+" von "+g.n+" Positionen"):I.late?te("r","Noch nicht hergerichtet","geplant war "+pkWd(pkHDay(p))):te("","Herrichten",(pkShifted(p)?"verschoben auf "+pkWd(pkHDay(p))+" (Dispo-Beginn "+pkWd(p.db)+")":"geplant "+pkWd(pkHDay(p)))+(hd&&hd.why?" – "+esc(hd.why):""));
+ const outT=I.over?te("r","Überfällig","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Draußen","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Draußen","ab "+pkWd(auOutDay(p)));
  const R=B.R.slice().sort((a,b)=>(abgRetT(a)||0)-(abgRetT(b)||0));
  const retT=R.length?R.map(r=>te(r.closed?(r.art==="teil"?"d":(B.fehlt&&!I.kl?"r":"d")):"n",abgRetLbl(r),fmt(abgRetT(r)).slice(0,6)+" · "+abgRetN(r)+" Stück"+(r.closed&&r.art!=="teil"?" · "+(B.fehlt?B.fehlt+" fehlen noch":"alles da"):""))).join(""):te("","Retouren","noch nichts zurück");
  const doneT=I.kl?te("d","Mit Projektleiter geklärt",fmt(H.klar.t).slice(0,6)+" · "+esc(nmA(H.klar,"by"))):I.done?te("d","Erledigt","alles zurück"):te("","Erledigt","wenn alles zurück oder geklärt ist");

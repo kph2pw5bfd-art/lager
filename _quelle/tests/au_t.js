@@ -18,6 +18,9 @@ const base=kat.concat([{col:"titel",id:"projektleiter",data:{name:"Projektleiter
  /* E: fremder, überfällig */
  {col:"pack",id:"E",data:{ord:"2601087",ps:"4",ev:"Messe Wieselburg",pl:"Max Muster",db:D(-10),de:D(-3),pos:[{p:"1",n:1,u:"Stk",t:"Schuko 20m",a:"1081",f:0}],by:"u1",t:D(-11)}},
  {col:"packh",id:"E",data:{c:1,h_1:{ok:true,by:"u1",t:1},fin:{by:"u1",t:1}}},
+ /* G: eigener, Herrichten verschoben (Dispo-Beginn vor 5 Tagen, Herrichten in 2 Tagen) */
+ {col:"pack",id:"G",data:{ord:"2601200",ps:"6",ev:"Weihnachtsmarkt Spittelberg 2026",pl:"Jürgen Hartmann",db:D(-5),de:D(40),pos:[{p:"1",n:3,u:"Stk",t:"Schuko 20m",a:"1081",f:0}],by:"u1",t:D(-8)}},
+ {col:"packh",id:"G",data:{c:1,hd:{d:(()=>{const d=new Date(D(2));return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")})(),why:"Aufbau später",by:"u1",t:1}}},
  /* F: eigener, erledigt */
  {col:"pack",id:"F",data:{ord:"2601001",ps:"5",ev:"Sommerfest Rust",pl:"Jürgen Hartmann",db:D(-20),de:D(-15),pos:[{p:"1",n:1,u:"Stk",t:"Schuko 20m",a:"1081",f:0}],by:"u1",t:D(-21)}},
  {col:"packh",id:"F",data:{c:1,h_1:{ok:true,by:"u1",t:1},fin:{by:"u1",t:1}}},
@@ -39,7 +42,7 @@ async function run(b,role,rolle,extra,fn){const docs=base.concat(rolle?[{col:"ro
   console.log("Kachel:",await T('[data-g="au"]'));
   await p.click('[data-g="au"]');await p.waitForTimeout(300);
   const mine=await p.$$eval(".aucard.mine b",l=>l.map(x=>x.innerText)),rest=await p.$$eval(".aucard:not(.mine) .auct b",l=>l.map(x=>x.innerText));
-  ok("Eigene (auch „Hartmann Jürgen“) oben, rot zuerst",mine.join(",")==="Stadtfest Eisenstadt,Firmenfeier Parndorf",mine.join(","));
+  ok("Eigene (auch „Hartmann Jürgen“) oben, rot zuerst",mine.join(",")==="Stadtfest Eisenstadt,Firmenfeier Parndorf,Weihnachtsmarkt Spittelberg 2026",mine.join(","));
   ok("Trennstrich + andere",!!(await p.$(".audiv"))&&rest.join(",")==="Messe Wieselburg",rest.join(","));
   console.log("Karten:",await T(".aucard"));await p.screenshot({path:S+"au_liste.png",fullPage:true});
   await p.click('[data-auf="done"]');await p.waitForTimeout(200);ok("Erledigt-Filter",(await T(".aucard .auct b"))==="Sommerfest Rust | Winterwunder Mörbisch",await T(".aucard .auct b"));
@@ -57,6 +60,10 @@ async function run(b,role,rolle,extra,fn){const docs=base.concat(rolle?[{col:"ro
   ok("Nachricht gespeichert",await p.evaluate(()=>PLAW.some(a=>a.typ==="msg"&&a.pk==="A")));
   await p.evaluate(()=>{curAu="E"});await V("auopen");ok("Fremder Auftrag ohne Antworten-Knopf",!(await p.$("#aumsg"))&&!(await p.$("[data-aua]")));console.log("Fremd:",await T(".aute"));
   await p.evaluate(()=>{curAu="C"});await V("auopen");console.log("Firmenfeier:",await T(".aute"));
+  await p.evaluate(()=>{curAu="G"});await V("auopen");const tg=await T(".aute");console.log("Verschoben:",tg);
+  ok("Verschoben: Draußen ab Herricht-Tag, nicht Dispo-Beginn",await p.evaluate(()=>{const P=packs.find(x=>x.id==="G");return pkWd(pkHDay(P))})===((tg.match(/Draußen ab (.+?)( \||$)/)||[])[1]),tg);
+  ok("Verschoben: Herrichten zeigt „verschoben auf“",/verschoben auf .*Aufbau später/.test(tg));
+  ok("Verschoben: Draußen noch nicht als erledigt",await p.evaluate(()=>auInfo(packs.find(x=>x.id==="G")).S[2].c)==="");
   await V("pack");ok("Packlisten-Ansicht gesperrt",await p.evaluate(()=>view)!=="pack");
  });
  console.log("--- Lager (Admin) ---");
