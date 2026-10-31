@@ -1,4 +1,4 @@
-/* Test 1.81: Wochenbericht – Inhalt, Wochenwechsel, Punkte eintragen/abhaken, Druck (PDF) – SP = Ordner mit fakesb.js */
+/* Test 1.81/1.84: Wochenbericht – Inhalt, Wochenwechsel, Punkte eintragen/abhaken, Druck (PDF) – SP = Ordner mit fakesb.js */
 const {chromium}=require("playwright");const fs=require("fs");const S=(process.env.SP||"/tmp")+"/";
 const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),H=36e5;
 /* Besprechung wie in der App: Mo dieser Woche, am Wochenende der nächste Montag */
@@ -24,10 +24,10 @@ const seed=kat.concat([
  {col:"wbnote",id:"n1",data:{txt:"Urlaubsplanung Dezember",by:"u1",t:at(-14),done:null}},
  {col:"wbnote",id:"n2",data:{txt:"Neue Gitterboxen für 32A-Kabel bestellen?",by:"u1",t:at(-4),done:null}},
  {col:"wbnote",id:"n3",data:{txt:"Schon erledigt",by:"u1",t:at(-10),done:{by:"u1",t:at(-7)}}}]);
-(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});
+(async()=>{const b=await chromium.launch();const MOB=process.env.MOB==="1";const ctx=await b.newContext({viewport:{width:390,height:844},...(MOB?{userAgent:"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",hasTouch:true,isMobile:true}:{})});
  const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
- await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("pdf-lib"))return r.fulfill({body:fs.readFileSync("/opt/npm-tools/node_modules/pdf-lib/dist/pdf-lib.min.js"),contentType:"text/javascript"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
  const T=async sel=>(await p.$$eval(sel,l=>l.map(x=>x.innerText.replace(/\s+/g," ").trim()))).join(" | ");
  await p.evaluate(()=>{view="jarvis";hist=["start"];draw()});await p.waitForTimeout(300);console.log("Knopf in der Übersicht:",await T("#jvwb"));
@@ -35,14 +35,20 @@ const seed=kat.concat([
  for(const s of [".wbpaper .wbl"]){const L=await p.$$eval(".wbpaper:not(.wbprint) .wbl",l=>l.map(x=>x.innerText.replace(/\s+/g," ")));L.forEach(x=>console.log("  ",x.slice(0,330)))}
  console.log("  Noch offen:",await T(".wbpaper:not(.wbprint) .wboff"));
  console.log("  Diese Woche:",(await T(".wbpaper:not(.wbprint) .wbt")).slice(0,500));console.log("  Achtung:",await T(".wbpaper:not(.wbprint) .wbach"));
- await p.evaluate(()=>{view="jarvis";draw()});await p.fill("#jvaq","Wird ein defekter Artikel diese Woche gebraucht?");await p.click("#jvgo");await p.waitForTimeout(250);console.log("  Assistent:",await p.textContent(".jvat"));await p.evaluate(()=>{view="wb";draw()});await p.waitForTimeout(200);
+ await p.evaluate(()=>{view="jarvis";draw()});await p.fill("#jvaq","Wird ein defekter Artikel diese Woche gebraucht?");await p.click("#jvgo");await p.waitForTimeout(250);console.log("  Assistent:",await p.textContent(".jvat"));await p.evaluate(()=>document.querySelectorAll(".eov").forEach(e=>e.remove()));await p.evaluate(()=>{view="wb";draw()});await p.waitForTimeout(200);
  console.log("  Punkte:",await T(".wbpaper:not(.wbprint) .wbn"));
  await p.screenshot({path:S+"wb_app.png",fullPage:true});
  /* Punkt eintragen + abhaken */
  await p.fill("#wbin","Stapler-Wartung ansprechen");await p.press("#wbin","Enter");await p.waitForTimeout(400);console.log("Nach Eintragen:",await T(".wbedit .wbei"));
- await p.click('[data-wbd="n1"]');await p.waitForTimeout(400);console.log("Nach Abhaken n1:",await T(".wbpaper:not(.wbprint) .wbn"),"| Erledigt-Liste:",await T(".wbdone summary"));
+ console.log("Box:",await p.evaluate(()=>{const e=document.querySelector(".eov");return e?e.innerHTML.slice(0,600):"-"}));await p.click('[data-wbd="n1"]');await p.waitForTimeout(400);console.log("Nach Abhaken n1:",await T(".wbpaper:not(.wbprint) .wbn"),"| Erledigt-Liste:",await T(".wbdone summary"));
  /* Woche zurück */
  await p.click("#wbp");await p.waitForTimeout(200);console.log("Eine Woche zurück:",await T(".wbnav"));await p.click("#wbnow");await p.waitForTimeout(200);
+ if(MOB){/* Handy: PDF erzeugen + Teilen */
+  await p.evaluate(()=>{window.print=()=>{window.__printed=true};navigator.canShare=()=>true;navigator.share=async o=>{const f=o.files[0];window.__sh={name:f.name,type:f.type,b64:btoa(String.fromCharCode(...new Uint8Array(await f.arrayBuffer())))}}});
+  console.log("Knopf:",await p.textContent("#wbpr"));await p.click("#wbpr");await p.waitForFunction(()=>window.__sh,null,{timeout:8000});const sh=await p.evaluate(()=>window.__sh);
+  fs.writeFileSync(S+"wb_mob.pdf",Buffer.from(sh.b64,"base64"));
+  const b64=await p.evaluate(async()=>{const D=wbData();for(let i=0;i<40;i++){D.over.push(Object.assign({},D.over[0],{n:"Langer Auftragsname Nummer "+i+" mit Zusatz",d:"2601"+i+" · Dispo-Ende irgendwann, mit einer recht langen Beschreibung damit umgebrochen wird → weiter"}))}const u=await wbPdf(D);return btoa(String.fromCharCode(...u))});
+  fs.writeFileSync(S+"wb_lang.pdf",Buffer.from(b64,"base64"));console.log("Geteilt:",sh.name,sh.type,"| print() aufgerufen:",await p.evaluate(()=>!!window.__printed));console.log("Fehler:",errs);return b.close()}
  /* Drucken: Druckansicht als PDF */
  await p.evaluate(()=>{window.print=()=>{window.__printed=true};});await p.click("#wbpr");await p.waitForTimeout(100);console.log("Drucken aufgerufen:",await p.evaluate(()=>!!window.__printed),"| Klasse gesetzt:",await p.evaluate(()=>document.body.classList.contains("wbprinting")));
  const pdfP=await ctx.newPage();await pdfP.setContent(await p.evaluate(()=>{document.body.classList.add("wbprinting");return "<!doctype html>"+document.documentElement.outerHTML}),{waitUntil:"domcontentloaded"});

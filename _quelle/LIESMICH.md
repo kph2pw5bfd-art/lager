@@ -155,3 +155,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.83
 - Fehler behoben: Zwei Defektmeldungen zum selben Artikel erschienen im Wochenbericht („Achtung“) und beim Assistenten doppelt, jeweils „wird gebraucht“. Jetzt `wbDefNeed(von,bis)` in wb.js: pro Artikel (Artikelnummer aus `anr` vor dem Bindestrich, sonst Name) eine Zeile „x Stück defekt (davon y dringend) – gebraucht Mo für … (n Stück)“ mit der Menge aus der Packliste. `jvDefNeed` nutzt dieselbe Funktion.
+
+## Version 1.84
+- Fehler behoben: „Drucken“ im Wochenbericht tat am iPhone (Web-App vom Home-Bildschirm) nichts – `window.print()` wird dort ignoriert. Jetzt am Handy/Tablet (`wbMobile()`: iPhone/iPad/Android, Touch-Mac oder Standalone-Modus): `wbPdf(D)` zeichnet den Bericht mit pdf-lib 1.17.1 (dynamisch von jsDelivr, Ausweich unpkg, `wbLoadPdf`, beim Öffnen vorgeladen) als A4-PDF – Kopf, blaue Abschnittsrahmen, alle Aufträge, Tabelle, Achtung, Besprechungspunkte mit Kästchen, Fußzeile „Seite x von n“, automatischer Seitenumbruch – und öffnet das Teilen-Menü (`navigator.share` mit Datei → „Drucken“ / „In Dateien sichern“). Geht Teilen nicht: Download. Knopf heißt am Handy „Drucken / Teilen (PDF)“.
+- Am PC bleibt „Drucken“ (`window.print`), daneben neu „Als PDF speichern“ (gleiche pdf-lib-PDF, Download).
+- PDF-Schrift Helvetica (WinAnsi): `wbTx` ersetzt „→“ durch „->“, unbekannte Zeichen durch „?“.
+- Test `tests/wb_t.js`: normal = PC-Druck; `MOB=1` = iPhone (Teilen abgefangen, schreibt wb_mob.pdf und eine lange Probe wb_lang.pdf über 3 Seiten). pdf-lib wird im Test auf /opt/npm-tools/node_modules/pdf-lib/dist/pdf-lib.min.js umgeleitet.
