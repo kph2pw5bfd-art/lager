@@ -14,7 +14,7 @@ const seed=[{col:"pack",id:"20260714",data:{ord:"260111401",ps:"20260714",ev:"Wi
  const prog=()=>p.evaluate(()=>document.querySelector(".pkprog b").textContent+" | "+[...document.querySelectorAll(".pkp")].map(r=>r.className.replace("pkp ","")).join(","));
  const H=()=>p.evaluate(()=>JSON.stringify((__T.docs.find(d=>d.col==="packh")||{}).data||{}));
  console.log("Version",await p.evaluate(()=>APPV));
- await p.click('[data-g="pack"]');await p.waitForTimeout(200);await p.click('[data-pk="20260714"]');await p.waitForTimeout(300);
+ await p.click('[data-g="pack"]');await p.waitForTimeout(200);await p.evaluate(()=>go("packall"));await p.waitForTimeout(200);/* ab 1.77: über „Alle Packlisten“ – am Wochenende liegt heute im zugeklappten Freitag-Fach */await p.click('[data-pk="20260714"]');await p.waitForTimeout(300);
  console.log("Start:",await prog());
  console.log("Gruppen-Überschriften:",await p.evaluate(()=>[...document.querySelectorAll(".pkl .pkg, .pkl .pkp .pkt")].map(e=>e.classList.contains("pkg")?"["+e.textContent+"]":e.childNodes[0].textContent.trim()).join(" → ")));
  console.log("Namen (Artikelliste vor Packschein):",await p.evaluate(()=>[...document.querySelectorAll(".pkp .pkt")].map(e=>e.childNodes[0].textContent).join(" | ")));
@@ -43,5 +43,5 @@ const seed=[{col:"pack",id:"20260714",data:{ord:"260111401",ps:"20260714",ev:"Wi
  await p.evaluate(()=>{curPack="20260714";view="packopen";hist=["start"];draw()});await p.waitForTimeout(200);await p.click("#pkreo");await p.click(".ov #y");await p.waitForTimeout(300);
  console.log("Wieder geöffnet:",await prog());
  await p.evaluate(()=>{view="jarvis";hist=["start"];draw()});await p.waitForTimeout(300);await p.evaluate(()=>__said.length=0);await p.click("#jvsp");await p.waitForTimeout(2500);console.log("Briefing:",(await p.evaluate(()=>__said)).slice(0,2).join(" / "));
- console.log("Jarvis-Zeile:",await p.evaluate(()=>document.querySelector('[data-jp]').innerText.replace(/\s+/g," ")));
+ await p.evaluate(()=>{jvTab="herr";jarvisView()});/* ab 1.76 Reiter */console.log("Jarvis-Zeile:",await p.evaluate(()=>document.querySelector('[data-jp]').innerText.replace(/\s+/g," ")));
  console.log("Fehler:",errs);await b.close()})();

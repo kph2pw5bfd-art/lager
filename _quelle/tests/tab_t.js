@@ -20,7 +20,7 @@ async function ctxFor(b,role,extra){const ctx=await b.newContext({viewport:{widt
  console.log("Auswahl da:",await p.isVisible("#tabov"),"| Kacheln:",await p.evaluate(()=>[...document.querySelectorAll("#tabov .tabt b")].map(e=>e.textContent).join(" | ")));
  await p.screenshot({path:S+"tab_pick.png"});
  await p.click('[data-tbu="u2"]');await p.waitForTimeout(300);console.log("Kopfzeile:",await p.textContent("#who"));
- await p.click('[data-g="pack"]');await p.waitForTimeout(200);await p.click('[data-pk="p1"]');await p.waitForTimeout(200);await p.click('[data-pc="0"]');await p.waitForTimeout(300);
+ await p.click('[data-g="pack"]');await p.waitForTimeout(200);await p.evaluate(()=>go("packall"));await p.waitForTimeout(200);/* ab 1.77: über „Alle Packlisten“ – am Wochenende liegt heute im zugeklappten Freitag-Fach */await p.click('[data-pk="p1"]');await p.waitForTimeout(200);await p.click('[data-pc="0"]');await p.waitForTimeout(300);
  console.log("gespeichert:",await p.evaluate(()=>JSON.stringify((__T.docs.find(d=>d.col==="packh")||{}).data.h_1_1)),"| angezeigt:",await p.textContent(".pkby"));
  await p.click("#tabsw");await p.waitForTimeout(300);await p.click("#tbother");await p.fill("#tbname","Hans Helfer");await p.click("#tbok");await p.waitForTimeout(300);
  console.log("Helfer → Kopfzeile:",await p.textContent("#who"));await p.click('[data-pc="1"]');await p.waitForTimeout(300);

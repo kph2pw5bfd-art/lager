@@ -219,6 +219,55 @@ body.jvhopen{overflow:hidden}
 .jvax{position:absolute;top:2px;right:2px;width:44px;height:44px;border:0;background:none;color:var(--ink);display:grid;place-items:center;cursor:pointer}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .jvtab.on{background:#1d3550}:root:not([data-theme="light"]) .jvtab.red,:root:not([data-theme="light"]) .jverb{background:#3d1d1d}:root:not([data-theme="light"]) .jverb{color:#ffb4ad}:root:not([data-theme="light"]) .jvtab.red span{color:#ffb4ad}:root:not([data-theme="light"]) .jvlh{color:#8fb0ea}}
 :root[data-theme="dark"] .jvtab.on{background:#1d3550}:root[data-theme="dark"] .jvtab.red,:root[data-theme="dark"] .jverb{background:#3d1d1d}:root[data-theme="dark"] .jverb{color:#ffb4ad}:root[data-theme="dark"] .jvtab.red span{color:#ffb4ad}:root[data-theme="dark"] .jvlh{color:#8fb0ea}
+/* 1.77: Abgleich */
+.or{color:#9a4d00}.red{color:var(--bad)}.ok{color:#1f6b41}
+.abtag{display:inline-block;font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
+.abtag.red{background:#fbebeb;color:var(--bad)}.abtag.or{background:#fff1e3;color:#9a4d00}.abtag.ok{background:#e3f3e9;color:#1f6b41}.abtag.grey{background:var(--line);color:var(--ink)}
+.abgpk{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1.5px solid var(--navy);font:inherit;color:var(--ink);cursor:pointer}
+.abgpkt{flex:1;min-width:0;display:flex;flex-direction:column}.abgpkt small{color:var(--mute);font-size:13px}.abgpkb{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.abgpk svg{flex:none;color:var(--navy)}
+.rabg{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--navy);border-radius:12px;padding:10px 12px;margin:0 0 10px;font:inherit;color:var(--ink);cursor:pointer}
+.rabgt{display:flex;gap:8px;align-items:baseline;font-size:14px}.rabgt>span{flex:1;min-width:0}.rabgr{color:var(--navy);white-space:nowrap}
+.rabgbar{display:block;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.rabgbar i{display:block;height:100%;background:var(--navy)}
+.abgdlg{width:100%;max-width:440px;margin:0;max-height:92vh;overflow:auto}
+.abgopt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;border:1.5px solid var(--navy);background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px;font:inherit;color:var(--ink);cursor:pointer}
+.abgopt i{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--navy);box-sizing:border-box;margin-top:1px;display:grid;place-items:center}
+.abgopt.on{border-width:2.5px;background:#dbe9f8}.abgopt.on i:after{content:"";width:10px;height:10px;border-radius:50%;background:var(--navy)}
+.abgopt span{display:flex;flex-direction:column;gap:2px}.abgopt small{font-size:13px;color:var(--mute);line-height:1.35}
+.abgbox{border:1.5px solid var(--navy);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.abglh{display:block;font-size:13px;font-weight:700;color:var(--navy);padding:2px 0 4px}
+.abgl{display:flex;gap:8px;font-size:13.5px;align-items:baseline}.abgl>span{flex:1;min-width:0}.abgl small{display:block;font-size:12px}
+.abgcard{background:var(--card);border:1.5px solid var(--navy);border-radius:12px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+.abgh{display:flex;gap:8px;align-items:flex-start}.abgh>span:first-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.abgh b{font-size:17px}.abgh small{font-size:13px;color:var(--mute)}
+.abgnums{display:grid;gap:6px}.abgnums div{border:1.5px solid var(--navy);border-radius:10px;padding:8px 4px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.abgnums b{font-size:24px;color:var(--navy);font-variant-numeric:tabular-nums}.abgnums span{font-size:11.5px;color:var(--mute)}
+.abgnums .red{border-color:var(--bad);background:#fbebeb}.abgnums .red b{color:var(--bad)}.abgnums .or{border-color:#e67e22;background:#fff1e3}.abgnums .or b,.abgnums .or span{color:#9a4d00}
+.abgchk{display:flex;align-items:center;gap:10px;background:#e7f1fb;border:1.5px solid var(--navy);border-radius:12px;padding:10px 12px;margin-bottom:10px;color:var(--navy)}
+.abgchk span{flex:1;min-width:0;display:flex;flex-direction:column;color:var(--ink)}.abgchk small{font-size:12.5px;color:var(--mute)}.abgchk .btn{width:auto;margin:0;flex:none}
+.abgdone{font-size:13px;font-weight:600;color:#1e7a46;margin:0 0 10px}
+.abgev{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:9px 0;font:inherit;color:var(--ink)}
+button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+.abgt{flex:1;min-width:0;display:flex;flex-direction:column}.abgt b{font-size:14px}.abgt small{font-size:12.5px;color:var(--mute)}
+.abgn{flex:none;font-size:14px}.abgn.out{color:var(--navy)}.abgn.in{color:#1f6b41}.abgn.zu{color:#9a4d00}
+.abgev .btn{width:auto;margin:0;flex:none}
+.abgart{border-top:1px solid var(--line);padding:9px 0;display:flex;flex-direction:column;gap:3px}
+.abgar{display:flex;gap:8px;align-items:baseline}.abgar b{flex:1;min-width:0;font-size:14.5px}.abgar>span{font-size:13px;color:var(--mute)}
+.abgsug{display:flex;gap:6px;align-items:center;width:100%;min-height:36px;border:0;background:none;padding:0;text-align:left;font:inherit;font-size:12.5px;color:#9a4d00;cursor:pointer}.abgsug span{flex:1}.abgsug b{color:var(--navy)}
+.abgbtns{display:grid;gap:8px}.abgbtns .btn{margin:0}
+.abgzv{border-color:#e67e22}
+.abgcand{border:1.5px solid var(--navy);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}.abgcand .btn{width:auto;align-self:flex-start;margin:0}
+.abgwhy{display:flex;flex-wrap:wrap;gap:6px}.abgwhy span{font-size:12px;padding:3px 8px;border-radius:12px;background:#e7f1fb;color:var(--navy)}
+.abgnone{font-size:13px;color:#9a4d00;line-height:1.35}.abgnote{font-size:13px;color:var(--ink);background:var(--tint);border-radius:8px;padding:6px 8px}
+.abgbtnr{display:flex;flex-wrap:wrap;gap:8px}.abgbtnr .btn{width:auto;margin:0}
+.abgtags{display:flex;flex-wrap:wrap;gap:6px}.abg2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.abg2 .btn{margin:0}
+.abgmore>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:40px}.abgmore>summary::-webkit-details-marker{display:none}.abgmore>summary b{flex:1}.abgmore>summary small{color:var(--mute)}
+.abgchkl{display:flex;gap:10px;align-items:flex-start;font-size:14px}.abgchkl input{width:20px;height:20px;margin:1px 0 0;flex:none}.abgchkl span{display:flex;flex-direction:column}.abgchkl small{font-size:12.5px}
+.abgstrip{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;background:#e7f1fb;border:1.5px solid var(--navy);border-radius:12px;padding:8px 12px;font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.abgstrip svg{flex:none;color:var(--navy)}.abgstrip span{flex:1;min-width:0;font-size:14px}
+.jvtabs.n5 span{font-size:10.5px}.jvtabs.n5 b{font-size:22px}.jvtabs.n5 .jvtab{min-height:66px;padding:6px 2px}
+.abgzvl .jvlt b{color:var(--navy)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .abgstrip,:root:not([data-theme="light"]) .abgchk{background:#1d3550}:root:not([data-theme="light"]) .abgopt.on{background:#1d3550}:root:not([data-theme="light"]) .abtag.red,:root:not([data-theme="light"]) .abgnums .red{background:#3d1d1d}:root:not([data-theme="light"]) .abtag.or,:root:not([data-theme="light"]) .abgnums .or{background:#3d2410}:root:not([data-theme="light"]) .or,:root:not([data-theme="light"]) .abgsug{color:#f5b878}:root:not([data-theme="light"]) .abtag.ok{background:#16402a;color:#6fd39a}}
+:root[data-theme="dark"] .abgstrip,:root[data-theme="dark"] .abgchk,:root[data-theme="dark"] .abgopt.on{background:#1d3550}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -244,7 +293,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.76";
+<script>const APPV="1.77";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -565,6 +614,7 @@ let jvTab=null,jvMoreOpen=false;
 function jvLine(attr,l,sub,r,cls){return '<button class="jvln" type="button" '+attr+'><span class="jvlt"><b>'+esc(l)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><span class="jvlr '+(cls||"")+'">'+esc(r||"")+'</span></button>'}
 function jvTabs(D){const P=D.pk,urg=D.od.filter(d=>d.urg),T=[];
  if(P){T.push({k:"over",n:P.over.length,l:"Überfällig",red:true});T.push({k:"herr",n:P.herr.length,l:"Heute herrichten"});T.push({k:"back",n:P.back.length,l:"Heute zurück"})}
+ if(P&&D.rs&&typeof abgMissing==="function"){const G=abgMissing();T.push({k:"miss",n:G.length,l:"Fehlt noch",red:true})}
  T.push({k:"urg",n:urg.length,l:"Defekte dringend",red:true});
  if(!P){T.push({k:"def",n:D.od.length,l:can("def_s")?"Defekte offen":"Deine Defekte"});if(D.rs)T.push({k:"ret",n:D.open.length,l:"Retourscheine offen"})}
  return T}
@@ -574,14 +624,15 @@ function jvTabList(k,D){const P=D.pk,sd=t=>{const d=Math.round((pkDay(Date.now()
  if(k==="back")return{h:"Heute zurück",e:"Heute kommt laut Packlisten nichts zurück.",L:P.back.map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste",pr(p),"bis "+pkD(p.de).slice(-5),""))};
  if(k==="urg"){const L=D.od.filter(d=>d.urg);return{h:"Defekte dringend",e:"Keine dringenden Defekte."+(D.od.length?" "+D.od.length+" offene stehen unter „Mehr anzeigen“.":""),L:L.map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,(d.ev?d.ev+" · ":"")+"gemeldet "+jvAgo(d.t),"dringend","warn"))}}
  if(k==="def")return{h:can("def_s")?"Offene Defekte":"Deine offenen Defekte",e:"Keine offenen Defekte.",L:D.od.map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,(d.ev?d.ev+" · ":"")+"gemeldet "+jvAgo(d.t),d.urg?"dringend":"offen",d.urg?"warn":""))};
+ if(k==="miss")return abgMissTab();
  return{h:"Offene Retourscheine",e:"Keine offenen Retourscheine.",L:D.open.map(r=>jvLine('data-jr="'+esc(r.id)+'"',r.ev||"Retourschein","Auftrag "+(r.ord||"–"),rTot(rIt(r))+" Stk · "+jvAgo(r.modT||r.t),""))}}
 function jvPanels(D){const T=jvTabs(D);if(!jvTab||!T.some(t=>t.k===jvTab))jvTab=(T.find(t=>t.n>0)||T[0]).k;
  const E=typeof jvErinMine==="function"?jvErinMine():[],due=E.filter(x=>x.due<=Date.now()),later=E.filter(x=>x.due>Date.now());
  const BELL='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
  const er=due.map(x=>'<button class="jverb" type="button" data-jer="'+esc(x.id)+'">'+BELL+'<span><b>Erinnerung:</b> '+esc(x.txt)+'</span><small>fällig '+jvTime(x.due)+'</small></button>').join("");
  const L=jvTabList(jvTab,D);
- const tabs='<section class="jvcard"><div class="jvtabs" role="tablist" style="grid-template-columns:repeat('+T.length+',minmax(0,1fr))">'+T.map(t=>'<button class="jvtab'+(t.k===jvTab?' on':'')+(t.red&&t.n?' red':'')+'" type="button" role="tab" aria-selected="'+(t.k===jvTab)+'" data-jt="'+t.k+'"><b>'+t.n+'</b><span>'+t.l+'</span></button>').join("")+'</div>'+
-  '<div class="jvlist"><div class="jvlh">'+esc(L.h)+(L.L.length?' · '+L.L.length:'')+'</div>'+(L.L.length?L.L.join(""):'<div class="jvempty">'+esc(L.e)+'</div>')+'</div></section>';
+ const tabs='<section class="jvcard"><div class="jvtabs n'+T.length+'" role="tablist" style="grid-template-columns:repeat('+T.length+',minmax(0,1fr))">'+T.map(t=>'<button class="jvtab'+(t.k===jvTab?' on':'')+(t.red&&t.n?' red':'')+'" type="button" role="tab" aria-selected="'+(t.k===jvTab)+'" data-jt="'+t.k+'"><b>'+t.n+'</b><span>'+t.l+'</span></button>').join("")+'</div>'+
+  '<div class="jvlist"><div class="jvlh">'+esc(L.h)+(L.L.length?' · '+L.L.length:'')+'</div>'+(L.L.length?L.L.join(""):'<div class="jvempty">'+esc(L.e)+'</div>')+(L.foot||"")+'</div></section>';
  /* eingeklappt: nur, was es gibt */
  const M=[];
  if(later.length)M.push(['Erinnerungen',later.map(x=>jvLine('data-jer="'+esc(x.id)+'"',x.txt,"",(pkDay(x.due)===pkDay(Date.now())?"heute":pkWd(x.due))+" "+jvTime(x.due),""))]);
@@ -591,12 +642,13 @@ function jvPanels(D){const T=jvTabs(D);if(!jvTab||!T.some(t=>t.k===jvTab))jvTab=
  if(D.last.length)M.push(['Letzte Retouren',D.last.map(r=>jvLine('data-jr="'+esc(r.id)+'"',r.ev||"Retourschein","Auftrag "+(r.ord||"–"),"abgeschlossen "+jvAgo(r.closedT||r.t),""))]);
  const SH={"Erinnerungen":"Erinnerungen","Offene Retourscheine":"Retourscheine","Weitere offene Defekte":"Defekte","Deine weiteren Defekte":"Defekte","Wieder einsatzbereit":"Repariert","Letzte Retouren":"Retouren"},sum=M.map(m=>(SH[m[0]]||m[0])+" "+m[1].length).join(" · ");
  const more=M.length?'<details class="jvcard jvmore" id="jvmore"'+(jvMoreOpen?' open':'')+'><summary><b>Mehr anzeigen</b><small>'+esc(sum)+'</small><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>'+M.map(m=>'<div class="jvlh">'+esc(m[0])+' · '+m[1].length+'</div>'+m[1].join("")).join("")+'</details>':'';
- return{left:er+tabs+more,right:""}}
+ const ps=typeof abgPrStrip==="function"?abgPrStrip():"";
+ return{left:er+ps+tabs+more,right:""}}
 function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i%6===0,r1=86,r2=r1+(big?12:5);t+='<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'" stroke="var(--jv-tick'+(big?'b':'')+')" stroke-width="1.2"/>'}
  return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
 function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+", "+d.toLocaleDateString("de-AT",{day:"numeric",month:"long",year:"numeric"})}
 setInterval(jvClock,1000);
-function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});document.querySelectorAll("[data-jt]").forEach(b=>b.onclick=()=>{jvTab=b.dataset.jt;jarvisView()});const mo=$("#jvmore");if(mo)mo.ontoggle=()=>{jvMoreOpen=mo.open};if(typeof jvErinBind==="function")jvErinBind()}
+function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});document.querySelectorAll("[data-jt]").forEach(b=>b.onclick=()=>{jvTab=b.dataset.jt;jarvisView()});const mo=$("#jvmore");if(mo)mo.ontoggle=()=>{jvMoreOpen=mo.open};if(typeof abgJvBind==="function")abgJvBind();if(typeof jvErinBind==="function")jvErinBind()}
 /* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
 const JV_MALE=/conrad|killian|florian|christoph|kasper|ralf|bernd|klaus|jonas|markus|martin|yannick|viktor|stefan|hans|thomas|männlich|male/i;
 const jvVK=v=>v.voiceURI||v.name;
@@ -617,6 +669,7 @@ const jvStyle=()=>{const v=jvLS("tpc_jv_style");return v==="sachlich"||v==="frec
 const jvPick=a=>a[Math.floor(Math.random()*a.length)];
 const jvCap=s=>String(s).replace(/^./,c=>c.toUpperCase());
 function jvText(D){const S=jvStyle()==="sachlich"?jvTextSachlich(D):jvTextFrech(D),E=typeof jvErinDue==="function"?jvErinDue():[];
+ const AP=typeof abgToCheck==="function"?abgToCheck():[];if(AP.length)S.splice(1,0,(AP.length===1?"Ein Auftrag wartet":AP.length+" Aufträge warten")+" auf deine Prüfung: "+jvList(AP.slice(0,3).map(x=>x.p?x.p.ev||x.p.ord:x.r.ev))+".");
  if(E.length)S.splice(1,0,(E.length===1?"Erinnerung: ":E.length+" Erinnerungen: ")+jvList(E.slice(0,3).map(x=>x.txt))+".");return S}
 function jvHiFrech(){const h=new Date().getHours(),n=String(meName()).split(" ")[0];
  const hi=jvPick(["Servus"+(n?" "+n:""),(h<11?"Guten Morgen":h<18?"Guten Tag":"Guten Abend")+(n?", "+n:"")]);
@@ -756,9 +809,9 @@ function rMailBody(r){const it=rIt(r),n=Object.keys(it).length,st=r.closed?"Abge
 const RTO="tpc_mail_empf";
 function rRecent(){let a=[];try{a=JSON.parse(localStorage.getItem(RTO)||"[]")}catch(e){}rets.forEach(r=>(r.sent||[]).forEach(x=>{if(x.to)a.push(x.to)}));return [...new Set(a.map(x=>String(x).trim()).filter(Boolean))].slice(0,30)}
 function rMailAsk(r){const o=document.createElement("div");o.className="ov";const rec=rRecent();
- o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Per Mail senden</b><p class="mute" style="margin:4px 0 10px">An wen geht der Retourschein? Wird in der Übersicht vermerkt. Die Adresse gibst du danach im Mailprogramm ein.</p><label class="mute" for="mto">Empfänger (Name oder E-Mail, optional)</label><input id="mto" list="mtol" autocomplete="off"><datalist id="mtol">'+rec.map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist><div class="row"><button class="btn ghost" id="mtc">Abbrechen</button><button class="btn" id="mtg">Weiter zum Mailprogramm</button></div></div>';
+ o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Per Mail senden</b><p class="mute" style="margin:4px 0 10px">An wen geht der Retourschein? Wird in der Übersicht vermerkt. Die Adresse gibst du danach im Mailprogramm ein.</p><label class="mute" for="mto">Empfänger (Name oder E-Mail, optional)</label><input id="mto" list="mtol" autocomplete="off"><datalist id="mtol">'+rec.map(x=>'<option value="'+esc(x)+'">').join("")+'</datalist>'+(typeof abgMailOpt==="function"?abgMailOpt(r):"")+'<div class="row"><button class="btn ghost" id="mtc">Abbrechen</button><button class="btn" id="mtg">Weiter zum Mailprogramm</button></div></div>';
  document.body.appendChild(o);o.querySelector("#mto").value=(r.sent&&r.sent.length&&r.sent[r.sent.length-1].to)||"";o.querySelector("#mtc").onclick=()=>o.remove();
- o.querySelector("#mtg").onclick=()=>{const to=o.querySelector("#mto").value.trim();o.remove();if(to){try{const a=JSON.parse(localStorage.getItem(RTO)||"[]").filter(x=>x!==to);a.unshift(to);localStorage.setItem(RTO,JSON.stringify(a.slice(0,30)))}catch(e){}}retXl(r,{to})}}
+ o.querySelector("#mtg").onclick=()=>{const to=o.querySelector("#mto").value.trim();o.remove();if(to){try{const a=JSON.parse(localStorage.getItem(RTO)||"[]").filter(x=>x!==to);a.unshift(to);localStorage.setItem(RTO,JSON.stringify(a.slice(0,30)))}catch(e){}}retXl(r,{to,abg:!!(o.querySelector("#mtabg")&&o.querySelector("#mtabg").checked)})}}
 async function rMarkSent(r,to){try{const cur=(rets.find(x=>x.id===r.id)||r).sent||[];await db.doc("retour/"+r.id).update({sent:cur.concat([{t:Date.now(),by:me,...tabAs("by"),to:to||""}])});toast("Als per Mail gesendet vermerkt",1)}catch(e){console.warn(e)}}
 function rSentLine(r){const s=r.sent||[];if(!s.length)return "";const x=s[s.length-1];return '<div class="msent">✉ Per Mail gesendet'+(x.to?' an '+esc(x.to):'')+' · '+fmt(x.t)+(s.length>1?' ('+s.length+'×)':'')+'</div>'}
 function rSentAll(r){const s=r.sent||[];if(!s.length)return "";return s.slice().reverse().map(x=>'<div class="msent">✉ Per Mail gesendet'+(x.to?' an '+esc(x.to):'')+' · '+esc(nmA(x,"by"))+', '+fmt(x.t)+'</div>').join("")}
@@ -893,13 +946,13 @@ async function rXlPhotos(wb,r,ws,last){const f=r.fotos||[];if(!f.length||!ws)ret
    docs 'titel': {name, o (Reihenfolge), r:{Recht:true}}   docs 'rolle' (id = Benutzer-ID): {t: Titel-ID, x:{Extra-Rechte}}
    Rechte: def_/ret_/inf_ + s (sehen) b (bearbeiten) l (löschen); v_user, v_rights, v_app. Der Admin darf immer alles.
    Die Datenbank prüft dieselben Rechte (rechte.sql). */
-const RK=["jv_s","pk_s","pk_b","pk_l","mat_b","mat_l","def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","v_user","v_rights","v_app"];
+const RK=["jv_s","pk_s","pk_b","pk_l","mat_b","mat_l","def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","abg_p","v_user","v_rights","v_app"];
 const RMAT=[["mat_b","Abschließen / Wieder öffnen"],["mat_l","Löschen"]];
 const RAREA=[["def","Defekte","Alle Defekte, nicht nur die eigenen"],["ret","Retourscheine",""],["pk","Packlisten","Sehen = ansehen und herrichten"],["inf","Infos an das Lager",""]],RLVL=[["s","Sehen"],["b","Bearbeiten"],["l","Löschen"]];
 const rLv=(a,l,t)=>a==="pk"&&l==="b"?"Hochladen":t;
 const RVW=[["v_user","Benutzer freigeben/sperren"],["v_rights","Titel und Rechte"],["v_app","App-Verwaltung (inkl. Artikelliste)"]];
 let TIT={},ROL={},rkLast=null,rxOpen=new Set(),tOpen=new Set();
-function rSum(r){r=rNormR(r);const jv=r.jv_s?["Lager Übersicht"]:[];const mt=RMAT.filter(([k])=>r[k]).map(([,t])=>t.toLowerCase());const L=jv.concat(mt.length?["Materialliste: "+mt.join(", ")]:[]).concat(RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([x,t])=>rLv(a,x,t).toLowerCase());return l.length?n+": "+l.join(", "):""})).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
+function rSum(r){r=rNormR(r);const jv=r.jv_s?["Lager Übersicht"]:[];const mt=RMAT.filter(([k])=>r[k]).map(([,t])=>t.toLowerCase());const L=jv.concat(mt.length?["Materialliste: "+mt.join(", ")]:[]).concat(RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([x,t])=>rLv(a,x,t).toLowerCase());return l.length?n+": "+l.join(", "):""})).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(r.abg_p)L.push("Abgleich: prüfen");if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
 function rNormR(o){o=o||{};const r={};RK.forEach(k=>{if(o[k]===true)r[k]=true});["def","ret","inf","pk"].forEach(a=>{if(r[a+"_b"]||r[a+"_l"])r[a+"_s"]=true});return r}
 function uRights(uid){const x=ROL[uid]||{},t=TIT[x.t]||{};return rNormR({...(t.r||{}),...Object.fromEntries(Object.entries(x.x||{}).filter(([,v])=>v===true))})}
 /* Solange die Datenbank-Änderung (rechte.sql) fehlt, gibt es keine Titel: dann gelten die alten Häkchen Werkstatt/Lager */
@@ -907,7 +960,7 @@ const rightsReady=()=>Object.keys(TIT).length>0;
 /* Materialliste-Recht: solange noch kein Titel mat_* hat (Datenbank-Update fehlt), gilt wie früher Defekte-Bearbeiten fürs Abschließen */
 const matReady=()=>Object.values(TIT).some(t=>t.r&&(t.r.mat_b||t.r.mat_l))||Object.values(ROL).some(x=>x.x&&(x.x.mat_b||x.x.mat_l));
 function can(k){if(owner)return true;if(k.startsWith("mat_")&&!matReady())return k==="mat_b"&&can("def_b");if(!rightsReady()){if(k.startsWith("def_"))return k!=="def_l"&&!!werk[me];if(k.startsWith("ret_"))return !!lagr[me];return false}return !!uRights(me)[k]}
-function rightsSub(){packSub();if(typeof hoSub==="function")hoSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
+function rightsSub(){packSub();if(typeof abgSub==="function")abgSub();if(typeof hoSub==="function")hoSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
 function rightsChanged(){const k=JSON.stringify(uRights(me));if(rkLast!==null&&k!==rkLast&&!owner)DBX.reloadAll();rkLast=k;draw();tabCheck()}
 const titList=()=>Object.keys(TIT).map(id=>({id,...TIT[id]})).sort((a,b)=>(a.o||0)-(b.o||0)||String(a.name).localeCompare(String(b.name),"de"));
 /* Retourschein: Knöpfe ohne Recht ausblenden */
@@ -917,7 +970,7 @@ function infoDelBtn(i){if(!can("inf_l")||$("#idel"))return;$("#app").insertAdjac
  $("#idel").onclick=()=>ask("Nachricht wirklich löschen?",async()=>{try{await db.doc("infos/"+i.id).delete();for(let k=0;k<(i.fn||0);k++){try{await db.doc("fotos/"+i.id+"-"+k).delete()}catch(e){}}view="info";hist=hist.filter(v=>v!=="infoopen");draw();toast("Nachricht gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
 /* Kästchen-Raster: cur = eigene Häkchen, inh = vom Titel geerbt (grau, nicht änderbar) */
 function rMx(cur,inh,attr){cur=cur||{};inh=inh||{};const cb=(k,l)=>{const i=!!inh[k],c=i||!!cur[k];return '<label class="rmc'+(i?' inh':'')+'"><input type="checkbox" '+attr+' data-k="'+k+'"'+(c?' checked':'')+(i?' disabled':'')+'><span>'+l+'</span></label>'};
- return '<div class="rmx"><div class="rmr"><div class="rmh"><b>Lager Übersicht</b><small>Lager Assistent mit Briefing (zeigt nur, was die Person sehen darf)</small></div><div class="rml">'+cb("jv_s","Sehen")+'</div></div><div class="rmr"><div class="rmh"><b>Materialliste</b><small>Erstellen und scannen darf jeder</small></div><div class="rml rmm">'+RMAT.map(([k,t])=>cb(k,t)).join("")+'</div></div>'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,rLv(a,l,t))).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
+ return '<div class="rmx"><div class="rmr"><div class="rmh"><b>Lager Übersicht</b><small>Lager Assistent mit Briefing (zeigt nur, was die Person sehen darf)</small></div><div class="rml">'+cb("jv_s","Sehen")+'</div></div><div class="rmr"><div class="rmh"><b>Materialliste</b><small>Erstellen und scannen darf jeder</small></div><div class="rml rmm">'+RMAT.map(([k,t])=>cb(k,t)).join("")+'</div></div>'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,rLv(a,l,t))).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Abgleich</b><small>Endretouren prüfen und als geprüft markieren (sieht „Zu prüfen“)</small></div><div class="rml">'+cb("abg_p","Prüfen")+'</div></div>'+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
 /* Häkchen lesen + Regeln: Bearbeiten/Löschen schließt Sehen ein, ohne Sehen kein Bearbeiten/Löschen */
 function rMxRead(box,changed){const g=k=>box.querySelector('[data-k="'+k+'"]');const k=changed&&changed.dataset.k;
  if(k){const [a,l]=k.split("_");if(["def","ret","inf","pk"].includes(a)){if((l==="b"||l==="l")&&changed.checked){const s=g(a+"_s");if(s&&!s.disabled)s.checked=true}if(l==="s"&&!changed.checked)["b","l"].forEach(x=>{const e=g(a+"_"+x);if(e&&!e.disabled)e.checked=false})}}
@@ -1031,7 +1084,7 @@ function pkHd(p){const h=(packh[p.id]||{}).hd;return h&&pkFromYmd(h.d)?h:null}
 function pkHDay(p){const h=pkHd(p);return h?pkFromYmd(h.d):(p.db?pkDay(p.db):0)}
 const pkShifted=p=>!!pkHd(p)&&pkHDay(p)!==(p.db?pkDay(p.db):0);
 const pkWd=t=>t?new Date(t).toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit"}):"–";
-function pkState(p){const t0=pkDay(Date.now()),R=pkRets(p),done=R.some(r=>r.closed),hd=pkHDay(p);
+function pkState(p){const t0=pkDay(Date.now()),R=pkRets(p),done=R.some(r=>r.closed&&r.art!=="teil"),hd=pkHDay(p);
  if(done)return{k:"done",l:"Retoure abgeschlossen",c:"ok"};
  const kl=(packh[p.id]||{}).klar;if(kl&&kl.t)return{k:"done",l:"Mit Projektleiter geklärt",c:"ok"};
  if(p.de&&pkDay(p.de)<t0)return{k:"over",l:R.length?"Überfällig · Retourschein offen":"Überfällig",c:"warn"};
@@ -1134,8 +1187,8 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
   '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+
   '<div class="pkhday"><span>Herrichten: <b>'+pkWd(pkHDay(p))+'</b>'+(pkShifted(p)?' <span class="mute">(verschoben)</span>':'')+'</span>'+(fin?'':'<button class="btn ghost s" id="pkmv" type="button">Verschieben</button>')+'</div>'+pkHint(p)+
   '<details class="pkmore"><summary>Alle Angaben</summary><div class="pkkv"><span>Packschein</span><b>'+esc(p.ps||"–")+'</b>'+(p.sa?'<span>Selbstabholer</span><b>'+esc(p.sa)+'</b>':'')+(p.pk?'<span>Packen</span><b>'+pkD(p.pk)+'</b>':'')+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+(p.eb?'<span>Event</span><b>'+pkD(p.eb)+' – '+pkD(p.ee)+'</b>':'')+'</div><div class="mute" style="font-size:13px;margin-top:6px">Hochgeladen '+fmt(p.t)+' von '+esc(nmA(p,"by"))+'</div></details>'+
-  (R.length&&can("ret_s")?R.map(r=>'<button class="btn ghost" data-pkr="'+esc(r.id)+'" style="margin-top:8px">Retourschein öffnen'+(r.closed?' (abgeschlossen)':' (offen)')+'</button>').join(""):'')+'</div>'+
-  '<div class="card pkprog'+(fin?' fin':'')+'" style="cursor:default"><div class="row" style="align-items:baseline"><b style="flex:1;font-size:17px">'+(fin?'Hergerichtet':pr.d+' von '+pr.n+' Positionen')+'</b>'+(pr.dev?'<span class="pkdev">'+pr.dev+' mit Abweichung</span>':'')+'</div>'+
+  (R.length&&can("ret_s")?R.map(r=>'<button class="btn ghost" data-pkr="'+esc(r.id)+'" style="margin-top:8px">Retourschein öffnen'+(r.closed?(r.art==="teil"?' (Teilretoure)':r.art==="end"?' (Endretoure)':' (abgeschlossen)'):' (offen)')+'</button>').join(""):'')+'</div>'+
+  (typeof abgPkCard==="function"?abgPkCard(p):'')+'<div class="card pkprog'+(fin?' fin':'')+'" style="cursor:default"><div class="row" style="align-items:baseline"><b style="flex:1;font-size:17px">'+(fin?'Hergerichtet':pr.d+' von '+pr.n+' Positionen')+'</b>'+(pr.dev?'<span class="pkdev">'+pr.dev+' mit Abweichung</span>':'')+'</div>'+
   '<div class="pkbar"><i style="width:'+pct+'%"></i></div>'+(fin?'<div class="mute" style="margin-top:6px">von '+esc(nmA(H.fin,"by"))+', '+fmt(H.fin.t)+(H.info&&H.info.t?' · Info an Projektleiter '+fmt(H.info.t):'')+'</div>':'')+'</div>'+
   chips([["alle","Alle"],["offen","Noch offen"]],pkHf,"data-pkhf")+
   '<div class="card pkl" style="cursor:default">'+(rows.length?rows.map(({x,i,h,st,z},ri)=>{const fm=pkFmTxt(x,h),gl=pkGrp(x),newZ=z&&(ri===0||rows[ri-1].z!==z),zd=newZ?(p.zus||[]).find(q=>String(q.ps)===z):null,
@@ -1150,7 +1203,7 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
   (fin?'<button class="btn ghost" id="pkinfo" style="margin-top:12px">Info an Projektleiter</button><button class="btn ghost" id="pkreo" style="margin-top:8px">Wieder öffnen</button>':'<button class="btn" id="pkfin" style="margin-top:12px">Herrichten abschließen</button>')+
   (can("pk_l")?'<button class="btn ghost" id="pkdel" style="color:var(--bad);margin-top:12px">Packliste löschen</button>':'');
  document.querySelectorAll("[data-pkhf]").forEach(b=>b.onclick=()=>{pkHf=b.dataset.pkhf;packOpenView()});
- document.querySelectorAll("[data-pkr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.pkr;go("retopen")});
+ document.querySelectorAll("[data-pkr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.pkr;go("retopen")});if(typeof abgPkBind==="function")abgPkBind();
  document.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>pkTap(p,+b.dataset.pc));
  document.querySelectorAll("[data-pe]").forEach(b=>b.onclick=()=>{if(fin)return toast("Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkEdit(p,+b.dataset.pe)});
  if($("#pkfin"))$("#pkfin").onclick=()=>pkFinish(p);
@@ -1578,14 +1631,6 @@ function jvBelongA(A,n){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),t0=j
  return{say:[(n?jvStk(n)+" "+A.label:A.label)+": am ehesten "+jvEv(b.p)+" (Auftrag "+(b.p.ord||"–")+")"+(b.fit===2?", dort fehlen genau "+jvStk(b.q)+".":", dort sind noch "+jvStk(b.q)+" draußen.")].concat(L.length>1?["Weitere Möglichkeiten stehen darunter."]:[]).concat(["Das ist nur ein Vorschlag nach Artikel und Menge."]),
   rows:L.slice(0,8).map(o=>({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–")+(o.fit===2?" · Menge passt genau":""),r:jvStk(o.q)+" · "+(o.over?"überfällig":"bis "+pkWd(o.p.de)),cls:o.over?"warn":"ok",pk:o.p.id}))}}
 /* ---------- Abgleich Packliste ↔ Retourschein ---------- */
-function jvBal(p){const H=pkH(p),M={},key=(c,nm)=>c?"c:"+c:"n:"+jvATok(nm).join(" ");
- const add=(c,nm,f,v)=>{if(!v)return;const k=key(c,nm),e=M[k]=M[k]||{k,code:c,name:nm,soll:0,fr:0,back:0};e[f]+=v};
- pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),nm=pkName(x),c=artCode(x.a);
-  add(c,nm,"soll",st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0));add(c,nm,"fr",f);
-  if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,"soll",+a.n||0)})});
- const R=pkRets(p);R.forEach(r=>Object.values(rIt(r)).forEach(it=>{if(it.g!=="Zubehör")add(artCode(it.nr),it.name,"back",+it.q||0)}));
- const L=Object.values(M),miss=L.filter(e=>e.soll>e.back),more=L.filter(e=>e.back>e.soll+e.fr);
- return{L,R,miss,more,has:R.length>0,closed:R.some(r=>r.closed)}}
 function jvBalAns(p,mode){const B=jvBal(p),say=[],rows=[],ev=jvEv(p);
  if(!B.has){say.push(mode==="all"?"Bei "+ev+" ist noch nichts zurück – es gibt keinen Retourschein.":"Zu "+ev+" gibt es noch keinen Retourschein. Laut Packliste ist alles draußen: "+jvStk(B.L.reduce((a,e)=>a+e.soll,0))+".");
   B.L.filter(e=>e.soll).forEach(e=>rows.push({l:e.name,r:jvStk(e.soll)+" draußen",cls:"ok",pk:p.id}));
@@ -1750,7 +1795,7 @@ function jvInfFrom(q){const T=jvNorm(q).split(" ").filter(w=>w&&!/^(was|hat|habe
 function jvInfLast(){const L=infos.slice().sort((a,b)=>b.t-a.t);if(!L.length)return{say:["Es gibt keine Nachrichten."]};const i=L[0];
  return{say:["Neueste Nachricht von "+nmA(i,"by")+", "+jvAgo(i.t)+" um "+jvTime(i.t)+": "+String(i.text||"(nur Foto)")],speak:["Neueste Nachricht von "+nmA(i,"by")+".",String(i.text||"Nur ein Foto.")],rows:[jvInfRow(i)]}}
 /* ---------- Rückblick ---------- */
-function jvClosedPacks(){return packs.filter(p=>pkRets(p).some(r=>r.closed)).map(p=>({p,ct:Math.max(...pkRets(p).filter(r=>r.closed).map(r=>r.closedT||0)),B:jvBal(p)})).sort((a,b)=>b.ct-a.ct)}
+function jvClosedPacks(){return packs.filter(p=>pkRets(p).some(rIsEnd)).map(p=>({p,ct:Math.max(...pkRets(p).filter(rIsEnd).map(r=>r.closedT||0)),B:jvBal(p)})).sort((a,b)=>b.ct-a.ct)}
 function jvLastMissing(){if(!can("ret_s")||!can("pk_s"))return JV_NORET;const L=jvClosedPacks().filter(o=>o.B.miss.length);
  if(!L.length)return{say:["Bei keiner abgeschlossenen Retoure fehlte laut Abgleich etwas."]};const o=L[0];
  return{say:["Zuletzt fehlte etwas bei "+jvEv(o.p)+" (Auftrag "+(o.p.ord||"–")+", Retoure "+pkDM(o.ct)+"): "+jvList(o.B.miss.slice(0,4).map(e=>jvStk(e.soll-e.back)+" "+e.name))+"."],rows:L.slice(0,6).map(o=>({l:jvEv(o.p),sub:"Retoure "+pkDM(o.ct),r:o.B.miss.reduce((a,e)=>a+e.soll-e.back,0)+" Stk fehlen",cls:"warn",pk:o.p.id}))}}
@@ -1792,13 +1837,14 @@ function jvMailDlg(title,subj,body){const o=document.createElement("div");o.clas
  const upd=()=>{g("jvmm").href="mailto:?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(ta.value)};upd();ta.oninput=upd;g("jvmm").onclick=()=>setTimeout(()=>o.remove(),300);
  if(navigator.share){g("jvms2").hidden=false;g("jvms2").onclick=()=>navigator.share({title:subj,text:ta.value}).then(()=>o.remove()).catch(()=>{})}
  g("jvmc").onclick=async()=>{try{await navigator.clipboard.writeText(subj+"\n\n"+ta.value);toast("Text kopiert",1)}catch(e){ta.select();toast("Bitte Text markieren und kopieren.")}};g("jvmx").onclick=()=>o.remove()}
-function jvAskPl(q){return jvOnePk(q,p=>{const B=jvBal(p),vn=String(p.pl||"").split(" ")[0],me1=meName(),ov=pkState(p).k==="over";
+function jvAskPl(q){return jvOnePk(q,jvAskPlP)}
+function jvAskPlP(p){{const B=jvBal(p),vn=String(p.pl||"").split(" ")[0],me1=meName(),ov=pkState(p).k==="over";
  const L=B.has?B.miss.map(e=>"- "+jvStk(e.soll-e.back)+" "+e.name+(e.back?" (zurück: "+pkNum(e.back)+" von "+pkNum(e.soll)+")":"")):[];
  const body="Hallo"+(vn?" "+vn:"")+",\n\nkurze Nachfrage zu Auftrag "+(p.ord||"–")+" – "+(p.ev||"")+" (Dispo-Ende "+pkD(p.de)+"):\n\n"+
   (B.has?(L.length?"Laut Retourschein fehlt noch:\n"+L.join("\n")+"\n\nWeißt du, wo das Material ist bzw. wann es kommt?":"Bei uns ist laut Retourschein alles da. Passt das so für dich?"):(ov?"Das Material ist bei uns noch nicht zurück. Weißt du, wann es kommt?":"Weißt du schon, wann das Material zurückkommt?"))+
   "\n\nDanke und LG\n"+me1;
  jvMailDlg("Nachfrage an "+(jvPl(p)||"Projektleiter"),"Nachfrage Auftrag "+(p.ord||"")+" – "+(p.ev||""),body);
- return{say:["Hier ist die Nachfrage an "+(jvPl(p)||"den Projektleiter")+". Die Adresse gibst du im Mailprogramm ein."],quiet:true}})}
+ return{say:["Hier ist die Nachfrage an "+(jvPl(p)||"den Projektleiter")+". Die Adresse gibst du im Mailprogramm ein."],quiet:true}}}
 /* ---------- Erinnerungen (docs „jverin“, nur eigene) ---------- */
 let jvErins=[],jvErinOn=false;
 function jvErinSub(){if(jvErinOn)return;jvErinOn=true;try{db.collection("jverin").onSnapshot(s=>{jvErins=s.docs.map(d=>({id:d.id,...d.data()}));draw()})}catch(e){console.warn(e)}}
@@ -1826,7 +1872,7 @@ const JV_FRAGEN=[
  {g:"Herrichten",r:"pk_s",q:["Was muss ich morgen herrichten?","Was geht übermorgen raus?","Wo gibt es heute rote Zahlen?","Ist Artikel X am Dienstag verfügbar?","Welche Packscheine sind angefangen, aber nicht fertig?","Was fehlt beim Packschein von Auftrag X noch?","Wo habe ich eine Alternative eingetragen?","Wer ist Projektleiter von Auftrag X?","Lies mir die Packliste von Auftrag X vor."]},
  {g:"Material suchen & zuordnen",q:["Auf welcher Baustelle sind 50m 32A?","Wo ist gerade die ID 1234-56?","Wie viele Artikel X sind gerade auf Baustellen?","Auf welcher Veranstaltung war Artikel X zuletzt?","Zu welchem Auftrag könnten 4 Stück Kabel A gehören?","Was fehlt bei Auftrag X noch?","Was bleibt auf Baustelle Y stehen?","Was geht von Baustelle Y direkt weiter zu Z?","Welche Materiallisten kamen heute von den Monteuren?"],note:"IDs kennt der Assistent nur, wenn sie in einer Materialliste gescannt wurden."},
  {g:"Werkstatt",q:["Welche Defekte sind dringend?","Welche Defekte sind älter als eine Woche?","Ist Artikel X schon repariert?","Welche Defekte kamen von Veranstaltung Y?","Gab es bei Artikel X schon öfter Defekte?","Was wurde diese Woche repariert?","Wird ein defekter Artikel diese Woche gebraucht?"]},
- {g:"Retourschein",r:"ret_s",q:["Öffne den Retourschein für Auftrag X.","Neuen Retourschein erstellen.","Welche Retourscheine sind angefangen?","Was fehlt bei Retourschein X gegenüber der Packliste?","Füge 3 Stück Kabel A zu Retourschein X hinzu."]},
+ {g:"Retourschein",r:"ret_s",q:["Öffne den Retourschein für Auftrag X.","Neuen Retourschein erstellen.","Welche Retourscheine sind angefangen?","Was muss ich prüfen?","Was fehlt bei Retourschein X gegenüber der Packliste?","Füge 3 Stück Kabel A zu Retourschein X hinzu."]},
  {g:"Info an das Lager",q:["Gibt es ungelesene Nachrichten?","Was hat Monteur X geschrieben?","Lies mir die neueste Nachricht vor."]},
  {g:"Rückblick & Auswertung",r:"ret_s",q:["War bei Auftrag X alles zurück?","Welche Veranstaltung hatte zuletzt Fehlmaterial?","Welche Artikel fehlen am häufigsten?","Welche Aufträge waren diesen Monat unvollständig?","Wie viele Retouren gab es diese Woche?"]},
  {g:"Aktionen",q:["Briefing noch einmal.","Erinnere mich morgen um 9 an Auftrag X.","Markiere Auftrag X als geklärt.","Notiere zu Auftrag X: …","Melde Defekt: Kabel 32A 25 m, Stecker gebrochen.","Auftrag X alles zurück, schreib Retoure an Projektleiter A.","Schick Projektleiter A eine Nachfrage zu Auftrag X."]}];
@@ -1888,6 +1934,8 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
   if(/kamen|von (der )?veranstaltung|bei (der )?veranstaltung|von (der )?baustelle/.test(n))return jvDefEv(raw);
   if(/^ist\b|schon repariert|noch kaputt|wieder (da|ganz|einsatz)/.test(n)&&jvArtFind(raw))return jvDefArt(raw,"status");
   return jvDef(q)}
+ if(/(muss|soll) ich .*prüf|zu prüfen|was ist zu prüfen|prüfen\?$/.test(n)){if(!can("abg_p"))return{say:["Dafür brauchst du das Recht „Abgleich prüfen“."]};const L=abgToCheck();if(!L.length)return{say:[jvF()?"Nichts zu prüfen. Kaffeepause verdient.":"Es ist nichts zu prüfen."]};
+  return{say:[(L.length===1?"Ein Auftrag wartet":L.length+" Aufträge warten")+" auf deine Prüfung: "+jvList(L.slice(0,4).map(x=>x.p?x.p.ev||x.p.ord:x.r.ev))+"."],rows:L.map(x=>({l:x.p?x.p.ev||"–":x.r.ev||"–",sub:"Endretoure von "+nmA(x.r,"closedBy")+", "+pkDM(x.r.closedT),r:x.B?(x.B.fehlt?x.B.fehlt+" fehlen":x.B.zuviel?x.B.zuviel+" zu viel":"alles zurück"):"ohne Packliste",cls:x.B&&(x.B.fehlt||x.B.zuviel)?"warn":"ok",fn:()=>{if(x.p){curPack=x.p.id;go("pkabg")}else{curRet=x.r.id;go("retopen")}}}))}}
  /* Rückblick */
  if(/alles zurück|vollständig zurück|komplett zurück/.test(n)&&/^(war|ist|kam)\b/.test(n))return jvRetBal(raw,"all");
  if(/zuletzt fehlmaterial|fehlmaterial/.test(n))return jvLastMissing();
@@ -1930,7 +1978,7 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
 function jvAsk(q){q=String(q||"").trim();if(!q)return;jvStop();let A;try{A=jvAnswer(q)}catch(e){console.error(e);A={say:["Da ist bei mir etwas schiefgegangen. Bitte nochmal versuchen."]}}
  jvFin(A,q);const inp=$("#jvaq");if(inp)inp.value="";jvMs("");if(view==="jarvis")jvShow(A,!A.quiet);else jvLast=A}
 /* Zähler auf der Kachel „Lager Übersicht“: überfällige Retouren + dringende Defekte + fällige Erinnerungen */
-function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length}catch(e){}return n?String(n):""}
+function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length;if(typeof abgToCheck==="function")n+=abgToCheck().length}catch(e){}return n?String(n):""}
 
 /* ===== Hauptseite sortieren (ab 1.75) =====
    Reihenfolge der Kacheln: eigene Reihenfolge (docs „hord“, id = Benutzer) → Vorgabe vom Titel (titel.ho) → Vorschlag nach Titelname.
@@ -1970,6 +2018,226 @@ function hoMineBlock(){const own=hoOwn(),t=hoTit(hoMyTitle());
   '<div class="card" style="padding:4px 12px">'+hoList(hoMine(),"me")+'</div>'+(own?'<button class="btn ghost s" id="hoback" type="button">'+(t?'Zurück zur Reihenfolge vom Titel':'Zurück zum Vorschlag')+'</button>':'')}
 function hoMineBind(){hoBind("me",hoMine,a=>rSave(()=>db.doc("hord/"+me).set({o:a,t:Date.now()}),"Reihenfolge gespeichert"));
  const b=$("#hoback");if(b)b.onclick=()=>rSave(()=>db.doc("hord/"+me).delete(),"Zurückgesetzt")}
+
+/* ===== Abgleich Ausgang ↔ Eingang (ab 1.77) =====
+   Pro Auftrag ein laufendes Konto: raus = Packliste + Zusatz-Packscheine (hergerichtet, ohne Fremdmiete, mit Alternativen),
+   zurück = alle Retourscheine mit gleicher Auftragsnummer (Teil- und Endretouren) ± bestätigte Zuordnungen.
+   Die App ordnet NIE selbst zu: bei „zu viel“ gibt es nur Vorschläge, gezählt wird erst nach „Zuordnen“ (docs „abzu“).
+   Prüfen: jede Endretoure (retour.art="end") landet in „Zu prüfen“, bis jemand mit Recht abg_p „Geprüft“ tippt (docs „abpr“). */
+let ABZ=[],ABN={},ABP={},abgOn=false;
+function abgSub(){if(abgOn)return;abgOn=true;try{
+ db.collection("abzu").onSnapshot(s=>{ABZ=s.docs.map(d=>({id:d.id,...d.data()}));draw()});
+ db.collection("abno").onSnapshot(s=>{ABN={};s.docs.forEach(d=>ABN[d.id]=d.data());draw()});
+ db.collection("abpr").onSnapshot(s=>{ABP={};s.docs.forEach(d=>ABP[d.id]=d.data());draw()})}catch(e){console.warn(e)}}
+const abgOk=()=>can("pk_s")&&can("ret_s");
+const abgKey=(c,nm)=>c?"c:"+c:"n:"+jvATok(nm).join(" ");
+const rIsEnd=r=>!!r.closed&&r.art!=="teil";
+const abgPackOf=ord=>{const o=pkDig(ord);if(!o)return null;return packs.find(p=>pkDig(p.ord)===o)||null};
+const abgN=n=>String(n);
+/* Konto eines Auftrags. ov = {id, items} ersetzt beim Zählen den eigenen, noch nicht gespeicherten Retourschein */
+function abgBal(p,ov){const H=pkH(p),M={};
+ const get=(k,c,nm)=>M[k]=M[k]||{k,code:c||"",name:nm,raus:0,nach:0,fr:0,soll:0,back0:0,zin:0,zout:0,back:0};
+ const add=(c,nm,zus,q,f)=>{const e=get(abgKey(c,nm),c,nm);e.soll+=q;e.fr+=f;if(zus)e.nach+=q+f;else e.raus+=q+f};
+ pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
+  add(artCode(x.a),pkName(x),!!o.z,st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0),f);
+  if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,!!o.z,+a.n||0,0)})});
+ const R=pkRets(p);
+ R.forEach(r=>{const it=ov&&ov.id&&r.id===ov.id?ov.items:rIt(r);Object.values(it||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0})});
+ if(ov&&!ov.id)Object.values(ov.items||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0});
+ ABZ.forEach(z=>{if(z.from===p.id)get(z.k,z.code,z.name).zout+=+z.q||0;if(z.to===p.id)get(z.k,z.code,z.name).zin+=+z.q||0});
+ const L=Object.values(M).filter(e=>e.soll||e.back0||e.fr||e.zin||e.zout);L.forEach(e=>{e.back=Math.max(0,e.back0-e.zout+e.zin)});
+ const miss=L.filter(e=>e.soll>e.back),more=L.filter(e=>e.back>e.soll+e.fr);
+ const ends=R.filter(rIsEnd),hasEnd=ends.length>0,endR=ends.sort((a,b)=>(b.closedT||0)-(a.closedT||0))[0]||null;
+ return{p,L,R,miss,more,has:R.length>0||!!ov,closed:hasEnd,hasEnd,endR,
+  raus:L.reduce((a,e)=>a+e.soll,0),zur:L.reduce((a,e)=>a+Math.min(e.back,e.soll),0),
+  fehlt:miss.reduce((a,e)=>a+e.soll-e.back,0),zuviel:more.reduce((a,e)=>a+e.back-e.soll-e.fr,0)}}
+/* für die Fragen im Assistenten (jvfrag.js) */
+function jvBal(p){return abgBal(p)}
+/* ---------- Vorschläge (nur anzeigen, nie selbst buchen) ---------- */
+const abgOverlap=(a,b)=>(a.db||0)<=(b.de||0)&&(b.db||0)<=(a.de||0);
+function abgMlHit(fromP,toP,e){/* Materialliste „geht weiter“ von toP-Veranstaltung zu fromP-Veranstaltung mit diesem Artikel */
+ const L=typeof lists!=="undefined"?lists:[],n=s=>jvNorm(s);
+ return L.some(c=>c.mode!=="bleibt"&&n(c.ev1)&&n(c.ev2)&&n(toP.ev).includes(n(c.ev1))&&n(fromP.ev).includes(n(c.ev2))&&Object.values(jvMlItems(c)).some(x=>abgKey(artCode(x.art),x.name||jvArtNm(x.art,x))===e.k))}
+/* Wo fehlt derselbe Artikel? (für „zu viel“ bei Auftrag A) */
+function abgCands(A,e,need){const out=[];packs.forEach(p=>{if(p.id===A.id)return;const k=(packh[p.id]||{}).klar;if(k&&k.t)return;
+  const B=abgBal(p),m=B.miss.find(x=>x.k===e.k);if(!m)return;const fehlt=m.soll-m.back,why=[];
+  if(fehlt===need)why.push("Menge passt genau");if(abgOverlap(A,p))why.push("Dispo zur selben Zeit");if(p.pl&&A.pl&&jvNorm(p.pl)===jvNorm(A.pl))why.push("gleicher Projektleiter");if(abgMlHit(A,p,e))why.push("Materialliste „geht weiter“");
+  out.push({p,fehlt,why,over:pkState(p).k==="over",end:B.hasEnd})});
+ return out.sort((a,b)=>b.why.length-a.why.length||(b.over-a.over)||(b.end-a.end)||((a.p.de||0)-(b.p.de||0)))}
+/* Wo kam derselbe Artikel zu viel zurück? (für „fehlt“ bei Auftrag B) */
+function abgMoreElse(B0,e){const out=[];packs.forEach(p=>{if(p.id===B0.id)return;const m=abgBal(p).more.find(x=>x.k===e.k);if(m)out.push({p,q:m.back-m.soll-m.fr})});return out.sort((a,b)=>b.q-a.q)}
+/* ---------- Listen über alle Aufträge ---------- */
+function abgAllMore(){const out=[];packs.forEach(p=>{const B=abgBal(p);B.more.forEach(e=>{const q=e.back-e.soll-e.fr;const last=B.R.slice().sort((a,b)=>(b.modT||b.closedT||b.t||0)-(a.modT||a.closedT||a.t||0))[0];out.push({p,e,q,last})})});
+ return out.sort((a,b)=>((b.last&&(b.last.closedT||b.last.modT||b.last.t))||0)-((a.last&&(a.last.closedT||a.last.modT||a.last.t))||0))}
+function abgMissing(){/* Aufträge mit Endretoure oder überfällig, nicht geklärt; pro Artikel zusammengezählt */
+ const G={};packs.forEach(p=>{const kl=(packh[p.id]||{}).klar;if(kl&&kl.t)return;const st=pkState(p).k,B=abgBal(p);if(!(B.hasEnd||st==="over"))return;
+  B.miss.forEach(e=>{const g=G[e.k]=G[e.k]||{k:e.k,name:e.name,n:0,at:[]};const f=e.soll-e.back;g.n+=f;g.at.push({p,f,over:st==="over",end:B.hasEnd})})});
+ return Object.values(G).map(g=>{g.at.sort((a,b)=>(b.over-a.over)||b.f-a.f);g.hint=null;
+  for(const a of g.at){const m=abgMoreElse(a.p,{k:g.k});if(m.length){g.hint={from:m[0].p,q:m[0].q};break}}return g}).sort((a,b)=>b.n-a.n)}
+function abgToCheck(){if(!can("abg_p"))return[];const out=[];
+ packs.forEach(p=>{const B=abgBal(p);if(!B.R.some(r=>r.closed&&r.art==="end"))return;const e=B.R.filter(r=>r.closed&&r.art==="end").sort((a,b)=>(b.closedT||0)-(a.closedT||0))[0],pr=ABP[p.id];
+  if(!pr||(pr.t||0)<(e.closedT||0))out.push({id:p.id,p,r:e,B})});
+ rets.forEach(r=>{if(!(r.closed&&r.art==="end")||abgPackOf(r.ord))return;const pr=ABP["r_"+r.id];if(!pr||(pr.t||0)<(r.closedT||0))out.push({id:"r_"+r.id,p:null,r,B:null})});
+ return out.sort((a,b)=>(a.r.closedT||0)-(b.r.closedT||0))}
+function abgCheck(id,endT){return rSave(()=>db.doc("abpr/"+id).set({by:me,...tabAs("by"),t:Date.now(),end:endT||0}),"Als geprüft markiert")}
+/* ---------- Bausteine ---------- */
+const abgTag=(t,c)=>'<span class="abtag '+c+'">'+esc(t)+'</span>';
+function abgBadge(B){return !B.has?abgTag("noch nichts zurück","grey"):B.fehlt||B.zuviel?(B.fehlt?abgTag(B.fehlt+(B.fehlt===1?" fehlt":" fehlen"),"red"):"")+(B.zuviel?abgTag(B.zuviel+" zu viel","or"):""):abgTag("alles zurück ✓","ok")}
+const abgRetLbl=r=>!r.closed?"Retourschein offen":r.art==="teil"?"Teilretoure":r.art==="end"?"Endretoure":"Retoure abgeschlossen";
+const abgRetT=r=>r.closed?(r.closedT||r.modT||r.t):(r.modT||r.t);
+const abgRetN=r=>Object.values(rIt(r)).filter(i=>i.g!=="Zubehör").reduce((a,i)=>a+(+i.q||0),0);
+/* Karte in der Packliste (Herricht-Ansicht) */
+function abgPkCard(p){if(!abgOk())return"";const B=abgBal(p);if(!B.has)return"";
+ return '<button class="card abgpk" type="button" data-abgo="'+esc(p.id)+'"><span class="abgpkt"><b>Abgleich mit Retouren</b><small>'+B.zur+' von '+B.raus+' zurück'+(B.hasEnd?' · Endretoure':'')+'</small></span><span class="abgpkb">'+abgBadge(B)+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
+function abgPkBind(){document.querySelectorAll("[data-abgo]").forEach(b=>b.onclick=()=>{curPack=b.dataset.abgo;go("pkabg")})}
+/* Zeile im Retourschein (beim Zählen und in der Ansicht) */
+function rAbgInject(){try{if(!abgOk())return;const ex=document.getElementById("rabg");if(ex)ex.remove();let p=null,B=null;
+ if(view==="retedit"&&rs){p=abgPackOf(rs.ord);if(p)B=abgBal(p,{id:rs.id,items:rs.items})}
+ else if(view==="retopen"){const r=rets.find(x=>x.id===curRet);if(r){p=abgPackOf(r.ord);if(p)B=abgBal(p)}}
+ if(!p||!B)return;const off=Math.max(0,B.raus-B.zur),pct=B.raus?Math.min(100,Math.round(B.zur*100/B.raus)):0;
+ const h='<button class="rabg" id="rabg" type="button"><span class="rabgt"><span><b>Mit Packliste:</b> '+B.zur+' von '+B.raus+' zurück</span><b class="rabgr">'+(off?off+' offen':'alles da ✓')+(B.zuviel?' · '+B.zuviel+' zu viel':'')+' ›</b></span><span class="rabgbar"><i style="width:'+pct+'%"></i></span></button>';
+ const app=$("#app"),first=app&&app.querySelector(".card");if(!app)return;if(first)first.insertAdjacentHTML("afterend",h);else app.insertAdjacentHTML("afterbegin",h);
+ $("#rabg").onclick=()=>{if(view==="retedit"&&typeof rPersist==="function")rPersist(true);curPack=p.id;go("pkabg")}}catch(e){console.warn("Abgleich-Zeile",e)}}
+/* ---------- Retourschein abschließen: Teil- oder Endretoure ---------- */
+function rCloseDlg(r,fn){const p=abgOk()?abgPackOf(r.ord):null,o=document.createElement("div");o.className="ov";let art=null;
+ let pv="";if(p){const B=abgBal(p),mL=B.miss.slice(0,3),zL=B.more.slice(0,2);
+  pv='<div class="abgbox"><b class="abglh">Abgleich mit der Packliste</b><div class="abgl"><span>Zurück insgesamt</span><b>'+B.zur+' von '+B.raus+'</b></div>'+
+   mL.map(e=>{const h=abgMoreElse(p,e)[0];return '<div class="abgl"><span>'+esc(e.name)+(h?'<small class="or">Vorschlag: '+h.q+' zu viel bei '+esc(h.p.ev||h.p.ord)+'</small>':'')+'</span><b class="red">fehlt '+(e.soll-e.back)+'</b></div>'}).join("")+(B.miss.length>3?'<div class="abgl"><span class="mute">und '+(B.miss.length-3)+' weitere</span></div>':'')+
+   zL.map(e=>{const c=abgCands(p,e,e.back-e.soll-e.fr)[0];return '<div class="abgl"><span>'+esc(e.name)+(c?'<small class="or">Vorschlag: fehlen bei '+esc(c.p.ev||c.p.ord)+'</small>':'')+'</span><b class="or">'+(e.back-e.soll-e.fr)+' zu viel</b></div>'}).join("")+
+   (!B.miss.length&&!B.more.length?'<div class="abgl"><span>Alles da.</span><b class="ok">✓</b></div>':'')+
+   '<small class="mute">Die App ordnet nichts selbst zu. Vorschläge klärst du unter „Zu viel zurück“.</small></div>'}
+ o.innerHTML='<div class="card abgdlg"><b style="font-size:18px">Retourschein abschließen</b><div class="mute">'+esc(r.ev||"")+(r.ord?' · Auftrag '+esc(r.ord):'')+'</div>'+
+  '<b style="display:block;margin:12px 0 8px">Kommt von diesem Auftrag noch etwas zurück?</b>'+
+  '<button class="abgopt" type="button" data-art="teil"><i></i><span><b>Teilretoure – es kommt noch etwas</b><small>Zum Beispiel der Rest nach dem Aufbau. Der offene Stand sinkt, niemand wird gefragt.</small></span></button>'+
+  '<button class="abgopt" type="button" data-art="end"><i></i><span><b>Endretoure – Abbau ist zurück</b><small>Danach kommt der Auftrag zur Prüfung.</small></span></button>'+pv+
+  '<div class="row" style="margin-top:12px"><button class="btn ghost" id="abgx">Abbrechen</button><button class="btn" id="abgok" disabled>Abschließen</button></div></div>';
+ document.body.appendChild(o);const ok=o.querySelector("#abgok");
+ o.querySelectorAll("[data-art]").forEach(b=>b.onclick=()=>{art=b.dataset.art;o.querySelectorAll("[data-art]").forEach(x=>x.classList.toggle("on",x===b));ok.disabled=false});
+ o.querySelector("#abgx").onclick=()=>o.remove();ok.onclick=()=>{if(!art)return;o.remove();fn(art)}}
+/* ---------- Ansicht: Auftragskonto ---------- */
+function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view="pack";return packOverView()}
+ $("#t").textContent="Abgleich";const B=abgBal(p),H=pkH(p),kl=H.klar&&H.klar.t?H.klar:null,pr=ABP[p.id],endT=B.R.filter(r=>r.closed&&r.art==="end").reduce((a,r)=>Math.max(a,r.closedT||0),0);
+ const wait=endT&&(!pr||(pr.t||0)<endT),endR=B.R.filter(r=>r.closed&&r.art==="end").sort((a,b)=>(b.closedT||0)-(a.closedT||0))[0];
+ const chk=wait&&can("abg_p")?'<section class="abgchk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span><b>Wartet auf Prüfung</b><small>Endretoure von '+esc(nmA(endR,"closedBy"))+', '+fmt(endR.closedT).slice(0,6)+'</small></span><button class="btn s" id="abgpr" type="button">Geprüft</button></section>':
+  (pr&&!wait?'<div class="abgdone">✓ Geprüft von '+esc(nmA(pr,"by"))+', '+fmt(pr.t).slice(0,6)+'</div>':'');
+ const nums=[[B.raus,"Raus",""],[B.zur,"Zurück",""],[B.fehlt,"Fehlt",B.fehlt?"red":""]].concat(B.zuviel?[[B.zuviel,"Zu viel","or"]]:[]);
+ const head='<section class="abgcard"><div class="abgh"><span><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+' · Dispo '+pkDM(p.db)+'–'+pkDM(p.de)+'</small></span><span class="abgpkb">'+abgBadge(B)+'</span></div>'+
+  '<div class="abgnums" style="grid-template-columns:repeat('+nums.length+',minmax(0,1fr))">'+nums.map(([n,l,c])=>'<div class="'+c+'"><b>'+n+'</b><span>'+l+'</span></div>').join("")+'</div>'+
+  '<small class="mute">Ohne Fremdmiete. Zugeordnet wird nur, was jemand bestätigt hat – Vorschläge ändern nichts an den Zahlen.</small>'+(kl?'<div class="abgdone">✓ Mit Projektleiter geklärt · '+esc(nmA(kl,"by"))+', '+fmt(kl.t).slice(0,6)+'</div>':'')+'</section>';
+ const ev=[{t:p.db||p.t,l:"Packliste raus",s:"Packschein "+(p.ps||"–")+(pkProg(p).fin?" · hergerichtet von "+esc(nmA(H.fin,"by")):""),n:"↑ "+(B.raus-abgZusOut(p)),c:"out"}];
+ (p.zus||[]).forEach(z=>ev.push({t:z.t||p.t,l:"Nachlieferung",s:"Zusatz-Packschein "+(z.ps||"–"),n:"↑ "+abgZusOut(p,z.ps),c:"out"}));
+ B.R.forEach(r=>ev.push({t:abgRetT(r),l:abgRetLbl(r),s:esc(nmA(r,r.closed?"closedBy":"by")),n:"↓ "+abgRetN(r),c:"in",ret:r.id}));
+ ABZ.filter(z=>z.from===p.id||z.to===p.id).forEach(z=>{const o=packs.find(x=>x.id===(z.from===p.id?z.to:z.from));ev.push({t:z.t,l:z.from===p.id?"Zugeordnet an "+(o?o.ev||o.ord:"anderen Auftrag"):"Zugeordnet von "+(o?o.ev||o.ord:"anderem Auftrag"),s:z.q+"× "+z.name+" · "+nmA(z,"by"),n:(z.from===p.id?"− ":"+ ")+z.q,c:"zu"})});
+ ev.sort((a,b)=>(a.t||0)-(b.t||0));
+ const verl='<section class="abgcard"><b class="abglh">Verlauf</b>'+ev.map(x=>'<'+(x.ret?'button type="button" data-abgr="'+esc(x.ret)+'"':'div')+' class="abgev"><span class="abgd">'+pkDM(x.t)+'</span><span class="abgt"><b>'+esc(x.l)+'</b><small>'+x.s+'</small></span><b class="abgn '+x.c+'">'+esc(x.n)+'</b></'+(x.ret?'button':'div')+'>').join("")+'</section>';
+ const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr?1:2;
+ const arts='<section class="abgcard"><div class="abglh" style="display:flex"><b style="flex:1">Artikel</b><small class="mute">raus · zurück</small></div>'+B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).map(e=>{
+  const f=e.soll-e.back,z=e.back-e.soll-e.fr,tag=f>0?abgTag("fehlt "+f,"red"):z>0?abgTag(z+" zu viel","or"):abgTag("passt ✓","ok"),sub=[];
+  if(f>0){const h=abgMoreElse(p,e)[0];if(h)sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>Vorschlag: bei '+esc(h.p.ev||h.p.ord)+' kamen '+h.q+' zu viel zurück</span><b>Klären ›</b></button>')}
+  if(z>0){const c=abgCands(p,e,z)[0];sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>'+(c?'Vorschlag: fehlen bei '+esc(c.p.ev||c.p.ord):'Kein Vorschlag – fehlt derzeit nirgends')+'</span><b>Klären ›</b></button>')}
+  if(e.fr)sub.push('<small class="mute">+ '+pkNum(e.fr)+' Fremdmiete – zählen hier nicht</small>');
+  if(e.zin)sub.push('<small class="mute">'+e.zin+' von anderem Auftrag zugeordnet</small>');if(e.zout)sub.push('<small class="mute">'+e.zout+' an anderen Auftrag zugeordnet</small>');
+  return '<div class="abgart"><div class="abgar"><b>'+esc(e.name)+'</b><span>'+pkNum(e.soll)+' · '+pkNum(e.back)+'</span>'+tag+'</div>'+sub.join("")+'</div>'}).join("")+'</section>';
+ $("#app").innerHTML=chk+head+verl+arts+'<div class="abgbtns"><button class="btn ghost" id="abgxl" type="button">Abgleich als Excel</button>'+
+  (B.fehlt||B.zuviel?'<button class="btn" id="abgask" type="button">Nachfrage an '+esc(shortName(p.pl)||"Projektleiter")+'</button>':'')+
+  (kl?'<button class="btn ghost" id="abgkl0" type="button">„Geklärt“ zurücknehmen</button>':'<button class="btn ghost" id="abgkl" type="button">Mit Projektleiter geklärt</button>')+
+  '<button class="btn ghost" id="abgpk" type="button">Packliste öffnen</button></div>';
+ if($("#abgpr"))$("#abgpr").onclick=()=>abgCheck(p.id,endT);
+ document.querySelectorAll("[data-abgr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.abgr;go("retopen")});
+ document.querySelectorAll("[data-abgzv]").forEach(b=>b.onclick=()=>go("abgzv"));
+ $("#abgxl").onclick=()=>abgXl(p);if($("#abgask"))$("#abgask").onclick=()=>jvAskPlP(p);
+ if($("#abgkl"))$("#abgkl").onclick=()=>ask("Auftrag "+(p.ord||"")+" als mit dem Projektleiter geklärt markieren? Dann zählt er nicht mehr bei „Fehlt noch“ und gilt nicht als überfällig.",()=>pkHSet(p,{klar:{by:me,...tabAs("by"),t:Date.now()}}).then(()=>toast("Als geklärt markiert",1)));
+ if($("#abgkl0"))$("#abgkl0").onclick=()=>ask("„Geklärt“ zurücknehmen?",()=>pkHSet(p,{klar:null}).then(()=>toast("Zurückgenommen",1)));
+ $("#abgpk").onclick=()=>go("packopen")}
+function abgZusOut(p,ps){const H=pkH(p);let n=0;pkItems(p).forEach(o=>{if(!o.z||(ps!==undefined&&o.z!==String(ps)))return;const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
+ n+=st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0);if(st.s!=="open")(st.alt||[]).forEach(a=>n+=+a.n||0)});return n}
+/* ---------- Ansicht: Zu viel zurück ---------- */
+function abgZvView(){if(!abgOk()){view="start";return startView()}$("#t").textContent="Zu viel zurück";const L=abgAllMore();
+ const card=(o,i)=>{const C=abgCands(o.p,o.e,o.q),nk=o.p.id+"|"+o.e.k,note=ABN[nk];
+  return '<section class="abgcard abgzv"><div class="abgh"><span><b>'+o.q+'× '+esc(o.e.name)+' zu viel</b><small>zurück mit '+esc(o.p.ev||"–")+' (Auftrag '+esc(o.p.ord||"–")+')'+(o.last?' · '+esc(nmA(o.last,o.last.closed?"closedBy":"by"))+', '+fmt(abgRetT(o.last)).slice(0,6):'')+'</small></span></div>'+
+   (C.length?'<b class="abglh">Könnte passen zu</b>'+C.slice(0,3).map((c,j)=>'<div class="abgcand"><div class="abgar"><b>'+esc(c.p.ev||"–")+'</b>'+abgTag("fehlen "+c.fehlt,"red")+'</div><small class="mute">Auftrag '+esc(c.p.ord||"–")+(c.p.pl?' · '+esc(shortName(c.p.pl)):'')+(c.over?' · überfällig':c.end?' · Endretoure':'')+'</small>'+
+     (c.why.length?'<div class="abgwhy">'+c.why.map(w=>'<span>'+esc(w)+'</span>').join("")+'</div>':'')+'<button class="btn s'+(j?' ghost':'')+'" type="button" data-zuo="'+i+'|'+j+'">Zu '+esc(c.p.ev||c.p.ord)+' zuordnen</button></div>').join(""):
+    '<div class="abgnone">Kein Vorschlag – fehlt derzeit nirgends. Fehlt es später irgendwo, erscheint hier ein Vorschlag.</div>')+
+   (note?'<div class="abgnote">✎ '+esc(note.txt)+' · '+esc(nmA(note,"by"))+', '+fmt(note.t).slice(0,6)+'</div>':'')+
+   '<div class="abgbtnr">'+(o.p.pl?'<button class="btn ghost s" type="button" data-zask="'+i+'">Nachfrage an PL</button>':'')+'<button class="btn ghost s" type="button" data-zoth="'+i+'">Anderer Auftrag …</button><button class="btn ghost s" type="button" data-znote="'+i+'">Notiz</button></div></section>'};
+ const done=ABZ.slice().sort((a,b)=>(b.t||0)-(a.t||0)).slice(0,20);
+ $("#app").innerHTML='<p class="mute" style="margin:0 0 10px;line-height:1.45">Kam irgendwo mehr zurück als rausging, zeigt die App, wo derselbe Artikel fehlt. Zugeordnet wird erst, wenn du es bestätigst – bis dahin bleibt alles, wie es ist.</p>'+
+  (L.length?L.map(card).join(""):'<div class="card mute">Nichts offen. Nirgends kam mehr zurück als rausging.</div>')+
+  (done.length?'<section class="abgcard"><b class="abglh">Bestätigt · '+ABZ.length+'</b>'+done.map(z=>{const f=packs.find(x=>x.id===z.from),t=packs.find(x=>x.id===z.to);
+   return '<div class="abgev"><span class="abgt"><b>'+z.q+'× '+esc(z.name)+' → '+esc(t?t.ev||t.ord:"?")+'</b><small>kam mit '+esc(f?f.ev||f.ord:"?")+' · '+esc(nmA(z,"by"))+', '+fmt(z.t).slice(0,6)+'</small></span><button class="btn ghost s" type="button" data-zundo="'+esc(z.id)+'">Rückgängig</button></div>'}).join("")+'</section>':'');
+ const zuo=(o,c,q)=>ask(q+"× "+o.e.name+" zu "+(c.ev||c.ord)+" zuordnen? Dann zählt es dort als zurück und bei "+(o.p.ev||o.p.ord)+" nicht mehr als zu viel.",()=>rSave(()=>db.doc("abzu/"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)).set({k:o.e.k,code:o.e.code||"",name:o.e.name,q,from:o.p.id,to:c.id,by:me,...tabAs("by"),t:Date.now()}),"Zugeordnet"));
+ document.querySelectorAll("[data-zuo]").forEach(b=>b.onclick=()=>{const[i,j]=b.dataset.zuo.split("|").map(Number),o=L[i],c=abgCands(o.p,o.e,o.q)[j];if(c)zuo(o,c.p,Math.min(o.q,c.fehlt))});
+ document.querySelectorAll("[data-zask]").forEach(b=>b.onclick=()=>jvAskPlP(L[+b.dataset.zask].p));
+ document.querySelectorAll("[data-zoth]").forEach(b=>b.onclick=()=>{const o=L[+b.dataset.zoth];abgPickPack(o.p,c=>zuo(o,c,o.q))});
+ document.querySelectorAll("[data-znote]").forEach(b=>b.onclick=()=>{const o=L[+b.dataset.znote],nk=o.p.id+"|"+o.e.k;tDlg("Notiz zu "+o.q+"× "+o.e.name,(ABN[nk]||{}).txt||"",v=>rSave(()=>db.doc("abno/"+nk.replace(/[^A-Za-z0-9_|:-]/g,"_")).set({txt:v,by:me,...tabAs("by"),t:Date.now()}),"Notiz gespeichert"))});
+ document.querySelectorAll("[data-zundo]").forEach(b=>b.onclick=()=>ask("Zuordnung zurücknehmen?",()=>rSave(()=>db.doc("abzu/"+b.dataset.zundo).delete(),"Zurückgenommen")))}
+function abgPickPack(not,cb){const o=document.createElement("div");o.className="ov";const P=packs.filter(p=>p.id!==not.id).sort((a,b)=>(b.de||0)-(a.de||0));
+ o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0;max-height:88vh;display:flex;flex-direction:column"><b>Zu welchem Auftrag?</b><input id="abgq" placeholder="Auftragsnummer oder Veranstaltung" style="margin:8px 0"><div id="abgpl" style="overflow:auto;flex:1"></div><button class="btn ghost" id="abgpx" style="margin-top:8px">Abbrechen</button></div>';
+ document.body.appendChild(o);const q=o.querySelector("#abgq"),box=o.querySelector("#abgpl");
+ const show=()=>{const v=jvNorm(q.value);box.innerHTML=P.filter(p=>!v||jvNorm((p.ev||"")+" "+(p.ord||"")).includes(v)).slice(0,30).map(p=>'<button class="jvln" type="button" data-pp="'+esc(p.id)+'"><span class="jvlt"><b>'+esc(p.ev||"–")+'</b><small>Auftrag '+esc(p.ord||"–")+' · Dispo '+pkDM(p.db)+'–'+pkDM(p.de)+'</small></span></button>').join("")||'<div class="mute" style="padding:8px 0">Nichts gefunden.</div>';
+  box.querySelectorAll("[data-pp]").forEach(b=>b.onclick=()=>{o.remove();cb(packs.find(x=>x.id===b.dataset.pp))})};
+ q.oninput=show;show();o.querySelector("#abgpx").onclick=()=>o.remove();setTimeout(()=>q.focus(),60)}
+/* ---------- Ansicht: Zu prüfen ---------- */
+function abgPrView(){if(!can("abg_p")){view="start";return startView()}$("#t").textContent="Zu prüfen";const L=abgToCheck();
+ const wk=pkMon(pkDay(Date.now())),D=Object.entries(ABP).filter(([,x])=>(x.t||0)>=wk).sort((a,b)=>b[1].t-a[1].t);
+ $("#app").innerHTML='<p class="mute" style="margin:0 0 10px;line-height:1.45">Jede Endretoure landet hier, bis jemand mit dem Recht „Abgleich prüfen“ sie als geprüft markiert.</p>'+
+  (L.length?L.map((x,i)=>'<section class="abgcard"><div class="abgh"><span><b>'+esc(x.p?x.p.ev||"–":x.r.ev||"–")+'</b><small>Auftrag '+esc((x.p?x.p.ord:x.r.ord)||"–")+(x.p&&x.p.pl?' · '+esc(shortName(x.p.pl)):'')+' · Endretoure von '+esc(nmA(x.r,"closedBy"))+', '+fmt(x.r.closedT).slice(0,6)+'</small></span></div>'+
+   '<div class="abgtags">'+(x.B?abgBadge(x.B)+(x.B.more.length?abgTag(x.B.more.length===1?"1 Vorschlag":x.B.more.length+" Vorschläge","grey"):""):abgTag("keine Packliste – nur Retourschein","grey"))+'</div>'+
+   '<div class="abg2"><button class="btn ghost" type="button" data-prv="'+i+'">Ansehen</button><button class="btn" type="button" data-prk="'+i+'">Geprüft</button></div></section>').join(""):'<div class="card mute">Nichts zu prüfen.</div>')+
+  (D.length?'<details class="abgcard abgmore"><summary><b>Zuletzt geprüft</b><small>'+D.length+' diese Woche</small></summary>'+D.map(([id,x])=>{const p=packs.find(q=>q.id===id),r=id.startsWith("r_")?rets.find(q=>"r_"+q.id===id):null;
+   return '<div class="abgev"><span class="abgt"><b>'+esc(p?p.ev||p.ord:r?r.ev:"–")+'</b><small>'+esc(nmA(x,"by"))+', '+fmt(x.t)+'</small></span></div>'}).join("")+'</details>':'');
+ document.querySelectorAll("[data-prv]").forEach(b=>b.onclick=()=>{const x=L[+b.dataset.prv];if(x.p){curPack=x.p.id;go("pkabg")}else{curRet=x.r.id;go("retopen")}});
+ document.querySelectorAll("[data-prk]").forEach(b=>b.onclick=()=>{const x=L[+b.dataset.prk];abgCheck(x.id,x.r.closedT)})}
+/* ---------- Excel ---------- */
+async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek nicht geladen.");const B=abgBal(p),NAVY="FF114A97",wb=new ExcelJS.Workbook();
+ const fill=c=>({type:"pattern",pattern:"solid",fgColor:{argb:c}}),bd={top:{style:"thin",color:{argb:"FFC9D1DC"}},left:{style:"thin",color:{argb:"FFC9D1DC"}},bottom:{style:"thin",color:{argb:"FFC9D1DC"}},right:{style:"thin",color:{argb:"FFC9D1DC"}}};
+ const head=(ws,cols)=>{const r=ws.addRow(cols);r.eachCell(c=>{c.fill=fill(NAVY);c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=bd;c.alignment={vertical:"middle",horizontal:"center",wrapText:true}});r.height=22};
+ const kopf=ws=>{ws.addRow(["Abgleich Packliste ↔ Retouren"]).font={bold:true,size:14,color:{argb:NAVY}};
+  ws.addRow(["Veranstaltung: "+(p.ev||"–")+" · Auftrag: "+(p.ord||"–")+" · Projektleiter: "+(shortName(p.pl)||"–")+" · Dispo "+pkD(p.db)+" – "+pkD(p.de)]);
+  ws.addRow(["Stand: "+(B.hasEnd?"Endretoure ("+fmt(B.endR.closedT)+")":B.R.length?"Teilretoure / offen":"noch nichts zurück")+" · Retourscheine: "+B.R.length+" · Erstellt von "+meName()+", "+fmt(Date.now())]);ws.addRow([])};
+ const ws=wb.addWorksheet("Übersicht",{pageSetup:{orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}});kopf(ws);
+ ws.columns=[{width:11},{width:36},{width:9},{width:13},{width:12},{width:9},{width:11},{width:10},{width:46}];
+ head(ws,["Art.-Nr.","Artikel","Raus","Nachlieferung","Fremdmiete","Zurück","Differenz","Status","Bemerkung / Zuordnung"]);
+ const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr?1:2;let sr=0,sn=0,sf=0,sb=0;
+ B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).forEach((e,i)=>{const f=e.soll-e.back,z=e.back-e.soll-e.fr,st=f>0?"fehlt":z>0?"zu viel":"passt",bm=[];
+  if(f>0){const h=abgMoreElse(p,e)[0];if(h)bm.push("Vorschlag: "+h.q+" zu viel bei "+(h.p.ev||h.p.ord))}if(z>0){const c=abgCands(p,e,z)[0];bm.push(c?"Vorschlag: fehlen bei "+(c.p.ev||c.p.ord):"kein Vorschlag")}
+  if(e.zin)bm.push(e.zin+" von anderem Auftrag zugeordnet");if(e.zout)bm.push(e.zout+" an anderen Auftrag zugeordnet");if(e.fr)bm.push(pkNum(e.fr)+" Fremdmiete zählen nicht");
+  const r=ws.addRow([e.code||"",e.name,e.raus,e.nach||"",e.fr||"",e.back,f>0?-f:z>0?z:0,st,bm.join(" · ")]);sr+=e.raus;sn+=e.nach;sf+=e.fr;sb+=e.back;
+  const col=f>0?"FFB8322A":z>0?"FF9A4D00":"FF1F6B41",bg=f>0?"FFFBEBEB":z>0?"FFFFF1E3":"FFE3F3E9";
+  r.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;c.alignment={vertical:"middle",horizontal:n===2||n===9?"left":"center",wrapText:n===9};if(i%2)c.fill=fill("FFF6F8FB")});
+  r.getCell(7).font={bold:true,color:{argb:col}};r.getCell(8).font={bold:true,color:{argb:col}};r.getCell(8).fill=fill(bg)});
+ const t=ws.addRow(["","Gesamt",sr,sn||"",sf||"",sb,(B.fehlt?"−"+B.fehlt:"0")+(B.zuviel?" / +"+B.zuviel:""),"",(B.fehlt?B.fehlt+" fehlen":"nichts fehlt")+(B.zuviel?" · "+B.zuviel+" zu viel":"")]);
+ t.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;c.font={bold:true};c.fill=fill("FFEEF3FA");c.alignment={horizontal:n===2||n===9?"left":"center"}});
+ const wv=wb.addWorksheet("Verlauf");wv.columns=[{width:17},{width:22},{width:36},{width:10},{width:18}];kopf(wv);head(wv,["Datum","Art","Artikel","Menge","Wer"]);
+ const ev=[];const H=pkH(p);
+ pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),q=st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0);
+  const zd=o.z?(p.zus||[]).find(z=>String(z.ps)===o.z):null;if(q)ev.push([zd?zd.t||p.t:p.db||p.t,zd?"Nachlieferung "+o.z:"Packliste raus",pkName(x),q,h&&h.by?nmA(h,"by"):""]);
+  if(st.s!=="open")(st.alt||[]).forEach(a=>ev.push([zd?zd.t||p.t:p.db||p.t,"Alternative",a.t,+a.n||0,h&&h.by?nmA(h,"by"):""]))});
+ B.R.forEach(r=>Object.values(rIt(r)).forEach(i=>{if(i.g!=="Zubehör"&&+i.q)ev.push([abgRetT(r),abgRetLbl(r),i.name,-(+i.q),nmA(r,r.closed?"closedBy":"by")])}));
+ ABZ.filter(z=>z.from===p.id||z.to===p.id).forEach(z=>{const o=packs.find(x=>x.id===(z.from===p.id?z.to:z.from));ev.push([z.t,z.from===p.id?"Zugeordnet an "+(o?o.ev||o.ord:"?"):"Zugeordnet von "+(o?o.ev||o.ord:"?"),z.name,z.from===p.id?+z.q:-z.q,nmA(z,"by")])});
+ ev.sort((a,b)=>(a[0]||0)-(b[0]||0)).forEach((e,i)=>{const r=wv.addRow([fmt(e[0]),e[1],e[2],e[3]>0?"↑ "+e[3]:"↓ "+(-e[3]),e[4]]);r.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;if(i%2)c.fill=fill("FFF6F8FB");if(n===4)c.alignment={horizontal:"center"}})});
+ const wz=wb.addWorksheet("Zu viel – Zuordnungen");wz.columns=[{width:30},{width:9},{width:28},{width:40},{width:22}];kopf(wz);head(wz,["Artikel","Menge","Status","Auftrag / Vorschlag","Wer / Wann"]);
+ B.more.forEach(e=>{const z=e.back-e.soll-e.fr,C=abgCands(p,e,z);wz.addRow([e.name,z,"offen – zu viel hier",C.length?"Vorschlag: "+C.slice(0,3).map(c=>(c.p.ev||c.p.ord)+" (fehlen "+c.fehlt+")").join(", "):"kein Vorschlag",""]).eachCell(c=>c.border=bd)});
+ B.miss.forEach(e=>{const M=abgMoreElse(p,e);if(M.length)wz.addRow([e.name,e.soll-e.back,"fehlt hier – Vorschlag",M.slice(0,3).map(m=>m.q+" zu viel bei "+(m.p.ev||m.p.ord)).join(", "),""]).eachCell(c=>c.border=bd)});
+ ABZ.filter(z=>z.from===p.id||z.to===p.id).forEach(z=>{const o=packs.find(x=>x.id===(z.from===p.id?z.to:z.from));wz.addRow([z.name,z.q,"bestätigt",(z.from===p.id?"an ":"von ")+(o?o.ev||o.ord:"?"),nmA(z,"by")+", "+fmt(z.t)]).eachCell(c=>c.border=bd)});
+ if(wz.rowCount<=5)wz.addRow(["Nichts zu viel, keine Zuordnungen."]);
+ const buf=await wb.xlsx.writeBuffer(),fn="Abgleich_"+String(p.ev||p.ord||"Auftrag").replace(/[^A-Za-z0-9äöüÄÖÜß]+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".xlsx";
+ const XT="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";return{fn,blob:new Blob([buf],{type:XT}),XT,B}}
+async function abgXl(p){const dl=await claude.use("downloads");if(!dl)return toast("Speichern ist hier nicht verfügbar.");try{const x=await abgXlMake(p);await dl.save({filename:x.fn,data:x.blob})}catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);toast("Excel konnte nicht erstellt werden.")}}
+/* für die Retoure-Mail: Datei + kurzer Text */
+async function abgXlFile(r){const p=abgOk()?abgPackOf(r.ord):null;if(!p)return null;try{const x=await abgXlMake(p),B=x.B;
+ const t="\n\nAbgleich mit der Packliste (Auftrag "+(p.ord||"–")+"): "+B.zur+" von "+B.raus+" zurück."+(B.miss.length?"\nFehlt noch:\n"+B.miss.map(e=>"- "+(e.soll-e.back)+"× "+e.name).join("\n"):"\nEs fehlt nichts.")+(B.more.length?"\nMehr zurück:\n"+B.more.map(e=>"- "+(e.back-e.soll-e.fr)+"× "+e.name).join("\n"):"")+"\nDetails im Anhang (Abgleich-Excel).";
+ return{file:new File([x.blob],x.fn,{type:x.XT}),fn:x.fn,blob:x.blob,txt:t}}catch(e){console.warn(e);return null}}
+function abgMailOpt(r){const p=abgOk()?abgPackOf(r.ord):null;if(!p)return"";const B=abgBal(p);
+ return '<div class="abgbox" style="margin:10px 0"><b class="abglh">Anhänge</b><label class="abgchkl"><input type="checkbox" checked disabled>Retourschein (Excel)</label><label class="abgchkl"><input type="checkbox" id="mtabg" checked><span>Abgleich mit Packliste (Excel)<small class="mute">'+(B.fehlt||B.zuviel?(B.fehlt?B.fehlt+" fehlen":"")+(B.fehlt&&B.zuviel?" · ":"")+(B.zuviel?B.zuviel+" zu viel":""):"alles zurück")+'</small></span></label></div>'}
+/* ---------- Lager Übersicht: Streifen „Zu prüfen“ und Reiter „Fehlt noch“ ---------- */
+function abgPrStrip(){const L=abgToCheck();if(!L.length)return"";const nm=L.slice(0,2).map(x=>x.p?x.p.ev||x.p.ord:x.r.ev).join(", ")+(L.length>2?" …":"");
+ return '<button class="abgstrip" type="button" id="abgstrip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span><b>'+(L.length===1?"1 Auftrag":L.length+" Aufträge")+' zu prüfen</b> · '+esc(nm)+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
+function abgMissTab(){const G=abgMissing(),Z=abgAllMore().length;
+ return{h:"Fehlt noch",e:"Es fehlt nichts. Gezählt werden Aufträge mit Endretoure oder überfällig.",
+  L:G.map(g=>{const a=g.at[0];return '<button class="jvln" type="button" data-'+(g.hint?'abgzv="1"':'jp="'+esc(a.p.id)+'" data-jpa="1"')+'><span class="jvlt"><b>'+esc(g.name)+'</b><small>'+(g.hint?'<span class="or">Vielleicht: '+g.hint.q+' kamen bei '+esc(g.hint.from.ev||g.hint.from.ord)+' zu viel zurück</span>':'am ehesten bei '+esc(a.p.ev||a.p.ord)+(a.over?', überfällig':', Endretoure'))+'</small></span><span class="jvlr warn">'+g.n+(g.n===1?' fehlt':' fehlen')+'</span></button>'}),
+  foot:Z?'<button class="jvln abgzvl" type="button" data-abgzv="1"><span class="jvlt"><b>Zu viel zurück: '+Z+' offen zum Klären</b></span><span class="jvlr">›</span></button>':""}}
+function abgJvBind(){const s=$("#abgstrip");if(s)s.onclick=()=>go("abgpr");document.querySelectorAll("#jv [data-abgzv]").forEach(b=>b.onclick=()=>go("abgzv"));document.querySelectorAll("#jv [data-jpa]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("pkabg")})}
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -2000,6 +2268,9 @@ function draw(){if(!db)return;document.body.classList.toggle("jvon",view==="jarv
  if(view.startsWith("ret")){const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&$("#app").contains(ae))return;return retDraw()}
  if(view==="jarvis"&&can("jv_s"))return jarvisView();
  if(view==="jarvis"){view="start";hist=[]}
+ if(view==="pkabg"&&can("pk_s")&&can("ret_s"))return pkAbgView();
+ if(view==="abgzv"&&can("pk_s")&&can("ret_s"))return abgZvView();
+ if(view==="abgpr"&&can("abg_p"))return abgPrView();
  if(view==="pack"&&can("pk_s"))return packOverView();
  if(view==="packall"&&can("pk_s"))return packView();
  if(view==="packopen"&&can("pk_s"))return packOpenView();
@@ -2279,7 +2550,7 @@ function rPage(x){const b=$("#rbody");if(rPartial&&b&&$("#rasq")){b.innerHTML=x+
 function rBindSq(){const i=$("#rasq");if(!i)return;i.oninput=()=>{rs.q=i.value;rPartial=true;try{retEdit()}finally{rPartial=false}}}
 function rTileBind(A){document.querySelectorAll("[data-ra]").forEach(b=>b.onclick=e=>{const a=A.find(x=>x.nr===b.dataset.ra);if(!a)return;const base={nr:a.nr,name:a.name,g:a.g,u:a.u||""};
  if(e.target.closest("[data-rm]")){rAdd(a.nr,base,-1);return retEdit()}rPad(a,base)})}
-function retEdit(){rPersist();const k=rKat(),L=rs.lvl;
+function retEdit(){rPersist();setTimeout(rAbgInject,0);const k=rKat(),L=rs.lvl;
  if(rs.q&&rs.q.trim()&&["groups","subs","items"].includes(L)){const q=rs.q.trim().toLowerCase(),A=k.filter(a=>(a.name+" "+a.nr).toLowerCase().includes(q)).sort(rSort),S=A.slice(0,60);$("#t").textContent="Artikelsuche";
   rPage((S.length?'<div class="rgrid">'+S.map(a=>{const c=rs.items[a.nr]?rs.items[a.nr].q:0;return '<button class="rtile'+(c?" sel":"")+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(a.name)+'</b><span class="mute">'+esc(a.g+(a.u?" / "+a.u:""))+' · Nr. '+esc(a.nr)+'</span></button>'}).join("")+'</div>'+(A.length>60?'<p class="mute">'+(A.length-60)+' weitere Treffer, bitte genauer suchen.</p>':""):'<div class="card mute">Kein Artikel gefunden.</div>'));
   rTileBind(S);rBindSq();$("#rsum").onclick=()=>{rs.q="";rs.lvl="sum";retEdit()};return}
@@ -2321,7 +2592,7 @@ function retSum(){rPersist();$("#t").textContent="Retourschein prüfen";const R=
   const id=rs.id||("r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),old=rets.find(r=>r.id===id),now=Date.now();
   clearTimeout(rTimer);await rChain.catch(()=>{});rs.id=id;const sn=rSnap(),d={...sn.d,draft:false};if(old){d.mod=me;d.modT=now}else{d.ev=String(rs.ev).trim();d.ord=String(rs.ord||"").trim();d.rem=String(rs.rem||"").trim();d.itemsJson="{}";d.by=me;d.t=now}
   try{if(old)await db.doc("retour/"+id).update(d);else await db.doc("retour/"+id).set(d);rDone[id]=JSON.stringify(sn.d);{const o=rBk();delete o[id];rBkSet(o)}curRet=id;rs=null;hist=hist.filter(v=>v!=="retedit");view="retopen";draw();toast("Retourschein gespeichert",1)}catch(x){b.disabled=false;errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}};window.scrollTo(0,0)}
-function retOpen(){const r=rets.find(x=>x.id===curRet);if(!r){view="ret";return retList()}$("#t").textContent="Retourschein";const it=rIt(r),R=rRows(it);
+function retOpen(){setTimeout(rAbgInject,0);const r=rets.find(x=>x.id===curRet);if(!r){view="ret";return retList()}$("#t").textContent="Retourschein";const it=rIt(r),R=rRows(it);
  $("#app").innerHTML=rTabs()+'<div class="card">'+(r.closed?'':'<button class="btn ghost s" id="rhed" style="float:right;margin:0 0 6px 10px">Ändern</button>')+'<b style="font-size:18px">'+esc(r.ev)+'</b><div class="mute">Auftragsnummer: '+esc(r.ord||"–")+'</div><div class="mute">Erstellt: '+esc(nmA(r,"by"))+", "+fmt(r.t)+'</div>'+(r.mod?'<div class="mute">Letzte Änderung: '+esc(nmA(r,"mod"))+", "+fmt(r.modT)+'</div>':"")+rSentAll(r)+'</div>'+
  '<div class="card" style="padding:4px 8px;overflow-x:auto"><table class="rtbl"><thead><tr><th>Artikel</th><th style="text-align:right">Retour</th></tr></thead><tbody>'+R.map(x=>'<tr><td><b>'+esc(x.name)+'</b><div class="mute" style="font-size:13px">'+(x.nr?"Nr. "+esc(x.nr):x.manual?"Manuell eingetragen":"Zubehör")+'</div></td><td style="text-align:right;font-weight:700">'+x.q+'</td></tr>').join("")+'<tr><td style="text-align:right"><b>Gesamt</b></td><td style="text-align:right;font-weight:800">'+rTot(it)+'</td></tr></tbody></table></div>'+
  (r.rem?'<div class="card"><div class="mute">Bemerkungen</div>'+esc(r.rem)+'</div>':"")+rPhotoBlock(r)+
@@ -2329,7 +2600,7 @@ function retOpen(){const r=rets.find(x=>x.id===curRet);if(!r){view="ret";return 
  rBindTabs();rPhotoBind(r);$("#rxl").onclick=()=>retXl(r);if($("#rplx"))$("#rplx").onclick=()=>rlogRetXl(r,$("#rplx"));if(navigator.canShare){$("#rmail").hidden=false;$("#rmail").onclick=()=>rMailAsk(r)}
  if($("#red"))$("#red").onclick=()=>{rs={...rEd(r),lvl:"sum",g:null,u:null};go("retedit")};
  if($("#rhed"))$("#rhed").onclick=()=>rEditHead(r);
- if($("#rclose"))$("#rclose").onclick=()=>ask("Retourschein abschließen? Danach kann er nur noch angesehen werden. Bei Bedarf kann man ihn wieder öffnen.",async()=>{try{await db.doc("retour/"+r.id).update({closed:true,closedBy:me,...tabAs("closedBy"),closedT:Date.now(),draft:false});toast("Retourschein abgeschlossen",1)}catch(x){errBox("Abschließen fehlgeschlagen. Bitte nochmal versuchen.")}});
+ if($("#rclose"))$("#rclose").onclick=()=>rCloseDlg(r,async art=>{try{await db.doc("retour/"+r.id).update({closed:true,art,closedBy:me,...tabAs("closedBy"),closedT:Date.now(),draft:false});toast(art==="teil"?"Als Teilretoure abgeschlossen":"Als Endretoure abgeschlossen",1)}catch(x){errBox("Abschließen fehlgeschlagen. Bitte nochmal versuchen.")}});
  if($("#rreo"))$("#rreo").onclick=()=>ask("Retourschein wieder öffnen, damit er bearbeitet werden kann?",async()=>{try{await db.doc("retour/"+r.id).update({closed:false,mod:me,...tabAs("mod"),modT:Date.now()});toast("Retourschein wieder geöffnet",1)}catch(x){errBox("Das hat nicht geklappt. Bitte nochmal versuchen.")}});
  if($("#radd"))$("#radd").onclick=()=>{rs={...rEd(r),lvl:"groups",g:null,u:null,add:true};go("retedit")};
  const dl=$("#rdel");if(dl)dl.onclick=()=>ask("Retourschein wirklich löschen?",async()=>{try{await db.doc("retour/"+r.id).delete();view="ret";draw()}catch(x){errBox("Löschen fehlgeschlagen.")}})}
@@ -2387,7 +2658,7 @@ async function retXl(r,share){const dl=await claude.use("downloads");if(!dl)retu
    const f=i%2?fill("FFF6F8FB"):null;for(let n=1;n<=5;n++){const c=row.getCell(n);c.border=bd;c.alignment={horizontal:n>=3?"center":"left",vertical:"middle"};if(f)c.fill=f}row.getCell(2).font={bold:true};row.getCell(3).fill=fill("FFFFF8DC")});
   await rXlPhotos(wb,r,ws,rw);const buf=await wb.xlsx.writeBuffer(),fn="Retourschein_"+String(r.ev).replace(/[^A-Za-z0-9äöüÄÖÜß]+/g,"_")+"_"+new Date(r.t).toISOString().slice(0,10)+".xlsx";
   const XT="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",blob=new Blob([buf],{type:XT});
-  if(share){const file=new File([blob],fn,{type:XT});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:rMailSubj(r),text:rMailBody(r)});await rMarkSent(r,share&&share.to);return}toast("Teilen geht auf diesem Gerät nicht. Die Datei wird gespeichert.",1)}
+  if(share){const file=new File([blob],fn,{type:XT}),ax=share.abg?await abgXlFile(r):null,files=ax?[file,ax.file]:[file];if(navigator.canShare&&navigator.canShare({files})){await navigator.share({files,title:rMailSubj(r),text:rMailBody(r)+(ax?ax.txt:"")});await rMarkSent(r,share&&share.to);return}toast("Teilen geht auf diesem Gerät nicht. Die Datei"+(ax?"en werden":" wird")+" gespeichert.",1);if(ax)await dl.save({filename:ax.fn,data:ax.blob})}
   await dl.save({filename:fn,data:blob})
  }catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;toast("Excel konnte nicht erstellt werden.")}}
 function lagerBlock(){const ids=Object.keys(usr).filter(i=>i!==me&&profActive(i));

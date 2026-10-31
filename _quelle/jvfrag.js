@@ -110,14 +110,6 @@ function jvBelongA(A,n){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),t0=j
  return{say:[(n?jvStk(n)+" "+A.label:A.label)+": am ehesten "+jvEv(b.p)+" (Auftrag "+(b.p.ord||"–")+")"+(b.fit===2?", dort fehlen genau "+jvStk(b.q)+".":", dort sind noch "+jvStk(b.q)+" draußen.")].concat(L.length>1?["Weitere Möglichkeiten stehen darunter."]:[]).concat(["Das ist nur ein Vorschlag nach Artikel und Menge."]),
   rows:L.slice(0,8).map(o=>({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–")+(o.fit===2?" · Menge passt genau":""),r:jvStk(o.q)+" · "+(o.over?"überfällig":"bis "+pkWd(o.p.de)),cls:o.over?"warn":"ok",pk:o.p.id}))}}
 /* ---------- Abgleich Packliste ↔ Retourschein ---------- */
-function jvBal(p){const H=pkH(p),M={},key=(c,nm)=>c?"c:"+c:"n:"+jvATok(nm).join(" ");
- const add=(c,nm,f,v)=>{if(!v)return;const k=key(c,nm),e=M[k]=M[k]||{k,code:c,name:nm,soll:0,fr:0,back:0};e[f]+=v};
- pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),nm=pkName(x),c=artCode(x.a);
-  add(c,nm,"soll",st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0));add(c,nm,"fr",f);
-  if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,"soll",+a.n||0)})});
- const R=pkRets(p);R.forEach(r=>Object.values(rIt(r)).forEach(it=>{if(it.g!=="Zubehör")add(artCode(it.nr),it.name,"back",+it.q||0)}));
- const L=Object.values(M),miss=L.filter(e=>e.soll>e.back),more=L.filter(e=>e.back>e.soll+e.fr);
- return{L,R,miss,more,has:R.length>0,closed:R.some(r=>r.closed)}}
 function jvBalAns(p,mode){const B=jvBal(p),say=[],rows=[],ev=jvEv(p);
  if(!B.has){say.push(mode==="all"?"Bei "+ev+" ist noch nichts zurück – es gibt keinen Retourschein.":"Zu "+ev+" gibt es noch keinen Retourschein. Laut Packliste ist alles draußen: "+jvStk(B.L.reduce((a,e)=>a+e.soll,0))+".");
   B.L.filter(e=>e.soll).forEach(e=>rows.push({l:e.name,r:jvStk(e.soll)+" draußen",cls:"ok",pk:p.id}));
@@ -282,7 +274,7 @@ function jvInfFrom(q){const T=jvNorm(q).split(" ").filter(w=>w&&!/^(was|hat|habe
 function jvInfLast(){const L=infos.slice().sort((a,b)=>b.t-a.t);if(!L.length)return{say:["Es gibt keine Nachrichten."]};const i=L[0];
  return{say:["Neueste Nachricht von "+nmA(i,"by")+", "+jvAgo(i.t)+" um "+jvTime(i.t)+": "+String(i.text||"(nur Foto)")],speak:["Neueste Nachricht von "+nmA(i,"by")+".",String(i.text||"Nur ein Foto.")],rows:[jvInfRow(i)]}}
 /* ---------- Rückblick ---------- */
-function jvClosedPacks(){return packs.filter(p=>pkRets(p).some(r=>r.closed)).map(p=>({p,ct:Math.max(...pkRets(p).filter(r=>r.closed).map(r=>r.closedT||0)),B:jvBal(p)})).sort((a,b)=>b.ct-a.ct)}
+function jvClosedPacks(){return packs.filter(p=>pkRets(p).some(rIsEnd)).map(p=>({p,ct:Math.max(...pkRets(p).filter(rIsEnd).map(r=>r.closedT||0)),B:jvBal(p)})).sort((a,b)=>b.ct-a.ct)}
 function jvLastMissing(){if(!can("ret_s")||!can("pk_s"))return JV_NORET;const L=jvClosedPacks().filter(o=>o.B.miss.length);
  if(!L.length)return{say:["Bei keiner abgeschlossenen Retoure fehlte laut Abgleich etwas."]};const o=L[0];
  return{say:["Zuletzt fehlte etwas bei "+jvEv(o.p)+" (Auftrag "+(o.p.ord||"–")+", Retoure "+pkDM(o.ct)+"): "+jvList(o.B.miss.slice(0,4).map(e=>jvStk(e.soll-e.back)+" "+e.name))+"."],rows:L.slice(0,6).map(o=>({l:jvEv(o.p),sub:"Retoure "+pkDM(o.ct),r:o.B.miss.reduce((a,e)=>a+e.soll-e.back,0)+" Stk fehlen",cls:"warn",pk:o.p.id}))}}
@@ -324,13 +316,14 @@ function jvMailDlg(title,subj,body){const o=document.createElement("div");o.clas
  const upd=()=>{g("jvmm").href="mailto:?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(ta.value)};upd();ta.oninput=upd;g("jvmm").onclick=()=>setTimeout(()=>o.remove(),300);
  if(navigator.share){g("jvms2").hidden=false;g("jvms2").onclick=()=>navigator.share({title:subj,text:ta.value}).then(()=>o.remove()).catch(()=>{})}
  g("jvmc").onclick=async()=>{try{await navigator.clipboard.writeText(subj+"\n\n"+ta.value);toast("Text kopiert",1)}catch(e){ta.select();toast("Bitte Text markieren und kopieren.")}};g("jvmx").onclick=()=>o.remove()}
-function jvAskPl(q){return jvOnePk(q,p=>{const B=jvBal(p),vn=String(p.pl||"").split(" ")[0],me1=meName(),ov=pkState(p).k==="over";
+function jvAskPl(q){return jvOnePk(q,jvAskPlP)}
+function jvAskPlP(p){{const B=jvBal(p),vn=String(p.pl||"").split(" ")[0],me1=meName(),ov=pkState(p).k==="over";
  const L=B.has?B.miss.map(e=>"- "+jvStk(e.soll-e.back)+" "+e.name+(e.back?" (zurück: "+pkNum(e.back)+" von "+pkNum(e.soll)+")":"")):[];
  const body="Hallo"+(vn?" "+vn:"")+",\n\nkurze Nachfrage zu Auftrag "+(p.ord||"–")+" – "+(p.ev||"")+" (Dispo-Ende "+pkD(p.de)+"):\n\n"+
   (B.has?(L.length?"Laut Retourschein fehlt noch:\n"+L.join("\n")+"\n\nWeißt du, wo das Material ist bzw. wann es kommt?":"Bei uns ist laut Retourschein alles da. Passt das so für dich?"):(ov?"Das Material ist bei uns noch nicht zurück. Weißt du, wann es kommt?":"Weißt du schon, wann das Material zurückkommt?"))+
   "\n\nDanke und LG\n"+me1;
  jvMailDlg("Nachfrage an "+(jvPl(p)||"Projektleiter"),"Nachfrage Auftrag "+(p.ord||"")+" – "+(p.ev||""),body);
- return{say:["Hier ist die Nachfrage an "+(jvPl(p)||"den Projektleiter")+". Die Adresse gibst du im Mailprogramm ein."],quiet:true}})}
+ return{say:["Hier ist die Nachfrage an "+(jvPl(p)||"den Projektleiter")+". Die Adresse gibst du im Mailprogramm ein."],quiet:true}}}
 /* ---------- Erinnerungen (docs „jverin“, nur eigene) ---------- */
 let jvErins=[],jvErinOn=false;
 function jvErinSub(){if(jvErinOn)return;jvErinOn=true;try{db.collection("jverin").onSnapshot(s=>{jvErins=s.docs.map(d=>({id:d.id,...d.data()}));draw()})}catch(e){console.warn(e)}}
@@ -358,7 +351,7 @@ const JV_FRAGEN=[
  {g:"Herrichten",r:"pk_s",q:["Was muss ich morgen herrichten?","Was geht übermorgen raus?","Wo gibt es heute rote Zahlen?","Ist Artikel X am Dienstag verfügbar?","Welche Packscheine sind angefangen, aber nicht fertig?","Was fehlt beim Packschein von Auftrag X noch?","Wo habe ich eine Alternative eingetragen?","Wer ist Projektleiter von Auftrag X?","Lies mir die Packliste von Auftrag X vor."]},
  {g:"Material suchen & zuordnen",q:["Auf welcher Baustelle sind 50m 32A?","Wo ist gerade die ID 1234-56?","Wie viele Artikel X sind gerade auf Baustellen?","Auf welcher Veranstaltung war Artikel X zuletzt?","Zu welchem Auftrag könnten 4 Stück Kabel A gehören?","Was fehlt bei Auftrag X noch?","Was bleibt auf Baustelle Y stehen?","Was geht von Baustelle Y direkt weiter zu Z?","Welche Materiallisten kamen heute von den Monteuren?"],note:"IDs kennt der Assistent nur, wenn sie in einer Materialliste gescannt wurden."},
  {g:"Werkstatt",q:["Welche Defekte sind dringend?","Welche Defekte sind älter als eine Woche?","Ist Artikel X schon repariert?","Welche Defekte kamen von Veranstaltung Y?","Gab es bei Artikel X schon öfter Defekte?","Was wurde diese Woche repariert?","Wird ein defekter Artikel diese Woche gebraucht?"]},
- {g:"Retourschein",r:"ret_s",q:["Öffne den Retourschein für Auftrag X.","Neuen Retourschein erstellen.","Welche Retourscheine sind angefangen?","Was fehlt bei Retourschein X gegenüber der Packliste?","Füge 3 Stück Kabel A zu Retourschein X hinzu."]},
+ {g:"Retourschein",r:"ret_s",q:["Öffne den Retourschein für Auftrag X.","Neuen Retourschein erstellen.","Welche Retourscheine sind angefangen?","Was muss ich prüfen?","Was fehlt bei Retourschein X gegenüber der Packliste?","Füge 3 Stück Kabel A zu Retourschein X hinzu."]},
  {g:"Info an das Lager",q:["Gibt es ungelesene Nachrichten?","Was hat Monteur X geschrieben?","Lies mir die neueste Nachricht vor."]},
  {g:"Rückblick & Auswertung",r:"ret_s",q:["War bei Auftrag X alles zurück?","Welche Veranstaltung hatte zuletzt Fehlmaterial?","Welche Artikel fehlen am häufigsten?","Welche Aufträge waren diesen Monat unvollständig?","Wie viele Retouren gab es diese Woche?"]},
  {g:"Aktionen",q:["Briefing noch einmal.","Erinnere mich morgen um 9 an Auftrag X.","Markiere Auftrag X als geklärt.","Notiere zu Auftrag X: …","Melde Defekt: Kabel 32A 25 m, Stecker gebrochen.","Auftrag X alles zurück, schreib Retoure an Projektleiter A.","Schick Projektleiter A eine Nachfrage zu Auftrag X."]}];
@@ -420,6 +413,8 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
   if(/kamen|von (der )?veranstaltung|bei (der )?veranstaltung|von (der )?baustelle/.test(n))return jvDefEv(raw);
   if(/^ist\b|schon repariert|noch kaputt|wieder (da|ganz|einsatz)/.test(n)&&jvArtFind(raw))return jvDefArt(raw,"status");
   return jvDef(q)}
+ if(/(muss|soll) ich .*prüf|zu prüfen|was ist zu prüfen|prüfen\?$/.test(n)){if(!can("abg_p"))return{say:["Dafür brauchst du das Recht „Abgleich prüfen“."]};const L=abgToCheck();if(!L.length)return{say:[jvF()?"Nichts zu prüfen. Kaffeepause verdient.":"Es ist nichts zu prüfen."]};
+  return{say:[(L.length===1?"Ein Auftrag wartet":L.length+" Aufträge warten")+" auf deine Prüfung: "+jvList(L.slice(0,4).map(x=>x.p?x.p.ev||x.p.ord:x.r.ev))+"."],rows:L.map(x=>({l:x.p?x.p.ev||"–":x.r.ev||"–",sub:"Endretoure von "+nmA(x.r,"closedBy")+", "+pkDM(x.r.closedT),r:x.B?(x.B.fehlt?x.B.fehlt+" fehlen":x.B.zuviel?x.B.zuviel+" zu viel":"alles zurück"):"ohne Packliste",cls:x.B&&(x.B.fehlt||x.B.zuviel)?"warn":"ok",fn:()=>{if(x.p){curPack=x.p.id;go("pkabg")}else{curRet=x.r.id;go("retopen")}}}))}}
  /* Rückblick */
  if(/alles zurück|vollständig zurück|komplett zurück/.test(n)&&/^(war|ist|kam)\b/.test(n))return jvRetBal(raw,"all");
  if(/zuletzt fehlmaterial|fehlmaterial/.test(n))return jvLastMissing();
@@ -462,4 +457,4 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
 function jvAsk(q){q=String(q||"").trim();if(!q)return;jvStop();let A;try{A=jvAnswer(q)}catch(e){console.error(e);A={say:["Da ist bei mir etwas schiefgegangen. Bitte nochmal versuchen."]}}
  jvFin(A,q);const inp=$("#jvaq");if(inp)inp.value="";jvMs("");if(view==="jarvis")jvShow(A,!A.quiet);else jvLast=A}
 /* Zähler auf der Kachel „Lager Übersicht“: überfällige Retouren + dringende Defekte + fällige Erinnerungen */
-function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length}catch(e){}return n?String(n):""}
+function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length;if(typeof abgToCheck==="function")n+=abgToCheck().length}catch(e){}return n?String(n):""}
