@@ -1,11 +1,11 @@
 /* ===== Hauptseite sortieren (ab 1.75) =====
    Reihenfolge der Kacheln: eigene Reihenfolge (docs „hord“, id = Benutzer) → Vorgabe vom Titel (titel.ho) → Vorschlag nach Titelname.
    Kacheln ohne Recht bleiben ausgeblendet, die Reihenfolge ändert daran nichts. */
-const HO_ALL=["jarvis","pack","ret","infonew","defnew","new"];
-const HO_NAME={jarvis:"Lager Übersicht",pack:"Packlisten",ret:"Retourschein",infonew:"Info an das Lager",defnew:"Defekt melden",new:"Material vor Ort erfassen"};
-const HO_DEF={L:["jarvis","pack","ret","infonew","defnew","new"],M:["new","defnew","infonew","jarvis","pack","ret"],W:["defnew","infonew","jarvis","new","pack","ret"]};
+const HO_ALL=["jarvis","au","pack","ret","infonew","defnew","new"];
+const HO_NAME={jarvis:"Lager Übersicht",au:"Meine Aufträge",pack:"Packlisten",ret:"Retourschein",infonew:"Info an das Lager",defnew:"Defekt melden",new:"Material vor Ort erfassen"};
+const HO_DEF={L:["jarvis","pack","ret","infonew","defnew","new"],M:["au","new","defnew","infonew","jarvis","pack","ret"],W:["defnew","infonew","jarvis","new","pack","ret","au"]};
 function hoDefFor(t){const n=String(t&&t.name||"").toLowerCase();return /werkstatt/.test(n)?HO_DEF.W:/monteur|projektleit/.test(n)?HO_DEF.M:HO_DEF.L}
-function hoFix(a){const o=(Array.isArray(a)?a:[]).filter((k,i,A)=>HO_ALL.includes(k)&&A.indexOf(k)===i);HO_ALL.forEach(k=>{if(!o.includes(k))o.push(k)});return o}
+function hoFix(a){const o=(Array.isArray(a)?a:[]).filter((k,i,A)=>HO_ALL.includes(k)&&A.indexOf(k)===i);HO_ALL.forEach((k,i)=>{if(!o.includes(k))o.splice(Math.min(i,o.length),0,k)});return o}
 const hoTit=id=>(typeof TIT!=="undefined"&&id&&TIT[id])||null;
 function hoTitle(id){const t=hoTit(id);return hoFix(t&&Array.isArray(t.ho)?t.ho:hoDefFor(t))}
 let HORD={},hoOn=false;

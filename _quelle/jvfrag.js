@@ -456,4 +456,4 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
 function jvAsk(q){q=String(q||"").trim();if(!q)return;jvStop();let A;try{A=jvAnswer(q)}catch(e){console.error(e);A={say:["Da ist bei mir etwas schiefgegangen. Bitte nochmal versuchen."]}}
  jvFin(A,q);const inp=$("#jvaq");if(inp)inp.value="";jvMs("");if(view==="jarvis")jvShow(A,!A.quiet);else jvLast=A}
 /* Zähler auf der Kachel „Lager Übersicht“: überfällige Retouren + dringende Defekte + fällige Erinnerungen */
-function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length;if(typeof abgToCheck==="function")n+=abgToCheck().length}catch(e){}return n?String(n):""}
+function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length;if(typeof abgToCheck==="function")n+=abgToCheck().length;if(typeof plUnread==="function")n+=plUnread().length}catch(e){}return n?String(n):""}

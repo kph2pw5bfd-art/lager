@@ -41,9 +41,9 @@ function abgMlHit(fromP,toP,e){/* Materialliste „geht weiter“ von toP-Verans
 /* Wo fehlt derselbe Artikel? (für „zu viel“ bei Auftrag A) */
 function abgCands(A,e,need){const out=[];packs.forEach(p=>{if(p.id===A.id)return;const k=(packh[p.id]||{}).klar;if(k&&k.t)return;
   const B=abgBal(p),m=B.miss.find(x=>x.k===e.k);if(!m)return;const fehlt=m.soll-m.back,why=[];
-  if(fehlt===need)why.push("Menge passt genau");if(abgOverlap(A,p))why.push("Dispo zur selben Zeit");if(p.pl&&A.pl&&jvNorm(p.pl)===jvNorm(A.pl))why.push("gleicher Projektleiter");if(abgMlHit(A,p,e))why.push("Materialliste „geht weiter“");
-  out.push({p,fehlt,why,over:pkState(p).k==="over",end:B.hasEnd})});
- return out.sort((a,b)=>b.why.length-a.why.length||(b.over-a.over)||(b.end-a.end)||((a.p.de||0)-(b.p.de||0)))}
+  if(fehlt===need)why.push("Menge passt genau");if(abgOverlap(A,p))why.push("Dispo zur selben Zeit");if(p.pl&&A.pl&&jvNorm(p.pl)===jvNorm(A.pl))why.push("gleicher Projektleiter");if(abgMlHit(A,p,e))why.push("Materialliste „geht weiter“");const pl=typeof plSays==="function"&&plSays(p,A,e.k);if(pl)why.unshift("Projektleiter sagt: ist dort");
+  out.push({p,fehlt,why,pl,over:pkState(p).k==="over",end:B.hasEnd})});
+ return out.sort((a,b)=>(b.pl-a.pl)||b.why.length-a.why.length||(b.over-a.over)||(b.end-a.end)||((a.p.de||0)-(b.p.de||0)))}
 /* Wo kam derselbe Artikel zu viel zurück? (für „fehlt“ bei Auftrag B) */
 function abgMoreElse(B0,e){const out=[];packs.forEach(p=>{if(p.id===B0.id)return;const m=abgBal(p).more.find(x=>x.k===e.k);if(m)out.push({p,q:m.back-m.soll-m.fr-m.l55})});return out.sort((a,b)=>b.q-a.q)}
 /* ---------- Listen über alle Aufträge ---------- */
@@ -113,13 +113,13 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
  const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr+e.l55?1:2;
  const arts='<section class="abgcard"><div class="abglh" style="display:flex"><b style="flex:1">Artikel</b><small class="mute">raus · zurück</small></div>'+B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).map(e=>{
   const f=e.soll-e.back,z=e.back-e.soll-e.fr-e.l55,tag=f>0?abgTag("fehlt "+f,"red"):z>0?abgTag(z+" zu viel","or"):!e.soll&&e.l55&&!e.back?abgTag("Lager 55","grey"):abgTag("passt ✓","ok"),sub=[];
-  if(f>0){const h=abgMoreElse(p,e)[0];if(h)sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>Vorschlag: bei '+esc(h.p.ev||h.p.ord)+' kamen '+h.q+' zu viel zurück</span><b>Klären ›</b></button>')}
+  if(f>0&&typeof plAbgLine==="function")sub.push(plAbgLine(p,e));if(f>0){const h=abgMoreElse(p,e)[0];if(h)sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>Vorschlag: bei '+esc(h.p.ev||h.p.ord)+' kamen '+h.q+' zu viel zurück</span><b>Klären ›</b></button>')}
   if(z>0){const c=abgCands(p,e,z)[0];sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>'+(c?'Vorschlag: fehlen bei '+esc(c.p.ev||c.p.ord):'Kein Vorschlag – fehlt derzeit nirgends')+'</span><b>Klären ›</b></button>')}
   if(e.fr)sub.push('<small class="mute">+ '+pkNum(e.fr)+' Fremdmiete – zählen hier nicht</small>');
   if(e.l55)sub.push('<small class="mute">+ '+pkNum(e.l55)+' über Lager 55 – zählen hier nicht</small>');if(e.via55)sub.push('<small class="mute">'+e.via55+' kam über uns statt Lager 55 zurück</small>');
   if(e.zin)sub.push('<small class="mute">'+e.zin+' von anderem Auftrag zugeordnet</small>');if(e.zout)sub.push('<small class="mute">'+e.zout+' an anderen Auftrag zugeordnet</small>');
   return '<div class="abgart"><div class="abgar"><b>'+esc(e.name)+'</b><span>'+pkNum(e.soll)+' · '+pkNum(e.back)+'</span>'+tag+'</div>'+sub.join("")+'</div>'}).join("")+'</section>';
- $("#app").innerHTML=chk+head+verl+arts+'<div class="abgbtns"><button class="btn ghost" id="abgxl" type="button">Abgleich als Excel</button>'+
+ $("#app").innerHTML=chk+head+(typeof plAbgMsgs==="function"?plAbgMsgs(p):"")+verl+arts+'<div class="abgbtns"><button class="btn ghost" id="abgxl" type="button">Abgleich als Excel</button>'+
   (B.fehlt||B.zuviel?'<button class="btn" id="abgask" type="button">Nachfrage an '+esc(shortName(p.pl)||"Projektleiter")+'</button>':'')+
   (kl?'<button class="btn ghost" id="abgkl0" type="button">„Geklärt“ zurücknehmen</button>':'<button class="btn ghost" id="abgkl" type="button">Mit Projektleiter geklärt</button>')+
   '<button class="btn ghost" id="abgpk" type="button">Packliste öffnen</button></div>';

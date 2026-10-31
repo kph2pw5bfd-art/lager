@@ -328,6 +328,40 @@ button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:va
 .rge{padding:4px 2px 8px}
 
 .wbbtns{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}.wbbtns .btn{flex:1 1 160px;margin:0}
+/* ===== Meine Aufträge (1.85) ===== */
+.abtag.blue{background:var(--tint);color:var(--navy)}
+.aug{display:flex;justify-content:space-between;align-items:baseline;margin:4px 2px 8px;color:var(--navy)}.aug b{font-size:16px}.aug small{color:var(--mute);font-size:13px}
+.audiv{height:3px;background:var(--navy);border-radius:2px;margin:16px 0 12px}
+.aucard{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;font:inherit;cursor:pointer}
+.aucard.mine{border-color:#9db6dc}.aucard.hot{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset}
+.auct{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.auct b{min-width:0;font-size:15px;overflow-wrap:anywhere}
+.aus{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}.aus i{display:block;height:6px;border-radius:3px;background:var(--line)}
+.aus i.d{background:var(--navy)}.aus i.n{background:#7ea3d8}.aus i.w{background:#e67e22}.aus i.r{background:var(--bad)}
+.aul{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;font-size:10px;color:var(--mute);text-align:center}
+.aupills{display:flex;flex-wrap:wrap;gap:4px}
+.aucd{display:flex;flex-direction:column;gap:6px}.aucd.red{border-color:var(--bad)}.aucd.unread{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy) inset}
+.ausec{color:var(--navy);font-size:14px;border-bottom:2px solid var(--tint);padding-bottom:4px}.ausec.red{color:var(--bad)}
+.aukv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}.aukv span{color:var(--mute)}
+.autl{display:flex;flex-direction:column}
+.aute{display:grid;grid-template-columns:22px 1fr;gap:9px;position:relative;padding-bottom:12px}.aute:last-child{padding-bottom:0}
+.aute:not(:last-child)::before{content:"";position:absolute;left:10px;top:22px;bottom:0;width:2px;background:var(--line)}
+.aute b{font-size:14px}.aute small{display:block;color:var(--mute);font-size:13px;line-height:1.4}
+.audev{display:block;color:var(--ink);margin-top:2px}
+.audot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;background:var(--card);border:2px solid var(--line);box-sizing:border-box}
+.audot.d{background:var(--navy);border-color:var(--navy)}.audot.n{background:#7ea3d8;border-color:#7ea3d8}.audot.w{background:#e67e22;border-color:#e67e22}.audot.r{background:var(--bad);border-color:var(--bad)}
+.aurow{display:flex;align-items:center;gap:8px;font-size:14px;padding:3px 0}.auq{min-width:34px;color:var(--bad);font-variant-numeric:tabular-nums}.auq.m{color:var(--mute)}
+.aun{flex:1;min-width:0;overflow-wrap:anywhere}.aun small{display:block;font-size:12px}.aust{font-size:13px;color:var(--ok);white-space:nowrap}
+.auab{width:auto;flex:none}
+.auans{background:var(--tint);border-radius:8px;padding:7px 9px;font-size:13px;line-height:1.4}.auans small{display:block;color:var(--mute);font-size:12px;margin-top:2px}.auans.s{margin-top:4px}
+.aumat>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline}.aumat>summary::-webkit-details-marker{display:none}.aumat>summary b{color:var(--navy)}.aumat>summary b:after{content:" ▸";color:var(--mute)}.aumat[open]>summary b:after{content:" ▾"}
+.audlg{width:100%;max-width:440px;margin:0;max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.auopt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;cursor:pointer}
+.auopt i{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--mute);margin-top:1px;box-sizing:border-box}
+.auopt.on{border-color:var(--navy);background:var(--tint)}.auopt.on i{border-color:var(--navy);background:radial-gradient(var(--navy) 42%,transparent 48%)}
+.auopt small{display:block;color:var(--mute);font-size:12px}.auopt small.auto{color:var(--navy);font-weight:600}.auopt input{margin-top:6px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .aug,:root:not([data-theme="light"]) .ausec:not(.red),:root:not([data-theme="light"]) .aumat>summary b,:root:not([data-theme="light"]) .auopt small.auto{color:#8fb0ea}:root:not([data-theme="light"]) .auans,:root:not([data-theme="light"]) .auopt.on,:root:not([data-theme="light"]) .abtag.blue{background:#1d3550}:root:not([data-theme="light"]) .abtag.blue{color:#8fb0ea}}
+:root[data-theme="dark"] .aug,:root[data-theme="dark"] .ausec:not(.red),:root[data-theme="dark"] .aumat>summary b{color:#8fb0ea}:root[data-theme="dark"] .auans,:root[data-theme="dark"] .auopt.on,:root[data-theme="dark"] .abtag.blue{background:#1d3550}
+.aucd .aun{color:var(--ink)}#aumsg{margin-bottom:10px}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -353,7 +387,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.84";
+<script>const APPV="1.85";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -703,7 +737,7 @@ function jvPanels(D){const T=jvTabs(D);if(!jvTab||!T.some(t=>t.k===jvTab))jvTab=
  if(D.last.length)M.push(['Letzte Retouren',D.last.map(r=>jvLine('data-jr="'+esc(r.id)+'"',r.ev||"Retourschein","Auftrag "+(r.ord||"–"),"abgeschlossen "+jvAgo(r.closedT||r.t),""))]);
  const SH={"Erinnerungen":"Erinnerungen","Offene Retourscheine":"Retourscheine","Weitere offene Defekte":"Defekte","Deine weiteren Defekte":"Defekte","Wieder einsatzbereit":"Repariert","Letzte Retouren":"Retouren"},sum=M.map(m=>(SH[m[0]]||m[0])+" "+m[1].length).join(" · ");
  const more=M.length?'<details class="jvcard jvmore" id="jvmore"'+(jvMoreOpen?' open':'')+'><summary><b>Mehr anzeigen</b><small>'+esc(sum)+'</small><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>'+M.map(m=>'<div class="jvlh">'+esc(m[0])+' · '+m[1].length+'</div>'+m[1].join("")).join("")+'</details>':'';
- const ps=typeof abgPrStrip==="function"?abgPrStrip():"";
+ const ps=(typeof abgPrStrip==="function"?abgPrStrip():"")+(typeof plStrip==="function"?plStrip():"");
  const wbn=typeof WBN!=="undefined"?WBN.filter(n=>!n.done).length:0;
  const wb='<button class="jvcard wbopen" type="button" id="jvwb"><span><b>Wochenbericht</b><small>Für die Besprechung, zum Drucken'+(wbn?' · '+wbn+(wbn===1?' Punkt':' Punkte')+' eingetragen':'')+'</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>';
  return{left:er+ps+tabs+more+wb,right:""}}
@@ -711,7 +745,7 @@ function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i
  return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
 function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+", "+d.toLocaleDateString("de-AT",{day:"numeric",month:"long",year:"numeric"})}
 setInterval(jvClock,1000);
-function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});document.querySelectorAll("[data-jt]").forEach(b=>b.onclick=()=>{jvTab=b.dataset.jt;jarvisView()});const mo=$("#jvmore");if(mo)mo.ontoggle=()=>{jvMoreOpen=mo.open};if(typeof abgJvBind==="function")abgJvBind();const wbb=$("#jvwb");if(wbb)wbb.onclick=()=>go("wb");if(typeof jvErinBind==="function")jvErinBind()}
+function jvBind(){document.querySelectorAll("[data-jp]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("packopen")});document.querySelectorAll("[data-jr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.jr;go("retopen")});document.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.jd;go("defopen")});document.querySelectorAll("[data-jt]").forEach(b=>b.onclick=()=>{jvTab=b.dataset.jt;jarvisView()});const mo=$("#jvmore");if(mo)mo.ontoggle=()=>{jvMoreOpen=mo.open};if(typeof abgJvBind==="function")abgJvBind();if(typeof plBind==="function")plBind();const wbb=$("#jvwb");if(wbb)wbb.onclick=()=>go("wb");if(typeof jvErinBind==="function")jvErinBind()}
 /* Sprache: beste deutsche Männerstimme des Geräts, ruhig und etwas tiefer; Satz für Satz gesprochen (natürliche Pausen) */
 const JV_MALE=/conrad|killian|florian|christoph|kasper|ralf|bernd|klaus|jonas|markus|martin|yannick|viktor|stefan|hans|thomas|männlich|male/i;
 const jvVK=v=>v.voiceURI||v.name;
@@ -733,6 +767,7 @@ const jvPick=a=>a[Math.floor(Math.random()*a.length)];
 const jvCap=s=>String(s).replace(/^./,c=>c.toUpperCase());
 function jvText(D){const S=jvStyle()==="sachlich"?jvTextSachlich(D):jvTextFrech(D),E=typeof jvErinDue==="function"?jvErinDue():[];
  const AP=typeof abgToCheck==="function"?abgToCheck():[];if(AP.length)S.splice(1,0,(AP.length===1?"Ein Auftrag wartet":AP.length+" Aufträge warten")+" auf deine Prüfung: "+jvList(AP.slice(0,3).map(x=>x.p?x.p.ev||x.p.ord:x.r.ev))+".");
+ const PU=typeof plUnread==="function"?plUnread():[];if(PU.length)S.splice(1,0,(PU.length===1?"Ein Projektleiter hat geantwortet":PU.length+" Antworten von Projektleitern")+": "+jvList([...new Set(PU.map(a=>a.ev||a.ord))].slice(0,3))+".");
  if(E.length)S.splice(1,0,(E.length===1?"Erinnerung: ":E.length+" Erinnerungen: ")+jvList(E.slice(0,3).map(x=>x.txt))+".");return S}
 function jvHiFrech(){const h=new Date().getHours(),n=String(meName()).split(" ")[0];
  const hi=jvPick(["Servus"+(n?" "+n:""),(h<11?"Guten Morgen":h<18?"Guten Tag":"Guten Abend")+(n?", "+n:"")]);
@@ -1016,21 +1051,21 @@ async function rXlPhotos(wb,r,ws,last){const f=r.fotos||[];if(!f.length||!ws)ret
    docs 'titel': {name, o (Reihenfolge), r:{Recht:true}}   docs 'rolle' (id = Benutzer-ID): {t: Titel-ID, x:{Extra-Rechte}}
    Rechte: def_/ret_/inf_ + s (sehen) b (bearbeiten) l (löschen); v_user, v_rights, v_app. Der Admin darf immer alles.
    Die Datenbank prüft dieselben Rechte (rechte.sql). */
-const RK=["jv_s","pk_s","pk_b","pk_l","mat_b","mat_l","def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","abg_p","v_user","v_rights","v_app"];
+const RK=["jv_s","au_s","au_b","pk_s","pk_b","pk_l","mat_b","mat_l","def_s","def_b","def_l","ret_s","ret_b","ret_l","inf_s","inf_b","inf_l","abg_p","v_user","v_rights","v_app"];
 const RMAT=[["mat_b","Abschließen / Wieder öffnen"],["mat_l","Löschen"]];
 const RAREA=[["def","Defekte","Alle Defekte, nicht nur die eigenen"],["ret","Retourscheine",""],["pk","Packlisten","Sehen = ansehen und herrichten"],["inf","Infos an das Lager",""]],RLVL=[["s","Sehen"],["b","Bearbeiten"],["l","Löschen"]];
 const rLv=(a,l,t)=>a==="pk"&&l==="b"?"Hochladen":t;
 const RVW=[["v_user","Benutzer freigeben/sperren"],["v_rights","Titel und Rechte"],["v_app","App-Verwaltung (inkl. Artikelliste)"]];
 let TIT={},ROL={},rkLast=null,rxOpen=new Set(),tOpen=new Set();
-function rSum(r){r=rNormR(r);const jv=r.jv_s?["Lager Übersicht"]:[];const mt=RMAT.filter(([k])=>r[k]).map(([,t])=>t.toLowerCase());const L=jv.concat(mt.length?["Materialliste: "+mt.join(", ")]:[]).concat(RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([x,t])=>rLv(a,x,t).toLowerCase());return l.length?n+": "+l.join(", "):""})).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(r.abg_p)L.push("Abgleich: prüfen");if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
-function rNormR(o){o=o||{};const r={};RK.forEach(k=>{if(o[k]===true)r[k]=true});["def","ret","inf","pk"].forEach(a=>{if(r[a+"_b"]||r[a+"_l"])r[a+"_s"]=true});return r}
+function rSum(r){r=rNormR(r);const jv=(r.jv_s?["Lager Übersicht"]:[]).concat(r.au_s?["Aufträge: "+(r.au_b?"sehen, antworten":"sehen")]:[]);const mt=RMAT.filter(([k])=>r[k]).map(([,t])=>t.toLowerCase());const L=jv.concat(mt.length?["Materialliste: "+mt.join(", ")]:[]).concat(RAREA.map(([a,n])=>{const l=RLVL.filter(([x])=>r[a+"_"+x]).map(([x,t])=>rLv(a,x,t).toLowerCase());return l.length?n+": "+l.join(", "):""})).filter(Boolean),v=RVW.filter(([k])=>r[k]).map(([,t])=>t);if(r.abg_p)L.push("Abgleich: prüfen");if(v.length)L.push("Verwaltung: "+v.join(", "));return L.length?L.join(" · "):"Nur Grundfunktionen"}
+function rNormR(o){o=o||{};const r={};RK.forEach(k=>{if(o[k]===true)r[k]=true});["def","ret","inf","pk","au"].forEach(a=>{if(r[a+"_b"]||r[a+"_l"])r[a+"_s"]=true});return r}
 function uRights(uid){const x=ROL[uid]||{},t=TIT[x.t]||{};return rNormR({...(t.r||{}),...Object.fromEntries(Object.entries(x.x||{}).filter(([,v])=>v===true))})}
 /* Solange die Datenbank-Änderung (rechte.sql) fehlt, gibt es keine Titel: dann gelten die alten Häkchen Werkstatt/Lager */
 const rightsReady=()=>Object.keys(TIT).length>0;
 /* Materialliste-Recht: solange noch kein Titel mat_* hat (Datenbank-Update fehlt), gilt wie früher Defekte-Bearbeiten fürs Abschließen */
 const matReady=()=>Object.values(TIT).some(t=>t.r&&(t.r.mat_b||t.r.mat_l))||Object.values(ROL).some(x=>x.x&&(x.x.mat_b||x.x.mat_l));
 function can(k){if(owner)return true;if(k.startsWith("mat_")&&!matReady())return k==="mat_b"&&can("def_b");if(!rightsReady()){if(k.startsWith("def_"))return k!=="def_l"&&!!werk[me];if(k.startsWith("ret_"))return !!lagr[me];return false}return !!uRights(me)[k]}
-function rightsSub(){packSub();if(typeof abgSub==="function")abgSub();if(typeof wbSub==="function")wbSub();if(typeof hoSub==="function")hoSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
+function rightsSub(){packSub();if(typeof abgSub==="function")abgSub();if(typeof wbSub==="function")wbSub();if(typeof hoSub==="function")hoSub();if(typeof plawSub==="function")plawSub();db.collection("titel").onSnapshot(s=>{TIT={};s.docs.forEach(d=>TIT[d.id]=d.data());rightsChanged()});db.collection("rolle").onSnapshot(s=>{ROL={};s.docs.forEach(d=>ROL[d.id]=d.data());rightsChanged()})}
 function rightsChanged(){const k=JSON.stringify(uRights(me));if(rkLast!==null&&k!==rkLast&&!owner)DBX.reloadAll();rkLast=k;draw();tabCheck()}
 const titList=()=>Object.keys(TIT).map(id=>({id,...TIT[id]})).sort((a,b)=>(a.o||0)-(b.o||0)||String(a.name).localeCompare(String(b.name),"de"));
 /* Retourschein: Knöpfe ohne Recht ausblenden */
@@ -1040,10 +1075,10 @@ function infoDelBtn(i){if(!can("inf_l")||$("#idel"))return;$("#app").insertAdjac
  $("#idel").onclick=()=>ask("Nachricht wirklich löschen?",async()=>{try{await db.doc("infos/"+i.id).delete();for(let k=0;k<(i.fn||0);k++){try{await db.doc("fotos/"+i.id+"-"+k).delete()}catch(e){}}view="info";hist=hist.filter(v=>v!=="infoopen");draw();toast("Nachricht gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
 /* Kästchen-Raster: cur = eigene Häkchen, inh = vom Titel geerbt (grau, nicht änderbar) */
 function rMx(cur,inh,attr){cur=cur||{};inh=inh||{};const cb=(k,l)=>{const i=!!inh[k],c=i||!!cur[k];return '<label class="rmc'+(i?' inh':'')+'"><input type="checkbox" '+attr+' data-k="'+k+'"'+(c?' checked':'')+(i?' disabled':'')+'><span>'+l+'</span></label>'};
- return '<div class="rmx"><div class="rmr"><div class="rmh"><b>Lager Übersicht</b><small>Lager Assistent mit Briefing (zeigt nur, was die Person sehen darf)</small></div><div class="rml">'+cb("jv_s","Sehen")+'</div></div><div class="rmr"><div class="rmh"><b>Materialliste</b><small>Erstellen und scannen darf jeder</small></div><div class="rml rmm">'+RMAT.map(([k,t])=>cb(k,t)).join("")+'</div></div>'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,rLv(a,l,t))).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Abgleich</b><small>Endretouren prüfen und als geprüft markieren (sieht „Zu prüfen“)</small></div><div class="rml">'+cb("abg_p","Prüfen")+'</div></div>'+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
+ return '<div class="rmx"><div class="rmr"><div class="rmh"><b>Lager Übersicht</b><small>Lager Assistent mit Briefing (zeigt nur, was die Person sehen darf)</small></div><div class="rml">'+cb("jv_s","Sehen")+'</div></div><div class="rmr"><div class="rmh"><b>Aufträge</b><small>„Meine Aufträge“: Lager-Stand aller Aufträge, eigene oben. Antworten = auf eigene Aufträge antworten (Projektleiter)</small></div><div class="rml">'+cb("au_s","Sehen")+cb("au_b","Antworten")+'</div></div><div class="rmr"><div class="rmh"><b>Materialliste</b><small>Erstellen und scannen darf jeder</small></div><div class="rml rmm">'+RMAT.map(([k,t])=>cb(k,t)).join("")+'</div></div>'+RAREA.map(([a,n,h])=>'<div class="rmr"><div class="rmh"><b>'+n+'</b>'+(h?'<small>'+h+'</small>':'')+'</div><div class="rml">'+RLVL.map(([l,t])=>cb(a+"_"+l,rLv(a,l,t))).join("")+'</div></div>').join("")+'<div class="rmr"><div class="rmh"><b>Abgleich</b><small>Endretouren prüfen und als geprüft markieren (sieht „Zu prüfen“)</small></div><div class="rml">'+cb("abg_p","Prüfen")+'</div></div>'+'<div class="rmr"><div class="rmh"><b>Verwaltung</b></div><div class="rml rmv">'+RVW.map(([k,t])=>cb(k,t)).join("")+'</div></div></div>'}
 /* Häkchen lesen + Regeln: Bearbeiten/Löschen schließt Sehen ein, ohne Sehen kein Bearbeiten/Löschen */
 function rMxRead(box,changed){const g=k=>box.querySelector('[data-k="'+k+'"]');const k=changed&&changed.dataset.k;
- if(k){const [a,l]=k.split("_");if(["def","ret","inf","pk"].includes(a)){if((l==="b"||l==="l")&&changed.checked){const s=g(a+"_s");if(s&&!s.disabled)s.checked=true}if(l==="s"&&!changed.checked)["b","l"].forEach(x=>{const e=g(a+"_"+x);if(e&&!e.disabled)e.checked=false})}}
+ if(k){const [a,l]=k.split("_");if(["def","ret","inf","pk","au"].includes(a)){if((l==="b"||l==="l")&&changed.checked){const s=g(a+"_s");if(s&&!s.disabled)s.checked=true}if(l==="s"&&!changed.checked)["b","l"].forEach(x=>{const e=g(a+"_"+x);if(e&&!e.disabled)e.checked=false})}}
  const o={};box.querySelectorAll("[data-k]").forEach(c=>{if(c.checked&&!c.disabled)o[c.dataset.k]=true});return o}
 function tDlg(title,val,ok){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>'+esc(title)+'</b><div style="height:8px"></div><input id="tdn" maxlength="40" autocomplete="off"><div class="row"><button class="btn ghost" id="tdc">Abbrechen</button><button class="btn" id="tdo">Speichern</button></div></div>';
  document.body.appendChild(o);const i=o.querySelector("#tdn");i.value=val||"";o.querySelector("#tdc").onclick=()=>o.remove();o.querySelector("#tdo").onclick=()=>{const v=i.value.trim().replace(/\s+/g," ");if(!v){i.classList.add("bad");return}o.remove();ok(v)};setTimeout(()=>i.focus(),60)}
@@ -2068,16 +2103,16 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
 function jvAsk(q){q=String(q||"").trim();if(!q)return;jvStop();let A;try{A=jvAnswer(q)}catch(e){console.error(e);A={say:["Da ist bei mir etwas schiefgegangen. Bitte nochmal versuchen."]}}
  jvFin(A,q);const inp=$("#jvaq");if(inp)inp.value="";jvMs("");if(view==="jarvis")jvShow(A,!A.quiet);else jvLast=A}
 /* Zähler auf der Kachel „Lager Übersicht“: überfällige Retouren + dringende Defekte + fällige Erinnerungen */
-function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length;if(typeof abgToCheck==="function")n+=abgToCheck().length}catch(e){}return n?String(n):""}
+function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length;if(typeof abgToCheck==="function")n+=abgToCheck().length;if(typeof plUnread==="function")n+=plUnread().length}catch(e){}return n?String(n):""}
 
 /* ===== Hauptseite sortieren (ab 1.75) =====
    Reihenfolge der Kacheln: eigene Reihenfolge (docs „hord“, id = Benutzer) → Vorgabe vom Titel (titel.ho) → Vorschlag nach Titelname.
    Kacheln ohne Recht bleiben ausgeblendet, die Reihenfolge ändert daran nichts. */
-const HO_ALL=["jarvis","pack","ret","infonew","defnew","new"];
-const HO_NAME={jarvis:"Lager Übersicht",pack:"Packlisten",ret:"Retourschein",infonew:"Info an das Lager",defnew:"Defekt melden",new:"Material vor Ort erfassen"};
-const HO_DEF={L:["jarvis","pack","ret","infonew","defnew","new"],M:["new","defnew","infonew","jarvis","pack","ret"],W:["defnew","infonew","jarvis","new","pack","ret"]};
+const HO_ALL=["jarvis","au","pack","ret","infonew","defnew","new"];
+const HO_NAME={jarvis:"Lager Übersicht",au:"Meine Aufträge",pack:"Packlisten",ret:"Retourschein",infonew:"Info an das Lager",defnew:"Defekt melden",new:"Material vor Ort erfassen"};
+const HO_DEF={L:["jarvis","pack","ret","infonew","defnew","new"],M:["au","new","defnew","infonew","jarvis","pack","ret"],W:["defnew","infonew","jarvis","new","pack","ret","au"]};
 function hoDefFor(t){const n=String(t&&t.name||"").toLowerCase();return /werkstatt/.test(n)?HO_DEF.W:/monteur|projektleit/.test(n)?HO_DEF.M:HO_DEF.L}
-function hoFix(a){const o=(Array.isArray(a)?a:[]).filter((k,i,A)=>HO_ALL.includes(k)&&A.indexOf(k)===i);HO_ALL.forEach(k=>{if(!o.includes(k))o.push(k)});return o}
+function hoFix(a){const o=(Array.isArray(a)?a:[]).filter((k,i,A)=>HO_ALL.includes(k)&&A.indexOf(k)===i);HO_ALL.forEach((k,i)=>{if(!o.includes(k))o.splice(Math.min(i,o.length),0,k)});return o}
 const hoTit=id=>(typeof TIT!=="undefined"&&id&&TIT[id])||null;
 function hoTitle(id){const t=hoTit(id);return hoFix(t&&Array.isArray(t.ho)?t.ho:hoDefFor(t))}
 let HORD={},hoOn=false;
@@ -2152,9 +2187,9 @@ function abgMlHit(fromP,toP,e){/* Materialliste „geht weiter“ von toP-Verans
 /* Wo fehlt derselbe Artikel? (für „zu viel“ bei Auftrag A) */
 function abgCands(A,e,need){const out=[];packs.forEach(p=>{if(p.id===A.id)return;const k=(packh[p.id]||{}).klar;if(k&&k.t)return;
   const B=abgBal(p),m=B.miss.find(x=>x.k===e.k);if(!m)return;const fehlt=m.soll-m.back,why=[];
-  if(fehlt===need)why.push("Menge passt genau");if(abgOverlap(A,p))why.push("Dispo zur selben Zeit");if(p.pl&&A.pl&&jvNorm(p.pl)===jvNorm(A.pl))why.push("gleicher Projektleiter");if(abgMlHit(A,p,e))why.push("Materialliste „geht weiter“");
-  out.push({p,fehlt,why,over:pkState(p).k==="over",end:B.hasEnd})});
- return out.sort((a,b)=>b.why.length-a.why.length||(b.over-a.over)||(b.end-a.end)||((a.p.de||0)-(b.p.de||0)))}
+  if(fehlt===need)why.push("Menge passt genau");if(abgOverlap(A,p))why.push("Dispo zur selben Zeit");if(p.pl&&A.pl&&jvNorm(p.pl)===jvNorm(A.pl))why.push("gleicher Projektleiter");if(abgMlHit(A,p,e))why.push("Materialliste „geht weiter“");const pl=typeof plSays==="function"&&plSays(p,A,e.k);if(pl)why.unshift("Projektleiter sagt: ist dort");
+  out.push({p,fehlt,why,pl,over:pkState(p).k==="over",end:B.hasEnd})});
+ return out.sort((a,b)=>(b.pl-a.pl)||b.why.length-a.why.length||(b.over-a.over)||(b.end-a.end)||((a.p.de||0)-(b.p.de||0)))}
 /* Wo kam derselbe Artikel zu viel zurück? (für „fehlt“ bei Auftrag B) */
 function abgMoreElse(B0,e){const out=[];packs.forEach(p=>{if(p.id===B0.id)return;const m=abgBal(p).more.find(x=>x.k===e.k);if(m)out.push({p,q:m.back-m.soll-m.fr-m.l55})});return out.sort((a,b)=>b.q-a.q)}
 /* ---------- Listen über alle Aufträge ---------- */
@@ -2224,13 +2259,13 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
  const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr+e.l55?1:2;
  const arts='<section class="abgcard"><div class="abglh" style="display:flex"><b style="flex:1">Artikel</b><small class="mute">raus · zurück</small></div>'+B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).map(e=>{
   const f=e.soll-e.back,z=e.back-e.soll-e.fr-e.l55,tag=f>0?abgTag("fehlt "+f,"red"):z>0?abgTag(z+" zu viel","or"):!e.soll&&e.l55&&!e.back?abgTag("Lager 55","grey"):abgTag("passt ✓","ok"),sub=[];
-  if(f>0){const h=abgMoreElse(p,e)[0];if(h)sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>Vorschlag: bei '+esc(h.p.ev||h.p.ord)+' kamen '+h.q+' zu viel zurück</span><b>Klären ›</b></button>')}
+  if(f>0&&typeof plAbgLine==="function")sub.push(plAbgLine(p,e));if(f>0){const h=abgMoreElse(p,e)[0];if(h)sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>Vorschlag: bei '+esc(h.p.ev||h.p.ord)+' kamen '+h.q+' zu viel zurück</span><b>Klären ›</b></button>')}
   if(z>0){const c=abgCands(p,e,z)[0];sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>'+(c?'Vorschlag: fehlen bei '+esc(c.p.ev||c.p.ord):'Kein Vorschlag – fehlt derzeit nirgends')+'</span><b>Klären ›</b></button>')}
   if(e.fr)sub.push('<small class="mute">+ '+pkNum(e.fr)+' Fremdmiete – zählen hier nicht</small>');
   if(e.l55)sub.push('<small class="mute">+ '+pkNum(e.l55)+' über Lager 55 – zählen hier nicht</small>');if(e.via55)sub.push('<small class="mute">'+e.via55+' kam über uns statt Lager 55 zurück</small>');
   if(e.zin)sub.push('<small class="mute">'+e.zin+' von anderem Auftrag zugeordnet</small>');if(e.zout)sub.push('<small class="mute">'+e.zout+' an anderen Auftrag zugeordnet</small>');
   return '<div class="abgart"><div class="abgar"><b>'+esc(e.name)+'</b><span>'+pkNum(e.soll)+' · '+pkNum(e.back)+'</span>'+tag+'</div>'+sub.join("")+'</div>'}).join("")+'</section>';
- $("#app").innerHTML=chk+head+verl+arts+'<div class="abgbtns"><button class="btn ghost" id="abgxl" type="button">Abgleich als Excel</button>'+
+ $("#app").innerHTML=chk+head+(typeof plAbgMsgs==="function"?plAbgMsgs(p):"")+verl+arts+'<div class="abgbtns"><button class="btn ghost" id="abgxl" type="button">Abgleich als Excel</button>'+
   (B.fehlt||B.zuviel?'<button class="btn" id="abgask" type="button">Nachfrage an '+esc(shortName(p.pl)||"Projektleiter")+'</button>':'')+
   (kl?'<button class="btn ghost" id="abgkl0" type="button">„Geklärt“ zurücknehmen</button>':'<button class="btn ghost" id="abgkl" type="button">Mit Projektleiter geklärt</button>')+
   '<button class="btn ghost" id="abgpk" type="button">Packliste öffnen</button></div>';
@@ -2476,6 +2511,140 @@ async function wbPdfOut(D,mode){const b=$("#wbpr"),old=b?b.textContent:"";if(b){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fn;document.body.appendChild(a);a.click();a.remove()}
  catch(e){if(e&&(e.name==="AbortError"||e.code==="declined"))return;console.error(e);errBox("Das PDF konnte nicht erstellt werden. Bitte Internetverbindung prüfen und nochmal versuchen.")}
  finally{if(b){b.disabled=false;b.textContent=old}}}
+
+/* ===== Meine Aufträge (ab 1.85) – Lager-Stand für Projektleiter =====
+   Recht au_s = Aufträge sehen (alle, eigene oben), au_b = auf eigene Aufträge antworten.
+   Eigene = Projektleiter in der Packliste ist man selbst (Name aus dem Profil, Reihenfolge/Groß-Klein/Akzente egal).
+   Antworten an das Lager: docs „plaw“ {pk, ord, ev, k, name, n, typ, to, toEv, toOrd, bis, txt, by, t, read:{by,t}}
+   typ: anders (auf anderer Baustelle → to), bau (noch auf der Baustelle, bis), kunde (bleibt beim Kunden), zur (schon zurück), weiss (kläre ich), msg (freie Nachricht).
+   Die App ändert nichts selbst – Antworten sind nur Infos; „anders“ erscheint beim Lager als Vorschlag bei „Zu viel zurück“. */
+let PLAW=[],plawOn=false,auf="lauf",auq="",curAu=null;
+function plawSub(){if(plawOn)return;plawOn=true;try{db.collection("plaw").onSnapshot(s=>{PLAW=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.t||0)-(a.t||0));draw()})}catch(e){console.warn(e)}}
+const AU_ICON='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="M9 11l2 2 4-4"/><path d="M9 17h6"/></svg>';
+/* ---------- eigene Aufträge ---------- */
+const auToks=s=>jvNorm(String(s||"")).split(" ").filter(w=>w.length>1);
+function auMyName(){return (tabOn()&&TAB.act?TAB.act.name:(names[me]||""))||""}
+function auIsMine(p){const u=auToks(auMyName()),l=auToks(p&&p.pl);if(!u.length||!l.length)return false;
+ if(u.length===1)return l.length===1&&l[0]===u[0];return u.every(w=>l.includes(w))}
+/* ---------- Stand eines Auftrags ---------- */
+function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.klar&&H.klar.t),t0=pkDay(Date.now()),over=st.k==="over",late=st.k==="late";
+ const missShow=(B.hasEnd||over)&&!kl&&B.fehlt>0;const done=kl||(B.hasEnd&&!B.fehlt);
+ const out=B.R.length>0||(g.fin&&p.db&&pkDay(p.db)<=t0);
+ const S=[{c:"d"},{c:g.fin?(g.dev?"w":"d"):g.d?"n":late?"r":""},{c:over?"r":out||B.R.length?"d":""},{c:B.hasEnd?(B.fehlt&&!kl?"r":"d"):B.R.length?"n":""},{c:done?"d":""}];
+ let lab,cls;
+ if(done){lab=kl?"Geklärt":"Erledigt ✓";cls="ok"}
+ else if(over&&!B.hasEnd){lab="Überfällig";cls="red"}
+ else if(missShow){lab="Fehlt "+B.fehlt;cls="red"}
+ else if(late){lab="Nicht hergerichtet";cls="red"}
+ else if(B.R.length){lab=B.R.some(r=>r.closed&&r.art==="teil")?"Teilretoure":"Retoure läuft";cls="b"}
+ else if(g.fin&&out){lab="Draußen";cls="b"}
+ else if(g.fin){lab="Hergerichtet";cls="b"}
+ else if(g.d){lab=g.d+" / "+g.n;cls="b"}
+ else{lab=st.k==="herr"?"Heute herrichten":"Kommt "+pkDM(pkHDay(p));cls="g"}
+ const hot=!done&&(missShow||over||late);
+ return{p,g,st,B,kl,done,over,late,missShow,S,lab,cls,hot}}
+const auAns=(p,k)=>PLAW.filter(a=>a.pk===p.id&&a.k===k&&a.typ!=="msg");
+const auAnsTxt=a=>{const T={anders:"Ist auf einer anderen Baustelle: "+(a.toEv||"")+(a.toOrd?" ("+a.toOrd+")":""),bau:"Ist noch auf der Baustelle"+(a.bis?", kommt bis "+pkWd(pkFromYmd(a.bis)):""),kunde:"Bleibt beim Kunden",zur:"Ist schon zurück – bitte nachzählen",weiss:"Weiß ich nicht / kläre ich",msg:"Nachricht"};
+ return (T[a.typ]||"")+(a.txt?(a.typ==="msg"?": ":" – ")+"„"+a.txt+"“":"")};
+const auStepL='<div class="aul"><span>Packliste</span><span>Herrichten</span><span>Draußen</span><span>Retouren</span><span>Erledigt</span></div>';
+function auCard(I){const p=I.p,mine=auIsMine(p),pills=[];
+ if(I.missShow)pills.push(abgTag(I.B.hasEnd?"Endretoure – "+I.B.fehlt+(I.B.fehlt===1?" Stück fehlt":" Stück fehlen"):I.B.fehlt+" Stück noch draußen","red"));
+ if(I.missShow&&mine&&I.B.miss.some(e=>!auAns(p,e.k).length))pills.push(abgTag("Noch nicht beantwortet","or"));
+ if(I.g.dev&&!I.done)pills.push(abgTag("Herrichten: "+I.g.dev+(I.g.dev===1?" Abweichung":" Abweichungen"),"or"));
+ if(I.B.zuviel&&!I.done)pills.push(abgTag(I.B.zuviel+" mehr zurück","grey"));
+ const sub=I.over?"Dispo-Ende war "+pkDM(p.de):I.done?"Dispo "+pkDM(p.db)+" – "+pkDM(p.de):I.st.k==="herr"?"Herrichten heute":"Dispo "+pkDM(p.db)+" – "+pkDM(p.de);
+ return '<button class="aucard'+(mine?' mine':'')+(I.hot?' hot':'')+'" type="button" data-au="'+esc(p.id)+'"><span class="auct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+abgTag(I.lab,I.cls==="b"?"blue":I.cls==="g"?"grey":I.cls)+'</span>'+
+  '<small class="mute">Auftrag '+esc(p.ord||"–")+(!mine&&p.pl?' · '+esc(shortName(p.pl)):'')+' · '+sub+'</small>'+
+  '<span class="aus">'+I.S.map(s=>'<i class="'+s.c+'"></i>').join("")+'</span>'+auStepL+(pills.length?'<span class="aupills">'+pills.join("")+'</span>':'')+'</button>'}
+function auList(){const t0=pkDay(Date.now()),q=jvNorm(auq);
+ const A=packs.map(auInfo).filter(I=>(auf==="alle"||(auf==="done")===I.done)&&(!q||jvNorm((I.p.ev||"")+" "+(I.p.ord||"")+" "+(I.p.pl||"")).includes(q)));
+ const srt=(a,b)=>(b.hot-a.hot)||(auf==="done"?(b.p.de||0)-(a.p.de||0):(a.done-b.done)||((pkHDay(a.p)||a.p.db||0)-(pkHDay(b.p)||b.p.db||0)));
+ return{mine:A.filter(I=>auIsMine(I.p)).sort(srt),rest:A.filter(I=>!auIsMine(I.p)).sort(srt)}}
+function auView(){if(!can("au_s")){view="start";return startView()}$("#t").textContent="Meine Aufträge";const L=auList(),nm0=shortName(auMyName());
+ const empty=auf==="done"?"Keine erledigten Aufträge.":auf==="lauf"?"Keine laufenden Aufträge.":"Noch keine Aufträge.";
+ const noMine=!L.mine.length&&!packs.some(auIsMine);
+ $("#app").innerHTML=chips([["lauf","Laufend"],["done","Erledigt"],["alle","Alle"]],auf,"data-auf")+
+  '<input id="auq" type="search" placeholder="Suchen: Veranstaltung, Auftrag, Projektleiter" autocomplete="off" style="margin:0 0 10px">'+
+  '<div class="aug"><b>Meine Aufträge</b><small>'+L.mine.length+'</small></div>'+
+  (L.mine.length?L.mine.map(auCard).join(""):'<div class="card mute" style="font-size:14px">'+(noMine?'Keine Packliste mit '+(nm0?'„'+esc(nm0)+'“':'deinem Namen')+' als Projektleiter.':empty)+'</div>')+
+  '<div class="audiv"></div><div class="aug"><b>Alle anderen Aufträge</b><small>'+L.rest.length+'</small></div>'+
+  (L.rest.length?L.rest.map(auCard).join(""):'<div class="card mute" style="font-size:14px">'+empty+'</div>')+
+  '<p class="mute" style="font-size:12px;margin:12px 2px 0;line-height:1.4">Eigene Aufträge: Projektleiter in der Packliste = dein Name. Erledigt = Endretoure ohne Fehlmaterial oder mit dem Projektleiter geklärt.</p>';
+ const qi=$("#auq");qi.value=auq;qi.oninput=()=>{auq=qi.value;const pos=qi.selectionStart;auView();const n=$("#auq");n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}};
+ document.querySelectorAll("[data-auf]").forEach(b=>b.onclick=()=>{auf=b.dataset.auf;auView()});
+ document.querySelectorAll("[data-au]").forEach(b=>b.onclick=()=>{curAu=b.dataset.au;go("auopen")})}
+/* ---------- ein Auftrag ---------- */
+function auDevLines(p){const H=pkH(p),K=pkKeys(p),L=[];pkPosAll(p).forEach((x,i)=>{const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x);
+ if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+" – fehlen "+pkNum(st.need-st.q));
+ (st.s!=="open"?st.alt:[]).forEach(a=>L.push(n+": stattdessen "+pkNum(a.n)+"× "+a.t));
+ if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" aus dem Lager statt Fremdmiete")});return L}
+function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){view="au";return auView()}
+ $("#t").textContent=p.ev||"Auftrag";const I=auInfo(p),B=I.B,H=pkH(p),mine=auIsMine(p),act=mine&&can("au_b"),g=I.g,fr=pkF(p).length;
+ const te=(c,t,s)=>'<div class="aute"><span class="audot '+c+'">'+(c==="d"?"✓":c==="r"||c==="w"?"!":"")+'</span><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+'</span></div>';
+ const dev=auDevLines(p),hd=pkHd(p);
+ const herr=g.fin?te(g.dev?"w":"d","Hergerichtet",fmt(H.fin.t).slice(0,6)+' von '+esc(nmA(H.fin,"by"))+(dev.length?'<span class="audev">'+dev.map(esc).join("<br>")+'</span>':'')):
+  g.d?te("n","Wird hergerichtet",g.d+" von "+g.n+" Positionen"):I.late?te("r","Noch nicht hergerichtet","geplant war "+pkWd(pkHDay(p))):te("","Herrichten","geplant "+pkWd(pkHDay(p))+(hd&&hd.why?" – "+esc(hd.why):""));
+ const outT=I.over?te("r","Überfällig","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Draußen","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Draußen","ab "+pkWd(p.db));
+ const R=B.R.slice().sort((a,b)=>(abgRetT(a)||0)-(abgRetT(b)||0));
+ const retT=R.length?R.map(r=>te(r.closed?(r.art==="teil"?"d":(B.fehlt&&!I.kl?"r":"d")):"n",abgRetLbl(r),fmt(abgRetT(r)).slice(0,6)+" · "+abgRetN(r)+" Stück"+(r.closed&&r.art!=="teil"?" · "+(B.fehlt?B.fehlt+" fehlen noch":"alles da"):""))).join(""):te("","Retouren","noch nichts zurück");
+ const doneT=I.kl?te("d","Mit Projektleiter geklärt",fmt(H.klar.t).slice(0,6)+" · "+esc(nmA(H.klar,"by"))):I.done?te("d","Erledigt","alles zurück"):te("","Erledigt","wenn alles zurück oder geklärt ist");
+ const tl='<section class="card aucd"><b class="ausec">Wie weit ist das Lager?</b><div class="autl">'+te("d","Packliste da",(p.t?fmt(p.t).slice(0,6)+" · ":"")+pkPosN(pkPosAll(p).length)+(fr?", davon "+fr+" mit Fremdmiete":"")+((p.zus||[]).length?" · "+(p.zus.length===1?"1 Zusatz":p.zus.length+" Zusätze"):""))+herr+outT+retT+doneT+'</div></section>';
+ const ansH=a=>'<div class="auans"><b>'+(a.by===me?'Deine Antwort':esc(nmA(a,"by")))+'</b> · '+fmt(a.t).slice(0,6)+'<br>'+esc(auAnsTxt(a))+(a.read&&a.read.t?'<small>Gelesen von '+esc(nmA(a.read,"by"))+'</small>':'<small>Noch nicht gelesen</small>')+'</div>';
+ const miss=I.missShow?'<section class="card aucd red"><b class="ausec red">Fehlt noch</b>'+B.miss.map((e,i)=>{const a=auAns(p,e.k)[0];return '<div class="aurow"><b class="auq">'+(e.soll-e.back)+'×</b><span class="aun">'+esc(e.name)+'</span>'+(act?'<button class="btn ghost s auab" type="button" data-aua="'+i+'">'+(a?'Ändern':'Antworten')+'</button>':'')+'</div>'+(a?ansH(a):'')}).join("")+'</section>':
+  (B.miss.length&&B.R.length&&!I.done?'<section class="card aucd"><b class="ausec">Noch draußen</b><small class="mute">Teilretoure – das kommt laut Packliste noch zurück.</small>'+B.miss.map(e=>'<div class="aurow"><b class="auq m">'+(e.soll-e.back)+'×</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'');
+ const more=B.more.length&&!I.done?'<section class="card aucd"><b class="ausec">Mehr zurück als geplant</b>'+B.more.map(e=>'<div class="aurow"><b class="auq m">+'+(e.back-e.soll-e.fr-e.l55)+'</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'';
+ const M=PLAW.filter(a=>a.pk===p.id&&a.typ==="msg");
+ const msgs=M.length?'<section class="card aucd"><b class="ausec">Nachrichten ans Lager</b>'+M.map(ansH).join("")+'</section>':'';
+ const H2=pkH(p),K=pkKeys(p);
+ const mat='<details class="card aucd aumat"><summary><b>Material</b><small>'+pkPosN(pkPosAll(p).length)+'</small></summary>'+pkPosAll(p).map((x,i)=>{const h=H2[K[i]],st=pkPS(x,h),l55=pkL55(x,h);
+  return '<div class="aurow"><b class="auq m">'+pkNum(x.n)+'</b><span class="aun">'+esc(pkName(x))+(x.f>0&&!(h&&h.fm==="lager")?' <small class="red">davon '+pkNum(x.f)+' Fremdmiete</small>':'')+'</span><span class="aust">'+(l55?'Lager 55':st.s==="open"?'':st.s==="part"?'<span class="or">'+pkNum(st.q)+' da</span>':'✓')+'</span></div>'}).join("")+'</details>';
+ $("#app").innerHTML='<section class="card aucd"><div class="aukv"><span>Auftrag</span><b>'+esc(p.ord||"–")+'</b><span>Projektleiter</span><b>'+esc(shortName(p.pl)||"–")+(mine?' <small class="mute">(du)</small>':'')+'</b><span>Dispo</span><b>'+pkD(p.db)+' – '+pkD(p.de)+'</b>'+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+'</div></section>'+
+  tl+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+mat+
+  (!mine?'<p class="mute" style="font-size:12px;margin:8px 2px">Antworten kann nur der Projektleiter dieses Auftrags.</p>':'');
+ document.querySelectorAll("[data-aua]").forEach(b=>b.onclick=()=>auAnsDlg(p,B.miss[+b.dataset.aua]));
+ if($("#aumsg"))$("#aumsg").onclick=()=>auMsgDlg(p)}
+/* ---------- Antworten ---------- */
+async function auSave(o,msg){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+ return rSave(()=>db.doc("plaw/"+id).set({...o,by:me,...tabAs("by"),...tabAs("by"),t:Date.now()}),msg)}
+function auAnsDlg(p,e){if(!e)return;const n=e.soll-e.back,o=document.createElement("div");o.className="ov";let typ=null,to=null;
+ const O=[["anders","Ist auf einer anderen Baustelle","Auftrag wählen"],["bau","Ist noch auf der Baustelle","kommt bis: Datum (optional)"],["kunde","Bleibt beim Kunden","z. B. Miete verlängert, Verkauf"],["zur","Ist schon zurück","Lager soll nachzählen"],["weiss","Weiß ich nicht / kläre ich",""]];
+ o.innerHTML='<div class="card audlg"><b style="font-size:17px">'+n+'× '+esc(e.name)+'</b><div class="mute">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</div>'+
+  O.map(([k,t,s])=>'<button class="auopt" type="button" data-ao="'+k+'"><i></i><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+(k==="anders"?'<small class="auto" id="auto"></small>':'')+(k==="bau"?'<input type="date" id="aubis" hidden>':'')+'</span></button>').join("")+
+  '<textarea id="autx" placeholder="Notiz (optional)" style="min-height:60px;margin-top:6px"></textarea><div class="row" style="margin-top:8px"><button class="btn ghost" id="aux" type="button">Abbrechen</button><button class="btn" id="auok" type="button" disabled>Antwort ans Lager schicken</button></div></div>';
+ document.body.appendChild(o);const ok=o.querySelector("#auok"),bis=o.querySelector("#aubis"),tl=o.querySelector("#auto");
+ const sel=k=>{typ=k;o.querySelectorAll("[data-ao]").forEach(x=>x.classList.toggle("on",x.dataset.ao===k));bis.hidden=k!=="bau";ok.disabled=k==="anders"&&!to;
+  if(k==="anders"&&!to)abgPickPack(p,c=>{to=c;tl.textContent=(c.ev||"–")+" ("+(c.ord||"–")+") – ändern";ok.disabled=false})};
+ o.querySelectorAll("[data-ao]").forEach(b=>b.onclick=ev=>{if(ev.target===bis)return;if(b.dataset.ao==="anders"&&typ==="anders"&&to){to=null;tl.textContent="";}sel(b.dataset.ao)});
+ o.querySelector("#aux").onclick=()=>o.remove();
+ ok.onclick=()=>{if(!typ)return;const d={pk:p.id,ord:p.ord||"",ev:p.ev||"",k:e.k,name:e.name,n,typ,txt:o.querySelector("#autx").value.trim()};
+  if(typ==="anders"&&to){d.to=to.id;d.toEv=to.ev||"";d.toOrd=to.ord||""}if(typ==="bau"&&bis.value)d.bis=bis.value;o.remove();auSave(d,"Antwort ans Lager geschickt")}}
+function auMsgDlg(p){const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card audlg"><b style="font-size:17px">Nachricht ans Lager</b><div class="mute">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</div><textarea id="aumt" placeholder="z. B. Abbau verschiebt sich auf Montag" style="min-height:110px;margin-top:8px"></textarea><div class="row" style="margin-top:8px"><button class="btn ghost" id="aux" type="button">Abbrechen</button><button class="btn" id="auok" type="button">Senden</button></div></div>';
+ document.body.appendChild(o);const t=o.querySelector("#aumt");o.querySelector("#aux").onclick=()=>o.remove();
+ o.querySelector("#auok").onclick=()=>{const v=t.value.trim();if(!v){t.classList.add("bad");return}o.remove();auSave({pk:p.id,ord:p.ord||"",ev:p.ev||"",typ:"msg",txt:v},"Nachricht ans Lager geschickt")};setTimeout(()=>t.focus(),60)}
+/* ---------- Lager-Seite ---------- */
+const plIn=()=>can("pk_s");
+const plUnread=()=>plIn()?PLAW.filter(a=>!(a.read&&a.read.t)):[];
+function plStrip(){const U=plUnread();if(!U.length)return"";const nm=[...new Set(U.map(a=>a.ev||a.ord))].slice(0,2).join(", ");
+ return '<button class="abgstrip" type="button" id="plstrip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span><b>'+(U.length===1?'1 Antwort':U.length+' Antworten')+' von Projektleitern</b><br><small class="mute">'+esc(nm)+'</small></span><b>›</b></button>'}
+function plBind(){const s=$("#plstrip");if(s)s.onclick=()=>go("plin")}
+function plCard(a){const p=packs.find(x=>x.id===a.pk);
+ return '<section class="card aucd'+(a.read&&a.read.t?'':' unread')+'"><div class="auct"><b>'+esc(a.ev||(p&&p.ev)||"–")+'</b><small class="mute">'+esc(nmA(a,"by"))+' · '+fmt(a.t)+'</small></div><small class="mute">Auftrag '+esc(a.ord||"–")+'</small>'+
+  (a.typ!=="msg"?'<div class="aurow"><b class="auq">'+(a.n||"")+'×</b><span class="aun">'+esc(a.name||"")+'</span></div>':'')+'<div class="auans">'+esc(auAnsTxt(a))+(a.read&&a.read.t?'<small>Gelesen von '+esc(nmA(a.read,"by"))+', '+fmt(a.read.t).slice(0,6)+'</small>':'')+'</div>'+
+  '<div class="abg2">'+(p?'<button class="btn ghost s" type="button" data-plv="'+esc(a.id)+'">Ansehen</button>':'')+(a.read&&a.read.t?'':'<button class="btn s" type="button" data-plr="'+esc(a.id)+'">Gelesen</button>')+'</div></section>'}
+function plInView(){if(!plIn()){view="start";return startView()}$("#t").textContent="Antworten von Projektleitern";const U=PLAW.filter(a=>!(a.read&&a.read.t)),R=PLAW.filter(a=>a.read&&a.read.t).slice(0,20);
+ $("#app").innerHTML='<p class="mute" style="margin:0 0 10px;line-height:1.45">Projektleiter antworten in „Meine Aufträge“ auf Fehlmaterial oder schreiben eine Nachricht. Die App ändert dabei nichts – zugeordnet oder geklärt wird weiter von euch.</p>'+
+  (U.length?U.map(plCard).join(""):'<div class="card mute">Keine neuen Antworten.</div>')+(R.length?'<details class="abgcard abgmore"><summary><b>Gelesen</b><small>'+R.length+'</small></summary>'+R.map(plCard).join("")+'</details>':'');
+ document.querySelectorAll("[data-plr]").forEach(b=>b.onclick=()=>rSave(()=>db.doc("plaw/"+b.dataset.plr).update({read:{by:me,...tabAs("by"),...tabAs("by"),t:Date.now()}}),"Als gelesen markiert"));
+ document.querySelectorAll("[data-plv]").forEach(b=>b.onclick=()=>{const a=PLAW.find(x=>x.id===b.dataset.plv);curPack=a.pk;go(abgOk()?"pkabg":"packopen")})}
+/* Antwort im Auftragskonto (abg.js) beim Artikel */
+function plAbgLine(p,e){const a=auAns(p,e.k)[0];return a?'<div class="auans s"><b>'+esc(nmA(a,"by"))+'</b>, '+fmt(a.t).slice(0,6)+': '+esc(auAnsTxt(a))+'</div>':''}
+function plAbgMsgs(p){const M=PLAW.filter(a=>a.pk===p.id&&a.typ==="msg");return M.length?'<section class="abgcard"><b class="abglh">Nachrichten vom Projektleiter</b>'+M.map(a=>'<div class="auans s"><b>'+esc(nmA(a,"by"))+'</b>, '+fmt(a.t).slice(0,6)+': '+esc(a.txt||"")+'</div>').join("")+'</section>':''}
+/* Projektleiter sagt: „ist auf Baustelle A“ – Vorschlag bei „Zu viel zurück“ von A */
+const plSays=(fromP,toP,k)=>PLAW.some(a=>a.typ==="anders"&&a.pk===fromP.id&&a.to===toP.id&&a.k===k);
+/* Kachel auf der Hauptseite */
+function auSubT(){const M=packs.filter(auIsMine).map(auInfo).filter(I=>!I.done);return M.length?M.length+(M.length===1?" eigener Auftrag läuft":" eigene Aufträge laufen"):"Lager-Stand deiner Aufträge"}
+function auHot(){const n=packs.filter(auIsMine).map(auInfo).filter(I=>I.hot).length;return n?String(n):""}
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -2506,6 +2675,9 @@ function draw(){if(!db)return;document.body.classList.toggle("jvon",view==="jarv
  if(view.startsWith("ret")){const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&$("#app").contains(ae))return;return retDraw()}
  if(view==="jarvis"&&can("jv_s"))return jarvisView();
  if(view==="jarvis"){view="start";hist=[]}
+ if(view==="au"&&can("au_s"))return auView();
+ if(view==="auopen"&&can("au_s"))return auOpenView();
+ if(view==="plin"&&can("pk_s"))return plInView();
  if(view==="wb"&&can("jv_s"))return wbView();
  if(view==="pkabg"&&can("pk_s")&&can("ret_s"))return pkAbgView();
  if(view==="abgzv"&&can("pk_s")&&can("ret_s"))return abgZvView();
@@ -2670,7 +2842,7 @@ function back(){try{document.activeElement.blur()}catch(e){}stop();let v;do{v=hi
 function startView(){$("#t").textContent="Hauptseite";
  const od=vdefs().filter(d=>!d.done),ou=od.filter(d=>d.urg).length,ol=lists.filter(l=>!l.chk).length,ui=infos.filter(i=>!i.read).length;
  const T=(g,ic,t,sub,hot)=>'<button class="hb" data-g="'+g+'"><span class="hi">'+ic+'</span><span class="ht"><b>'+t+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</span>'+(hot?'<span class="hc">'+hot+'</span>':'')+'<svg class="hv" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>';
- $("#app").innerHTML='<div class="hgrid">'+(can("jv_s")?T("jarvis",JV_ICON,'Lager Übersicht','Briefing, heute, überfällig, Defekte',jvHot()).replace('class="hb"','class="hb hbjv"'):'')+(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+
+ $("#app").innerHTML='<div class="hgrid">'+(can("jv_s")?T("jarvis",JV_ICON,'Lager Übersicht','Briefing, heute, überfällig, Defekte',jvHot()).replace('class="hb"','class="hb hbjv"'):'')+(can("au_s")?T("au",AU_ICON,'Meine Aufträge',auSubT(),auHot()):'')+(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+
   T("new",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/></svg>','Material vor Ort erfassen',ol+(ol===1?' offene Liste':' offene Listen'),ol)+
   T("defnew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>','Defekt melden',od.length+(od.length===1?' offener Defekt':' offene Defekte')+(ou?', davon '+ou+' dringend':''),ou?'!':'')+
   T("infonew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14h4"/></svg>','Info an das Lager',can("inf_s")?ui+' ungelesen':'Nachricht mit Foto ans Lager',can("inf_s")&&ui?ui:'')+
