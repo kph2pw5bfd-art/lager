@@ -173,3 +173,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.86
 - Fehler behoben (Meine Aufträge): Bei verschobenem Herrichten stand „Draußen ab <Dispo-Beginn>“. Jetzt `auOutDay(p)` = späterer von Dispo-Beginn und Herricht-Tag (`pkHDay`) – für „Draußen ab …“ und dafür, ab wann der Schritt „Draußen“ als erledigt gilt. Herrichten-Schritt zeigt „verschoben auf <Tag> (Dispo-Beginn …) – Grund“, Karten-Etikett „Herrichten <Tag>“ statt „Kommt …“. Test in `tests/au_t.js` (Auftrag G).
+
+## Version 1.87
+- Meine Aufträge: alle Mengen mit Einheit (Jürgen: „Bitte immer die Einheit dazu schreiben“). `auUnit(p,k)` holt die Einheit aus der Packliste (Position mit gleichem Artikel-Schlüssel), sonst „Stk“; `auQ(n,u)` schreibt „4 Stk“. Gilt für Material, Fehlt noch, Noch draußen, Mehr zurück, Antwort-Dialog, Antworten-Liste beim Lager (Einheit wird in `plaw.u` mitgespeichert), Abweichungen beim Herrichten und Fremdmiete.

@@ -259,3 +259,4 @@ button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:va
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .aug,:root:not([data-theme="light"]) .ausec:not(.red),:root:not([data-theme="light"]) .aumat>summary b,:root:not([data-theme="light"]) .auopt small.auto{color:#8fb0ea}:root:not([data-theme="light"]) .auans,:root:not([data-theme="light"]) .auopt.on,:root:not([data-theme="light"]) .abtag.blue{background:#1d3550}:root:not([data-theme="light"]) .abtag.blue{color:#8fb0ea}}
 :root[data-theme="dark"] .aug,:root[data-theme="dark"] .ausec:not(.red),:root[data-theme="dark"] .aumat>summary b{color:#8fb0ea}:root[data-theme="dark"] .auans,:root[data-theme="dark"] .auopt.on,:root[data-theme="dark"] .abtag.blue{background:#1d3550}
 .aucd .aun{color:var(--ink)}#aumsg{margin-bottom:10px}
+.aurow .auq{min-width:62px;white-space:nowrap}.aurow .auq small{font-size:12px;font-weight:600}

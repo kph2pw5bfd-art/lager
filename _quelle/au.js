@@ -61,10 +61,13 @@ function auView(){if(!can("au_s")){view="start";return startView()}$("#t").textC
  document.querySelectorAll("[data-auf]").forEach(b=>b.onclick=()=>{auf=b.dataset.auf;auView()});
  document.querySelectorAll("[data-au]").forEach(b=>b.onclick=()=>{curAu=b.dataset.au;go("auopen")})}
 /* ---------- ein Auftrag ---------- */
+/* Einheit eines Artikels im Auftrag (aus der Packliste, sonst „Stk“) – Jürgen: überall Menge + Einheit */
+function auUnit(p,k){const x=p&&k?pkPosAll(p).find(x=>abgKey(artCode(x.a),pkName(x))===k):null;return (x&&x.u)||"Stk"}
+const auQ=(n,u)=>pkNum(n)+'<small> '+esc(u||"Stk")+'</small>';
 function auDevLines(p){const H=pkH(p),K=pkKeys(p),L=[];pkPosAll(p).forEach((x,i)=>{const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x);
- if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+" – fehlen "+pkNum(st.need-st.q));
- (st.s!=="open"?st.alt:[]).forEach(a=>L.push(n+": stattdessen "+pkNum(a.n)+"× "+a.t));
- if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" aus dem Lager statt Fremdmiete")});return L}
+ const u=" "+(x.u||"Stk");if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
+ (st.s!=="open"?st.alt:[]).forEach(a=>L.push(n+": stattdessen "+pkNum(a.n)+" "+(x.u||"Stk")+" "+a.t));
+ if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete")});return L}
 function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){view="au";return auView()}
  $("#t").textContent=p.ev||"Auftrag";const I=auInfo(p),B=I.B,H=pkH(p),mine=auIsMine(p),act=mine&&can("au_b"),g=I.g,fr=pkF(p).length;
  const te=(c,t,s)=>'<div class="aute"><span class="audot '+c+'">'+(c==="d"?"✓":c==="r"||c==="w"?"!":"")+'</span><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+'</span></div>';
@@ -77,14 +80,14 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const doneT=I.kl?te("d","Mit Projektleiter geklärt",fmt(H.klar.t).slice(0,6)+" · "+esc(nmA(H.klar,"by"))):I.done?te("d","Erledigt","alles zurück"):te("","Erledigt","wenn alles zurück oder geklärt ist");
  const tl='<section class="card aucd"><b class="ausec">Wie weit ist das Lager?</b><div class="autl">'+te("d","Packliste da",(p.t?fmt(p.t).slice(0,6)+" · ":"")+pkPosN(pkPosAll(p).length)+(fr?", davon "+fr+" mit Fremdmiete":"")+((p.zus||[]).length?" · "+(p.zus.length===1?"1 Zusatz":p.zus.length+" Zusätze"):""))+herr+outT+retT+doneT+'</div></section>';
  const ansH=a=>'<div class="auans"><b>'+(a.by===me?'Deine Antwort':esc(nmA(a,"by")))+'</b> · '+fmt(a.t).slice(0,6)+'<br>'+esc(auAnsTxt(a))+(a.read&&a.read.t?'<small>Gelesen von '+esc(nmA(a.read,"by"))+'</small>':'<small>Noch nicht gelesen</small>')+'</div>';
- const miss=I.missShow?'<section class="card aucd red"><b class="ausec red">Fehlt noch</b>'+B.miss.map((e,i)=>{const a=auAns(p,e.k)[0];return '<div class="aurow"><b class="auq">'+(e.soll-e.back)+'×</b><span class="aun">'+esc(e.name)+'</span>'+(act?'<button class="btn ghost s auab" type="button" data-aua="'+i+'">'+(a?'Ändern':'Antworten')+'</button>':'')+'</div>'+(a?ansH(a):'')}).join("")+'</section>':
-  (B.miss.length&&B.R.length&&!I.done?'<section class="card aucd"><b class="ausec">Noch draußen</b><small class="mute">Teilretoure – das kommt laut Packliste noch zurück.</small>'+B.miss.map(e=>'<div class="aurow"><b class="auq m">'+(e.soll-e.back)+'×</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'');
- const more=B.more.length&&!I.done?'<section class="card aucd"><b class="ausec">Mehr zurück als geplant</b>'+B.more.map(e=>'<div class="aurow"><b class="auq m">+'+(e.back-e.soll-e.fr-e.l55)+'</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'';
+ const miss=I.missShow?'<section class="card aucd red"><b class="ausec red">Fehlt noch</b>'+B.miss.map((e,i)=>{const a=auAns(p,e.k)[0];return '<div class="aurow"><b class="auq">'+auQ(e.soll-e.back,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span>'+(act?'<button class="btn ghost s auab" type="button" data-aua="'+i+'">'+(a?'Ändern':'Antworten')+'</button>':'')+'</div>'+(a?ansH(a):'')}).join("")+'</section>':
+  (B.miss.length&&B.R.length&&!I.done?'<section class="card aucd"><b class="ausec">Noch draußen</b><small class="mute">Teilretoure – das kommt laut Packliste noch zurück.</small>'+B.miss.map(e=>'<div class="aurow"><b class="auq m">'+auQ(e.soll-e.back,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'');
+ const more=B.more.length&&!I.done?'<section class="card aucd"><b class="ausec">Mehr zurück als geplant</b>'+B.more.map(e=>'<div class="aurow"><b class="auq m">+'+auQ(e.back-e.soll-e.fr-e.l55,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'';
  const M=PLAW.filter(a=>a.pk===p.id&&a.typ==="msg");
  const msgs=M.length?'<section class="card aucd"><b class="ausec">Nachrichten ans Lager</b>'+M.map(ansH).join("")+'</section>':'';
  const H2=pkH(p),K=pkKeys(p);
  const mat='<details class="card aucd aumat"><summary><b>Material</b><small>'+pkPosN(pkPosAll(p).length)+'</small></summary>'+pkPosAll(p).map((x,i)=>{const h=H2[K[i]],st=pkPS(x,h),l55=pkL55(x,h);
-  return '<div class="aurow"><b class="auq m">'+pkNum(x.n)+'</b><span class="aun">'+esc(pkName(x))+(x.f>0&&!(h&&h.fm==="lager")?' <small class="red">davon '+pkNum(x.f)+' Fremdmiete</small>':'')+'</span><span class="aust">'+(l55?'Lager 55':st.s==="open"?'':st.s==="part"?'<span class="or">'+pkNum(st.q)+' da</span>':'✓')+'</span></div>'}).join("")+'</details>';
+  return '<div class="aurow"><b class="auq m">'+auQ(x.n,x.u)+'</b><span class="aun">'+esc(pkName(x))+(x.f>0&&!(h&&h.fm==="lager")?' <small class="red">davon '+pkNum(x.f)+' '+esc(x.u||"Stk")+' Fremdmiete</small>':'')+'</span><span class="aust">'+(l55?'Lager 55':st.s==="open"?'':st.s==="part"?'<span class="or">'+pkNum(st.q)+' '+esc(x.u||"Stk")+' da</span>':'✓')+'</span></div>'}).join("")+'</details>';
  $("#app").innerHTML='<section class="card aucd"><div class="aukv"><span>Auftrag</span><b>'+esc(p.ord||"–")+'</b><span>Projektleiter</span><b>'+esc(shortName(p.pl)||"–")+(mine?' <small class="mute">(du)</small>':'')+'</b><span>Dispo</span><b>'+pkD(p.db)+' – '+pkD(p.de)+'</b>'+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+'</div></section>'+
   tl+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+mat+
   (!mine?'<p class="mute" style="font-size:12px;margin:8px 2px">Antworten kann nur der Projektleiter dieses Auftrags.</p>':'');
@@ -95,7 +98,7 @@ async function auSave(o,msg){const id=Date.now().toString(36)+Math.random().toSt
  return rSave(()=>db.doc("plaw/"+id).set({...o,by:me,...tabAs("by"),t:Date.now()}),msg)}
 function auAnsDlg(p,e){if(!e)return;const n=e.soll-e.back,o=document.createElement("div");o.className="ov";let typ=null,to=null;
  const O=[["anders","Ist auf einer anderen Baustelle","Auftrag wählen"],["bau","Ist noch auf der Baustelle","kommt bis: Datum (optional)"],["kunde","Bleibt beim Kunden","z. B. Miete verlängert, Verkauf"],["zur","Ist schon zurück","Lager soll nachzählen"],["weiss","Weiß ich nicht / kläre ich",""]];
- o.innerHTML='<div class="card audlg"><b style="font-size:17px">'+n+'× '+esc(e.name)+'</b><div class="mute">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</div>'+
+ o.innerHTML='<div class="card audlg"><b style="font-size:17px">'+pkNum(n)+' '+esc(auUnit(p,e.k))+' '+esc(e.name)+'</b><div class="mute">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</div>'+
   O.map(([k,t,s])=>'<button class="auopt" type="button" data-ao="'+k+'"><i></i><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+(k==="anders"?'<small class="auto" id="auto"></small>':'')+(k==="bau"?'<input type="date" id="aubis" hidden>':'')+'</span></button>').join("")+
   '<textarea id="autx" placeholder="Notiz (optional)" style="min-height:60px;margin-top:6px"></textarea><div class="row" style="margin-top:8px"><button class="btn ghost" id="aux" type="button">Abbrechen</button><button class="btn" id="auok" type="button" disabled>Antwort ans Lager schicken</button></div></div>';
  document.body.appendChild(o);const ok=o.querySelector("#auok"),bis=o.querySelector("#aubis"),tl=o.querySelector("#auto");
@@ -103,7 +106,7 @@ function auAnsDlg(p,e){if(!e)return;const n=e.soll-e.back,o=document.createEleme
   if(k==="anders"&&!to)abgPickPack(p,c=>{to=c;tl.textContent=(c.ev||"–")+" ("+(c.ord||"–")+") – ändern";ok.disabled=false})};
  o.querySelectorAll("[data-ao]").forEach(b=>b.onclick=ev=>{if(ev.target===bis)return;if(b.dataset.ao==="anders"&&typ==="anders"&&to){to=null;tl.textContent="";}sel(b.dataset.ao)});
  o.querySelector("#aux").onclick=()=>o.remove();
- ok.onclick=()=>{if(!typ)return;const d={pk:p.id,ord:p.ord||"",ev:p.ev||"",k:e.k,name:e.name,n,typ,txt:o.querySelector("#autx").value.trim()};
+ ok.onclick=()=>{if(!typ)return;const d={pk:p.id,ord:p.ord||"",ev:p.ev||"",k:e.k,name:e.name,n,u:auUnit(p,e.k),typ,txt:o.querySelector("#autx").value.trim()};
   if(typ==="anders"&&to){d.to=to.id;d.toEv=to.ev||"";d.toOrd=to.ord||""}if(typ==="bau"&&bis.value)d.bis=bis.value;o.remove();auSave(d,"Antwort ans Lager geschickt")}}
 function auMsgDlg(p){const o=document.createElement("div");o.className="ov";
  o.innerHTML='<div class="card audlg"><b style="font-size:17px">Nachricht ans Lager</b><div class="mute">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</div><textarea id="aumt" placeholder="z. B. Abbau verschiebt sich auf Montag" style="min-height:110px;margin-top:8px"></textarea><div class="row" style="margin-top:8px"><button class="btn ghost" id="aux" type="button">Abbrechen</button><button class="btn" id="auok" type="button">Senden</button></div></div>';
@@ -117,7 +120,7 @@ function plStrip(){const U=plUnread();if(!U.length)return"";const nm=[...new Set
 function plBind(){const s=$("#plstrip");if(s)s.onclick=()=>go("plin")}
 function plCard(a){const p=packs.find(x=>x.id===a.pk);
  return '<section class="card aucd'+(a.read&&a.read.t?'':' unread')+'"><div class="auct"><b>'+esc(a.ev||(p&&p.ev)||"–")+'</b><small class="mute">'+esc(nmA(a,"by"))+' · '+fmt(a.t)+'</small></div><small class="mute">Auftrag '+esc(a.ord||"–")+'</small>'+
-  (a.typ!=="msg"?'<div class="aurow"><b class="auq">'+(a.n||"")+'×</b><span class="aun">'+esc(a.name||"")+'</span></div>':'')+'<div class="auans">'+esc(auAnsTxt(a))+(a.read&&a.read.t?'<small>Gelesen von '+esc(nmA(a.read,"by"))+', '+fmt(a.read.t).slice(0,6)+'</small>':'')+'</div>'+
+  (a.typ!=="msg"?'<div class="aurow"><b class="auq">'+auQ(a.n||0,a.u||auUnit(p,a.k))+'</b><span class="aun">'+esc(a.name||"")+'</span></div>':'')+'<div class="auans">'+esc(auAnsTxt(a))+(a.read&&a.read.t?'<small>Gelesen von '+esc(nmA(a.read,"by"))+', '+fmt(a.read.t).slice(0,6)+'</small>':'')+'</div>'+
   '<div class="abg2">'+(p?'<button class="btn ghost s" type="button" data-plv="'+esc(a.id)+'">Ansehen</button>':'')+(a.read&&a.read.t?'':'<button class="btn s" type="button" data-plr="'+esc(a.id)+'">Gelesen</button>')+'</div></section>'}
 function plInView(){if(!plIn()){view="start";return startView()}$("#t").textContent="Antworten von Projektleitern";const U=PLAW.filter(a=>!(a.read&&a.read.t)),R=PLAW.filter(a=>a.read&&a.read.t).slice(0,20);
  $("#app").innerHTML='<p class="mute" style="margin:0 0 10px;line-height:1.45">Projektleiter antworten in „Meine Aufträge“ auf Fehlmaterial oder schreiben eine Nachricht. Die App ändert dabei nichts – zugeordnet oder geklärt wird weiter von euch.</p>'+
