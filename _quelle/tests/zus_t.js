@@ -47,8 +47,8 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  ok("Mail nur Zusatz",await E(()=>{const m=pkMailText(packs.find(x=>x.id==="P1"),"102");return /Zusatz-Packschein 102/.test(m.subj)&&/Verteiler|1026/.test(m.body)&&!/1097/.test(m.body)}));
  await p.click('[data-pkzr="102"]');await p.waitForTimeout(200);await p.click(".ov .btn:not(.ghost)");await p.waitForTimeout(300);ok("Zusatz wieder geöffnet",await E(()=>{const P=packs.find(x=>x.id==="P1");return !pkZFin(P,pkZOf(P,"102"))}));
  /* Hochladen eines neuen Zusatzes (PDF-Lesen und Bestätigung nachgestellt) */
- await E(()=>{window.pkRead=async()=>({ord:"2601300",ps:"103",ev:"Weihnachtsmarkt Spittelberg 2026",pl:"Jürgen Hartmann",db:Date.now(),de:Date.now(),pos:[{p:"1",n:6,u:"Stk",t:"Schuko 20m",a:"1081",f:0}]});window.pkConfirm=async()=>"zus";pkUpload([{name:"x.pdf"}])});
- await p.waitForTimeout(300);const dlg=await T(".ov");ok("Frage nach dem Herricht-Tag",/Wann wird der Zusatz hergerichtet/.test(dlg),dlg.slice(0,120));await p.screenshot({path:S+"zus_frage.png"});
+ await E(()=>{window.pkRead=async()=>({ord:"2601300",ps:"103",ev:"Weihnachtsmarkt Spittelberg 2026",pl:"Jürgen Hartmann",db:Date.now(),de:Date.now(),pos:[{p:"1",n:6,u:"Stk",t:"Schuko 20m",a:"1081",f:0}]});pkUpload([{name:"x.pdf"}])});
+ await p.waitForTimeout(300);ok("Inhalt neu -> Zusatz vorgeschlagen",await p.$eval('[data-cm="zus"]',e=>e.classList.contains("on")));await p.click("#pkco");await p.waitForTimeout(300);const dlg=await T(".ov");ok("Frage nach dem Herricht-Tag",/Wann wird der Zusatz hergerichtet/.test(dlg),dlg.slice(0,120));await p.screenshot({path:S+"zus_frage.png"});
  await p.click('[data-zq="2"]');await p.click("#pzo");await p.waitForTimeout(400);
  ok("Neuer Zusatz: Tag übermorgen, Haupt bleibt hergerichtet",await E(()=>{const P=packs.find(x=>x.id==="P1"),z=pkZOf(P,"103");return !!z&&z.v===2&&pkZDay(P,z)===pkAddD(pkDay(Date.now()),2)&&!pkZFin(P,z)&&pkProg(P).fin}));
  /* Meine Aufträge */
