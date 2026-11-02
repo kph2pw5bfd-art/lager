@@ -231,3 +231,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Hauptseite: Kachel „Defekt melden“ führt jetzt zur Defekte-Liste mit Reiter „Alle“ (Reihenfolge wie 1.95). Melden über den Reiter „Defekt melden“. Standard-Reiter der Liste ist „Alle“.
 - Sprachbefehl „Defekt melden“ im Lager Assistent öffnet weiterhin direkt das Formular.
 - Test: tests/defkachel_t.js
+
+## 1.97 – Kachel heißt „Defekte“
+- Hauptseite und Einstellungen (Reihenfolge der Kacheln): „Defekt melden“ → „Defekte“. Der Reiter in der Liste heißt weiterhin „Defekt melden“.

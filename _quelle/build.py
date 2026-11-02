@@ -145,6 +145,8 @@ rep("""fn,foto:fn>0});dpho=null;view="def";draw();""","""fn,foto:fn>0});dpho=nul
 # 1.96: Kachel „Defekt melden“ auf der Hauptseite öffnet die Defekte-Liste mit Reiter „Alle“ (melden dann über den Reiter „Defekt melden“)
 rep("""if(v==="defnew")dpho=null;if(v==="infonew")ipho=null;go(v)})""","""if(v==="defnew"){dpho=null;df="alle";return go("def")}if(v==="infonew")ipho=null;go(v)})""")
 rep('let lq="",lqv="",lf="offen",df="offen";','let lq="",lqv="",lf="offen",df="alle";')
+# 1.97: Kachel heißt „Defekte“
+rep("""</svg>','Defekt melden',od.length""","""</svg>','Defekte',od.length""")
 rep("""'<div id="dph" class="thr"></div>':'')+'</div>'+
  (d.by===me?""","""'<div id="dph" class="thr"></div>':'')+'</div>'+etCard(d)+
  (d.by===me?""")

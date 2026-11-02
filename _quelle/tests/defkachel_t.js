@@ -7,6 +7,8 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
  await p.evaluate(()=>{df="offen";view="start";hist=[];draw()});await p.waitForTimeout(200);
+ 
+ ok("Kachel heißt Defekte",/^Defekte/.test((await p.innerText('[data-g="defnew"] .ht b')).trim()));
  await p.click('[data-g="defnew"]');await p.waitForTimeout(300);
  ok("Kachel öffnet Liste mit Reiter Alle",await p.evaluate(()=>view==="def"&&df==="alle"&&document.querySelector('[data-dfl="alle"]').classList.contains("act")&&document.querySelectorAll("[data-df]").length===2));
  await p.click('[data-v="defnew"]');await p.waitForTimeout(200);ok("Reiter Defekt melden → Formular",!!(await p.$("#dnart")));
