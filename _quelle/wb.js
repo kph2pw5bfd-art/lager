@@ -1,7 +1,15 @@
 /* ===== Wochenbericht (ab 1.81) – für die Montagsbesprechung, zum Drucken =====
    Besprechung = Montag der „diesen Woche“ (Sa/So → nächster Montag). Block 1 letzte Woche (Mo–So davor), Block 2 diese Woche (Mo–Fr, Sa/So beim Freitag),
    Block 3 Punkte zur Besprechung (docs „wbnote“ {txt,by,t,done:{by,t}|null}) – eintragen darf jeder mit „Lager Übersicht“. Alle betroffenen Aufträge werden angeführt. */
-let wbOff=0,WBN=[],wbOn=false;
+let wbOff=0,WBN=[],wbOn=false,wbBemOpen=null,wbBemEdit=null;
+/* Bemerkungen zu Punkten (ab 1.91): Feld b_<id> = {txt,by,t,mod} im wbnote-Dokument (null = gelöscht); mehrere pro Punkt, schreiben darf jeder mit Lager Übersicht,
+   ändern/löschen eigene, Admin (v_app) alle; auch bei erledigten Punkten; im Ausdruck klein unter dem Punkt */
+const wbBems=n=>Object.keys(n||{}).filter(k=>/^b_/.test(k)&&n[k]&&n[k].txt).map(k=>({id:k,...n[k]})).sort((a,b)=>(a.t||0)-(b.t||0));
+const wbBemTx=b=>nmA(b,"by")+", "+pkDM(b.t)+": "+b.txt;
+function wbBemHtml(n){const B=wbBems(n),op=wbBemOpen===n.id,ed=wbBemEdit&&wbBemEdit.n===n.id?wbBemEdit.b:null,cur=ed?(n[ed]||{}).txt||"":"";
+ return '<div class="wbbm">'+B.map(b=>'<div class="wbb"><span><b>'+esc(nmA(b,"by"))+'</b>, '+pkDM(b.t)+(b.mod?' (geändert)':'')+': '+esc(b.txt)+'</span>'+(b.by===me||can("v_app")?'<span class="wbba"><button type="button" class="lnk" data-wbbe="'+esc(n.id)+'|'+esc(b.id)+'">Ändern</button> · <button type="button" class="lnk" data-wbbx="'+esc(n.id)+'|'+esc(b.id)+'" style="color:var(--bad)">Löschen</button></span>':'')+'</div>').join("")+
+  (op||ed?'<div class="wbbi"><label><span class="sr">Bemerkung</span><input data-wbbi="'+esc(n.id)+'" maxlength="300" placeholder="Bemerkung …" autocomplete="off" value="'+esc(cur)+'"></label><button class="btn s" type="button" data-wbbs="'+esc(n.id)+'">'+(ed?'Speichern':'Hinzufügen')+'</button><button class="lnk" type="button" data-wbbc="1">Abbrechen</button></div>':
+   '<button type="button" class="lnk wbbadd" data-wbbo="'+esc(n.id)+'">+ Bemerkung</button>')+'</div>'}
 function wbSub(){if(wbOn)return;wbOn=true;try{db.collection("wbnote").onSnapshot(s=>{WBN=s.docs.map(d=>({id:d.id,...d.data()}));if(view==="wb")wbView()})}catch(e){console.warn(e)}}
 const wbWd=t=>PK_WD[new Date(t).getDay()]+" "+pkDM(t);
 function wbMeet(){const t0=pkDay(Date.now()),w=new Date(t0).getDay();let m=pkMon(t0);if(w===6||w===0)m=pkAddD(m,7);return pkAddD(m,7*wbOff)}
@@ -51,18 +59,18 @@ function wbPaper(D,print){const kwL=pkKW(D.L0),kwN=pkKW(D.M),y=new Date(D.M).get
    '<tr class="wbsum"><td>Summe</td><td>'+nh+(nh===1?' Packliste':' Packlisten')+'</td><td>'+nz+(nz===1?' Rücklauf':' Rückläufe')+'</td></tr></tbody></table>'+
    (D.ach.length?'<div class="wbach"><b>Achtung</b>'+D.ach.map(a=>'<span>· '+esc(a)+'</span>').join("")+'</div>':'')+'</div></section>'+
   '<section class="wbsec wbnotes"><div class="wbbar"><b>3 · Sonstiges zur Besprechung</b></div><div class="wbin">'+
-   D.notes.map(n=>'<div class="wbn"><span class="wbbox"></span><span class="wbnt">'+esc(n.txt)+'</span><small>'+esc(nmA(n,"by"))+', '+wbWd(n.t)+(n.old?' · noch offen':'')+'</small></div>').join("")+
+   D.notes.map(n=>'<div class="wbn"><span class="wbbox"></span><span class="wbnt">'+esc(n.txt)+wbBems(n).map(b=>'<span class="wbnb">'+esc(wbBemTx(b))+'</span>').join("")+'</span><small>'+esc(nmA(n,"by"))+', '+wbWd(n.t)+(n.old?' · noch offen':'')+'</small></div>').join("")+
    '<div class="wbline"></div><div class="wbline"></div></div></section>'+
   '<div class="wbft"><span>Erstellt aus der TPC Lager App · '+fmt(Date.now())+' · '+esc(meName())+'</span><span>Einzelheiten in der App</span></div></div>'}
 /* ---------- Ansicht ---------- */
 function wbView(){if(!can("jv_s")){view="start";return startView()}$("#t").textContent="Wochenbericht";const D=wbData(),kwL=pkKW(D.L0),kwN=pkKW(D.M);
- const ae=document.activeElement,keep=ae&&ae.id==="wbin"?ae.value:null;
+ const ae=document.activeElement,keep=ae&&ae.id==="wbin"?ae.value:null,keepB=ae&&ae.dataset&&ae.dataset.wbbi?{n:ae.dataset.wbbi,v:ae.value}:null,dOpen=!!(document.querySelector(".wbdone")||{}).open;
  $("#app").innerHTML='<section class="wbnav"><button type="button" class="wbarr" id="wbp" aria-label="Eine Woche zurück"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><div><b>Rückblick KW '+kwL+' · Ausblick KW '+kwN+'</b><small>Besprechung '+wbWd(D.M)+new Date(D.M).getFullYear()+(wbOff?' · <button type="button" class="lnk" id="wbnow">zur aktuellen</button>':'')+'</small></div><button type="button" class="wbarr" id="wbn" aria-label="Eine Woche vor"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></section>'+
   '<div class="wbbtns"><button class="btn" id="wbpr" type="button">'+(wbMobile()?'Drucken / Teilen (PDF)':'Drucken')+'</button>'+(wbMobile()?'':'<button class="btn ghost" id="wbpdf" type="button">Als PDF speichern</button>')+'</div>'+
   '<section class="wbedit"><b>Punkte für die Besprechung</b><small class="mute">'+wbWd(D.M)+' · wird mitgedruckt · nicht Erledigtes bleibt für die nächste Woche</small>'+
-   D.notes.map(n=>'<div class="wbei"><input type="checkbox" data-wbd="'+esc(n.id)+'" aria-label="Erledigt"><span><span>'+esc(n.txt)+'</span><small>'+esc(nmA(n,"by"))+', '+wbWd(n.t)+(n.old?' · noch offen':'')+'</small></span>'+(n.by===me||can("v_app")?'<button type="button" class="lnk" data-wbx="'+esc(n.id)+'" style="color:var(--bad)">Löschen</button>':'')+'</div>').join("")+
+   D.notes.map(n=>'<div class="wbei"><input type="checkbox" data-wbd="'+esc(n.id)+'" aria-label="Erledigt"><span><span>'+esc(n.txt)+'</span><small>'+esc(nmA(n,"by"))+', '+wbWd(n.t)+(n.old?' · noch offen':'')+'</small></span>'+(n.by===me||can("v_app")?'<button type="button" class="lnk" data-wbx="'+esc(n.id)+'" style="color:var(--bad)">Löschen</button>':'')+'</div>'+wbBemHtml(n)).join("")+
    '<div class="wbadd"><label><span class="sr">Neuer Punkt</span><input id="wbin" maxlength="200" placeholder="Neuer Punkt …" autocomplete="off"></label><button class="btn s" id="wbadd" type="button">Hinzufügen</button></div>'+
-   (D.doneN.length?'<details class="wbdone"><summary>Erledigt · '+D.doneN.length+'</summary>'+D.doneN.map(n=>'<div class="wbei"><input type="checkbox" checked data-wbu="'+esc(n.id)+'" aria-label="Wieder offen"><span><span>'+esc(n.txt)+'</span><small>erledigt '+wbWd(n.done.t)+' · '+esc(nmA(n.done,"by"))+'</small></span></div>').join("")+'</details>':'')+'</section>'+
+   (D.doneN.length?'<details class="wbdone"><summary>Erledigt · '+D.doneN.length+'</summary>'+D.doneN.map(n=>'<div class="wbei"><input type="checkbox" checked data-wbu="'+esc(n.id)+'" aria-label="Wieder offen"><span><span>'+esc(n.txt)+'</span><small>erledigt '+wbWd(n.done.t)+' · '+esc(nmA(n.done,"by"))+'</small></span></div>'+wbBemHtml(n)).join("")+'</details>':'')+'</section>'+
   wbPaper(D,false);
  const old=document.getElementById("wbprintbox");if(old)old.remove();document.body.insertAdjacentHTML("beforeend",'<div id="wbprintbox">'+wbPaper(D,true)+'</div>');
  $("#wbp").onclick=()=>{wbOff--;wbView()};$("#wbn").onclick=()=>{wbOff++;wbView()};if($("#wbnow"))$("#wbnow").onclick=()=>{wbOff=0;wbView()};
@@ -73,7 +81,21 @@ function wbView(){if(!can("jv_s")){view="start";return startView()}$("#t").textC
  $("#wbadd").onclick=add;$("#wbin").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add()}};if(keep!==null){$("#wbin").value=keep;$("#wbin").focus()}
  document.querySelectorAll("[data-wbd]").forEach(c=>c.onchange=()=>rSave(()=>db.doc("wbnote/"+c.dataset.wbd).update({done:{by:me,t:Date.now()}}),"Als erledigt markiert"));
  document.querySelectorAll("[data-wbu]").forEach(c=>c.onchange=()=>rSave(()=>db.doc("wbnote/"+c.dataset.wbu).update({done:null}),"Wieder offen"));
- document.querySelectorAll("[data-wbx]").forEach(b=>b.onclick=()=>ask("Punkt löschen?",()=>rSave(()=>db.doc("wbnote/"+b.dataset.wbx).delete(),"Gelöscht")))}
+ document.querySelectorAll("[data-wbx]").forEach(b=>b.onclick=()=>ask("Punkt löschen?",()=>rSave(()=>db.doc("wbnote/"+b.dataset.wbx).delete(),"Gelöscht")))
+ /* Bemerkungen */
+ const dd=document.querySelector(".wbdone");if(dd&&(dOpen||(wbBemOpen||wbBemEdit)&&D.doneN.some(n=>n.id===wbBemOpen||(wbBemEdit&&n.id===wbBemEdit.n))))dd.open=true;
+ if(keepB){const i=document.querySelector('[data-wbbi="'+keepB.n+'"]');if(i){i.value=keepB.v;i.focus()}}
+ const focusB=id=>setTimeout(()=>{const i=document.querySelector('[data-wbbi="'+id+'"]');if(i){i.focus();try{i.setSelectionRange(i.value.length,i.value.length)}catch(e){}}},30);
+ document.querySelectorAll("[data-wbbo]").forEach(b=>b.onclick=()=>{wbBemOpen=b.dataset.wbbo;wbBemEdit=null;wbView();focusB(wbBemOpen)});
+ document.querySelectorAll("[data-wbbc]").forEach(b=>b.onclick=()=>{wbBemOpen=null;wbBemEdit=null;wbView()});
+ document.querySelectorAll("[data-wbbe]").forEach(b=>b.onclick=()=>{const [n,k]=b.dataset.wbbe.split("|");wbBemEdit={n,b:k};wbBemOpen=null;wbView();focusB(n)});
+ document.querySelectorAll("[data-wbbx]").forEach(b=>b.onclick=()=>{const [n,k]=b.dataset.wbbx.split("|");ask("Bemerkung löschen?",()=>rSave(()=>db.doc("wbnote/"+n).update({[k]:null}),"Bemerkung gelöscht"))});
+ const saveB=nid=>{const i=document.querySelector('[data-wbbi="'+nid+'"]');const v=i?i.value.trim():"";if(!v){if(i)i.classList.add("bad");return}
+  const N=WBN.find(x=>x.id===nid),e=wbBemEdit&&wbBemEdit.n===nid?wbBemEdit.b:null;wbBemOpen=null;wbBemEdit=null;
+  if(e){const o=(N&&N[e])||{};rSave(()=>db.doc("wbnote/"+nid).update({[e]:{...o,txt:v,mod:{by:me,t:Date.now()}}}),"Bemerkung geändert")}
+  else rSave(()=>db.doc("wbnote/"+nid).update({["b_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)]:{txt:v,by:me,...tabAs("by"),t:Date.now()}}),"Bemerkung gespeichert")};
+ document.querySelectorAll("[data-wbbs]").forEach(b=>b.onclick=()=>saveB(b.dataset.wbbs));
+ document.querySelectorAll("[data-wbbi]").forEach(i=>i.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();saveB(i.dataset.wbbi)}if(e.key==="Escape"){wbBemOpen=null;wbBemEdit=null;wbView()}})}
 window.addEventListener("afterprint",()=>document.body.classList.remove("wbprinting"));
 /* ---------- PDF (ab 1.84): am Handy (v. a. iPhone-Web-App) tut window.print() nichts → PDF erzeugen und teilen (Drucken / In Dateien sichern) ---------- */
 const WB_PDF_URLS=["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"];
@@ -129,8 +151,8 @@ async function wbPdf(D){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb}=
  secEnd();
  /* 3 · Sonstiges */
  secStart("3 · Sonstiges zur Besprechung","");
- D.notes.forEach(n=>{const meta=nmA(n,"by")+", "+wbWd(n.t)+(n.old?" · noch offen":""),mw=tw(meta,F,7.5)+8,L=wrap(n.txt,F,9,IW-18-mw),h=L.length*11+6;need(h);
-  pg.drawRectangle({x:IX,y:y-10,width:7,height:7,borderColor:INK,borderWidth:.8});L.forEach((l,i)=>txt(l,IX+14,y-9.5-i*11,{size:9}));txt(meta,IX+IW-tw(meta,F,7.5),y-9.5,{size:7.5,color:GREY});
+ D.notes.forEach(n=>{const meta=nmA(n,"by")+", "+wbWd(n.t)+(n.old?" · noch offen":""),mw=tw(meta,F,7.5)+8,L=wrap(n.txt,F,9,IW-18-mw),BL=[].concat(...wbBems(n).map(b=>wrap(wbBemTx(b),F,7.5,IW-18-mw))),h=L.length*11+BL.length*9.5+6;need(h);
+  pg.drawRectangle({x:IX,y:y-10,width:7,height:7,borderColor:INK,borderWidth:.8});L.forEach((l,i)=>txt(l,IX+14,y-9.5-i*11,{size:9}));BL.forEach((l,i)=>txt(l,IX+14,y-9.5-L.length*11-i*9.5+1,{size:7.5,color:GREY}));txt(meta,IX+IW-tw(meta,F,7.5),y-9.5,{size:7.5,color:GREY});
   y-=h;pg.drawLine({start:{x:IX,y:y+1},end:{x:IX+IW,y:y+1},thickness:.5,color:HAIR})});
  for(let i=0;i<3;i++){need(22);y-=20;pg.drawLine({start:{x:IX,y},end:{x:IX+IW,y},thickness:.6,color:LINE})}
  y-=4;secEnd();
