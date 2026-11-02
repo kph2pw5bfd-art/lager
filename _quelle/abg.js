@@ -22,6 +22,7 @@ function abgBal(p,ov){const H=pkH(p),M={};
   add(artCode(x.a),pkName(x),!!o.z,st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0),f);
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,!!o.z,+a.n||0,0)})});
  const R=pkRets(p);
+ if(typeof pkX==="function")pkX(p).forEach(e=>add(artCode(e.a),pkXName(e),false,+e.n||0,0));
  R.forEach(r=>{const it=ov&&ov.id&&r.id===ov.id?ov.items:rIt(r);Object.values(it||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0})});
  if(ov&&!ov.id)Object.values(ov.items||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0});
  ABZ.forEach(z=>{if(z.from===p.id)get(z.k,z.code,z.name).zout+=+z.q||0;if(z.to===p.id)get(z.k,z.code,z.name).zin+=+z.q||0});

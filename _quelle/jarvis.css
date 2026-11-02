@@ -295,3 +295,10 @@ button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:va
 .wbbi{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.wbbi label{flex:1;min-width:160px}.wbbi input{margin:0;width:100%}.wbbi .btn{width:auto}
 .wbbadd{align-self:flex-start;padding:2px 0;font-size:14px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .wbb b{color:#8fb0ea}}:root[data-theme="dark"] .wbb b{color:#8fb0ea}
+/* Zusätzlich mitgegebenes Material (1.93) */
+.pkg.pkgx{background:#2a7d4f}
+.pkc.pkcx{background:#2a7d4f;border-color:#2a7d4f;color:#fff;font-weight:700}.pkc.pkcx:disabled{opacity:.7}
+.pk-x .pkt small.pkby{display:block}
+.pkxadd{display:block;width:100%;margin:12px 0 4px;padding:12px;border:2px dashed #2a7d4f;border-radius:10px;background:none;color:#2a7d4f;font:inherit;font-weight:700;cursor:pointer}
+.pkxadd:active{background:#e3f3e9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pkxadd{color:#6fd39a;border-color:#6fd39a}}:root[data-theme="dark"] .pkxadd{color:#6fd39a;border-color:#6fd39a}

@@ -72,8 +72,9 @@ async function pkUpload(files){for(const f of files){let P;const b=$("#pkup");if
   else{ok=await pkConfirm(P,null);if(!ok)continue}
   if(ok==="zus"){const day=await pkZAskDay(P,main);if(!day)continue;
    try{const zus=(main.zus||[]).filter(z=>String(z.ps)!==String(P.ps)).concat([{ps:P.ps,ev:P.ev,t:Date.now(),by:me,pos:P.pos,v:2}]);
-    await db.doc("pack/"+main.id).update({zus});const zk=pkZK(P.ps);await pkHSet(main,{["zd_"+zk]:{d:day,by:me,t:Date.now()},["zf_"+zk]:{t:0}});
-    toast("Zusatz angehängt – herrichten "+pkWd(pkFromYmd(day)),1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}continue}
+    await db.doc("pack/"+main.id).update({zus});const zk=pkZK(P.ps),xp=typeof pkXApply==="function"?pkXApply(main,pkH(main),pkItems({...main,zus}).filter(o=>o.z===String(P.ps))):{},xn=Object.keys(xp).filter(k=>/^h_/.test(k)).length;
+    await pkHSet(main,{["zd_"+zk]:{d:day,by:me,t:Date.now()},["zf_"+zk]:{t:0},...xp});
+    toast("Zusatz angehängt – herrichten "+pkWd(pkFromYmd(day))+(xn?" · "+xn+(xn===1?" Position":" Positionen")+" mit zusätzlich Mitgegebenem verrechnet":""),1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}continue}
   try{await db.doc("pack/"+id).set({...P,zus:[],by:me,t:Date.now()});toast("Packliste gespeichert",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}}}
 /* Gibt es schon eine Packliste mit derselben Auftragsnummer (anderer Packschein)? -> Zusatz. Bereits angehängter Zusatz mit gleicher Nummer -> derselbe Haupt-Packschein */
 function pkMainFor(P,id){const o=pkDig(P.ord);if(!o||packs.some(x=>x.id===id||String(x.ps)===String(P.ps)))return null;
@@ -108,6 +109,7 @@ function pkPS(x,h){const need=pkNeed(x,h);if(!h)return{s:"open",need,alt:[]};con
 function pkL55(x,h){if(h&&typeof h.l55==="boolean")return h.l55;const k=pkKat(x);return !!(k&&k.l55)}
 function pkProg(P){if(P&&P._z)return pkZProg(P._p,P._z);return pkProgOf(P,null,!!(pkH(P).fin&&pkH(P).fin.t))}
 function pkProgOf(P,zps,fin){const H=pkH(P);let d=0,dev=0,n=0,l55=0;pkItems(P).forEach(o=>{if((o.z||null)!==zps)return;const x=o.x,h=H[o.k];if(pkL55(x,h)){l55++;return}n++;const st=pkPS(x,h);if(st.s!=="open")d++;if(st.s==="part"||st.alt.length||(h&&h.fm==="lager"&&x.f>0))dev++});
+ if(zps===null&&typeof pkX==="function")dev+=pkX(P).length;
  return{d,n,dev,l55,fin,H}}
 /* ===== Zusatz-Packscheine mit eigenem Herricht-Tag (ab 1.88) =====
    epirent gibt jedem Zusatz den Dispo-Beginn des ersten Packscheins – darum eigener Tag: packh.zd_<ps> = {d:"JJJJ-MM-TT", why, by, t} (beim Hochladen gefragt, „Verschieben“).
@@ -165,14 +167,14 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
    (st.s==="part"?'<em class="pkpart">'+pkNum(st.q)+' von '+pkNum(st.need)+' da – fehlen '+pkNum(st.need-st.q)+'</em>':'')+
    st.alt.map(a=>'<em class="pkalt">+ '+esc(pkNum(a.n))+'× '+esc(a.t)+(a.a?' ('+esc(a.a)+')':'')+'</em>').join("")+
    (h&&h.by&&st.s!=="open"?'<small class="pkby">'+esc(nm(h.by))+', '+fmt(h.t).slice(-5)+'</small>':'')+'</span></div>'+zf}).join(""):'<div class="mute" style="padding:10px 0">Alles hergerichtet.</div>')+
-   (r55.length?'<div class="pkg pkg55">Lager 55</div>'+r55.map(({x,i})=>'<div class="pkp pk-l55"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+'<em class="pk55">holt Fahrer/Monteur'+(x.f>0?' · davon '+esc(pkNum(x.f))+' Fremdmiete':'')+'</em></span></div>').join(""):'')+'</div>'+
+   (r55.length?'<div class="pkg pkg55">Lager 55</div>'+r55.map(({x,i})=>'<div class="pkp pk-l55"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+'<em class="pk55">holt Fahrer/Monteur'+(x.f>0?' · davon '+esc(pkNum(x.f))+' Fremdmiete':'')+'</em></span></div>').join(""):'')+(typeof pkXHtml==="function"?pkXHtml(p,fin):'')+'</div>'+
   '<button class="btn'+(fin?'':' ghost')+'" id="pkprint" type="button" style="margin-top:12px">Drucken / Teilen (PDF)</button>'+(fin?'<button class="btn ghost" id="pkinfo" style="margin-top:8px">Info an Projektleiter</button><button class="btn ghost" id="pkreo" style="margin-top:8px">Wieder öffnen</button>':'<button class="btn" id="pkfin" style="margin-top:8px">Herrichten abschließen</button>')+
   (can("pk_l")?'<button class="btn ghost" id="pkdel" style="color:var(--bad);margin-top:12px">Packliste löschen</button>':'');
  document.querySelectorAll("[data-pkhf]").forEach(b=>b.onclick=()=>{pkHf=b.dataset.pkhf;packOpenView()});
  document.querySelectorAll("[data-pkr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.pkr;go("retopen")});if(typeof abgPkBind==="function")abgPkBind();
  document.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>pkTap(p,+b.dataset.pc));
  document.querySelectorAll("[data-pe]").forEach(b=>b.onclick=()=>{if(pkRowFin(p,+b.dataset.pe))return toast((pkItems(p)[+b.dataset.pe]||{}).z?"Der Zusatz ist abgeschlossen – zum Ändern erst „Zusatz wieder öffnen“.":"Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkEdit(p,+b.dataset.pe)});
- document.querySelectorAll("[data-pkzmv]").forEach(b=>b.onclick=()=>pkZMove(p,b.dataset.pkzmv));if(typeof pkChgBind==="function")pkChgBind(p);
+ document.querySelectorAll("[data-pkzmv]").forEach(b=>b.onclick=()=>pkZMove(p,b.dataset.pkzmv));if(typeof pkChgBind==="function")pkChgBind(p);if(typeof pkXBind==="function")pkXBind(p,fin);
  document.querySelectorAll("[data-pkzf]").forEach(b=>b.onclick=()=>pkZFinish(p,b.dataset.pkzf));
  document.querySelectorAll("[data-pkzr]").forEach(b=>b.onclick=()=>pkZReopen(p,b.dataset.pkzr));
  document.querySelectorAll("[data-pkzi]").forEach(b=>b.onclick=()=>pkMail(p,b.dataset.pkzi));
@@ -289,6 +291,7 @@ function pkMailText(P,zps){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[],inc=o=>
   else if(st.s==="part")L.push("- "+nm2+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q));
   if(st.alt.length)st.alt.forEach(a=>L.push((st.s==="part"||st.s==="open"?"  ":"- "+nm2+":\n  ")+"Alternative: "+pkNum(a.n)+"× "+a.t+(a.a?" ("+a.a+")":"")));
   if(h&&h.fm==="lager"&&x.f>0)L.push("- "+nm2+": aus dem Lager statt Fremdmiete ("+pkNum(x.f)+u+")")});
+ if(!zps&&typeof pkX==="function")pkX(P).forEach(e=>L.push("- Zusätzlich mitgegeben (nicht im Packschein): "+pkXTx(e)+(e.why?" – "+e.why:"")));
  const vn=String(P.pl||"").split(" ")[0],me1=String(meName()||""),F=zps?pkZFin(P,pkZOf(P,zps)||{})||{}:H.fin||{};
  return{subj:(zps?"Zusatz-Packschein "+zps:"Packliste "+(P.ord||""))+" – "+(P.ev||"")+": Abweichungen beim Herrichten",
   body:"Hallo"+(vn?" "+vn:"")+",\n\nbeim Herrichten von "+(zps?"Zusatz-Packschein "+zps+" zu ":"")+(P.ev||"")+" (Auftrag "+(P.ord||"–")+", Packschein "+(zps||P.ps||"–")+") gab es folgende Abweichungen:\n\n"+(L.length?L.join("\n"):"- keine")+"\n\nHergerichtet von "+(F.by?nm(F.by):me1)+(F.t?", "+fmt(F.t):"")+".\n\nLG\n"+me1}}

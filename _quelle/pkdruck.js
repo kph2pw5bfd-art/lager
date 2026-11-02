@@ -27,6 +27,7 @@ function pkDrRows(P){const H=pkH(P),IT=pkItems(P),rows=[];
   if(r.nf)h.push(["davon "+pkDrQ(r.nf,u)+" Fremdmiete (noch nicht geklärt)","m"]);
   Object.keys(r.zn).forEach(z=>h.push(["inkl. "+pkDrQ(r.zn[z],u)+" aus Zusatz "+z,"m"]));
   if(r.z)h.push(["aus Zusatz "+r.z,"m"]);r.hints=h});
+ if(typeof pkX==="function")pkX(P).forEach(e=>rows.push({k:pkXKey(e),pos:"+",name:pkXName(e),a:e.a||"",u:e.u||"Stk",z:null,l55:false,items:[],extra:e,soll:0,mit:+e.n||0,fz:0,fl:0,nf:0,miss:0,open:0,zn:{},alt:[],ck:"+",hints:[["zusätzlich (nicht im Packschein)"+(e.why?" – "+e.why:""),"g"]]}));
  return rows}
 const pkDrAltName=a=>{const k=a.a?pkKat({a:a.a}):null;return (k&&k.name)||a.t||""};
 /* Stand (Kopf) und Abweichungen (Kasten) */
@@ -38,11 +39,12 @@ function pkDrDev(rows){const D=[],O=[];rows.forEach(r=>{const u=pkDrU(r);
   if(r.miss)D.push(r.name+": fehlt "+pkDrQ(r.miss,u)+(r.mit?" ("+pkDrQ(r.mit,u)+" mitgegeben)":" (nicht mitgegeben)"));
   r.alt.forEach(a=>D.push("Ersatz für "+r.name+": "+pkDrQ(+a.n||0,u)+" "+pkDrAltName(a)));
   if(r.fl)D.push(r.name+": "+pkDrQ(r.fl,u)+" aus dem Lager statt Fremdmiete");
-  if(r.open)O.push(r.name+" ("+pkDrQ(r.open,u)+")")});return{D,O}}
+  if(r.open)O.push(r.name+" ("+pkDrQ(r.open,u)+")");
+  if(r.extra)D.push("Zusätzlich mitgegeben: "+pkDrQ(r.mit,u)+" "+r.name+(r.extra.why?" ("+r.extra.why+")":""))});return{D,O}}
 /* ---------- PDF ---------- */
 async function pkDrPdf(P){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb}=PDFLib,doc=await PDFDocument.create(),F=await doc.embedFont(StandardFonts.Helvetica),B=await doc.embedFont(StandardFonts.HelveticaBold);
  const W=595.28,HP=841.89,ML=34,MR=34,MT=34,MB=44,CW=W-ML-MR;
- const NAVY=rgb(.067,.29,.592),INK=rgb(.09,.13,.18),GREY=rgb(.36,.41,.47),LINE=rgb(.73,.76,.83),HAIR=rgb(.89,.91,.93),OR=rgb(.6,.3,0),ORL=rgb(.902,.494,.133),ORBG=rgb(1,.945,.89),OKBG=rgb(.89,.953,.914),OK=rgb(.12,.42,.25),TINT=rgb(.933,.953,.98),BLUE=rgb(.067,.29,.592);
+ const NAVY=rgb(.067,.29,.592),INK=rgb(.09,.13,.18),GREY=rgb(.36,.41,.47),LINE=rgb(.73,.76,.83),HAIR=rgb(.89,.91,.93),OR=rgb(.6,.3,0),ORL=rgb(.902,.494,.133),ORBG=rgb(1,.945,.89),OKBG=rgb(.89,.953,.914),OK=rgb(.12,.42,.25),TINT=rgb(.933,.953,.98),BLUE=rgb(.067,.29,.592),XBG=rgb(.89,.953,.914),XG=rgb(.12,.42,.25);
  const rows=pkDrRows(P),head=pkDrHead(P),dev=pkDrDev(rows);let pg,y;const pages=[];
  const txt=(s,x,yy,o)=>{o=o||{};pg.drawText(wbTx(s),{x,y:yy,size:o.size||9,font:o.bold?B:F,color:o.color||INK})};
  const tw=(s,f,z)=>f.widthOfTextAtSize(wbTx(s),z);
@@ -77,9 +79,10 @@ async function pkDrPdf(P){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb
   txt(cells.pos,C[1].x+4,y-10.5,{size:8,color:GREY});
   [[2,cells.soll],[3,cells.mit]].forEach(([i,s])=>txt(s,C[i].x+C[i].w-6-tw(s,F,8.5),y-10.5,{size:8.5}));
   nameL.forEach((l,i)=>txt(l,C[4].x+4,y-10.5-i*10.5,{size:8.5,bold:!o.l55,color:o.l55?GREY:INK}));
-  hl.forEach((l,i)=>txt(l[0],C[4].x+4,y-10.5-nameL.length*10.5-i*9.5+1,{size:7.5,color:l[1]==="o"?OR:l[1]==="b"?BLUE:GREY}));
+  hl.forEach((l,i)=>txt(l[0],C[4].x+4,y-10.5-nameL.length*10.5-i*9.5+1,{size:7.5,color:l[1]==="o"?OR:l[1]==="b"?BLUE:l[1]==="g"?XG:GREY}));
   txt(cells.a||"",C[5].x+4,y-10.5,{size:8,color:GREY});y-=h;pg.drawLine({start:{x:ML,y},end:{x:ML+CW,y},thickness:.5,color:HAIR})};
  rows.forEach(r=>{const u=pkDrU(r);
+  if(r.extra)return line({ck:"+",pos:"",soll:"–",mit:pkDrQ(r.mit,u),name:r.name,a:r.a,hints:r.hints},{bg:XBG});
   line({ck:r.ck,pos:r.pos,soll:pkDrQ(r.soll,u),mit:r.l55?"–":r.open&&!r.mit?"–":pkDrQ(r.mit,u),name:r.name,a:r.a,hints:r.hints},{bg:r.ck==="!"?ORBG:null,l55:r.l55});
   r.alt.forEach(a=>line({ck:"+",pos:"",soll:"–",mit:pkDrQ(+a.n||0,u),name:pkDrAltName(a),a:a.a||"",hints:[["Ersatz für Pos. "+r.pos,"b"]]},{bg:TINT}))});
  const foot="TPC Lager App · Packliste "+(P.ps||P.id);
@@ -88,9 +91,9 @@ async function pkDrPdf(P){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb
 /* ---------- Mail-Text an den Monteur: ganze Liste ---------- */
 function pkDrMail(P){const rows=pkDrRows(P),dev=pkDrDev(rows),H=pkH(P),g=pkProg(P),me1=String(meName()||"");
  const ag={},order=[],add=(key,name,u,n,o)=>{if(!ag[key]){ag[key]={name,u,n:0,fz:0,alt:0};order.push(key)}const e=ag[key];e.n+=n;e.fz+=(o&&o.fz)||0;e.alt+=(o&&o.alt)||0};
- rows.forEach(r=>{if(r.l55)return;const u=pkDrU(r);if(r.mit+r.fz)add(r.k+"|"+u,r.name,u,r.mit+r.fz,{fz:r.fz});
+ rows.forEach(r=>{if(r.l55)return;const u=pkDrU(r);if(r.extra){add(r.k+"|"+u,r.name,u,r.mit,{});ag[r.k+"|"+u].x=(ag[r.k+"|"+u].x||0)+r.mit;return}if(r.mit+r.fz)add(r.k+"|"+u,r.name,u,r.mit+r.fz,{fz:r.fz});
   r.alt.forEach(a=>{const ak=(a.a?abgKey(artCode(a.a),pkDrAltName(a)):"n:"+pkDrAltName(a))+"|"+u;add(ak,pkDrAltName(a),u,+a.n||0,{alt:+a.n||0})})});
- const L=order.map(k=>{const e=ag[k],x=[];if(e.alt)x.push("inkl. "+pkDrQ(e.alt,e.u)+" Ersatz");if(e.fz)x.push("davon "+pkDrQ(e.fz,e.u)+" Fremdmiete");return "- "+pkDrQ(e.n,e.u)+" "+e.name+(x.length?" ("+x.join(", ")+")":"")});
+ const L=order.map(k=>{const e=ag[k],x=[];if(e.alt)x.push("inkl. "+pkDrQ(e.alt,e.u)+" Ersatz");if(e.fz)x.push("davon "+pkDrQ(e.fz,e.u)+" Fremdmiete");if(e.x)x.push((e.x===e.n?"":"davon "+pkDrQ(e.x,e.u)+" ")+"zusätzlich, nicht im Packschein");return "- "+pkDrQ(e.n,e.u)+" "+e.name+(x.length?" ("+x.join(", ")+")":"")});
  const l55=rows.filter(r=>r.l55).map(r=>"- "+pkDrQ(r.soll,pkDrU(r))+" "+r.name);
  const st=g.fin?"hergerichtet am "+fmt(H.fin.t).slice(0,10):"Stand "+fmt(Date.now()).slice(0,10)+" ("+g.d+" von "+g.n+" Positionen hergerichtet)";
  return "Hallo,\n\nanbei die Packliste für "+(P.ev||"")+" (Auftrag "+(P.ord||"–")+"), "+st+".\n\n"+

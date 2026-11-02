@@ -398,6 +398,13 @@ button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:va
 .wbbi{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.wbbi label{flex:1;min-width:160px}.wbbi input{margin:0;width:100%}.wbbi .btn{width:auto}
 .wbbadd{align-self:flex-start;padding:2px 0;font-size:14px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .wbb b{color:#8fb0ea}}:root[data-theme="dark"] .wbb b{color:#8fb0ea}
+/* Zusätzlich mitgegebenes Material (1.93) */
+.pkg.pkgx{background:#2a7d4f}
+.pkc.pkcx{background:#2a7d4f;border-color:#2a7d4f;color:#fff;font-weight:700}.pkc.pkcx:disabled{opacity:.7}
+.pk-x .pkt small.pkby{display:block}
+.pkxadd{display:block;width:100%;margin:12px 0 4px;padding:12px;border:2px dashed #2a7d4f;border-radius:10px;background:none;color:#2a7d4f;font:inherit;font-weight:700;cursor:pointer}
+.pkxadd:active{background:#e3f3e9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pkxadd{color:#6fd39a;border-color:#6fd39a}}:root[data-theme="dark"] .pkxadd{color:#6fd39a;border-color:#6fd39a}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -423,7 +430,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.92";
+<script>const APPV="1.93";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1274,8 +1281,9 @@ async function pkUpload(files){for(const f of files){let P;const b=$("#pkup");if
   else{ok=await pkConfirm(P,null);if(!ok)continue}
   if(ok==="zus"){const day=await pkZAskDay(P,main);if(!day)continue;
    try{const zus=(main.zus||[]).filter(z=>String(z.ps)!==String(P.ps)).concat([{ps:P.ps,ev:P.ev,t:Date.now(),by:me,...tabAs("by"),pos:P.pos,v:2}]);
-    await db.doc("pack/"+main.id).update({zus});const zk=pkZK(P.ps);await pkHSet(main,{["zd_"+zk]:{d:day,by:me,...tabAs("by"),t:Date.now()},["zf_"+zk]:{t:0}});
-    toast("Zusatz angehängt – herrichten "+pkWd(pkFromYmd(day)),1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}continue}
+    await db.doc("pack/"+main.id).update({zus});const zk=pkZK(P.ps),xp=typeof pkXApply==="function"?pkXApply(main,pkH(main),pkItems({...main,zus}).filter(o=>o.z===String(P.ps))):{},xn=Object.keys(xp).filter(k=>/^h_/.test(k)).length;
+    await pkHSet(main,{["zd_"+zk]:{d:day,by:me,...tabAs("by"),t:Date.now()},["zf_"+zk]:{t:0},...xp});
+    toast("Zusatz angehängt – herrichten "+pkWd(pkFromYmd(day))+(xn?" · "+xn+(xn===1?" Position":" Positionen")+" mit zusätzlich Mitgegebenem verrechnet":""),1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}continue}
   try{await db.doc("pack/"+id).set({...P,zus:[],by:me,...tabAs("by"),t:Date.now()});toast("Packliste gespeichert",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}}}
 /* Gibt es schon eine Packliste mit derselben Auftragsnummer (anderer Packschein)? -> Zusatz. Bereits angehängter Zusatz mit gleicher Nummer -> derselbe Haupt-Packschein */
 function pkMainFor(P,id){const o=pkDig(P.ord);if(!o||packs.some(x=>x.id===id||String(x.ps)===String(P.ps)))return null;
@@ -1310,6 +1318,7 @@ function pkPS(x,h){const need=pkNeed(x,h);if(!h)return{s:"open",need,alt:[]};con
 function pkL55(x,h){if(h&&typeof h.l55==="boolean")return h.l55;const k=pkKat(x);return !!(k&&k.l55)}
 function pkProg(P){if(P&&P._z)return pkZProg(P._p,P._z);return pkProgOf(P,null,!!(pkH(P).fin&&pkH(P).fin.t))}
 function pkProgOf(P,zps,fin){const H=pkH(P);let d=0,dev=0,n=0,l55=0;pkItems(P).forEach(o=>{if((o.z||null)!==zps)return;const x=o.x,h=H[o.k];if(pkL55(x,h)){l55++;return}n++;const st=pkPS(x,h);if(st.s!=="open")d++;if(st.s==="part"||st.alt.length||(h&&h.fm==="lager"&&x.f>0))dev++});
+ if(zps===null&&typeof pkX==="function")dev+=pkX(P).length;
  return{d,n,dev,l55,fin,H}}
 /* ===== Zusatz-Packscheine mit eigenem Herricht-Tag (ab 1.88) =====
    epirent gibt jedem Zusatz den Dispo-Beginn des ersten Packscheins – darum eigener Tag: packh.zd_<ps> = {d:"JJJJ-MM-TT", why, by, t} (beim Hochladen gefragt, „Verschieben“).
@@ -1367,14 +1376,14 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
    (st.s==="part"?'<em class="pkpart">'+pkNum(st.q)+' von '+pkNum(st.need)+' da – fehlen '+pkNum(st.need-st.q)+'</em>':'')+
    st.alt.map(a=>'<em class="pkalt">+ '+esc(pkNum(a.n))+'× '+esc(a.t)+(a.a?' ('+esc(a.a)+')':'')+'</em>').join("")+
    (h&&h.by&&st.s!=="open"?'<small class="pkby">'+esc(nmA(h,"by"))+', '+fmt(h.t).slice(-5)+'</small>':'')+'</span></div>'+zf}).join(""):'<div class="mute" style="padding:10px 0">Alles hergerichtet.</div>')+
-   (r55.length?'<div class="pkg pkg55">Lager 55</div>'+r55.map(({x,i})=>'<div class="pkp pk-l55"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+'<em class="pk55">holt Fahrer/Monteur'+(x.f>0?' · davon '+esc(pkNum(x.f))+' Fremdmiete':'')+'</em></span></div>').join(""):'')+'</div>'+
+   (r55.length?'<div class="pkg pkg55">Lager 55</div>'+r55.map(({x,i})=>'<div class="pkp pk-l55"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+'<em class="pk55">holt Fahrer/Monteur'+(x.f>0?' · davon '+esc(pkNum(x.f))+' Fremdmiete':'')+'</em></span></div>').join(""):'')+(typeof pkXHtml==="function"?pkXHtml(p,fin):'')+'</div>'+
   '<button class="btn'+(fin?'':' ghost')+'" id="pkprint" type="button" style="margin-top:12px">Drucken / Teilen (PDF)</button>'+(fin?'<button class="btn ghost" id="pkinfo" style="margin-top:8px">Info an Projektleiter</button><button class="btn ghost" id="pkreo" style="margin-top:8px">Wieder öffnen</button>':'<button class="btn" id="pkfin" style="margin-top:8px">Herrichten abschließen</button>')+
   (can("pk_l")?'<button class="btn ghost" id="pkdel" style="color:var(--bad);margin-top:12px">Packliste löschen</button>':'');
  document.querySelectorAll("[data-pkhf]").forEach(b=>b.onclick=()=>{pkHf=b.dataset.pkhf;packOpenView()});
  document.querySelectorAll("[data-pkr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.pkr;go("retopen")});if(typeof abgPkBind==="function")abgPkBind();
  document.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>pkTap(p,+b.dataset.pc));
  document.querySelectorAll("[data-pe]").forEach(b=>b.onclick=()=>{if(pkRowFin(p,+b.dataset.pe))return toast((pkItems(p)[+b.dataset.pe]||{}).z?"Der Zusatz ist abgeschlossen – zum Ändern erst „Zusatz wieder öffnen“.":"Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkEdit(p,+b.dataset.pe)});
- document.querySelectorAll("[data-pkzmv]").forEach(b=>b.onclick=()=>pkZMove(p,b.dataset.pkzmv));if(typeof pkChgBind==="function")pkChgBind(p);
+ document.querySelectorAll("[data-pkzmv]").forEach(b=>b.onclick=()=>pkZMove(p,b.dataset.pkzmv));if(typeof pkChgBind==="function")pkChgBind(p);if(typeof pkXBind==="function")pkXBind(p,fin);
  document.querySelectorAll("[data-pkzf]").forEach(b=>b.onclick=()=>pkZFinish(p,b.dataset.pkzf));
  document.querySelectorAll("[data-pkzr]").forEach(b=>b.onclick=()=>pkZReopen(p,b.dataset.pkzr));
  document.querySelectorAll("[data-pkzi]").forEach(b=>b.onclick=()=>pkMail(p,b.dataset.pkzi));
@@ -1491,6 +1500,7 @@ function pkMailText(P,zps){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[],inc=o=>
   else if(st.s==="part")L.push("- "+nm2+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q));
   if(st.alt.length)st.alt.forEach(a=>L.push((st.s==="part"||st.s==="open"?"  ":"- "+nm2+":\n  ")+"Alternative: "+pkNum(a.n)+"× "+a.t+(a.a?" ("+a.a+")":"")));
   if(h&&h.fm==="lager"&&x.f>0)L.push("- "+nm2+": aus dem Lager statt Fremdmiete ("+pkNum(x.f)+u+")")});
+ if(!zps&&typeof pkX==="function")pkX(P).forEach(e=>L.push("- Zusätzlich mitgegeben (nicht im Packschein): "+pkXTx(e)+(e.why?" – "+e.why:"")));
  const vn=String(P.pl||"").split(" ")[0],me1=String(meName()||""),F=zps?pkZFin(P,pkZOf(P,zps)||{})||{}:H.fin||{};
  return{subj:(zps?"Zusatz-Packschein "+zps:"Packliste "+(P.ord||""))+" – "+(P.ev||"")+": Abweichungen beim Herrichten",
   body:"Hallo"+(vn?" "+vn:"")+",\n\nbeim Herrichten von "+(zps?"Zusatz-Packschein "+zps+" zu ":"")+(P.ev||"")+" (Auftrag "+(P.ord||"–")+", Packschein "+(zps||P.ps||"–")+") gab es folgende Abweichungen:\n\n"+(L.length?L.join("\n"):"- keine")+"\n\nHergerichtet von "+(F.by?nmA(F,"by"):me1)+(F.t?", "+fmt(F.t):"")+".\n\nLG\n"+me1}}
@@ -1794,6 +1804,7 @@ function jvArtCnt(p,m){const H=pkH(p),k=pkState(p).k,run=k==="over"||k==="out"||
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),own=Math.max(0,(+x.n||0)-(h&&h.fm==="lager"?0:(+x.f||0)));
   if(m(artCode(x.a),x.t+" "+pkName(x))){if(pkL55(x,h)){if(run){out+=own;l55+=own}else plan+=own}else if(st.s==="open"){if(run)out+=own;else plan+=own}else out+=h&&h.ok?own:Math.min(own,+st.q||0)}
   if(st.s!=="open")(st.alt||[]).forEach(a=>{if(m(artCode(a.a),a.t))out+=+a.n||0})});
+ if(typeof pkX==="function")pkX(p).forEach(e=>{if(m(artCode(e.a),(e.nm||"")+" "+pkXName(e)))out+=+e.n||0});
  pkRets(p).forEach(r=>Object.values(rIt(r)).forEach(it=>{if(it.g!=="Zubehör"&&m(artCode(it.nr),it.name))back+=+it.q||0}));
  return{out,plan,back,l55,rest:Math.max(0,out-back)}}
 function jvOutSum(A){if(!can("pk_s"))return 0;const m=jvMatcher(A);let s=0;packs.forEach(p=>{if(pkState(p).k!=="done")s+=jvArtCnt(p,m).rest});return s}
@@ -2251,6 +2262,7 @@ function abgBal(p,ov){const H=pkH(p),M={};
   add(artCode(x.a),pkName(x),!!o.z,st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0),f);
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,!!o.z,+a.n||0,0)})});
  const R=pkRets(p);
+ if(typeof pkX==="function")pkX(p).forEach(e=>add(artCode(e.a),pkXName(e),false,+e.n||0,0));
  R.forEach(r=>{const it=ov&&ov.id&&r.id===ov.id?ov.items:rIt(r);Object.values(it||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0})});
  if(ov&&!ov.id)Object.values(ov.items||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0});
  ABZ.forEach(z=>{if(z.from===p.id)get(z.k,z.code,z.name).zout+=+z.q||0;if(z.to===p.id)get(z.k,z.code,z.name).zin+=+z.q||0});
@@ -2689,7 +2701,8 @@ const auQ=(n,u)=>pkNum(n)+'<small> '+esc(u||"Stk")+'</small>';
 function auDevLines(p,zps){const H=pkH(p),K=pkKeys(p),IT=pkItems(p),L=[];pkPosAll(p).forEach((x,i)=>{if((IT[i].z||null)!==(zps||null))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x);
  const u=" "+(x.u||"Stk");if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
  (st.s!=="open"?st.alt:[]).forEach(a=>L.push(n+": stattdessen "+pkNum(a.n)+" "+(x.u||"Stk")+" "+a.t));
- if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete")});return L}
+ if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete")});
+ if(!zps&&typeof pkX==="function")pkX(p).forEach(e=>L.push("zusätzlich mitgegeben: "+pkXTx(e)+(e.why?" – "+e.why:"")));return L}
 function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){view="au";return auView()}
  $("#t").textContent=p.ev||"Auftrag";const I=auInfo(p),B=I.B,H=pkH(p),mine=auIsMine(p),act=mine&&can("au_b"),g=I.g,fr=pkF(p).length;
  const te=(c,t,s)=>'<div class="aute"><span class="audot '+c+'">'+(c==="d"?"✓":c==="r"||c==="w"?"!":"")+'</span><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+'</span></div>';
@@ -2824,6 +2837,7 @@ async function pkReplace(M,P,inc){const H=pkH(M),IT=pkItems(M),incS=new Set((inc
  const rest=(M.zus||[]).filter(z=>!incS.has(String(z.ps))),newP={...M,pos:P.pos,zus:rest},newI=pkItems(newP).filter(o=>!o.z);
  const C=pkCarry(H,oldI,newI),from=[M.ps].concat([...incS]).filter((v,i,a)=>v&&a.indexOf(v)===i),chg={t:Date.now(),by:me,...tabAs("by"),from,to:P.ps,kind:"main",diff:C.diff.map(d=>({name:d.name,u:d.u,o:d.o,n:d.n}))};
  const patch={...C.patch};incS.forEach(ps=>{patch["zd_"+pkZK(ps)]=null;patch["zf_"+pkZK(ps)]=null});
+ if(typeof pkXApply==="function")Object.assign(patch,pkXApply(M,{...H,...patch},newI));
  if(C.back.length)patch.zr=pkZrAdd(H,C.back,P.ps);
  const wasFin=!!(H.fin&&H.fin.t),same=String(P.ps)===String(M.ps)&&!incS.size;
  if(wasFin&&(C.diff.length||incS.size&&[...incS].some(ps=>!pkZFin(M,pkZOf(M,ps)||{ps}))))patch.fin=null;
@@ -2837,6 +2851,7 @@ async function pkReplaceZ(M,zps,P){const z=pkZOf(M,zps);if(!z)return;const H=pkH
  const nz={ps:P.ps,ev:P.ev,t:Date.now(),by:me,...tabAs("by"),pos:P.pos,v:2},rest=(M.zus||[]).map(q=>String(q.ps)===String(zps)?nz:q),newI=pkItems({...M,zus:rest}).filter(o=>o.z===String(P.ps));
  const C=pkCarry(H,oldI,newI),ok=pkZK(zps),nk=pkZK(P.ps),patch={...C.patch},zf=pkZFin(M,z);
  patch["zd_"+nk]=H["zd_"+ok]||{d:pkYmd(pkZDay(M,z)),by:me,...tabAs("by"),t:Date.now()};patch["zf_"+nk]=zf&&!C.diff.length?zf:{t:0};if(ok!==nk){patch["zd_"+ok]=null;patch["zf_"+ok]=null}
+ if(typeof pkXApply==="function")Object.assign(patch,pkXApply(M,{...H,...patch},newI));
  if(C.back.length)patch.zr=pkZrAdd(H,C.back,P.ps);
  try{await db.doc("pack/"+M.id).update({zus:rest,chg:(M.chg||[]).concat([{t:Date.now(),by:me,...tabAs("by"),from:[String(zps)],to:P.ps,kind:"zus",diff:C.diff.map(d=>({name:d.name,u:d.u,o:d.o,n:d.n}))}])});await pkHSet(M,patch);
   toast("Zusatz ersetzt"+(C.diff.length?" – "+C.diff.length+(C.diff.length===1?" Änderung":" Änderungen"):""),1)}
@@ -2881,6 +2896,7 @@ function pkDrRows(P){const H=pkH(P),IT=pkItems(P),rows=[];
   if(r.nf)h.push(["davon "+pkDrQ(r.nf,u)+" Fremdmiete (noch nicht geklärt)","m"]);
   Object.keys(r.zn).forEach(z=>h.push(["inkl. "+pkDrQ(r.zn[z],u)+" aus Zusatz "+z,"m"]));
   if(r.z)h.push(["aus Zusatz "+r.z,"m"]);r.hints=h});
+ if(typeof pkX==="function")pkX(P).forEach(e=>rows.push({k:pkXKey(e),pos:"+",name:pkXName(e),a:e.a||"",u:e.u||"Stk",z:null,l55:false,items:[],extra:e,soll:0,mit:+e.n||0,fz:0,fl:0,nf:0,miss:0,open:0,zn:{},alt:[],ck:"+",hints:[["zusätzlich (nicht im Packschein)"+(e.why?" – "+e.why:""),"g"]]}));
  return rows}
 const pkDrAltName=a=>{const k=a.a?pkKat({a:a.a}):null;return (k&&k.name)||a.t||""};
 /* Stand (Kopf) und Abweichungen (Kasten) */
@@ -2892,11 +2908,12 @@ function pkDrDev(rows){const D=[],O=[];rows.forEach(r=>{const u=pkDrU(r);
   if(r.miss)D.push(r.name+": fehlt "+pkDrQ(r.miss,u)+(r.mit?" ("+pkDrQ(r.mit,u)+" mitgegeben)":" (nicht mitgegeben)"));
   r.alt.forEach(a=>D.push("Ersatz für "+r.name+": "+pkDrQ(+a.n||0,u)+" "+pkDrAltName(a)));
   if(r.fl)D.push(r.name+": "+pkDrQ(r.fl,u)+" aus dem Lager statt Fremdmiete");
-  if(r.open)O.push(r.name+" ("+pkDrQ(r.open,u)+")")});return{D,O}}
+  if(r.open)O.push(r.name+" ("+pkDrQ(r.open,u)+")");
+  if(r.extra)D.push("Zusätzlich mitgegeben: "+pkDrQ(r.mit,u)+" "+r.name+(r.extra.why?" ("+r.extra.why+")":""))});return{D,O}}
 /* ---------- PDF ---------- */
 async function pkDrPdf(P){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb}=PDFLib,doc=await PDFDocument.create(),F=await doc.embedFont(StandardFonts.Helvetica),B=await doc.embedFont(StandardFonts.HelveticaBold);
  const W=595.28,HP=841.89,ML=34,MR=34,MT=34,MB=44,CW=W-ML-MR;
- const NAVY=rgb(.067,.29,.592),INK=rgb(.09,.13,.18),GREY=rgb(.36,.41,.47),LINE=rgb(.73,.76,.83),HAIR=rgb(.89,.91,.93),OR=rgb(.6,.3,0),ORL=rgb(.902,.494,.133),ORBG=rgb(1,.945,.89),OKBG=rgb(.89,.953,.914),OK=rgb(.12,.42,.25),TINT=rgb(.933,.953,.98),BLUE=rgb(.067,.29,.592);
+ const NAVY=rgb(.067,.29,.592),INK=rgb(.09,.13,.18),GREY=rgb(.36,.41,.47),LINE=rgb(.73,.76,.83),HAIR=rgb(.89,.91,.93),OR=rgb(.6,.3,0),ORL=rgb(.902,.494,.133),ORBG=rgb(1,.945,.89),OKBG=rgb(.89,.953,.914),OK=rgb(.12,.42,.25),TINT=rgb(.933,.953,.98),BLUE=rgb(.067,.29,.592),XBG=rgb(.89,.953,.914),XG=rgb(.12,.42,.25);
  const rows=pkDrRows(P),head=pkDrHead(P),dev=pkDrDev(rows);let pg,y;const pages=[];
  const txt=(s,x,yy,o)=>{o=o||{};pg.drawText(wbTx(s),{x,y:yy,size:o.size||9,font:o.bold?B:F,color:o.color||INK})};
  const tw=(s,f,z)=>f.widthOfTextAtSize(wbTx(s),z);
@@ -2931,9 +2948,10 @@ async function pkDrPdf(P){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb
   txt(cells.pos,C[1].x+4,y-10.5,{size:8,color:GREY});
   [[2,cells.soll],[3,cells.mit]].forEach(([i,s])=>txt(s,C[i].x+C[i].w-6-tw(s,F,8.5),y-10.5,{size:8.5}));
   nameL.forEach((l,i)=>txt(l,C[4].x+4,y-10.5-i*10.5,{size:8.5,bold:!o.l55,color:o.l55?GREY:INK}));
-  hl.forEach((l,i)=>txt(l[0],C[4].x+4,y-10.5-nameL.length*10.5-i*9.5+1,{size:7.5,color:l[1]==="o"?OR:l[1]==="b"?BLUE:GREY}));
+  hl.forEach((l,i)=>txt(l[0],C[4].x+4,y-10.5-nameL.length*10.5-i*9.5+1,{size:7.5,color:l[1]==="o"?OR:l[1]==="b"?BLUE:l[1]==="g"?XG:GREY}));
   txt(cells.a||"",C[5].x+4,y-10.5,{size:8,color:GREY});y-=h;pg.drawLine({start:{x:ML,y},end:{x:ML+CW,y},thickness:.5,color:HAIR})};
  rows.forEach(r=>{const u=pkDrU(r);
+  if(r.extra)return line({ck:"+",pos:"",soll:"–",mit:pkDrQ(r.mit,u),name:r.name,a:r.a,hints:r.hints},{bg:XBG});
   line({ck:r.ck,pos:r.pos,soll:pkDrQ(r.soll,u),mit:r.l55?"–":r.open&&!r.mit?"–":pkDrQ(r.mit,u),name:r.name,a:r.a,hints:r.hints},{bg:r.ck==="!"?ORBG:null,l55:r.l55});
   r.alt.forEach(a=>line({ck:"+",pos:"",soll:"–",mit:pkDrQ(+a.n||0,u),name:pkDrAltName(a),a:a.a||"",hints:[["Ersatz für Pos. "+r.pos,"b"]]},{bg:TINT}))});
  const foot="TPC Lager App · Packliste "+(P.ps||P.id);
@@ -2942,9 +2960,9 @@ async function pkDrPdf(P){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb
 /* ---------- Mail-Text an den Monteur: ganze Liste ---------- */
 function pkDrMail(P){const rows=pkDrRows(P),dev=pkDrDev(rows),H=pkH(P),g=pkProg(P),me1=String(meName()||"");
  const ag={},order=[],add=(key,name,u,n,o)=>{if(!ag[key]){ag[key]={name,u,n:0,fz:0,alt:0};order.push(key)}const e=ag[key];e.n+=n;e.fz+=(o&&o.fz)||0;e.alt+=(o&&o.alt)||0};
- rows.forEach(r=>{if(r.l55)return;const u=pkDrU(r);if(r.mit+r.fz)add(r.k+"|"+u,r.name,u,r.mit+r.fz,{fz:r.fz});
+ rows.forEach(r=>{if(r.l55)return;const u=pkDrU(r);if(r.extra){add(r.k+"|"+u,r.name,u,r.mit,{});ag[r.k+"|"+u].x=(ag[r.k+"|"+u].x||0)+r.mit;return}if(r.mit+r.fz)add(r.k+"|"+u,r.name,u,r.mit+r.fz,{fz:r.fz});
   r.alt.forEach(a=>{const ak=(a.a?abgKey(artCode(a.a),pkDrAltName(a)):"n:"+pkDrAltName(a))+"|"+u;add(ak,pkDrAltName(a),u,+a.n||0,{alt:+a.n||0})})});
- const L=order.map(k=>{const e=ag[k],x=[];if(e.alt)x.push("inkl. "+pkDrQ(e.alt,e.u)+" Ersatz");if(e.fz)x.push("davon "+pkDrQ(e.fz,e.u)+" Fremdmiete");return "- "+pkDrQ(e.n,e.u)+" "+e.name+(x.length?" ("+x.join(", ")+")":"")});
+ const L=order.map(k=>{const e=ag[k],x=[];if(e.alt)x.push("inkl. "+pkDrQ(e.alt,e.u)+" Ersatz");if(e.fz)x.push("davon "+pkDrQ(e.fz,e.u)+" Fremdmiete");if(e.x)x.push((e.x===e.n?"":"davon "+pkDrQ(e.x,e.u)+" ")+"zusätzlich, nicht im Packschein");return "- "+pkDrQ(e.n,e.u)+" "+e.name+(x.length?" ("+x.join(", ")+")":"")});
  const l55=rows.filter(r=>r.l55).map(r=>"- "+pkDrQ(r.soll,pkDrU(r))+" "+r.name);
  const st=g.fin?"hergerichtet am "+fmt(H.fin.t).slice(0,10):"Stand "+fmt(Date.now()).slice(0,10)+" ("+g.d+" von "+g.n+" Positionen hergerichtet)";
  return "Hallo,\n\nanbei die Packliste für "+(P.ev||"")+" (Auftrag "+(P.ord||"–")+"), "+st+".\n\n"+
@@ -2981,6 +2999,57 @@ function pkDrDlg(P){const mob=wbMobile(),fn=pkDrFn(P),o=document.createElement("
  if(g("pkdrsh"))g("pkdrsh").onclick=()=>share(true);
  g("pkdrc").onclick=async()=>{try{await navigator.clipboard.writeText(subj+"\n\n"+ta.value);toast("Text kopiert",1)}catch(e){ta.select();toast("Bitte Text markieren und kopieren.")}};
  g("pkdrx").onclick=()=>o.remove()}
+
+/* ===== Zusätzlich mitgegebenes Material (ab 1.93) =====
+   Beim Herrichten Material hinzufügen, das nicht im Packschein steht: packh.x_<id> = {n, u, nm, a, why, by, ts} (null = gelöscht).
+   Gehört zur Haupt-Packliste; ändern/löschen, solange sie nicht abgeschlossen ist; darf jeder, der herrichten darf (pk_s).
+   Zählt im Abgleich als „raus“, steht im PDF (Abweichungen + Liste), in der Info an den PL und in der Mail an den Monteur.
+   Kommt später ein Zusatz oder geänderter Packschein mit demselben Artikel, wird es dagegen verrechnet (pkXApply). */
+const pkX=P=>{const H=pkH(P);return Object.keys(H).filter(k=>/^x_/.test(k)&&H[k]&&(+H[k].n||0)>0).map(k=>({id:k,...H[k]})).sort((a,b)=>(a.ts||0)-(b.ts||0))};
+const pkXName=e=>{const k=e.a?pkKat({a:e.a}):null;return (k&&k.name)||e.nm||""};
+const pkXKey=e=>pkAK({a:e.a,t:e.nm});
+const pkXTx=e=>pkNum(e.n)+" "+(e.u||"Stk")+" "+pkXName(e);
+/* Liste in der Herricht-Ansicht */
+function pkXHtml(P,fin){const X=pkX(P);if(!X.length&&fin)return"";
+ return (X.length?'<div class="pkg pkgx">Zusätzlich (nicht im Packschein)</div>'+X.map(e=>'<div class="pkp pk-x"><button class="pkc pkcx" type="button" data-pkxe="'+esc(e.id)+'" aria-label="Ändern"'+(fin?' disabled':'')+'>+</button>'+
+   '<span class="pkn" data-pkxe="'+esc(e.id)+'">'+esc(pkNum(e.n))+' '+esc(e.u||"Stk")+'</span><span class="pkt" data-pkxe="'+esc(e.id)+'">'+esc(pkXName(e))+(e.a?' <small>'+esc(e.a)+'</small>':'')+
+   '<small class="pkby">'+(e.why?esc(e.why)+' · ':'')+esc(nmA(e,"by"))+', '+fmt(e.ts).slice(-5)+'</small></span></div>').join(""):'')+
+  (fin?'':'<button class="pkxadd" id="pkxadd" type="button">+ Material hinzufügen</button>')}
+function pkXBind(P,fin){const a=$("#pkxadd");if(a)a.onclick=()=>pkXDlg(P,null);
+ document.querySelectorAll("[data-pkxe]").forEach(b=>b.onclick=()=>{if(fin)return toast("Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkXDlg(P,b.dataset.pkxe)})}
+/* Hinzufügen / ändern */
+function pkXDlg(P,id){const e=id?(pkH(P)[id]||null):null,o=document.createElement("div");o.className="ov";let pick=e&&e.a?{t:pkXName(e),a:e.a}:null;
+ o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0;max-height:92vh;overflow:auto"><b style="font-size:17px">'+(e?'Zusätzliches Material ändern':'Material hinzufügen')+'</b>'+
+  '<p class="mute" style="margin:4px 0 10px">Steht nicht im Packschein – wird trotzdem mitgegeben.</p>'+
+  '<label class="mute" for="pxt">Artikel</label><div style="position:relative"><input id="pxt" placeholder="Artikel suchen oder frei eintippen" autocomplete="off" style="margin:0"><div id="pxres" class="peres"></div></div>'+
+  '<div class="row" style="gap:8px;align-items:flex-end;margin-top:10px"><div style="flex:1"><label class="mute" for="pxn">Menge</label><div class="row" style="align-items:center;gap:6px"><button class="btn ghost" id="pxm" type="button" style="flex:0 0 46px">−</button><input id="pxn" type="number" inputmode="decimal" min="0" style="text-align:center;font-size:20px;margin:0"><button class="btn ghost" id="pxp" type="button" style="flex:0 0 46px">+</button></div></div>'+
+  '<div style="flex:0 0 86px"><label class="mute" for="pxu">Einheit</label><input id="pxu" maxlength="8" style="margin:0"></div></div>'+
+  '<label class="mute" for="pxw" style="margin-top:10px;display:block">Grund (optional)</label><input id="pxw" maxlength="80" placeholder="z. B. Monteur hat angerufen" style="margin:0">'+
+  '<div class="row" style="margin-top:14px"><button class="btn ghost" id="pxx" type="button">Abbrechen</button><button class="btn" id="pxs" type="button">'+(e?'Speichern':'Hinzufügen')+'</button></div>'+
+  (e?'<button class="lnk" id="pxd" type="button" style="margin-top:8px;color:var(--bad)">Löschen</button>':'')+'</div>';
+ document.body.appendChild(o);const g=k=>o.querySelector("#"+k),K=(typeof rkat!=="undefined"&&Array.isArray(rkat))?rkat:[];
+ g("pxt").value=e?pkXName(e):"";g("pxn").value=e?String(e.n):"1";g("pxu").value=e?(e.u||"Stk"):"Stk";g("pxw").value=e?(e.why||""):"";
+ g("pxt").oninput=()=>{pick=null;const t=g("pxt").value.trim().toLowerCase();if(t.length<2){g("pxres").innerHTML="";return}
+  const L=K.filter(a=>String(a.name||"").toLowerCase().includes(t)||String(a.nr||"").toLowerCase().startsWith(t)).slice(0,6);
+  g("pxres").innerHTML=L.map((a,j)=>'<button type="button" data-xr="'+j+'"><b>'+esc(a.name)+'</b> <small>'+esc(a.nr||"")+(a.g?' · '+esc(a.g):'')+'</small></button>').join("");
+  g("pxres").querySelectorAll("[data-xr]").forEach(b=>b.onclick=()=>{const a=L[+b.dataset.xr];pick={t:a.name,a:a.nr||""};g("pxt").value=a.name;g("pxres").innerHTML=""})};
+ const nv=()=>Math.max(0,parseFloat(String(g("pxn").value).replace(",","."))||0);
+ g("pxm").onclick=()=>{g("pxn").value=String(Math.max(0,nv()-1))};g("pxp").onclick=()=>{g("pxn").value=String(nv()+1)};
+ g("pxx").onclick=()=>o.remove();
+ if(g("pxd"))g("pxd").onclick=()=>{o.remove();ask("Zusätzliches Material „"+pkXTx(e)+"“ löschen?",()=>pkHSet(P,{[id]:null}).then(()=>toast("Gelöscht",1)))};
+ g("pxs").onclick=()=>{const t=g("pxt").value.trim(),n=nv(),u=g("pxu").value.trim()||"Stk";if(!t){g("pxt").classList.add("bad");return}if(!n){g("pxn").classList.add("bad");return}
+  const d={n,u,nm:pick&&pick.t===t?pick.t:t,a:pick&&pick.t===t?pick.a:"",why:g("pxw").value.trim(),by:me,...tabAs("by"),...tabAs("by"),ts:e?e.ts:Date.now()};if(e)d.mod={by:me,...tabAs("by"),t:Date.now()};
+  o.remove();pkHSet(P,{[id||("x_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5))]:d}).then(()=>toast(e?"Geändert":"Hinzugefügt: "+pkXTx(d),1))}}
+/* Später: Zusatz / geänderter Packschein mit demselben Artikel → zusätzliches Material dagegen verrechnen.
+   H = Stand inkl. bereits geplanter Änderungen, items = neue Positionen [{x,k}]. Gibt Patch (Positionen + gekürzte/gelöschte x_) zurück. */
+function pkXApply(P,H,items){const pool={},patch={};
+ Object.keys(H).filter(k=>/^x_/.test(k)&&H[k]&&(+H[k].n||0)>0).forEach(k=>{const e=H[k],key=pkXKey(e);(pool[key]=pool[key]||[]).push({k,e,left:+e.n||0})});
+ if(!Object.keys(pool).length)return patch;
+ items.forEach(o=>{const x=o.x,h=H[o.k]||null;if(pkL55(x,h))return;const L=pool[pkAK(x)];if(!L)return;const st=pkPS(x,h),need=st.need,have=st.s==="ok"?need:st.s==="part"?(+st.q||0):0;let rest=need-have;if(rest<=0)return;
+  let got=0,from=null;L.forEach(p=>{if(rest<=0||p.left<=0)return;const t=Math.min(rest,p.left);p.left-=t;rest-=t;got+=t;from=from||p.e});
+  if(!got)return;const q=have+got,nh={...(h||{}),q,ok:q>=need,by:from.by,t:Date.now(),xf:true};if(nh.ok)delete nh.q;patch[o.k]=nh});
+ Object.values(pool).forEach(L=>L.forEach(p=>{if(p.left<=0)patch[p.k]=null;else if(p.left!==(+p.e.n||0))patch[p.k]={...p.e,n:p.left}}));
+ return patch}
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};

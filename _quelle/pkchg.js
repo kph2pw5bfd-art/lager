@@ -61,6 +61,7 @@ async function pkReplace(M,P,inc){const H=pkH(M),IT=pkItems(M),incS=new Set((inc
  const rest=(M.zus||[]).filter(z=>!incS.has(String(z.ps))),newP={...M,pos:P.pos,zus:rest},newI=pkItems(newP).filter(o=>!o.z);
  const C=pkCarry(H,oldI,newI),from=[M.ps].concat([...incS]).filter((v,i,a)=>v&&a.indexOf(v)===i),chg={t:Date.now(),by:me,from,to:P.ps,kind:"main",diff:C.diff.map(d=>({name:d.name,u:d.u,o:d.o,n:d.n}))};
  const patch={...C.patch};incS.forEach(ps=>{patch["zd_"+pkZK(ps)]=null;patch["zf_"+pkZK(ps)]=null});
+ if(typeof pkXApply==="function")Object.assign(patch,pkXApply(M,{...H,...patch},newI));
  if(C.back.length)patch.zr=pkZrAdd(H,C.back,P.ps);
  const wasFin=!!(H.fin&&H.fin.t),same=String(P.ps)===String(M.ps)&&!incS.size;
  if(wasFin&&(C.diff.length||incS.size&&[...incS].some(ps=>!pkZFin(M,pkZOf(M,ps)||{ps}))))patch.fin=null;
@@ -74,6 +75,7 @@ async function pkReplaceZ(M,zps,P){const z=pkZOf(M,zps);if(!z)return;const H=pkH
  const nz={ps:P.ps,ev:P.ev,t:Date.now(),by:me,pos:P.pos,v:2},rest=(M.zus||[]).map(q=>String(q.ps)===String(zps)?nz:q),newI=pkItems({...M,zus:rest}).filter(o=>o.z===String(P.ps));
  const C=pkCarry(H,oldI,newI),ok=pkZK(zps),nk=pkZK(P.ps),patch={...C.patch},zf=pkZFin(M,z);
  patch["zd_"+nk]=H["zd_"+ok]||{d:pkYmd(pkZDay(M,z)),by:me,t:Date.now()};patch["zf_"+nk]=zf&&!C.diff.length?zf:{t:0};if(ok!==nk){patch["zd_"+ok]=null;patch["zf_"+ok]=null}
+ if(typeof pkXApply==="function")Object.assign(patch,pkXApply(M,{...H,...patch},newI));
  if(C.back.length)patch.zr=pkZrAdd(H,C.back,P.ps);
  try{await db.doc("pack/"+M.id).update({zus:rest,chg:(M.chg||[]).concat([{t:Date.now(),by:me,from:[String(zps)],to:P.ps,kind:"zus",diff:C.diff.map(d=>({name:d.name,u:d.u,o:d.o,n:d.n}))}])});await pkHSet(M,patch);
   toast("Zusatz ersetzt"+(C.diff.length?" – "+C.diff.length+(C.diff.length===1?" Änderung":" Änderungen"):""),1)}

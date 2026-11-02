@@ -68,7 +68,8 @@ const auQ=(n,u)=>pkNum(n)+'<small> '+esc(u||"Stk")+'</small>';
 function auDevLines(p,zps){const H=pkH(p),K=pkKeys(p),IT=pkItems(p),L=[];pkPosAll(p).forEach((x,i)=>{if((IT[i].z||null)!==(zps||null))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x);
  const u=" "+(x.u||"Stk");if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
  (st.s!=="open"?st.alt:[]).forEach(a=>L.push(n+": stattdessen "+pkNum(a.n)+" "+(x.u||"Stk")+" "+a.t));
- if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete")});return L}
+ if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete")});
+ if(!zps&&typeof pkX==="function")pkX(p).forEach(e=>L.push("zusätzlich mitgegeben: "+pkXTx(e)+(e.why?" – "+e.why:"")));return L}
 function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){view="au";return auView()}
  $("#t").textContent=p.ev||"Auftrag";const I=auInfo(p),B=I.B,H=pkH(p),mine=auIsMine(p),act=mine&&can("au_b"),g=I.g,fr=pkF(p).length;
  const te=(c,t,s)=>'<div class="aute"><span class="audot '+c+'">'+(c==="d"?"✓":c==="r"||c==="w"?"!":"")+'</span><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+'</span></div>';
