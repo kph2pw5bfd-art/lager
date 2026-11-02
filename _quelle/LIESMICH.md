@@ -279,3 +279,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.104 – Begriffe in der Lager Übersicht (Jürgen)
 - Reiter „Überfällig“ heißt „Dispo abgelaufen“, Reiter „Fehlt noch“ heißt „Fehlmaterial“ (jvTabs/jvTabList in shim.js, abgMissTab in abg.js, Hinweistext unten, Rückfrage „Mit Projektleiter geklärt“). Nur die Lager Übersicht – Packlisten-Gruppe „Überfällig“, Wochenbericht, Briefing, Assistenten-Fragen und „Meine Aufträge“ („Fehlt noch“) unverändert (Jürgen gefragt).
+
+## 1.105 – „Dispo abgelaufen“ und „Fehlmaterial“ überall (Jürgen: „Ja bitte“) + Reiter-Layout
+- Alle sichtbaren „Überfällig/überfällig“ → „Dispo abgelaufen“, Sätze umformuliert („Bei X ist die Dispo abgelaufen“, „Bei n Aufträgen …“, „mit abgelaufener Dispo“): Packlisten (Status-Etikett, Gruppe, Kachel), Lager-Übersicht-Kachel, Briefing frech/sachlich, Assistent (jvask/jvfrag inkl. Hilfe: „Wo ist die Dispo seit mehr als 3 Tagen abgelaufen?“, „Wo ist die Dispo am längsten abgelaufen?“), Wochenbericht, Meine Aufträge, Abgleich. „Fehlt noch“ → „Fehlmaterial“ (Meine Aufträge, Retoure-Mail, Nachfrage-Mail „Fehlmaterial laut Retourschein:“); in „Was kommt diese Woche zurück“ „noch nicht zurück“. Intern heißen Zustände weiter `over`.
+- Erkennung im Assistenten: „überfällig“ UND „Dispo (ist) abgelaufen“, „abgelaufene Dispo“ usw. (jvfrag.js, Abschnitt Rücklauf & Dispo).
+- Lager Übersicht: Reiter „Fehl-<br>material“ (Feld `lh` in jvTabs), Reiter oben ausgerichtet (`.jvtab{justify-content:flex-start}`) → Zahlen auf gleicher Höhe.
+- Kleinigkeit: doppelter Punkt nach dem Datum in „Dispo-Ende Mi 28.10.“ entfernt.

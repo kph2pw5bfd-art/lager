@@ -347,3 +347,5 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 /* 1.103: Vorschau Artikelliste-Import */
 .axn{color:var(--ok);font-weight:700}.axc{color:#b35a00;font-weight:700}.axw{color:var(--bad);font-weight:700}
 .axd{margin:6px 0}.axd summary{cursor:pointer}.axd ul{margin:4px 0 0;padding-left:20px;font-size:13.5px}
+/* 1.105: Zahlen in allen Reitern auf gleicher Höhe (oben ausgerichtet) */
+.jvtab{justify-content:flex-start;padding-top:9px}

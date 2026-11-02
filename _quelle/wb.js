@@ -52,7 +52,7 @@ function wbPaper(D,print){const kwL=pkKW(D.L0),kwN=pkKW(D.M),y=new Date(D.M).get
  return '<div class="wbpaper'+(print?' wbprint':'')+'"><div class="wbhd"><div><span>The Power Company · Lager</span><h1>Wochenbericht</h1></div><em>Besprechung '+wbWd(D.M)+y+'</em></div>'+
   '<section class="wbsec"><div class="wbbar"><b>1 · Letzte Woche</b><span>KW '+kwL+' · '+pkDM(D.L0)+'–'+pkDM(pkAddD(D.M,-1))+new Date(pkAddD(D.M,-1)).getFullYear()+'</span></div><div class="wbin">'+
    wbList("Hergerichtet",D.herr,false,"Nichts hergerichtet.")+wbList("Zurückgekommen",D.zur,false,"Nichts zurückgekommen.")+
-   '<div class="wb2">'+wbList("Überfällig",D.over,true,"Nichts überfällig.")+wbList("Dispodaten stimmten nicht",D.dis,false,"Keine Abweichungen.")+'</div>'+
+   '<div class="wb2">'+wbList("Dispo abgelaufen",D.over,true,"Bei keinem Auftrag ist die Dispo abgelaufen.")+wbList("Dispodaten stimmten nicht",D.dis,false,"Keine Abweichungen.")+'</div>'+
    (D.offen?'<div class="wboff">'+(D.offen.n?'<b>Noch offen insgesamt:</b> '+D.offen.n+' Stück Fehlmaterial bei '+D.offen.a+(D.offen.a===1?' Auftrag':' Aufträgen')+' (auch aus früheren Wochen)':'<b>Noch offen insgesamt:</b> kein Fehlmaterial')+'</div>':'')+'</div></section>'+
   '<section class="wbsec"><div class="wbbar"><b>2 · Diese Woche</b><span>KW '+kwN+' · '+pkDM(D.M)+'–'+pkDM(pkAddD(D.M,4))+y+'</span></div><div class="wbin">'+
    '<table class="wbt"><thead><tr><th>Tag</th><th>Herrichten</th><th>Kommt zurück</th></tr></thead><tbody>'+D.days.map(d=>'<tr><td><b>'+wbWd(d.t)+'</b></td><td>'+day(d,"h")+'</td><td>'+day(d,"z")+'</td></tr>').join("")+
@@ -133,7 +133,7 @@ async function wbPdf(D){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb}=
  /* 1 · Letzte Woche */
  secStart("1 · Letzte Woche","KW "+pkKW(D.L0)+" · "+pkDM(D.L0)+"–"+pkDM(pkAddD(D.M,-1))+new Date(pkAddD(D.M,-1)).getFullYear());
  list("Hergerichtet",D.herr,false,"Nichts hergerichtet.");list("Zurückgekommen",D.zur,false,"Nichts zurückgekommen.");
- list("Überfällig",D.over,true,"Nichts überfällig.");list("Dispodaten stimmten nicht",D.dis,false,"Keine Abweichungen.");
+ list("Dispo abgelaufen",D.over,true,"Bei keinem Auftrag ist die Dispo abgelaufen.");list("Dispodaten stimmten nicht",D.dis,false,"Keine Abweichungen.");
  if(D.offen){const a="Noch offen insgesamt: ",b=D.offen.n?D.offen.n+" Stück Fehlmaterial bei "+D.offen.a+(D.offen.a===1?" Auftrag":" Aufträgen")+" (auch aus früheren Wochen)":"kein Fehlmaterial";
   need(22);pg.drawRectangle({x:IX,y:y-18,width:IW,height:18,color:PINK});txt(a,IX+8,y-12.5,{size:9,bold:true,color:RED});txt(b,IX+8+tw(a,B,9),y-12.5,{size:9});y-=24}
  secEnd();

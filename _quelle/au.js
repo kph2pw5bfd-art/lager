@@ -20,7 +20,7 @@ function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.
  const S=[{c:"d"},{c:g.fin?(g.dev?"w":"d"):g.d?"n":late?"r":""},{c:over?"r":out||B.R.length?"d":""},{c:B.hasEnd?(B.fehlt&&!kl?"r":"d"):B.R.length?"n":""},{c:done?"d":""}];
  let lab,cls;
  if(done){lab=kl?"Geklärt":"Erledigt ✓";cls="ok"}
- else if(over&&!B.hasEnd){lab="Überfällig";cls="red"}
+ else if(over&&!B.hasEnd){lab="Dispo abgelaufen";cls="red"}
  else if(missShow){lab="Fehlt "+B.fehlt;cls="red"}
  else if(late){lab="Nicht hergerichtet";cls="red"}
  else if(B.R.length){lab=B.R.some(r=>r.closed&&r.art==="teil")?"Teilretoure":"Retoure läuft";cls="b"}
@@ -80,13 +80,13 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const t00=pkDay(Date.now()),zusT=(p.zus||[]).map(z=>{const zg=pkZProg(p,z.ps),zf=pkZFin(p,z),zd=pkZDay(p,z),zdev=auDevLines(p,String(z.ps)),lab="Nachlieferung (Zusatz "+esc(z.ps)+")";
   return zf?te(zg.dev?"w":"d",lab,"hergerichtet "+fmt(zf.t).slice(0,6)+" von "+esc(nmA(zf,"by"))+(zdev.length?'<span class="audev">'+zdev.map(esc).join("<br>")+'</span>':"")):zg.d?te("n",lab,"wird hergerichtet: "+zg.d+" von "+zg.n+" Positionen"):zd<t00?te("r",lab,"noch nicht hergerichtet – geplant war "+pkWd(zd)):te("",lab,"herrichten "+(zd===t00?"heute":pkWd(zd))+" · "+pkPosN((z.pos||[]).length))}).join("");
  const chgT=(p.chg||[]).slice().sort((a,b)=>a.t-b.t).map(c=>te("w","Packschein geändert",esc(pkChgLbl(c))+" · "+fmt(c.t).slice(0,6)+(c.diff&&c.diff.length?'<span class="audev">'+c.diff.map(d=>esc(d.name)+": "+esc(pkDiffTxt(d))).join("<br>")+'</span>':""))).join("");
- const outT=I.over?te("r","Überfällig","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Draußen","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Draußen","ab "+pkWd(auOutDay(p)));
+ const outT=I.over?te("r","Dispo abgelaufen","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Draußen","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Draußen","ab "+pkWd(auOutDay(p)));
  const R=B.R.slice().sort((a,b)=>(abgRetT(a)||0)-(abgRetT(b)||0));
  const retT=R.length?R.map(r=>te(r.closed?(r.art==="teil"?"d":(B.fehlt&&!I.kl?"r":"d")):"n",abgRetLbl(r),fmt(abgRetT(r)).slice(0,6)+" · "+abgRetN(r)+" Stück"+(r.closed&&r.art!=="teil"?" · "+(B.fehlt?B.fehlt+" fehlen noch":"alles da"):""))).join(""):te("","Retouren","noch nichts zurück");
  const doneT=I.kl?te("d","Mit Projektleiter geklärt",fmt(H.klar.t).slice(0,6)+" · "+esc(nmA(H.klar,"by"))):I.done?te("d","Erledigt","alles zurück"):te("","Erledigt","wenn alles zurück oder geklärt ist");
  const tl='<section class="card aucd"><b class="ausec">Wie weit ist das Lager?</b><div class="autl">'+te("d","Packliste da",(p.t?fmt(p.t).slice(0,6)+" · ":"")+pkPosN(pkPosAll(p).length)+(fr?", davon "+fr+" mit Fremdmiete":"")+((p.zus||[]).length?" · "+(p.zus.length===1?"1 Zusatz":p.zus.length+" Zusätze"):""))+chgT+herr+zusT+outT+retT+doneT+'</div></section>';
  const ansH=a=>'<div class="auans"><b>'+(a.by===me?'Deine Antwort':esc(nmA(a,"by")))+'</b> · '+fmt(a.t).slice(0,6)+'<br>'+esc(auAnsTxt(a))+(a.read&&a.read.t?'<small>Gelesen von '+esc(nmA(a.read,"by"))+'</small>':'<small>Noch nicht gelesen</small>')+'</div>';
- const miss=I.missShow?'<section class="card aucd red"><b class="ausec red">Fehlt noch</b>'+B.miss.map((e,i)=>{const a=auAns(p,e.k)[0];return '<div class="aurow"><b class="auq">'+auQ(e.soll-e.back,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span>'+(act?'<button class="btn ghost s auab" type="button" data-aua="'+i+'">'+(a?'Ändern':'Antworten')+'</button>':'')+'</div>'+(a?ansH(a):'')}).join("")+'</section>':
+ const miss=I.missShow?'<section class="card aucd red"><b class="ausec red">Fehlmaterial</b>'+B.miss.map((e,i)=>{const a=auAns(p,e.k)[0];return '<div class="aurow"><b class="auq">'+auQ(e.soll-e.back,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span>'+(act?'<button class="btn ghost s auab" type="button" data-aua="'+i+'">'+(a?'Ändern':'Antworten')+'</button>':'')+'</div>'+(a?ansH(a):'')}).join("")+'</section>':
   (B.miss.length&&B.R.length&&!I.done?'<section class="card aucd"><b class="ausec">Noch draußen</b><small class="mute">Teilretoure – das kommt laut Packliste noch zurück.</small>'+B.miss.map(e=>'<div class="aurow"><b class="auq m">'+auQ(e.soll-e.back,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'');
  const more=B.more.length&&!I.done?'<section class="card aucd"><b class="ausec">Mehr zurück als geplant</b>'+B.more.map(e=>'<div class="aurow"><b class="auq m">+'+auQ(e.back-e.soll-e.fr-e.l55,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'';
  const M=PLAW.filter(a=>a.pk===p.id&&a.typ==="msg");

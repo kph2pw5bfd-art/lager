@@ -78,10 +78,10 @@ function jvWhereA(A,count){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),L
  const say=[],rows=[];
  if(L.length){const ov=L.filter(o=>o.over);
   say.push(A.label+": "+jvStk(sum)+(L.length===1?" auf einer Baustelle.":" auf "+L.length+" Baustellen."));
-  if(!count||L.length<=3){if(ov.length)say.push("Überfällig: "+jvList(ov.map(o=>jvStk(o.q)+" bei "+jvEv(o.p)))+".");
+  if(!count||L.length<=3){if(ov.length)say.push("Dispo abgelaufen: "+jvList(ov.map(o=>jvStk(o.q)+" bei "+jvEv(o.p)))+".");
    L.filter(o=>!o.over).slice(0,4).forEach(o=>say.push(jvStk(o.q)+" bei "+jvEv(o.p)+", Dispo bis "+jvDayName(pkDay(o.p.de))+"."))}
-  else if(ov.length)say.push("Davon "+jvStk(ov.reduce((a,o)=>a+o.q,0))+" überfällig.");
-  L.forEach(o=>rows.push({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–")+(o.l55?" · "+(o.l55>=o.q?"über Lager 55":"davon "+o.l55+" über Lager 55"):"")+(o.back?" · "+jvStk(o.back)+" schon zurück":""),r:jvStk(o.q)+" · "+(o.over?"überfällig, ":"bis ")+pkWd(o.p.de),cls:o.over?"warn":"ok",pk:o.p.id}));
+  else if(ov.length)say.push("Davon "+jvStk(ov.reduce((a,o)=>a+o.q,0))+" mit abgelaufener Dispo.");
+  L.forEach(o=>rows.push({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–")+(o.l55?" · "+(o.l55>=o.q?"über Lager 55":"davon "+o.l55+" über Lager 55"):"")+(o.back?" · "+jvStk(o.back)+" schon zurück":""),r:jvStk(o.q)+" · "+(o.over?"Dispo abgelaufen, ":"bis ")+pkWd(o.p.de),cls:o.over?"warn":"ok",pk:o.p.id}));
   rows.push({sum:true,l:"Summe auf Baustellen",r:jvStk(sum)})}
  if(P.length){say.push((L.length?"Dazu geplant, noch nicht hergerichtet: ":A.label+": auf keiner Baustelle, aber geplant: ")+jvStk(sumP)+".");
   rows.push({hd:true,l:"Geplant, noch nicht hergerichtet"});
@@ -101,7 +101,7 @@ function jvAvailA(A,D){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),t=D.t
  const dl=D.lab==="heute"?"heute":D.lab==="morgen"?"morgen":jvDL(D.t);
  if(!L.length)return{say:[A.label+": "+dl+" ist laut Packlisten nichts davon draußen. Wie viele wir insgesamt haben, weiß ich nicht."]};
  return{say:[A.label+": "+dl+" sind laut Packlisten "+jvStk(sum)+" verplant, auf "+L.length+(L.length===1?" Veranstaltung.":" Veranstaltungen."),"Den Gesamtbestand im Lager kenne ich nicht."],
-  rows:L.sort((a,b)=>(b.over-a.over)||((a.p.de||0)-(b.p.de||0))).map(o=>({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–"),r:jvStk(o.q)+" · "+(o.over?"überfällig":"bis "+pkWd(o.p.de)),cls:o.over?"warn":"ok",pk:o.p.id})).concat([{sum:true,l:"Summe "+(D.lab==="heute"?"heute":pkDM(D.t)),r:jvStk(sum)}])}}
+  rows:L.sort((a,b)=>(b.over-a.over)||((a.p.de||0)-(b.p.de||0))).map(o=>({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–"),r:jvStk(o.q)+" · "+(o.over?"Dispo abgelaufen":"bis "+pkWd(o.p.de)),cls:o.over?"warn":"ok",pk:o.p.id})).concat([{sum:true,l:"Summe "+(D.lab==="heute"?"heute":pkDM(D.t)),r:jvStk(sum)}])}}
 /* „Zu welchem Auftrag könnten 4 Stück Kabel A gehören?“ – Vorschlag nach Artikel + Menge */
 function jvBelongA(A,n){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),t0=jvToday(),L=[];
  packs.forEach(p=>{const s=pkState(p);if(s.k==="done"||!(s.k==="over"||s.k==="out"||s.k==="back"))return;const c=jvArtCnt(p,m);if(c.rest>0)L.push({p,q:c.rest,over:s.k==="over",fit:n?(c.rest===n?2:c.rest>n?1:0):1})});
@@ -109,7 +109,7 @@ function jvBelongA(A,n){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),t0=j
  L.sort((a,b)=>b.fit-a.fit||(b.over-a.over)||((b.p.de||0)-(a.p.de||0)));
  const b=L[0];
  return{say:[(n?jvStk(n)+" "+A.label:A.label)+": am ehesten "+jvEv(b.p)+" (Auftrag "+(b.p.ord||"–")+")"+(b.fit===2?", dort fehlen genau "+jvStk(b.q)+".":", dort sind noch "+jvStk(b.q)+" draußen.")].concat(L.length>1?["Weitere Möglichkeiten stehen darunter."]:[]).concat(["Das ist nur ein Vorschlag nach Artikel und Menge."]),
-  rows:L.slice(0,8).map(o=>({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–")+(o.fit===2?" · Menge passt genau":""),r:jvStk(o.q)+" · "+(o.over?"überfällig":"bis "+pkWd(o.p.de)),cls:o.over?"warn":"ok",pk:o.p.id}))}}
+  rows:L.slice(0,8).map(o=>({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–")+(o.fit===2?" · Menge passt genau":""),r:jvStk(o.q)+" · "+(o.over?"Dispo abgelaufen":"bis "+pkWd(o.p.de)),cls:o.over?"warn":"ok",pk:o.p.id}))}}
 /* ---------- Abgleich Packliste ↔ Retourschein ---------- */
 function jvBalAns(p,mode){const B=jvBal(p),say=[],rows=[],ev=jvEv(p);
  if(!B.has){say.push(mode==="all"?"Bei "+ev+" ist noch nichts zurück – es gibt keinen Retourschein.":"Zu "+ev+" gibt es noch keinen Retourschein. Laut Packliste ist alles draußen: "+jvStk(B.L.reduce((a,e)=>a+e.soll,0))+".");
@@ -147,26 +147,26 @@ function jvRetFind(q){if(!can("ret_s"))return[];const n=jvNorm(q),dig=(n.match(/
 /* ---------- Rücklauf & Dispo ---------- */
 function jvOverDays(n){if(!can("pk_s"))return JV_NOPK;const m=n.match(/(\d+|[a-zäöü]+)\s*(tag|tage|tagen|woche|wochen)/),k=m?(jvZ(m[1])||1)*(/woche/.test(m[2])?7:1):3;
  const t0=jvToday(),L=pkGroups().over.filter(p=>(t0-pkDay(p.de))/864e5>k);
- if(!L.length)return{say:["Nichts ist länger als "+(k%7===0&&k>=7?(k/7===1?"eine Woche":k/7+" Wochen"):k+" Tage")+" überfällig."]};
- return{say:[L.length===1?"Eine Retoure ist länger als "+k+" Tage überfällig:":L.length+" Retouren sind länger als "+k+" Tage überfällig:"].concat(L.slice(0,4).map(p=>jvEv(p)+", "+jvSince(p.de)+".")),rows:L.map(p=>jvPkRow(p,"überfällig "+jvSince(p.de)))}}
-function jvOverLongest(){if(!can("pk_s"))return JV_NOPK;const L=pkGroups().over;if(!L.length)return{say:["Überfällig ist nichts."]};const p=L[0];
- return{say:["Am längsten überfällig ist "+jvEv(p)+", Auftrag "+(p.ord||"–")+": Dispo-Ende war "+jvDL(p.de)+", also "+jvSince(p.de)+"."+(jvF()?" Zeit für einen Anruf.":"")+(jvPl(p)?" Projektleiter: "+jvPl(p)+".":"")],rows:L.slice(0,5).map(p=>jvPkRow(p,"überfällig "+jvSince(p.de)))}}
+ if(!L.length)return{say:["Bei keinem Auftrag ist die Dispo länger als "+(k%7===0&&k>=7?(k/7===1?"eine Woche":k/7+" Wochen"):k+" Tage")+" abgelaufen."]};
+ return{say:[L.length===1?"Bei einem Auftrag ist die Dispo länger als "+k+" Tage abgelaufen:":"Bei "+L.length+" Aufträgen ist die Dispo länger als "+k+" Tage abgelaufen:"].concat(L.slice(0,4).map(p=>jvEv(p)+", "+jvSince(p.de)+".")),rows:L.map(p=>jvPkRow(p,"Dispo abgelaufen "+jvSince(p.de)))}}
+function jvOverLongest(){if(!can("pk_s"))return JV_NOPK;const L=pkGroups().over;if(!L.length)return{say:["Bei keinem Auftrag ist die Dispo abgelaufen."]};const p=L[0];
+ return{say:["Am längsten abgelaufen ist die Dispo bei "+jvEv(p)+", Auftrag "+(p.ord||"–")+": Dispo-Ende war "+jvDL(p.de)+", also "+jvSince(p.de)+"."+(jvF()?" Zeit für einen Anruf.":"")+(jvPl(p)?" Projektleiter: "+jvPl(p)+".":"")],rows:L.slice(0,5).map(p=>jvPkRow(p,"Dispo abgelaufen "+jvSince(p.de)))}}
 const jvPl=p=>shortName(p.pl)||"";
 function jvBackDay(D){if(!can("pk_s"))return JV_NOPK;const L=packs.filter(p=>p.de&&pkDay(p.de)===D.t);
  if(!L.length)return{say:[(D.lab==="gestern"?"Gestern hätte":"Am "+pkDM(D.t)+" hätte")+" laut Packlisten nichts zurückkommen sollen."]};
  const ok=L.filter(p=>pkState(p).k==="done"),no=L.filter(p=>pkState(p).k!=="done");
  return{say:[(D.lab==="gestern"?"Gestern":jvDL(D.t))+" hätte"+(L.length===1?"":"n")+" "+(L.length===1?"eine Packliste":L.length+" Packlisten")+" zurückkommen sollen."].concat(ok.length?[jvList(ok.map(jvEv))+(ok.length===1?" ist":" sind")+" zurück."]:[]).concat(no.length?[jvList(no.map(jvEv))+(no.length===1?" fehlt":" fehlen")+" noch."]:[]),
-  rows:L.map(p=>jvPkRow(p,pkState(p).k==="done"?"zurück ✓":"fehlt noch"))}}
+  rows:L.map(p=>jvPkRow(p,pkState(p).k==="done"?"zurück ✓":"noch nicht zurück"))}}
 function jvBackWeek(){if(!can("pk_s"))return JV_NOPK;const t0=jvToday(),e=pkAddD(pkMon(t0),6),L=packs.filter(p=>p.de&&pkDay(p.de)>=t0&&pkDay(p.de)<=e&&pkState(p).k!=="done").sort((a,b)=>a.de-b.de);
  if(!L.length)return{say:["Diese Woche kommt laut Packlisten nichts mehr zurück."]};
  return{say:["Diese Woche kommen noch "+(L.length===1?"eine Packliste":L.length+" Packlisten")+" zurück:"].concat(L.slice(0,5).map(p=>jvEv(p)+", "+jvDayName(pkDay(p.de))+".")),rows:L.map(p=>jvPkRow(p,"Dispo-Ende "+pkWd(p.de)))}}
-function jvDispo(q){return jvOnePk(q,p=>({say:["Die Dispo von "+jvEv(p)+" (Auftrag "+(p.ord||"–")+") "+(p.de&&pkDay(p.de)<jvToday()?"endete":"endet")+" am "+jvDL(p.de)+(new Date(p.de).getHours()?" um "+jvTime(p.de):"")+"."].concat(pkState(p).k==="over"?["Die Retoure ist überfällig."]:[]),rows:[jvPkRow(p,"Dispo "+pkDM(p.db)+"–"+pkDM(p.de))]}))}
+function jvDispo(q){return jvOnePk(q,p=>({say:["Die Dispo von "+jvEv(p)+" (Auftrag "+(p.ord||"–")+") "+(p.de&&pkDay(p.de)<jvToday()?"endete":"endet")+" am "+jvDL(p.de)+(new Date(p.de).getHours()?" um "+jvTime(p.de):"")+"."].concat(pkState(p).k==="over"?["Die Dispo ist abgelaufen."]:[]),rows:[jvPkRow(p,"Dispo "+pkDM(p.db)+"–"+pkDM(p.de))]}))}
 function jvPlOpen(q){if(!can("pk_s"))return JV_NOPK;const n=jvNorm(q).replace(/^.*?projektleiter(in)?\s*/,"").replace(/\b(sind|noch|offen|offene|aufträge|auftrag|von|welche|hat|was|alles)\b/g," ").trim();
  const T=n.split(" ").filter(w=>w.length>1);if(!T.length)return{say:["Welcher Projektleiter? Sag zum Beispiel „Aufträge von Projektleiter Marvin“."]};
  const L=packs.filter(p=>{const s=jvNorm(p.pl);return s&&T.every(w=>s.split(" ").some(x=>x.startsWith(w)))&&pkState(p).k!=="done"}).sort((a,b)=>(a.de||0)-(b.de||0));
  if(!L.length)return{say:["Für Projektleiter „"+T.join(" ")+"“ finde ich keine offenen Aufträge."]};
  const ov=L.filter(p=>pkState(p).k==="over");
- return{say:[jvPl(L[0])+" hat "+(L.length===1?"einen offenen Auftrag":L.length+" offene Aufträge")+(ov.length?", davon "+ov.length+" überfällig":"")+"."].concat(L.slice(0,4).map(p=>jvEv(p)+", "+pkState(p).l+".")),rows:L.map(p=>jvPkRow(p,pkState(p).l))}}
+ return{say:[jvPl(L[0])+" hat "+(L.length===1?"einen offenen Auftrag":L.length+" offene Aufträge")+(ov.length?", davon "+ov.length+" mit abgelaufener Dispo":"")+"."].concat(L.slice(0,4).map(p=>jvEv(p)+", "+pkState(p).l+".")),rows:L.map(p=>jvPkRow(p,pkState(p).l))}}
 function jvNoMail(){if(!can("ret_s"))return JV_NORET;const L=rets.filter(r=>r.closed&&!(r.sent||[]).length).sort((a,b)=>(b.closedT||0)-(a.closedT||0));
  if(!L.length)return{say:[jvF()?"Für alles Zurückgekommene ist die Retoure geschrieben. Ordnung muss sein.":"Für alle abgeschlossenen Retourscheine ist eine Retoure verschickt."]};
  return{say:[(L.length===1?"Ein abgeschlossener Retourschein ist":L.length+" abgeschlossene Retourscheine sind")+" noch nicht per Mail verschickt:"].concat(L.slice(0,4).map(r=>(r.ev||"")+(r.ord?", Auftrag "+r.ord:"")+".")),rows:L.map(r=>({l:r.ev||"Retourschein",sub:"Auftrag "+(r.ord||"–"),r:"abgeschlossen "+jvAgo(r.closedT||r.t),cls:"warn",ret:r.id}))}}
@@ -289,7 +289,7 @@ function jvRetWeek(){if(!can("ret_s"))return JV_NORET;const m=pkMon(jvToday()),C
 function jvKlar(q,undo){return jvOnePk(q,p=>{const K=pkH(p).klar;
  if(undo){if(!K)return{say:[jvEv(p)+" ist nicht als geklärt markiert."]};return{say:["Bei "+jvEv(p)+" „geklärt“ zurücknehmen?"],acts:[{l:"Ja, zurücknehmen",fn:()=>pkHSet(p,{klar:null}).then(()=>{toast("Zurückgenommen",1);jvAsk("Was ist mit Auftrag "+(p.ord||p.ev))})}]}}
  if(K&&K.t)return{say:[jvEv(p)+" ist schon geklärt, von "+nmA(K,"by")+" am "+pkDM(K.t)+"."]};
- return{say:["Auftrag "+(p.ord||"–")+" ("+jvEv(p)+") als mit dem Projektleiter geklärt markieren? Dann gilt er nicht mehr als überfällig."],speak:["Als geklärt markieren? Bitte bestätigen."],
+ return{say:["Auftrag "+(p.ord||"–")+" ("+jvEv(p)+") als mit dem Projektleiter geklärt markieren? Dann zählt er nicht mehr bei „Dispo abgelaufen“."],speak:["Als geklärt markieren? Bitte bestätigen."],
   acts:[{l:"Ja, als geklärt markieren",fn:()=>pkHSet(p,{klar:{by:me,t:Date.now()}}).then(()=>{toast("Als geklärt markiert",1);jvShowRes({say:[jvEv(p)+" ist als geklärt markiert."],q:"Markiere Auftrag "+(p.ord||"")+" als geklärt"})})},{l:"Abbrechen",fn:()=>{const b=$("#jvans");if(b)b.innerHTML=""}}]}})}
 function jvNote(q){const s=String(q).trim(),m=s.match(/^(?:bitte\s+)?notier\w*\s+(?:dir\s+)?(?:zu|bei|für|zum)?\s*(?:auftrag|veranstaltung|packliste)?\s*(.+?)\s*[:–-]\s*(.+)$/i)||s.match(/^(?:bitte\s+)?notier\w*\s+(?:dir\s+)?(?:zu|bei|für|zum)?\s*(?:auftrag)?\s*(\d{6,}[\d-]*)\s+(.+)$/i);
  if(!m)return{say:["Sag es so: „Notiere zu Auftrag 260111401: Kunde holt selbst ab.“"]};
@@ -319,7 +319,7 @@ function jvAskPl(q){return jvOnePk(q,jvAskPlP)}
 function jvAskPlP(p){{const B=jvBal(p),vn=String(p.pl||"").split(" ")[0],me1=meName(),ov=pkState(p).k==="over";
  const L=B.has?B.miss.map(e=>"- "+jvStk(e.soll-e.back)+" "+e.name+(e.back?" (zurück: "+pkNum(e.back)+" von "+pkNum(e.soll)+")":"")):[];
  const body="Hallo"+(vn?" "+vn:"")+",\n\nkurze Nachfrage zu Auftrag "+(p.ord||"–")+" – "+(p.ev||"")+" (Dispo-Ende "+pkD(p.de)+"):\n\n"+
-  (B.has?(L.length?"Laut Retourschein fehlt noch:\n"+L.join("\n")+"\n\nWeißt du, wo das Material ist bzw. wann es kommt?":"Bei uns ist laut Retourschein alles da. Passt das so für dich?"):(ov?"Das Material ist bei uns noch nicht zurück. Weißt du, wann es kommt?":"Weißt du schon, wann das Material zurückkommt?"))+
+  (B.has?(L.length?"Fehlmaterial laut Retourschein:\n"+L.join("\n")+"\n\nWeißt du, wo das Material ist bzw. wann es kommt?":"Bei uns ist laut Retourschein alles da. Passt das so für dich?"):(ov?"Das Material ist bei uns noch nicht zurück. Weißt du, wann es kommt?":"Weißt du schon, wann das Material zurückkommt?"))+
   "\n\nDanke und LG\n"+me1;
  jvMailDlg("Nachfrage an "+(jvPl(p)||"Projektleiter"),"Nachfrage Auftrag "+(p.ord||"")+" – "+(p.ev||""),body);
  return{say:["Hier ist die Nachfrage an "+(jvPl(p)||"den Projektleiter")+". Die Adresse gibst du im Mailprogramm ein."],quiet:true}}}
@@ -346,7 +346,7 @@ function jvErinBind(){document.querySelectorAll("[data-jer]").forEach(b=>b.oncli
 let jvErinN=-1;setInterval(()=>{try{const n=jvErinDue().length;if(n!==jvErinN){const f=jvErinN>=0;jvErinN=n;if(f&&(view==="jarvis"||view==="start"))draw()}}catch(e){}},30000);
 /* ---------- Hilfe-Bildschirm ---------- */
 const JV_FRAGEN=[
- {g:"Rücklauf & Dispo",r:"pk_s",q:["Was ist seit mehr als 3 Tagen überfällig?","Welcher Auftrag ist am längsten überfällig?","Was hätte gestern zurückkommen sollen?","Was kommt diese Woche noch zurück?","Wann endet die Dispo von Auftrag X?","Welche Aufträge von Projektleiter A sind noch offen?","Für welche zurückgekommenen Aufträge ist noch keine Retoure geschrieben?"]},
+ {g:"Rücklauf & Dispo",r:"pk_s",q:["Wo ist die Dispo seit mehr als 3 Tagen abgelaufen?","Wo ist die Dispo am längsten abgelaufen?","Was hätte gestern zurückkommen sollen?","Was kommt diese Woche noch zurück?","Wann endet die Dispo von Auftrag X?","Welche Aufträge von Projektleiter A sind noch offen?","Für welche zurückgekommenen Aufträge ist noch keine Retoure geschrieben?"]},
  {g:"Herrichten",r:"pk_s",q:["Was muss ich morgen herrichten?","Was geht übermorgen raus?","Wo gibt es heute rote Zahlen?","Ist Artikel X am Dienstag verfügbar?","Welche Packscheine sind angefangen, aber nicht fertig?","Was fehlt beim Packschein von Auftrag X noch?","Wo habe ich eine Alternative eingetragen?","Wer ist Projektleiter von Auftrag X?","Lies mir die Packliste von Auftrag X vor."]},
  {g:"Material suchen & zuordnen",q:["Auf welcher Baustelle sind 50m 32A?","Wo ist gerade die ID 1234-56?","Wie viele Artikel X sind gerade auf Baustellen?","Auf welcher Veranstaltung war Artikel X zuletzt?","Zu welchem Auftrag könnten 4 Stück Kabel A gehören?","Was fehlt bei Auftrag X noch?","Was bleibt auf Baustelle Y stehen?","Was geht von Baustelle Y direkt weiter zu Z?","Welche Materiallisten kamen heute von den Monteuren?"],note:"IDs kennt der Assistent nur, wenn sie in einer Materialliste gescannt wurden."},
  {g:"Werkstatt",q:["Welche Defekte sind dringend?","Welche Defekte sind älter als eine Woche?","Ist Artikel X schon repariert?","Welche Defekte kamen von Veranstaltung Y?","Gab es bei Artikel X schon öfter Defekte?","Was wurde diese Woche repariert?","Wird ein defekter Artikel diese Woche gebraucht?"]},
@@ -435,7 +435,7 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
  if(/projektleiter/.test(n)&&/^wer\b/.test(n))return jvPlOf(raw);
  if(/(lies|lese|vorlesen).*(packliste|packschein)|(packliste|packschein).*vor(lesen)?$/.test(n))return jvReadPk(raw);
  /* Rücklauf & Dispo */
- if(/überfällig/.test(n)){if(/längsten|ältest/.test(n))return jvOverLongest();if(/seit|mehr als|länger als|über \d/.test(n))return jvOverDays(n);return jvOver()}
+ if(/überfällig|dispo (ist |sind )?(schon )?abgelaufen|abgelaufene dispo|dispo am längsten abgelaufen|dispo seit .* abgelaufen/.test(n)){if(/längsten|ältest/.test(n))return jvOverLongest();if(/seit|mehr als|länger als|über \d/.test(n))return jvOverDays(n);return jvOver()}
  if(/(hätte|sollte|sollten|hätten).*zurück/.test(n)){const D=jvDayIn(raw)||{t:pkAddD(jvToday(),-1),lab:"gestern"};return jvBackDay(D)}
  if(/woche/.test(n)&&/zurück/.test(n))return jvBackWeek();
  if(/dispo/.test(n)&&/(endet|ende|wann|bis wann)/.test(n))return jvDispo(raw);
@@ -456,5 +456,5 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
  return{say:[jvF()?jvPick(["Das habe ich nicht verstanden. Sag „Hilfe“, dann zeige ich dir, was ich kann.","Hm. Das ist mir zu hoch. Sag „Hilfe“ für meine Liste."]):"Das habe ich nicht verstanden. Sag „Hilfe“, dann zeige ich dir, was ich kann."]}}
 function jvAsk(q){q=String(q||"").trim();if(!q)return;jvStop();let A;try{A=jvAnswer(q)}catch(e){console.error(e);A={say:["Da ist bei mir etwas schiefgegangen. Bitte nochmal versuchen."]}}
  jvFin(A,q);const inp=$("#jvaq");if(inp)inp.value="";jvMs("");if(view==="jarvis")jvShow(A,!A.quiet);else jvLast=A}
-/* Zähler auf der Kachel „Lager Übersicht“: überfällige Retouren + dringende Defekte + fällige Erinnerungen */
+/* Zähler auf der Kachel „Lager Übersicht“: Aufträge mit abgelaufener Dispo + dringende Defekte + fällige Erinnerungen */
 function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length;if(typeof abgToCheck==="function")n+=abgToCheck().length;if(typeof plUnread==="function")n+=plUnread().length}catch(e){}return n?String(n):""}

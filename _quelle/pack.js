@@ -2,7 +2,7 @@
    PDF (epirent-Packliste) in der App hochladen -> im Gerät mit pdf.js lesen (pkparse.js) -> nur das Ausgelesene speichern (docs 'pack', id = Packscheinnummer).
    Kein PDF, keine Kundendaten. Kein automatisches Abrufen aus dem Postfach.
    Rechte: pk_s Sehen, pk_b Hochladen, pk_l Löschen (packliste.sql).
-   Status: Herrichten heute = Dispo-Beginn heute · Heute zurück = Dispo-Ende heute · Überfällig = Dispo-Ende vor heute und kein abgeschlossener
+   Status: Herrichten heute = Dispo-Beginn heute · Heute zurück = Dispo-Ende heute · Dispo abgelaufen (intern „over“) = Dispo-Ende vor heute und kein abgeschlossener
    Retourschein mit derselben Auftragsnummer (Ziffern verglichen, 2601114-01 = 260111401). Materialgenauer Abgleich kommt später. */
 let packs=[],curPack=null,pkf="aktuell";
 const PK_ICON='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>';
@@ -26,7 +26,7 @@ const pkWd=t=>t?new Date(t).toLocaleDateString("de-AT",{weekday:"short",day:"2-d
 function pkState(p){const t0=pkDay(Date.now()),R=pkRets(p),done=R.some(r=>r.closed&&r.art!=="teil"),hd=pkHDay(p);
  if(done)return{k:"done",l:"Retoure abgeschlossen",c:"ok"};
  const kl=(packh[p.id]||{}).klar;if(kl&&kl.t)return{k:"done",l:"Mit Projektleiter geklärt",c:"ok"};
- if(p.de&&pkDay(p.de)<t0)return{k:"over",l:R.length?"Überfällig · Retourschein offen":"Überfällig",c:"warn"};
+ if(p.de&&pkDay(p.de)<t0)return{k:"over",l:R.length?"Dispo abgelaufen · Retourschein offen":"Dispo abgelaufen",c:"warn"};
  if(hd&&hd===t0){const g=pkProg(p);return g.fin?{k:"herr",l:"Hergerichtet",c:"ok"}:{k:"herr",l:g.d?"Herrichten "+g.d+"/"+g.n:"Heute herrichten",c:"hot"}}
  if(p.de&&pkDay(p.de)===t0)return{k:"back",l:"Heute zurück",c:"hot"};
  if(hd&&hd<t0&&!pkProg(p).fin){const g=pkProg(p);return g.d?{k:"late",l:"Teilweise hergerichtet "+g.d+"/"+g.n,c:"part"}:{k:"late",l:"Nicht hergerichtet",c:"warn"}}
@@ -54,7 +54,7 @@ function pkUpHtml(){return can("pk_b")?'<button class="btn" id="pkup">Packliste 
 function pkUpBind(){if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)}}}
 function packView(){$("#t").textContent="Alle Packlisten";const G=pkGroups();
  const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
- const cur=sec("Überfällig",G.over)+sec("Nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
+ const cur=sec("Dispo abgelaufen",G.over)+sec("Nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
  $("#app").innerHTML=(can("pk_b")?pkUpHtml()+'<p class="mute" style="font-size:13px;margin:6px 0 12px">Die PDF wird nur im Gerät gelesen. Gespeichert werden Auftrag, Veranstaltung, Projektleiter, Zeiten und Material – keine Kundendaten.</p>':'')+
   chips([["aktuell","Aktuell"],["done","Erledigt"],["alle","Alle"]],pkf,"data-pkf")+
   (pkf==="aktuell"?(cur||'<div class="card mute">Keine aktuellen Packlisten.</div>'):pkf==="done"?(sec("Retoure abgeschlossen",G.done)||'<div class="card mute">Noch keine erledigten Packlisten.</div>'):(packs.length?cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute">Noch keine Packlisten hochgeladen.</div>'));
@@ -347,7 +347,7 @@ function pkMail(P,zps){const m=pkMailText(P,zps),o=document.createElement("div")
 /* Für Jarvis */
 function pkZToday(){const t0=pkDay(Date.now());return pkZTasks().filter(z=>pkHDay(z)===t0)}
 function pkJarvis(){if(!can("pk_s"))return null;const G=pkGroups(),Z=pkZToday();return{herr:G.herr.filter(p=>!pkProg(p).fin).concat(Z.filter(z=>!pkProg(z).fin)),herrDone:G.herr.filter(p=>pkProg(p).fin).concat(Z.filter(z=>pkProg(z).fin)),back:G.back,over:G.over}}
-function pkSub(){const G=pkGroups(),a=[];if(G.over.length)a.push(G.over.length+" überfällig");const hh=G.herr.filter(p=>!pkProg(p).fin).length+pkZToday().filter(z=>!pkProg(z).fin).length;if(hh)a.push(hh+" heute herrichten");if(G.back.length)a.push(G.back.length+" heute zurück");return a.length?a.join(", "):"PDF hochladen und ansehen"}
+function pkSub(){const G=pkGroups(),a=[];if(G.over.length)a.push(G.over.length+" Dispo abgelaufen");const hh=G.herr.filter(p=>!pkProg(p).fin).length+pkZToday().filter(z=>!pkProg(z).fin).length;if(hh)a.push(hh+" heute herrichten");if(G.back.length)a.push(G.back.length+" heute zurück");return a.length?a.join(", "):"PDF hochladen und ansehen"}
 function pkHot(){const n=pkGroups().over.length;return n?String(n):""}
 /* ===== Übersicht (ab 1.65) – wie die Wand im Lager: Diese Woche / Nächste Woche / Später, je 5 Fächer Mo–Fr.
    Jede Packliste liegt im Fach ihres Herricht-Tags (Dispo-Beginn oder verschoben); Samstag/Sonntag -> Freitag davor.

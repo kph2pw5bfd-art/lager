@@ -1,4 +1,4 @@
-const APPV="1.104";
+const APPV="1.105";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -294,7 +294,7 @@ async function rlogRetXl(r,btn){const lbl=btn&&btn.textContent;try{const dl=awai
 /* ===== Jarvis (vorerst nur Admin) =====
    Eigene Karte auf der Hauptseite, eigener HUD-Bildschirm (dunkel, hell umschaltbar).
    Zeigt, was die App schon weiß: offene Retourscheine, offene Defekte, seit dem letzten Briefing repariert, letzte Retouren.
-   Herrichten / Heute zurück / Überfällig brauchen die Packlisten (kommt später). Briefing per Sprachausgabe. */
+   Herrichten / Heute zurück / Dispo abgelaufen brauchen die Packlisten (kommt später). Briefing per Sprachausgabe. */
 const JV_ICON='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-dasharray="5 2.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>';
 let jvPrev=null,jvSpeaking=false;
 function jvLS(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
@@ -310,17 +310,17 @@ function jvRow(attr,l,r,cls){return '<button class="jvrow" '+attr+'><span>'+l+'<
 /* nach Kalendertagen (ab 1.80): gestern 23:00 ist „gestern“, auch wenn erst 2 Stunden vergangen sind */
 function jvAgo(t){const a=new Date(t),b=new Date();a.setHours(0,0,0,0);b.setHours(0,0,0,0);const d=Math.round((b-a)/864e5);return d<=0?"heute":d===1?"gestern":"vor "+d+" Tagen"}
 function jvPkPanel(D){const P=D.pk;if(!P)return"";const now=pkDay(Date.now());
- const st='<div class="jvstats"><div class="jvstat"><div class="n">'+String(P.herr.length).padStart(2,"0")+'</div><div class="t">Heute herrichten</div></div><div class="jvstat"><div class="n">'+String(P.back.length).padStart(2,"0")+'</div><div class="t">Heute zurück</div></div><div class="jvstat'+(P.over.length?' al':'')+'"><div class="n">'+String(P.over.length).padStart(2,"0")+'</div><div class="t">Überfällig</div></div></div>';
+ const st='<div class="jvstats"><div class="jvstat"><div class="n">'+String(P.herr.length).padStart(2,"0")+'</div><div class="t">Heute herrichten</div></div><div class="jvstat"><div class="n">'+String(P.back.length).padStart(2,"0")+'</div><div class="t">Heute zurück</div></div><div class="jvstat'+(P.over.length?' al':'')+'"><div class="n">'+String(P.over.length).padStart(2,"0")+'</div><div class="t">Dispo abgelaufen</div></div></div>';
  const sd=t=>{const d=Math.round((now-pkDay(t))/864e5);return d<=1?"seit gestern":"seit "+d+" Tagen"};
- const rows=P.over.map(p=>[p,"überfällig "+sd(p.de),"warn"]).concat(P.herr.map(p=>{const g=pkProg(p);return[p,"herrichten"+(g.d?" "+g.d+"/"+g.n:"")+(pkF(p).length?" · "+pkF(p).length+" Fremd":""),"ok"]}),(P.herrDone||[]).map(p=>[p,"hergerichtet ✓","ok"]),P.back.map(p=>[p,"zurück "+pkD(p.de).slice(-5),"ok"])).slice(0,8);
- return '<section class="jvpn'+(P.over.length?' al':'')+'"><div class="jvlb">Packlisten <span>heute</span></div>'+st+(rows.length?rows.map(([p,r,c])=>jvRow('data-jp="'+esc(p.id)+'"',esc((p.ord?p.ord+" · ":"")+p.ev),esc(r),c)).join(""):'<div class="jvempty">Heute nichts herzurichten, nichts zurück, nichts überfällig.</div>')+'</section>'}
-/* ab 1.76: Übersicht „Variante A“ – fällige Erinnerungen als Streifen, eine Reihe Reiter (Überfällig / Heute herrichten / Heute zurück / Defekte dringend),
+ const rows=P.over.map(p=>[p,"Dispo abgelaufen "+sd(p.de),"warn"]).concat(P.herr.map(p=>{const g=pkProg(p);return[p,"herrichten"+(g.d?" "+g.d+"/"+g.n:"")+(pkF(p).length?" · "+pkF(p).length+" Fremd":""),"ok"]}),(P.herrDone||[]).map(p=>[p,"hergerichtet ✓","ok"]),P.back.map(p=>[p,"zurück "+pkD(p.de).slice(-5),"ok"])).slice(0,8);
+ return '<section class="jvpn'+(P.over.length?' al':'')+'"><div class="jvlb">Packlisten <span>heute</span></div>'+st+(rows.length?rows.map(([p,r,c])=>jvRow('data-jp="'+esc(p.id)+'"',esc((p.ord?p.ord+" · ":"")+p.ev),esc(r),c)).join(""):'<div class="jvempty">Heute nichts herzurichten, nichts zurück, keine Dispo abgelaufen.</div>')+'</section>'}
+/* ab 1.76: Übersicht „Variante A“ – fällige Erinnerungen als Streifen, eine Reihe Reiter (Dispo abgelaufen / Heute herrichten / Heute zurück / Defekte dringend),
    darunter die Liste zum gewählten Reiter, Seltenes eingeklappt unter „Mehr anzeigen“. Leere Bereiche entfallen. */
 let jvTab=null,jvMoreOpen=false;
 function jvLine(attr,l,sub,r,cls){return '<button class="jvln" type="button" '+attr+'><span class="jvlt"><b>'+esc(l)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><span class="jvlr '+(cls||"")+'">'+esc(r||"")+'</span></button>'}
 function jvTabs(D){const P=D.pk,urg=D.od.filter(d=>d.urg),T=[];
  if(P){T.push({k:"over",n:P.over.length,l:"Dispo abgelaufen",red:true});T.push({k:"herr",n:P.herr.length,l:"Heute herrichten"});T.push({k:"back",n:P.back.length,l:"Heute zurück"})}
- if(P&&D.rs&&typeof abgMissing==="function"){const G=abgMissing();T.push({k:"miss",n:G.length,l:"Fehlmaterial",red:true})}
+ if(P&&D.rs&&typeof abgMissing==="function"){const G=abgMissing();T.push({k:"miss",n:G.length,l:"Fehlmaterial",lh:"Fehl-<br>material",red:true})}
  T.push({k:"urg",n:urg.length,l:"Defekte dringend",red:true});
  if(!P){T.push({k:"def",n:D.od.length,l:can("def_s")?"Defekte offen":"Deine Defekte"});if(D.rs)T.push({k:"ret",n:D.open.length,l:"Retourscheine offen"})}
  return T}
@@ -337,7 +337,7 @@ function jvPanels(D){const T=jvTabs(D);if(!jvTab||!T.some(t=>t.k===jvTab))jvTab=
  const BELL='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
  const er=due.map(x=>'<button class="jverb" type="button" data-jer="'+esc(x.id)+'">'+BELL+'<span><b>Erinnerung:</b> '+esc(x.txt)+'</span><small>fällig '+jvTime(x.due)+'</small></button>').join("");
  const L=jvTabList(jvTab,D);
- const tabs='<section class="jvcard"><div class="jvtabs n'+T.length+'" role="tablist" style="grid-template-columns:repeat('+T.length+',minmax(0,1fr))">'+T.map(t=>'<button class="jvtab'+(t.k===jvTab?' on':'')+(t.red&&t.n?' red':'')+'" type="button" role="tab" aria-selected="'+(t.k===jvTab)+'" data-jt="'+t.k+'"><b>'+t.n+'</b><span>'+t.l+'</span></button>').join("")+'</div>'+
+ const tabs='<section class="jvcard"><div class="jvtabs n'+T.length+'" role="tablist" style="grid-template-columns:repeat('+T.length+',minmax(0,1fr))">'+T.map(t=>'<button class="jvtab'+(t.k===jvTab?' on':'')+(t.red&&t.n?' red':'')+'" type="button" role="tab" aria-selected="'+(t.k===jvTab)+'" data-jt="'+t.k+'"><b>'+t.n+'</b><span>'+(t.lh||t.l)+'</span></button>').join("")+'</div>'+
   '<div class="jvlist"><div class="jvlh">'+esc(L.h)+(L.L.length?' · '+L.L.length:'')+'</div>'+(L.L.length?L.L.join(""):'<div class="jvempty">'+esc(L.e)+'</div>')+(L.foot||"")+'</div></section>';
  /* eingeklappt: nur, was es gibt */
  const M=[];
@@ -397,9 +397,9 @@ function jvPkText(D,frech){const P=D.pk,S=[];if(!P)return S;const ev=p=>jvSay(p.
  else S.push((H.length<=3?"Heute sind "+jvN(H.length)+" Aufträge herzurichten: "+jvList(H.map(ev))+".":"Heute sind "+jvN(H.length)+" Aufträge herzurichten. Zuerst "+ev(H[0])+".")+jvPkFremd(H,frech)+(frech?jvPick([" Das wird ein Tag."," Kaffee nachfüllen empfohlen."]):""));
  if(B.length===1)S.push(frech?jvPick(["Heute kommt "+ev(B[0])+" zurück. Hoffentlich vollständig.","Zurück kommt heute "+ev(B[0])+". Ich zähl mit."]):"Heute sollte "+ev(B[0])+" zurückkommen.");
  else if(B.length>1)S.push((frech?"Heute kommen ":"Heute sollten ")+jvN(B.length)+" Aufträge zurück"+(frech?"":"kommen")+": "+jvList(B.slice(0,3).map(ev))+(B.length>3?" und weitere":"")+"."+(frech?" Hoffentlich vollständig.":""));
- if(!O.length)S.push(frech?jvPick(["Überfällig ist nichts. Respekt.","Überfällig: nichts. So soll's sein."]):"Überfällig ist nichts.");
- else if(O.length===1){const p=O[0],w=jvWhen(p.de),ro=pkRets(p).length?" Ein Retourschein ist schon angefangen.":"";S.push((frech?jvPick([ev(p)+" ist überfällig, Dispo-Ende war "+w+". Das Material macht offenbar noch Urlaub.",ev(p)+" hätte "+w+" zurück sein sollen. Ich sag ja nur."]):ev(p)+" ist überfällig, Dispo-Ende war "+w+".")+ro)}
- else S.push(jvCap(jvN(O.length))+" Aufträge sind überfällig. Am längsten "+ev(O[0])+", Dispo-Ende "+jvWhen(O[0].de)+"."+(frech?jvPick([" Die suchen wir besser mal."," Das Material macht offenbar noch Urlaub."]):""));
+ if(!O.length)S.push(frech?jvPick(["Keine Dispo abgelaufen. Respekt.","Abgelaufene Dispo: keine. So soll's sein."]):"Bei keinem Auftrag ist die Dispo abgelaufen.");
+ else if(O.length===1){const p=O[0],w=jvWhen(p.de),ro=pkRets(p).length?" Ein Retourschein ist schon angefangen.":"";S.push((frech?jvPick(["Bei "+ev(p)+" ist die Dispo abgelaufen, Dispo-Ende war "+w+". Das Material macht offenbar noch Urlaub.",ev(p)+" hätte "+w+" zurück sein sollen. Ich sag ja nur."]):"Bei "+ev(p)+" ist die Dispo abgelaufen, Dispo-Ende war "+w+".")+ro)}
+ else S.push("Bei "+jvN(O.length)+" Aufträgen ist die Dispo abgelaufen. Am längsten bei "+ev(O[0])+", Dispo-Ende "+jvWhen(O[0].de)+"."+(frech?jvPick([" Die suchen wir besser mal."," Das Material macht offenbar noch Urlaub."]):""));
  return S}
 function jvTextFrech(D){const S=[jvHiFrech()].concat(jvPkText(D,true)),h=new Date().getHours(),k=D.open.length,N=jvCap(jvN(k));
  if(!D.rs);else if(!k)S.push(jvPick(["Alle Retourscheine abgeschlossen. Ich bin fast ein bisschen enttäuscht.","Retourscheine: nichts offen. Genieß es, das bleibt nicht lange so."]));

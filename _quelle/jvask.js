@@ -67,7 +67,7 @@ function jvOrder(q,open){const L=jvFindPacks(q),R=jvFindRets(q);
  say.push(g.fin?"Hergerichtet.":g.d?g.d+" von "+g.n+" Positionen hergerichtet.":"Noch nicht hergerichtet.");
  say.push("Herrichten "+jvDayName(pkHDay(p))+", Dispo bis "+jvDayName(pkDay(p.de))+".");
  if(can("ret_s"))say.push(!RR.length?"Retourschein gibt es noch keinen.":RR.some(r=>r.closed)?"Die Retoure ist abgeschlossen.":"Ein Retourschein ist angefangen, aber noch offen.");
- if(s.k==="over")say.push(jvF()?"Und ja: Das ist überfällig.":"Die Retoure ist überfällig.");
+ if(s.k==="over")say.push(jvF()?"Und ja: Die Dispo ist abgelaufen.":"Die Dispo ist abgelaufen.");
  const KL=pkH(p).klar;if(KL&&KL.t)say.push("Mit dem Projektleiter geklärt, von "+nmA(KL,"by")+" am "+pkDM(KL.t)+".");
  if(typeof jvNotes==="function")jvNotes(p).forEach(x=>say.push("Notiz von "+nmA(x,"by")+": "+x.txt));
  const acts=[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}];RR.forEach(r=>acts.push({l:"Retourschein öffnen",fn:()=>{curRet=r.id;go("retopen")}}));
@@ -90,8 +90,8 @@ function jvBack(q){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Pa
  if(!L.length)return{say:["Zurück kommt "+lab+" laut Packlisten nichts."]};
  return{say:[(lab==="heute"?"Heute":"Morgen")+" sollte"+(L.length===1?"":"n")+" zurückkommen: "+jvList(L.map(p=>p.ev||p.ord))+"."].concat(jvF()?["Hoffentlich vollständig."]:[]),rows:L.map(p=>jvPkRow(p,"Dispo-Ende "+pkD(p.de).slice(-5)))}}
 function jvOver(){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const L=pkGroups().over;
- if(!L.length)return{say:[jvF()?"Überfällig ist nichts. So soll's sein.":"Überfällig ist nichts."]};
- return{say:[L.length===1?"Eine Retoure ist überfällig:":L.length+" Retouren sind überfällig:"].concat(L.slice(0,4).map(p=>(p.ev||p.ord)+", Dispo-Ende "+jvDayName(pkDay(p.de))+".")),rows:L.map(p=>jvPkRow(p,"seit "+pkWd(p.de)))}}
+ if(!L.length)return{say:[jvF()?"Keine Dispo abgelaufen. So soll's sein.":"Bei keinem Auftrag ist die Dispo abgelaufen."]};
+ return{say:[L.length===1?"Bei einem Auftrag ist die Dispo abgelaufen:":"Bei "+L.length+" Aufträgen ist die Dispo abgelaufen:"].concat(L.slice(0,4).map(p=>(p.ev||p.ord)+", Dispo-Ende "+String(jvDayName(pkDay(p.de))).replace(/\.$/,"")+".")),rows:L.map(p=>jvPkRow(p,"seit "+pkWd(p.de)))}}
 function jvDef(q){const n=jvNorm(q),D=jvData();
  if(/repariert|wieder einsatz|fertig/.test(n)){if(!D.fixed.length)return{say:["Seit dem letzten Briefing wurde nichts repariert."]};return{say:[jvList(D.fixed.slice(0,5).map(d=>d.art))+(D.fixed.length===1?" ist":" sind")+" wieder einsatzbereit."],rows:D.fixed.map(d=>({l:d.art,r:"repariert",def:d.id}))}}
  const L=/dringend/.test(n)?D.od.filter(d=>d.urg):D.od;
