@@ -1,4 +1,4 @@
-const APPV="1.100";
+const APPV="1.101";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -11,8 +11,8 @@ const LIVE=["lists","artikel","defekte","infos","werkstatt","users","lager","ret
 const DBX=(()=>{const subs={};let ch=null;
  const snap=s=>({docs:[...s.rows.values()].map(r=>({id:r.id,data:()=>r.data}))});
  const emit=c=>{const s=subs[c];if(!s||!s.ready)return;const v=snap(s);s.cbs.slice().forEach(f=>{try{f(v)}catch(e){console.error(e)}})};
- async function load(c){const s=subs[c];let all=[],from=0;for(;;){const {data,error}=await SB.from("docs").select("id,data").eq("col",c).range(from,from+999);if(error){console.error(error);return}all=all.concat(data);if(data.length<1000)break;from+=1000}s.rows=new Map(all.map(r=>[r.id,r]));s.ready=true;emit(c)}
- const put=(c,id,data)=>{const s=subs[c];if(s){s.rows.set(id,{id,data});emit(c)}};
+ async function load(c){const s=subs[c];let all=[],from=0;for(;;){const {data,error}=await SB.from("docs").select("id,data").eq("col",c).range(from,from+999);if(error){console.error(error);return}all=all.concat(data);if(data.length<1000)break;from+=1000}s.rows=new Map(all.map(r=>[r.id,window.dbOverlay?{id:r.id,data:window.dbOverlay(c,r.id,r.data)}:r]));if(window.dbOverlayIds)window.dbOverlayIds(c).forEach(id=>{if(!s.rows.has(id))s.rows.set(id,{id,data:window.dbOverlay(c,id,{})})});s.ready=true;emit(c)}
+ const put=(c,id,data)=>{const s=subs[c];if(s){if(window.dbOverlay)data=window.dbOverlay(c,id,data);s.rows.set(id,{id,data});emit(c)}};
  const del=(c,id)=>{const s=subs[c];if(s&&s.rows.delete(id))emit(c)};
  const reload=()=>Object.keys(subs).forEach(load);
  function listen(){if(ch)return;const f="col=in.("+LIVE.join(",")+")";
@@ -24,7 +24,7 @@ const DBX=(()=>{const subs={};let ch=null;
    .subscribe(st=>{if(st==="SUBSCRIBED")reload()})}
  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&ME){reload();loadProfs()}});
  window.addEventListener("online",()=>{if(ME){reload();loadProfs()}});
- const api={reloadAll:()=>reload(),
+ const api={reloadAll:()=>reload(),local:(c,id,data)=>put(c,id,data),
   collection:c=>({onSnapshot(cb){let s=subs[c];if(!s){s=subs[c]={rows:new Map(),cbs:[],ready:false};load(c)}s.cbs.push(cb);if(s.ready)cb(snap(s));listen();return()=>{s.cbs=s.cbs.filter(f=>f!==cb)}},doc:id=>api.doc(c+"/"+id)}),
   doc:p=>{const i=p.indexOf("/"),c=p.slice(0,i),id=p.slice(i+1);return{
    async set(d){const {data,error}=await SB.from("docs").upsert({col:c,id,data:d,updated_at:new Date().toISOString()}).select("data").single();if(error)throw error;put(c,id,data.data)},

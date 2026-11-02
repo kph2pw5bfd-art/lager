@@ -129,7 +129,31 @@ function pkZPseudo(P,z){return{id:P.id,_z:String(z.ps),_p:P,ev:"Zusatz "+z.ps+" 
 function pkZTasks(){return packs.flatMap(P=>pkState(P).k==="done"?[]:(P.zus||[]).map(z=>pkZPseudo(P,z)))}
 /* Zeile i (Index in pkItems) gesperrt? Haupt-Positionen mit fin, Zusatz-Positionen mit ihrem eigenen Abschluss */
 function pkRowFin(P,i){const o=pkItems(P)[i];if(!o)return false;if(o.z){const z=pkZOf(P,o.z);return !!(z&&pkZFin(P,z))}return !!(pkH(P).fin&&pkH(P).fin.t)}
-async function pkHSet(P,patch){try{if(!packh[P.id])await db.doc("packh/"+P.id).set({c:Date.now()});await db.doc("packh/"+P.id).update(patch)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}
+/* Herrichten auch ohne Netz (ab 1.101): jede Änderung sofort im Gerät (localStorage tpc_packh_queue) und auf dem Bildschirm,
+   hochgeladen sobald Netz da ist (online-Ereignis, alle 20 s, beim Start). Feldweise zusammengeführt wie doc_update. */
+const PKQ="tpc_packh_queue";let pkQBusy=false,pkQWarned=false;
+function pkQ(){try{return JSON.parse(localStorage.getItem(PKQ)||"{}")||{}}catch(e){return{}}}
+function pkQSet(o){try{localStorage.setItem(PKQ,JSON.stringify(o))}catch(e){}}
+const pkQN=()=>Object.values(pkQ()).filter(e=>e&&e.u===me).length;
+const pkNetErr=e=>!navigator.onLine||/fetch|network|load failed|timeout|timed out|abort|offline|Verbindung/i.test(String(e&&(e.message||e.details||e)||""));
+window.dbOverlay=(c,id,data)=>{if(c!=="packh")return data;const e=pkQ()[id];return e&&e.u===me?{...(data||{}),...e.p}:data};
+window.dbOverlayIds=c=>c==="packh"?Object.keys(pkQ()).filter(id=>pkQ()[id].u===me):[];
+function pkHSet(P,patch){const id=P.id,q=pkQ(),e=q[id]&&q[id].u===me?q[id]:{u:me,p:{},n:0};e.p={...e.p,...patch};e.n++;e.t=Date.now();q[id]=e;pkQSet(q);
+ if(db&&db.local)db.local("packh",id,{c:Date.now(),...(packh[id]||{})});
+ return pkQFlush()}
+async function pkQFlush(){if(pkQBusy||typeof SB==="undefined"||!ME)return;const q0=pkQ(),ids=Object.keys(q0).filter(id=>q0[id].u===me);if(!ids.length)return;
+ if(!navigator.onLine){pkQWarn();return}pkQBusy=true;let done=0,net=false;
+ try{for(const id of ids){const e=pkQ()[id];if(!e)continue;const n=e.n;
+   try{try{await db.doc("packh/"+id).update(e.p)}catch(x){if(/nicht gefunden/i.test(String(x&&x.message||x)))await db.doc("packh/"+id).set({c:Date.now(),...e.p});else throw x}
+    const q=pkQ();if(q[id]&&q[id].n===n){delete q[id];pkQSet(q)}done++}
+   catch(x){console.error(x);if(pkNetErr(x)){net=true;pkQWarn();break}
+    const q=pkQ();delete q[id];pkQSet(q);errBox("Speichern fehlgeschlagen. Hast du das Recht zum Herrichten?");if(db.reloadAll)db.reloadAll()}}}
+ finally{pkQBusy=false}
+ if(!net&&pkQN())return pkQFlush();
+ if(done&&!pkQN()){if(pkQWarned)toast("Wieder Netz – alles vom Herrichten ist gespeichert",1);pkQWarned=false;if(view==="packopen")packOpenView()}}
+function pkQWarn(){if(!pkQWarned)toast("Kein Netz – wird im Gerät gemerkt und gespeichert, sobald wieder Netz da ist",1);pkQWarned=true;if(view==="packopen"&&!document.querySelector(".ov"))packOpenView()}
+function pkOffHint(){const n=pkQN();return n?'<div class="pkhint part">⏳ Kein Netz – '+(n===1?'eine Packliste wartet':n+' Packlisten warten')+' aufs Speichern. Nichts geht verloren.</div>':''}
+window.addEventListener("online",()=>setTimeout(pkQFlush,1200));setInterval(()=>{if(pkQN())pkQFlush()},20000);setTimeout(pkQFlush,4000);
 /* Anzeigename: wie in der Artikelliste (über die Artikelnummer), sonst wie im Packschein */
 function pkKat(x){const c=typeof artCode==="function"?artCode(x&&x.a):"";if(!c||typeof rkat==="undefined"||!Array.isArray(rkat))return null;return rkat.find(a=>artCode(a.nr)===c)||null}
 const pkGrp=x=>{const k=pkKat(x);return k?[k.g,k.u].filter(Boolean).join(" · ")||"Ohne Gruppe":"Nicht in der Artikelliste"};
@@ -171,7 +195,7 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
  const IT=pkItems(p),rows0=pkSortIdx(p).map(i=>{const x=IT[i].x,h=H[K[i]],st=pkPS(x,h),l55=pkL55(x,h);return{x,i,h,st,z:IT[i].z,l55,dev:!l55&&pkDevRow(x,h,st)}}),rows=rows0.filter(r=>!r.l55&&(pkHf==="alle"||r.st.s!=="ok")),r55=pkHf==="alle"?rows0.filter(r=>r.l55):[];
  $("#app").innerHTML='<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;min-width:0;font-size:18px">'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span></div>'+
   '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+
-  '<div class="pkhday"><span>Herrichten: <b>'+pkWd(pkHDay(p))+'</b>'+(pkShifted(p)?' <span class="mute">(verschoben)</span>':'')+'</span>'+(fin?'':'<button class="btn ghost s" id="pkmv" type="button">Verschieben</button>')+'</div>'+pkHint(p)+
+  pkOffHint()+'<div class="pkhday"><span>Herrichten: <b>'+pkWd(pkHDay(p))+'</b>'+(pkShifted(p)?' <span class="mute">(verschoben)</span>':'')+'</span>'+(fin?'':'<button class="btn ghost s" id="pkmv" type="button">Verschieben</button>')+'</div>'+pkHint(p)+
   '<details class="pkmore"><summary>Alle Angaben</summary><div class="pkkv"><span>Packschein</span><b>'+esc(p.ps||"–")+'</b>'+(p.sa?'<span>Selbstabholer</span><b>'+esc(p.sa)+'</b>':'')+(p.pk?'<span>Packen</span><b>'+pkD(p.pk)+'</b>':'')+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+(p.eb?'<span>Event</span><b>'+pkD(p.eb)+' – '+pkD(p.ee)+'</b>':'')+'</div><div class="mute" style="font-size:13px;margin-top:6px">Hochgeladen '+fmt(p.t)+' von '+esc(nm(p.by))+'</div></details>'+
   (R.length&&can("ret_s")?R.map(r=>'<button class="btn ghost" data-pkr="'+esc(r.id)+'" style="margin-top:8px">Retourschein öffnen'+(r.closed?(r.art==="teil"?' (Teilretoure)':r.art==="end"?' (Endretoure)':' (abgeschlossen)'):' (offen)')+'</button>').join(""):'')+'</div>'+
   (typeof pkChgCard==="function"?pkChgCard(p):'')+(typeof abgPkCard==="function"?abgPkCard(p):'')+'<div class="card pkprog'+(fin?' fin':'')+'" style="cursor:default"><div class="row" style="align-items:baseline"><b style="flex:1;font-size:17px">'+(fin?'Hergerichtet':pr.d+' von '+pr.n+' Positionen')+'</b>'+(pr.dev?'<span class="pkdev">'+pr.dev+' mit Abweichung</span>':'')+'</div>'+

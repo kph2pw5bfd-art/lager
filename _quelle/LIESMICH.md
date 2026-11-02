@@ -253,3 +253,10 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - „Zu viel“ (`pkOver`) zählt als mitgegeben: Abgleich raus (abg.js, 3 Stellen), Assistent „Wo ist …“ (jvArtCnt), geänderter Packschein (pkchg), Zusatzmaterial-Verrechnung (pkextra). Info-Mail: Zeile „x von y – z mehr als im Packschein“. PDF: Mitgegeben = tatsächliche Menge, „!“, Hinweis und Zeile im Kasten „Abweichungen“; „!“ jetzt auch bei Ersatz. Meine Aufträge: Abweichungen beim Herrichten + Material-Liste zeigen zu viel.
 - Einheiten ergänzt: „15 von 16 Stk da – fehlen 1 Stk“ (Herricht-Ansicht und Info-Mail).
 - Test `tests/pkscan_t.js` prüft Mail, PDF und Abgleich mit zu viel.
+
+## 1.101 – Herrichten ohne Netz (Fehler gemeldet von Jürgen: Tablet außerhalb des WLAN → „Speichern fehlgeschlagen“)
+- `pkHSet` (alle Schreibstellen für `packh`: Abhaken, Mengen, Alternativen, Verschieben, Abschließen, Zusatzmaterial, geklärt, Notizen) schreibt zuerst in localStorage `tpc_packh_queue` ({<packliste-id>: {u, p:Patch, n, t}}, feldweise zusammengeführt) und zeigt es sofort an (`db.local` im DBX = put). Hochladen in `pkQFlush`: `update`, bei „Eintrag nicht gefunden“ `set({c,...p})` (statt vorher immer zuerst set). Netzfehler (`pkNetErr`) → bleibt in der Warteschlange, Toast „Kein Netz – wird im Gerät gemerkt …“ + Hinweis oben in der Packliste (`pkOffHint`). Anderer Fehler (Recht) → Eintrag verworfen, errBox, neu laden.
+- Nachladen: online-Ereignis (+1,2 s), alle 20 s solange etwas wartet, 4 s nach dem Start. Danach Toast „Wieder Netz – alles vom Herrichten ist gespeichert“.
+- `window.dbOverlay`/`dbOverlayIds` (shim.js, DBX `load`/`put`): wartende Änderungen bleiben sichtbar, auch wenn die Daten neu geladen werden.
+- Nur Herrichten. Packliste hochladen/löschen, Materialliste, Defekte usw. brauchen weiter Netz (Retourschein hatte schon eigene Offline-Sicherung, autosave.js).
+- Test `tests/offline_t.js` (fakesb: `window.__offline=true` → rpc „Failed to fetch“).
