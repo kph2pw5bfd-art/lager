@@ -12,15 +12,16 @@ function pkDrRows(P){const H=pkH(P),IT=pkItems(P),rows=[];
   let r=o.z&&!l55?rows.find(q=>!q.z&&!q.l55&&q.k===k):null;
   if(!r){r={k,pos:(o.z?"Z ":"")+(x.p||String(i+1)),name:pkName(x),a:x.a||"",u:x.u||"Stk",z:o.z||null,l55,items:[]};rows.push(r)}
   r.items.push(part)});
- rows.forEach(r=>{Object.assign(r,{soll:0,mit:0,fz:0,fl:0,nf:0,miss:0,open:0,zn:{},alt:[]});
+ rows.forEach(r=>{Object.assign(r,{soll:0,mit:0,fz:0,fl:0,nf:0,miss:0,open:0,over:0,zn:{},alt:[]});
   r.items.forEach(p=>{const n=+p.x.n||0;r.soll+=n;if(p.z&&!r.z)r.zn[p.z]=(r.zn[p.z]||0)+n;if(p.l55)return;
    if(p.f>0){if(p.fm==="lager")r.fl+=p.f;else if(p.fm==="miete")r.fz+=p.f;else r.nf+=p.f}
    if(p.st.s==="open"){if(p.fin)r.miss+=p.st.need;else r.open+=p.st.need}
-   else{const q=p.st.s==="ok"?p.st.need:Math.min(p.st.need,+p.st.q||0);r.mit+=q;if(p.st.s==="part")r.miss+=p.st.need-q;p.st.alt.forEach(a=>r.alt.push(a))}});
-  r.ck=r.l55?"55":r.miss||r.fl?"!":r.open&&!r.mit?"":r.open?"…":"ok";
+   else{const ov=pkOver(p.x,p.h,p.st),q=p.st.s==="ok"?p.st.need+ov:Math.min(p.st.need,+p.st.q||0);r.mit+=q;r.over+=ov;if(p.st.s==="part")r.miss+=p.st.need-q;p.st.alt.forEach(a=>r.alt.push(a))}});
+  r.ck=r.l55?"55":r.miss||r.fl||r.over||r.alt.length?"!":r.open&&!r.mit?"":r.open?"…":"ok";
   const u=pkDrU(r),h=[];
   if(r.l55)h.push(["Lager 55 – holt Fahrer/Monteur selbst","m"]);
   if(r.miss)h.push([r.mit?"fehlt "+pkDrQ(r.miss,u):"nicht mitgegeben","o"]);
+  if(r.over)h.push([pkDrQ(r.over,u)+" mehr als im Packschein","o"]);
   if(r.open)h.push([(r.mit?pkDrQ(r.open,u)+" ":"")+"noch nicht hergerichtet","m"]);
   if(r.fl)h.push([pkDrQ(r.fl,u)+" aus dem Lager statt Fremdmiete","o"]);
   if(r.fz)h.push(["davon "+pkDrQ(r.fz,u)+" Fremdmiete – kommt nicht vom Lager","m"]);
@@ -37,6 +38,7 @@ function pkDrHead(P){const H=pkH(P),g=pkProg(P),L=[];
  return L}
 function pkDrDev(rows){const D=[],O=[];rows.forEach(r=>{const u=pkDrU(r);
   if(r.miss)D.push(r.name+": fehlt "+pkDrQ(r.miss,u)+(r.mit?" ("+pkDrQ(r.mit,u)+" mitgegeben)":" (nicht mitgegeben)"));
+  if(r.over)D.push(r.name+": "+pkDrQ(r.over,u)+" mehr als im Packschein ("+pkDrQ(r.mit,u)+" mitgegeben)");
   r.alt.forEach(a=>D.push("Ersatz für "+r.name+": "+pkDrQ(+a.n||0,u)+" "+pkDrAltName(a)));
   if(r.fl)D.push(r.name+": "+pkDrQ(r.fl,u)+" aus dem Lager statt Fremdmiete");
   if(r.open)O.push(r.name+" ("+pkDrQ(r.open,u)+")");

@@ -19,7 +19,7 @@ function abgBal(p,ov){const H=pkH(p),M={};
  const add=(c,nm,zus,q,f)=>{const e=get(abgKey(c,nm),c,nm);e.soll+=q;e.fr+=f;if(zus)e.nach+=q+f;else e.raus+=q+f};
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
   if(pkL55(x,h)){get(abgKey(artCode(x.a),pkName(x)),artCode(x.a),pkName(x)).l55+=own;return}
-  add(artCode(x.a),pkName(x),!!o.z,st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0),f);
+  add(artCode(x.a),pkName(x),!!o.z,(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st),f);
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,!!o.z,+a.n||0,0)})});
  const R=pkRets(p);
  if(typeof pkX==="function")pkX(p).forEach(e=>add(artCode(e.a),pkXName(e),false,+e.n||0,0));
@@ -145,7 +145,7 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
  if($("#abgkl0"))$("#abgkl0").onclick=()=>ask("„Geklärt“ zurücknehmen?",()=>pkHSet(p,{klar:null}).then(()=>toast("Zurückgenommen",1)));
  $("#abgpk").onclick=()=>go("packopen")}
 function abgZusOut(p,ps){const H=pkH(p);let n=0;pkItems(p).forEach(o=>{if(!o.z||(ps!==undefined&&o.z!==String(ps)))return;const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
- n+=st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0);if(st.s!=="open")(st.alt||[]).forEach(a=>n+=+a.n||0)});return n}
+ n+=(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st);if(st.s!=="open")(st.alt||[]).forEach(a=>n+=+a.n||0)});return n}
 /* ---------- Ansicht: Zu viel zurück ---------- */
 function abgZvView(){if(!abgOk()){view="start";return startView()}$("#t").textContent="Zu viel zurück";const L=abgAllMore();
  const card=(o,i)=>{const C=abgCands(o.p,o.e,o.q),nk=o.p.id+"|"+o.e.k,note=ABN[nk];
@@ -217,7 +217,7 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
  t.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;c.font={bold:true};c.fill=fill("FFEEF3FA");c.alignment={horizontal:n===2||n===9?"left":"center"}});
  const wv=wb.addWorksheet("Verlauf");wv.columns=[{width:17},{width:22},{width:36},{width:10},{width:18}];kopf(wv);head(wv,["Datum","Art","Artikel","Menge","Wer"]);
  const ev=[];const H=pkH(p);
- pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),q=st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0);
+ pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),q=(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st);
   const zd=o.z?(p.zus||[]).find(z=>String(z.ps)===o.z):null;if(q)ev.push([zd?zd.t||p.t:p.db||p.t,zd?"Nachlieferung "+o.z:"Packliste raus",pkName(x),q,h&&h.by?nmA(h,"by"):""]);
   if(st.s!=="open")(st.alt||[]).forEach(a=>ev.push([zd?zd.t||p.t:p.db||p.t,"Alternative",a.t,+a.n||0,h&&h.by?nmA(h,"by"):""]))});
  B.R.forEach(r=>Object.values(rIt(r)).forEach(i=>{if(i.g!=="Zubehör"&&+i.q)ev.push([abgRetT(r),abgRetLbl(r),i.name,-(+i.q),nmA(r,r.closed?"closedBy":"by")])}));

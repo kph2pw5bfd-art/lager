@@ -467,7 +467,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.99";
+<script>const APPV="1.100";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1354,7 +1354,7 @@ function pkPS(x,h){const need=pkNeed(x,h);if(!h)return{s:"open",need,alt:[]};con
 /* Lager 55 (ab 1.78): holt Fahrer/Monteur selbst – Artikel in der Artikelliste markiert (rkat.l55), pro Position umstellbar (packh h_<Pos>.l55 = true/false) */
 /* Abweichung beim Herrichten (ab 1.99): zu wenig, zu viel oder Alternative → oranges „!“, Zeile ganz oben */
 const pkOver=(x,h,st)=>st.s==="ok"&&h&&typeof h.q==="number"&&h.q>st.need?h.q-st.need:0;
-const pkDevRow=(x,h,st)=>st.s==="part"||st.alt.length>0||pkOver(x,h,st)>0;
+const pkDevRow=(x,h,st)=>st.s==="part"||st.alt.length>0||pkOver(x,h,st)>0||!!(h&&h.fm==="lager"&&x.f>0&&st.s!=="open");
 let pkScanHl=null;
 function pkL55(x,h){if(h&&typeof h.l55==="boolean")return h.l55;const k=pkKat(x);return !!(k&&k.l55)}
 function pkProg(P){if(P&&P._z)return pkZProg(P._p,P._z);return pkProgOf(P,null,!!(pkH(P).fin&&pkH(P).fin.t))}
@@ -1399,8 +1399,8 @@ function pkRowHtml(p,r,sub){const {x,i,h,st}=r,fm=pkFmTxt(x,h),ov=pkOver(x,h,st)
  return '<div class="pkp pk-'+(dv?'part':st.s)+(hl?' pkhl':'')+'" data-pkrow="'+i+'"><button class="pkc" type="button" data-pc="'+i+'" aria-label="Abhaken"'+(pkRowFin(p,i)?' disabled':'')+'>'+(dv?'!':st.s==="ok"?'✓':'')+'</button>'+
   '<span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+(sub?'<small class="pksub">'+esc(sub)+'</small>':'')+
   (fm?'<em class="'+(h&&h.fm?'pkfm':'pkfr')+'">'+esc(fm)+'</em>':'')+
-  (st.s==="part"?'<em class="pkpart">'+pkNum(st.q)+' von '+pkNum(st.need)+' da – fehlen '+pkNum(st.need-st.q)+'</em>':'')+
-  (ov?'<em class="pkpart">'+pkNum(h.q)+' von '+pkNum(st.need)+' – '+pkNum(ov)+' mehr als im Packschein</em>':'')+
+  (st.s==="part"?'<em class="pkpart">'+pkNum(st.q)+' von '+pkNum(st.need)+' '+esc(x.u||"Stk")+' da – fehlen '+pkNum(st.need-st.q)+' '+esc(x.u||"Stk")+'</em>':'')+
+  (ov?'<em class="pkpart">'+pkNum(h.q)+' von '+pkNum(st.need)+' '+esc(x.u||"Stk")+' – '+pkNum(ov)+' '+esc(x.u||"Stk")+' mehr als im Packschein</em>':'')+
   st.alt.map(a=>'<em class="pkalt">+ '+esc(pkNum(a.n))+'× '+esc(a.t)+(a.a?' ('+esc(a.a)+')':'')+'</em>').join("")+
   (h&&h.by&&st.s!=="open"?'<small class="pkby">'+esc(nmA(h,"by"))+', '+fmt(h.t).slice(-5)+'</small>':'')+'</span></div>'}
 function pkRowsHtml(p,rows){const D=rows.filter(r=>r.dev);let out=D.length?'<div class="pkg pkgdev">Abweichungen ('+D.length+')</div>'+D.map(r=>pkRowHtml(p,r,pkGrp(r.x)+(r.z?' · Zusatz '+r.z:''))).join(""):'';
@@ -1481,7 +1481,7 @@ function pkTap(P,i){const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k],st=pkPS(x,
  const put=fm=>pkHSet(P,{[k]:{ok:true,q:null,alt:(h&&h.alt)||[],fm:fm||(h&&h.fm)||"",by:me,...tabAs("by"),t:Date.now()}});
  if(x.f>0&&!(h&&h.fm))return pkFmAsk(x,fm=>put(fm));
  if(st.s==="open")return put();
- if(st.s==="ok"&&h&&h.ok&&!st.alt.length&&!pkOver(x,h,st))return pkHSet(P,{[k]:h.fm?{fm:h.fm,by:me,...tabAs("by"),t:Date.now()}:null});
+ if(st.s==="ok"&&h&&h.ok&&!pkDevRow(x,h,st))return pkHSet(P,{[k]:h.fm?{fm:h.fm,by:me,...tabAs("by"),t:Date.now()}:null});
  pkEdit(P,i)}
 function pkFmAsk(x,cb){const o=document.createElement("div");o.className="ov";
  o.innerHTML='<div class="card" style="width:100%;max-width:400px;margin:0"><b>'+esc(pkName(x))+'</b><p style="margin:8px 0">Laut Packliste '+pkNum(x.n)+(x.u?' '+esc(x.u):'')+', davon <span class="pkfr">'+pkNum(x.f)+' Fremdmiete</span>.</p>'+
@@ -1548,8 +1548,9 @@ function pkFinish(P){const pr=pkProg(P),open=pr.n-pr.d;
 function pkMailText(P,zps){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[],inc=o=>zps?o.z===String(zps):!o.z||!(pkZOf(P,o.z)||{}).v;
  pkPosAll(P).forEach((x,i)=>{if(!inc(IT[i]))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),nm2=x.t+(x.a?" ("+x.a+")":"")+(IT[i].z?" [Zusatz "+IT[i].z+"]":""),u=x.u?" "+x.u:"";
   if(st.s==="open")L.push("- "+nm2+": nicht hergerichtet (laut Packliste "+pkNum(st.need)+u+")");
-  else if(st.s==="part")L.push("- "+nm2+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q));
-  if(st.alt.length)st.alt.forEach(a=>L.push((st.s==="part"||st.s==="open"?"  ":"- "+nm2+":\n  ")+"Alternative: "+pkNum(a.n)+"× "+a.t+(a.a?" ("+a.a+")":"")));
+  else if(st.s==="part")L.push("- "+nm2+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
+  else if(pkOver(x,h,st))L.push("- "+nm2+": "+pkNum(h.q)+" von "+pkNum(st.need)+u+" – "+pkNum(pkOver(x,h,st))+u+" mehr als im Packschein");
+  if(st.alt.length)st.alt.forEach(a=>L.push((st.s==="part"||st.s==="open"||pkOver(x,h,st)?"  ":"- "+nm2+":\n  ")+"Alternative: "+pkNum(a.n)+"× "+a.t+(a.a?" ("+a.a+")":"")));
   if(h&&h.fm==="lager"&&x.f>0)L.push("- "+nm2+": aus dem Lager statt Fremdmiete ("+pkNum(x.f)+u+")")});
  if(!zps&&typeof pkX==="function")pkX(P).forEach(e=>L.push("- Zusätzlich mitgegeben (nicht im Packschein): "+pkXTx(e)+(e.why?" – "+e.why:"")));
  const vn=String(P.pl||"").split(" ")[0],me1=String(meName()||""),F=zps?pkZFin(P,pkZOf(P,zps)||{})||{}:H.fin||{};
@@ -1853,7 +1854,7 @@ function jvWithArt(q,fn,none){const R=jvArtFind(q);if(!R)return none?none():{say
    draußen = hergerichtet (bzw. bei laufender/abgelaufener Dispo laut Packschein), ohne Fremdmiete, + Alternativen, − schon im Retourschein */
 function jvArtCnt(p,m){const H=pkH(p),k=pkState(p).k,run=k==="over"||k==="out"||k==="back";let out=0,plan=0,back=0,l55=0;
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),own=Math.max(0,(+x.n||0)-(h&&h.fm==="lager"?0:(+x.f||0)));
-  if(m(artCode(x.a),x.t+" "+pkName(x))){if(pkL55(x,h)){if(run){out+=own;l55+=own}else plan+=own}else if(st.s==="open"){if(run)out+=own;else plan+=own}else out+=h&&h.ok?own:Math.min(own,+st.q||0)}
+  if(m(artCode(x.a),x.t+" "+pkName(x))){if(pkL55(x,h)){if(run){out+=own;l55+=own}else plan+=own}else if(st.s==="open"){if(run)out+=own;else plan+=own}else out+=(h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st)}
   if(st.s!=="open")(st.alt||[]).forEach(a=>{if(m(artCode(a.a),a.t))out+=+a.n||0})});
  if(typeof pkX==="function")pkX(p).forEach(e=>{if(m(artCode(e.a),(e.nm||"")+" "+pkXName(e)))out+=+e.n||0});
  pkRets(p).forEach(r=>Object.values(rIt(r)).forEach(it=>{if(it.g!=="Zubehör"&&m(artCode(it.nr),it.name))back+=+it.q||0}));
@@ -2310,7 +2311,7 @@ function abgBal(p,ov){const H=pkH(p),M={};
  const add=(c,nm,zus,q,f)=>{const e=get(abgKey(c,nm),c,nm);e.soll+=q;e.fr+=f;if(zus)e.nach+=q+f;else e.raus+=q+f};
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
   if(pkL55(x,h)){get(abgKey(artCode(x.a),pkName(x)),artCode(x.a),pkName(x)).l55+=own;return}
-  add(artCode(x.a),pkName(x),!!o.z,st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0),f);
+  add(artCode(x.a),pkName(x),!!o.z,(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st),f);
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,!!o.z,+a.n||0,0)})});
  const R=pkRets(p);
  if(typeof pkX==="function")pkX(p).forEach(e=>add(artCode(e.a),pkXName(e),false,+e.n||0,0));
@@ -2436,7 +2437,7 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
  if($("#abgkl0"))$("#abgkl0").onclick=()=>ask("„Geklärt“ zurücknehmen?",()=>pkHSet(p,{klar:null}).then(()=>toast("Zurückgenommen",1)));
  $("#abgpk").onclick=()=>go("packopen")}
 function abgZusOut(p,ps){const H=pkH(p);let n=0;pkItems(p).forEach(o=>{if(!o.z||(ps!==undefined&&o.z!==String(ps)))return;const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
- n+=st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0);if(st.s!=="open")(st.alt||[]).forEach(a=>n+=+a.n||0)});return n}
+ n+=(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st);if(st.s!=="open")(st.alt||[]).forEach(a=>n+=+a.n||0)});return n}
 /* ---------- Ansicht: Zu viel zurück ---------- */
 function abgZvView(){if(!abgOk()){view="start";return startView()}$("#t").textContent="Zu viel zurück";const L=abgAllMore();
  const card=(o,i)=>{const C=abgCands(o.p,o.e,o.q),nk=o.p.id+"|"+o.e.k,note=ABN[nk];
@@ -2508,7 +2509,7 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
  t.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;c.font={bold:true};c.fill=fill("FFEEF3FA");c.alignment={horizontal:n===2||n===9?"left":"center"}});
  const wv=wb.addWorksheet("Verlauf");wv.columns=[{width:17},{width:22},{width:36},{width:10},{width:18}];kopf(wv);head(wv,["Datum","Art","Artikel","Menge","Wer"]);
  const ev=[];const H=pkH(p);
- pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),q=st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0);
+ pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),q=(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st);
   const zd=o.z?(p.zus||[]).find(z=>String(z.ps)===o.z):null;if(q)ev.push([zd?zd.t||p.t:p.db||p.t,zd?"Nachlieferung "+o.z:"Packliste raus",pkName(x),q,h&&h.by?nmA(h,"by"):""]);
   if(st.s!=="open")(st.alt||[]).forEach(a=>ev.push([zd?zd.t||p.t:p.db||p.t,"Alternative",a.t,+a.n||0,h&&h.by?nmA(h,"by"):""]))});
  B.R.forEach(r=>Object.values(rIt(r)).forEach(i=>{if(i.g!=="Zubehör"&&+i.q)ev.push([abgRetT(r),abgRetLbl(r),i.name,-(+i.q),nmA(r,r.closed?"closedBy":"by")])}));
@@ -2777,6 +2778,7 @@ function auUnit(p,k){const x=p&&k?pkPosAll(p).find(x=>abgKey(artCode(x.a),pkName
 const auQ=(n,u)=>pkNum(n)+'<small> '+esc(u||"Stk")+'</small>';
 function auDevLines(p,zps){const H=pkH(p),K=pkKeys(p),IT=pkItems(p),L=[];pkPosAll(p).forEach((x,i)=>{if((IT[i].z||null)!==(zps||null))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x);
  const u=" "+(x.u||"Stk");if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
+ const ov=pkOver(x,h,st);if(ov)L.push(n+": "+pkNum(h.q)+" von "+pkNum(st.need)+u+" – "+pkNum(ov)+u+" mehr als im Packschein");
  (st.s!=="open"?st.alt:[]).forEach(a=>L.push(n+": stattdessen "+pkNum(a.n)+" "+(x.u||"Stk")+" "+a.t));
  if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete")});
  if(!zps&&typeof pkX==="function")pkX(p).forEach(e=>L.push("zusätzlich mitgegeben: "+pkXTx(e)+(e.why?" – "+e.why:"")));return L}
@@ -2802,7 +2804,7 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const msgs=M.length?'<section class="card aucd"><b class="ausec">Nachrichten ans Lager</b>'+M.map(ansH).join("")+'</section>':'';
  const H2=pkH(p),K=pkKeys(p);
  const mat='<details class="card aucd aumat"><summary><b>Material</b><small>'+pkPosN(pkPosAll(p).length)+'</small></summary>'+pkPosAll(p).map((x,i)=>{const h=H2[K[i]],st=pkPS(x,h),l55=pkL55(x,h);
-  return '<div class="aurow"><b class="auq m">'+auQ(x.n,x.u)+'</b><span class="aun">'+esc(pkName(x))+(x.f>0&&!(h&&h.fm==="lager")?' <small class="red">davon '+pkNum(x.f)+' '+esc(x.u||"Stk")+' Fremdmiete</small>':'')+'</span><span class="aust">'+(l55?'Lager 55':st.s==="open"?'':st.s==="part"?'<span class="or">'+pkNum(st.q)+' '+esc(x.u||"Stk")+' da</span>':'✓')+'</span></div>'}).join("")+'</details>';
+  return '<div class="aurow"><b class="auq m">'+auQ(x.n,x.u)+'</b><span class="aun">'+esc(pkName(x))+(x.f>0&&!(h&&h.fm==="lager")?' <small class="red">davon '+pkNum(x.f)+' '+esc(x.u||"Stk")+' Fremdmiete</small>':'')+'</span><span class="aust">'+(l55?'Lager 55':st.s==="open"?'':st.s==="part"||pkOver(x,h,st)?'<span class="or">'+pkNum(st.s==="part"?st.q:h.q)+' '+esc(x.u||"Stk")+' da</span>':'✓')+'</span></div>'}).join("")+'</details>';
  $("#app").innerHTML='<section class="card aucd"><div class="aukv"><span>Auftrag</span><b>'+esc(p.ord||"–")+'</b><span>Projektleiter</span><b>'+esc(shortName(p.pl)||"–")+(mine?' <small class="mute">(du)</small>':'')+'</b><span>Dispo</span><b>'+pkD(p.db)+' – '+pkD(p.de)+'</b>'+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+'</div></section>'+
   tl+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+mat+
   (!mine?'<p class="mute" style="font-size:12px;margin:8px 2px">Antworten kann nur der Projektleiter dieses Auftrags.</p>':'');
@@ -2899,7 +2901,7 @@ function pkChgDlg(P,M,same){return new Promise(res=>{const m=pkMatch(P,M),o=docu
  document.body.appendChild(o);draw()})}
 /* Herricht-Stand übernehmen: alte Positionen (mit Schlüssel) -> neue Positionen (mit Schlüssel). Gibt {patch, back:[…], diff} */
 function pkCarry(H,oldI,newI){const done={},alt={},fm={},l55={},who={};
- oldI.forEach(o=>{const x=o.x,h=H[o.k];if(!h)return;const k=pkAK(x),st=pkPS(x,h);done[k]=(done[k]||0)+(st.s==="ok"?st.need:st.s==="part"?(+st.q||0):0);
+ oldI.forEach(o=>{const x=o.x,h=H[o.k];if(!h)return;const k=pkAK(x),st=pkPS(x,h);done[k]=(done[k]||0)+(st.s==="ok"?st.need+pkOver(x,h,st):st.s==="part"?(+st.q||0):0);
   if(st.alt.length)alt[k]=(alt[k]||[]).concat(st.alt);if(h.fm)fm[k]=h.fm;if(typeof h.l55==="boolean")l55[k]=h.l55;if(h.by)who[k]={by:h.by,t:h.t}});
  const patch={};oldI.forEach(o=>{patch[o.k]=null});
  newI.forEach(o=>{const x=o.x,k=pkAK(x),h={};if(fm[k]&&x.f>0)h.fm=fm[k];if(k in l55)h.l55=l55[k];const need=pkNeed(x,h),av=done[k]||0;
@@ -2958,15 +2960,16 @@ function pkDrRows(P){const H=pkH(P),IT=pkItems(P),rows=[];
   let r=o.z&&!l55?rows.find(q=>!q.z&&!q.l55&&q.k===k):null;
   if(!r){r={k,pos:(o.z?"Z ":"")+(x.p||String(i+1)),name:pkName(x),a:x.a||"",u:x.u||"Stk",z:o.z||null,l55,items:[]};rows.push(r)}
   r.items.push(part)});
- rows.forEach(r=>{Object.assign(r,{soll:0,mit:0,fz:0,fl:0,nf:0,miss:0,open:0,zn:{},alt:[]});
+ rows.forEach(r=>{Object.assign(r,{soll:0,mit:0,fz:0,fl:0,nf:0,miss:0,open:0,over:0,zn:{},alt:[]});
   r.items.forEach(p=>{const n=+p.x.n||0;r.soll+=n;if(p.z&&!r.z)r.zn[p.z]=(r.zn[p.z]||0)+n;if(p.l55)return;
    if(p.f>0){if(p.fm==="lager")r.fl+=p.f;else if(p.fm==="miete")r.fz+=p.f;else r.nf+=p.f}
    if(p.st.s==="open"){if(p.fin)r.miss+=p.st.need;else r.open+=p.st.need}
-   else{const q=p.st.s==="ok"?p.st.need:Math.min(p.st.need,+p.st.q||0);r.mit+=q;if(p.st.s==="part")r.miss+=p.st.need-q;p.st.alt.forEach(a=>r.alt.push(a))}});
-  r.ck=r.l55?"55":r.miss||r.fl?"!":r.open&&!r.mit?"":r.open?"…":"ok";
+   else{const ov=pkOver(p.x,p.h,p.st),q=p.st.s==="ok"?p.st.need+ov:Math.min(p.st.need,+p.st.q||0);r.mit+=q;r.over+=ov;if(p.st.s==="part")r.miss+=p.st.need-q;p.st.alt.forEach(a=>r.alt.push(a))}});
+  r.ck=r.l55?"55":r.miss||r.fl||r.over||r.alt.length?"!":r.open&&!r.mit?"":r.open?"…":"ok";
   const u=pkDrU(r),h=[];
   if(r.l55)h.push(["Lager 55 – holt Fahrer/Monteur selbst","m"]);
   if(r.miss)h.push([r.mit?"fehlt "+pkDrQ(r.miss,u):"nicht mitgegeben","o"]);
+  if(r.over)h.push([pkDrQ(r.over,u)+" mehr als im Packschein","o"]);
   if(r.open)h.push([(r.mit?pkDrQ(r.open,u)+" ":"")+"noch nicht hergerichtet","m"]);
   if(r.fl)h.push([pkDrQ(r.fl,u)+" aus dem Lager statt Fremdmiete","o"]);
   if(r.fz)h.push(["davon "+pkDrQ(r.fz,u)+" Fremdmiete – kommt nicht vom Lager","m"]);
@@ -2983,6 +2986,7 @@ function pkDrHead(P){const H=pkH(P),g=pkProg(P),L=[];
  return L}
 function pkDrDev(rows){const D=[],O=[];rows.forEach(r=>{const u=pkDrU(r);
   if(r.miss)D.push(r.name+": fehlt "+pkDrQ(r.miss,u)+(r.mit?" ("+pkDrQ(r.mit,u)+" mitgegeben)":" (nicht mitgegeben)"));
+  if(r.over)D.push(r.name+": "+pkDrQ(r.over,u)+" mehr als im Packschein ("+pkDrQ(r.mit,u)+" mitgegeben)");
   r.alt.forEach(a=>D.push("Ersatz für "+r.name+": "+pkDrQ(+a.n||0,u)+" "+pkDrAltName(a)));
   if(r.fl)D.push(r.name+": "+pkDrQ(r.fl,u)+" aus dem Lager statt Fremdmiete");
   if(r.open)O.push(r.name+" ("+pkDrQ(r.open,u)+")");
@@ -3122,7 +3126,7 @@ function pkXDlg(P,id,pre){const e=id?(pkH(P)[id]||null):null,o=document.createEl
 function pkXApply(P,H,items){const pool={},patch={};
  Object.keys(H).filter(k=>/^x_/.test(k)&&H[k]&&(+H[k].n||0)>0).forEach(k=>{const e=H[k],key=pkXKey(e);(pool[key]=pool[key]||[]).push({k,e,left:+e.n||0})});
  if(!Object.keys(pool).length)return patch;
- items.forEach(o=>{const x=o.x,h=H[o.k]||null;if(pkL55(x,h))return;const L=pool[pkAK(x)];if(!L)return;const st=pkPS(x,h),need=st.need,have=st.s==="ok"?need:st.s==="part"?(+st.q||0):0;let rest=need-have;if(rest<=0)return;
+ items.forEach(o=>{const x=o.x,h=H[o.k]||null;if(pkL55(x,h))return;const L=pool[pkAK(x)];if(!L)return;const st=pkPS(x,h),need=st.need,have=st.s==="ok"?need+pkOver(x,h,st):st.s==="part"?(+st.q||0):0;let rest=need-have;if(rest<=0)return;
   let got=0,from=null;L.forEach(p=>{if(rest<=0||p.left<=0)return;const t=Math.min(rest,p.left);p.left-=t;rest-=t;got+=t;from=from||p.e});
   if(!got)return;const q=have+got,nh={...(h||{}),q,ok:q>=need,by:from.by,t:Date.now(),xf:true};if(nh.ok)delete nh.q;patch[o.k]=nh});
  Object.values(pool).forEach(L=>L.forEach(p=>{if(p.left<=0)patch[p.k]=null;else if(p.left!==(+p.e.n||0))patch[p.k]={...p.e,n:p.left}}));

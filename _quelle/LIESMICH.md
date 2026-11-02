@@ -246,3 +246,10 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Info-Mail, PDF und Abgleich behandeln „zu viel“ unverändert (PDF: Mitgegeben max. Soll).
 - `pkscan.js` (build.py nach pkextra.js): Knopf „Artikel scannen“ über der Liste (weg, wenn alle Zeilen abgeschlossen). `rScanCam` → `pkScanHit`: Nummer wie Retourschein (`rScanNr`, `artCode`), IDs werden NICHT gespeichert. Treffer → `pkScanHl` (blaue Zeile `.pkhl`), scrollen, `pkEdit(P,i,{msg})` mit grünem Hinweis (bzw. „Schon komplett hergerichtet“). Mehrere Treffer (Packschein + Zusatz) → Auswahl. Nicht in der Packliste → Fehler-Ton + Auswahl: Alternative für offene Position (gleiche Gruppe zuerst, `pkEdit(...,{alt:{t,a}})` belegt Artikel vor), „+ Zusätzlich mitgeben“ (`pkXDlg(P,null,{t,a,msg})`, nur wenn Haupt-Packliste offen), „Verwerfen“. Unbekannte Nummer: nur Zusätzlich/Verwerfen.
 - Test `tests/pkscan_t.js` (SP). Hinweis: `ov_t.js` scheitert montags (kein vergangener Wochentag) – schon vor 1.99.
+
+## 1.100 – „Zu viel“ überall als Abweichung (Jürgen: „Zu viel ist auch eine Abweichung! Jede Art von Abweichung soll angezeigt werden.“)
+- Versionsnummer 1.99 → 1.100 (nach dem Punkt weiterzählen, nicht 2.0).
+- `pkDevRow` zählt jetzt auch „aus dem Lager statt Fremdmiete“ → steht ebenfalls oben bei „Abweichungen“. Kreis antippen bei jeder Abweichung öffnet Bearbeiten.
+- „Zu viel“ (`pkOver`) zählt als mitgegeben: Abgleich raus (abg.js, 3 Stellen), Assistent „Wo ist …“ (jvArtCnt), geänderter Packschein (pkchg), Zusatzmaterial-Verrechnung (pkextra). Info-Mail: Zeile „x von y – z mehr als im Packschein“. PDF: Mitgegeben = tatsächliche Menge, „!“, Hinweis und Zeile im Kasten „Abweichungen“; „!“ jetzt auch bei Ersatz. Meine Aufträge: Abweichungen beim Herrichten + Material-Liste zeigen zu viel.
+- Einheiten ergänzt: „15 von 16 Stk da – fehlen 1 Stk“ (Herricht-Ansicht und Info-Mail).
+- Test `tests/pkscan_t.js` prüft Mail, PDF und Abgleich mit zu viel.

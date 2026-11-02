@@ -43,7 +43,7 @@ function pkXDlg(P,id,pre){const e=id?(pkH(P)[id]||null):null,o=document.createEl
 function pkXApply(P,H,items){const pool={},patch={};
  Object.keys(H).filter(k=>/^x_/.test(k)&&H[k]&&(+H[k].n||0)>0).forEach(k=>{const e=H[k],key=pkXKey(e);(pool[key]=pool[key]||[]).push({k,e,left:+e.n||0})});
  if(!Object.keys(pool).length)return patch;
- items.forEach(o=>{const x=o.x,h=H[o.k]||null;if(pkL55(x,h))return;const L=pool[pkAK(x)];if(!L)return;const st=pkPS(x,h),need=st.need,have=st.s==="ok"?need:st.s==="part"?(+st.q||0):0;let rest=need-have;if(rest<=0)return;
+ items.forEach(o=>{const x=o.x,h=H[o.k]||null;if(pkL55(x,h))return;const L=pool[pkAK(x)];if(!L)return;const st=pkPS(x,h),need=st.need,have=st.s==="ok"?need+pkOver(x,h,st):st.s==="part"?(+st.q||0):0;let rest=need-have;if(rest<=0)return;
   let got=0,from=null;L.forEach(p=>{if(rest<=0||p.left<=0)return;const t=Math.min(rest,p.left);p.left-=t;rest-=t;got+=t;from=from||p.e});
   if(!got)return;const q=have+got,nh={...(h||{}),q,ok:q>=need,by:from.by,t:Date.now(),xf:true};if(nh.ok)delete nh.q;patch[o.k]=nh});
  Object.values(pool).forEach(L=>L.forEach(p=>{if(p.left<=0)patch[p.k]=null;else if(p.left!==(+p.e.n||0))patch[p.k]={...p.e,n:p.left}}));

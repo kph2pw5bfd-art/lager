@@ -46,7 +46,7 @@ function pkChgDlg(P,M,same){return new Promise(res=>{const m=pkMatch(P,M),o=docu
  document.body.appendChild(o);draw()})}
 /* Herricht-Stand übernehmen: alte Positionen (mit Schlüssel) -> neue Positionen (mit Schlüssel). Gibt {patch, back:[…], diff} */
 function pkCarry(H,oldI,newI){const done={},alt={},fm={},l55={},who={};
- oldI.forEach(o=>{const x=o.x,h=H[o.k];if(!h)return;const k=pkAK(x),st=pkPS(x,h);done[k]=(done[k]||0)+(st.s==="ok"?st.need:st.s==="part"?(+st.q||0):0);
+ oldI.forEach(o=>{const x=o.x,h=H[o.k];if(!h)return;const k=pkAK(x),st=pkPS(x,h);done[k]=(done[k]||0)+(st.s==="ok"?st.need+pkOver(x,h,st):st.s==="part"?(+st.q||0):0);
   if(st.alt.length)alt[k]=(alt[k]||[]).concat(st.alt);if(h.fm)fm[k]=h.fm;if(typeof h.l55==="boolean")l55[k]=h.l55;if(h.by)who[k]={by:h.by,t:h.t}});
  const patch={};oldI.forEach(o=>{patch[o.k]=null});
  newI.forEach(o=>{const x=o.x,k=pkAK(x),h={};if(fm[k]&&x.f>0)h.fm=fm[k];if(k in l55)h.l55=l55[k];const need=pkNeed(x,h),av=done[k]||0;

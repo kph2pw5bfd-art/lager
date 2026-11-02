@@ -67,6 +67,7 @@ function auUnit(p,k){const x=p&&k?pkPosAll(p).find(x=>abgKey(artCode(x.a),pkName
 const auQ=(n,u)=>pkNum(n)+'<small> '+esc(u||"Stk")+'</small>';
 function auDevLines(p,zps){const H=pkH(p),K=pkKeys(p),IT=pkItems(p),L=[];pkPosAll(p).forEach((x,i)=>{if((IT[i].z||null)!==(zps||null))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x);
  const u=" "+(x.u||"Stk");if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
+ const ov=pkOver(x,h,st);if(ov)L.push(n+": "+pkNum(h.q)+" von "+pkNum(st.need)+u+" – "+pkNum(ov)+u+" mehr als im Packschein");
  (st.s!=="open"?st.alt:[]).forEach(a=>L.push(n+": stattdessen "+pkNum(a.n)+" "+(x.u||"Stk")+" "+a.t));
  if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete")});
  if(!zps&&typeof pkX==="function")pkX(p).forEach(e=>L.push("zusätzlich mitgegeben: "+pkXTx(e)+(e.why?" – "+e.why:"")));return L}
@@ -92,7 +93,7 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const msgs=M.length?'<section class="card aucd"><b class="ausec">Nachrichten ans Lager</b>'+M.map(ansH).join("")+'</section>':'';
  const H2=pkH(p),K=pkKeys(p);
  const mat='<details class="card aucd aumat"><summary><b>Material</b><small>'+pkPosN(pkPosAll(p).length)+'</small></summary>'+pkPosAll(p).map((x,i)=>{const h=H2[K[i]],st=pkPS(x,h),l55=pkL55(x,h);
-  return '<div class="aurow"><b class="auq m">'+auQ(x.n,x.u)+'</b><span class="aun">'+esc(pkName(x))+(x.f>0&&!(h&&h.fm==="lager")?' <small class="red">davon '+pkNum(x.f)+' '+esc(x.u||"Stk")+' Fremdmiete</small>':'')+'</span><span class="aust">'+(l55?'Lager 55':st.s==="open"?'':st.s==="part"?'<span class="or">'+pkNum(st.q)+' '+esc(x.u||"Stk")+' da</span>':'✓')+'</span></div>'}).join("")+'</details>';
+  return '<div class="aurow"><b class="auq m">'+auQ(x.n,x.u)+'</b><span class="aun">'+esc(pkName(x))+(x.f>0&&!(h&&h.fm==="lager")?' <small class="red">davon '+pkNum(x.f)+' '+esc(x.u||"Stk")+' Fremdmiete</small>':'')+'</span><span class="aust">'+(l55?'Lager 55':st.s==="open"?'':st.s==="part"||pkOver(x,h,st)?'<span class="or">'+pkNum(st.s==="part"?st.q:h.q)+' '+esc(x.u||"Stk")+' da</span>':'✓')+'</span></div>'}).join("")+'</details>';
  $("#app").innerHTML='<section class="card aucd"><div class="aukv"><span>Auftrag</span><b>'+esc(p.ord||"–")+'</b><span>Projektleiter</span><b>'+esc(shortName(p.pl)||"–")+(mine?' <small class="mute">(du)</small>':'')+'</b><span>Dispo</span><b>'+pkD(p.db)+' – '+pkD(p.de)+'</b>'+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+'</div></section>'+
   tl+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+mat+
   (!mine?'<p class="mute" style="font-size:12px;margin:8px 2px">Antworten kann nur der Projektleiter dieses Auftrags.</p>':'');
