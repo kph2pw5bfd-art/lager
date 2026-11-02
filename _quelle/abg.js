@@ -60,7 +60,20 @@ function abgToCheck(){if(!can("abg_p"))return[];const out=[];
   if(!pr||(pr.t||0)<(e.closedT||0))out.push({id:p.id,p,r:e,B})});
  rets.forEach(r=>{if(!(r.closed&&r.art==="end")||abgPackOf(r.ord))return;const pr=ABP["r_"+r.id];if(!pr||(pr.t||0)<(r.closedT||0))out.push({id:"r_"+r.id,p:null,r,B:null})});
  return out.sort((a,b)=>(a.r.closedT||0)-(b.r.closedT||0))}
-function abgCheck(id,endT){return rSave(()=>db.doc("abpr/"+id).set({by:me,t:Date.now(),end:endT||0}),"Als geprüft markiert")}
+function abgCheck(id,endT,note){return rSave(()=>db.doc("abpr/"+id).set({by:me,...tabAs("by"),t:Date.now(),end:endT||0,note:note||""}),"Als geprüft markiert")}
+/* 1.98: „Geprüft“ mit freiwilliger Notiz (Knöpfe für häufige Notizen) */
+const ABG_NOTES=["Retoure per Mail an Projektleiter gesendet","Fehlmaterial mit Projektleiter geklärt","Alles vollständig"];
+function abgCheckDlg(id,endT,title){const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0;max-height:92vh;overflow:auto"><b style="font-size:17px">Als geprüft markieren</b>'+(title?'<div class="mute">'+esc(title)+'</div>':'')+
+  '<label class="mute" for="abgnt" style="display:block;margin-top:10px">Notiz (optional)</label><div class="abgnch">'+ABG_NOTES.map((t,i)=>'<button type="button" class="abgnc" data-anc="'+i+'">'+esc(t)+'</button>').join("")+'</div>'+
+  '<textarea id="abgnt" maxlength="300" placeholder="z. B. Retoure per Mail an Projektleiter gesendet" style="min-height:70px"></textarea>'+
+  '<div class="row" style="margin-top:6px"><button class="btn ghost" id="abgnx" type="button">Abbrechen</button><button class="btn" id="abgns" type="button" style="background:var(--ok)">Geprüft</button></div></div>';
+ document.body.appendChild(o);const ta=o.querySelector("#abgnt");
+ const mark=()=>o.querySelectorAll("[data-anc]").forEach(b=>b.classList.toggle("on",ta.value.includes(ABG_NOTES[+b.dataset.anc])));
+ o.querySelectorAll("[data-anc]").forEach(b=>b.onclick=()=>{const t=ABG_NOTES[+b.dataset.anc];if(ta.value.includes(t))ta.value=ta.value.replace(t,"").replace(/^[\s·,]+|[\s·,]+$/g,"").replace(/\s*·\s*·\s*/g," · ");else ta.value=ta.value.trim()?ta.value.trim()+" · "+t:t;mark();ta.focus()});
+ ta.oninput=mark;o.querySelector("#abgnx").onclick=()=>o.remove();
+ o.querySelector("#abgns").onclick=()=>{o.remove();abgCheck(id,endT,ta.value.trim())}}
+const abgWait=t=>{const d=Math.round((pkDay(Date.now())-pkDay(t||Date.now()))/864e5);return d<=0?"wartet seit heute":d===1?"wartet seit gestern":"wartet seit "+d+" Tagen"};
 /* ---------- Bausteine ---------- */
 const abgTag=(t,c)=>'<span class="abtag '+c+'">'+esc(t)+'</span>';
 function abgBadge(B){return !B.has?abgTag("noch nichts zurück","grey"):B.fehlt||B.zuviel?(B.fehlt?abgTag(B.fehlt+(B.fehlt===1?" fehlt":" fehlen"),"red"):"")+(B.zuviel?abgTag(B.zuviel+" zu viel","or"):""):abgTag("alles zurück ✓","ok")}
@@ -100,7 +113,7 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
  $("#t").textContent="Abgleich";const B=abgBal(p),H=pkH(p),kl=H.klar&&H.klar.t?H.klar:null,pr=ABP[p.id],endT=B.R.filter(r=>r.closed&&r.art==="end").reduce((a,r)=>Math.max(a,r.closedT||0),0);
  const wait=endT&&(!pr||(pr.t||0)<endT),endR=B.R.filter(r=>r.closed&&r.art==="end").sort((a,b)=>(b.closedT||0)-(a.closedT||0))[0];
  const chk=wait&&can("abg_p")?'<section class="abgchk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span><b>Wartet auf Prüfung</b><small>Endretoure von '+esc(nmA(endR,"closedBy"))+', '+fmt(endR.closedT).slice(0,6)+'</small></span><button class="btn s" id="abgpr" type="button">Geprüft</button></section>':
-  (pr&&!wait?'<div class="abgdone">✓ Geprüft von '+esc(nmA(pr,"by"))+', '+fmt(pr.t).slice(0,6)+'</div>':'');
+  (pr&&!wait?'<div class="abgdone">✓ Geprüft von '+esc(nmA(pr,"by"))+', '+fmt(pr.t).slice(0,6)+(pr.note?' · <span style="font-weight:400;color:var(--ink)">'+esc(pr.note)+'</span>':'')+'</div>':'');
  const nums=[[B.raus,"Raus",""],[B.zur,"Zurück",""],[B.fehlt,"Fehlt",B.fehlt?"red":""]].concat(B.zuviel?[[B.zuviel,"Zu viel","or"]]:[]);
  const head='<section class="abgcard"><div class="abgh"><span><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+' · Dispo '+pkDM(p.db)+'–'+pkDM(p.de)+'</small></span><span class="abgpkb">'+abgBadge(B)+'</span></div>'+
   '<div class="abgnums" style="grid-template-columns:repeat('+nums.length+',minmax(0,1fr))">'+nums.map(([n,l,c])=>'<div class="'+c+'"><b>'+n+'</b><span>'+l+'</span></div>').join("")+'</div>'+
@@ -124,7 +137,7 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
   (B.fehlt||B.zuviel?'<button class="btn" id="abgask" type="button">Nachfrage an '+esc(shortName(p.pl)||"Projektleiter")+'</button>':'')+
   (kl?'<button class="btn ghost" id="abgkl0" type="button">„Geklärt“ zurücknehmen</button>':'<button class="btn ghost" id="abgkl" type="button">Mit Projektleiter geklärt</button>')+
   '<button class="btn ghost" id="abgpk" type="button">Packliste öffnen</button></div>';
- if($("#abgpr"))$("#abgpr").onclick=()=>abgCheck(p.id,endT);
+ if($("#abgpr"))$("#abgpr").onclick=()=>abgCheckDlg(p.id,endT,(p.ev||"")+" · Auftrag "+(p.ord||"–"));
  document.querySelectorAll("[data-abgr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.abgr;go("retopen")});
  document.querySelectorAll("[data-abgzv]").forEach(b=>b.onclick=()=>go("abgzv"));
  $("#abgxl").onclick=()=>abgXl(p);if($("#abgask"))$("#abgask").onclick=()=>jvAskPlP(p);
@@ -160,16 +173,28 @@ function abgPickPack(not,cb){const o=document.createElement("div");o.className="
   box.querySelectorAll("[data-pp]").forEach(b=>b.onclick=()=>{o.remove();cb(packs.find(x=>x.id===b.dataset.pp))})};
  q.oninput=show;show();o.querySelector("#abgpx").onclick=()=>o.remove();setTimeout(()=>q.focus(),60)}
 /* ---------- Ansicht: Zu prüfen ---------- */
+let abgPrT="zu",abgPrQ="";
 function abgPrView(){if(!can("abg_p")){view="start";return startView()}$("#t").textContent="Zu prüfen";const L=abgToCheck();
- const wk=pkMon(pkDay(Date.now())),D=Object.entries(ABP).filter(([,x])=>(x.t||0)>=wk).sort((a,b)=>b[1].t-a[1].t);
- $("#app").innerHTML='<p class="mute" style="margin:0 0 10px;line-height:1.45">Jede Endretoure landet hier, bis jemand mit dem Recht „Abgleich prüfen“ sie als geprüft markiert.</p>'+
+ const tabs='<div class="row" style="margin-bottom:10px"><button class="btn ghost s'+(abgPrT==="zu"?' act':'')+'" data-prt="zu" style="flex:1">Zu prüfen ('+L.length+')</button><button class="btn ghost s'+(abgPrT==="ok"?' act':'')+'" data-prt="ok" style="flex:1">Geprüft</button></div>';
+ if(abgPrT==="ok"){$("#app").innerHTML=tabs+'<input id="abgprq" placeholder="Suchen: Veranstaltung, Auftrag, Projektleiter, Notiz …" autocomplete="off"><div id="abgprl"></div>';
+  const q=$("#abgprq");q.value=abgPrQ;q.oninput=()=>{abgPrQ=q.value;abgPrDone()};abgPrDone();
+ }else{
+ $("#app").innerHTML=tabs+'<p class="mute" style="margin:0 0 10px;line-height:1.45">Jede Endretoure landet hier, bis jemand mit dem Recht „Abgleich prüfen“ sie als geprüft markiert.</p>'+
   (L.length?L.map((x,i)=>'<section class="abgcard"><div class="abgh"><span><b>'+esc(x.p?x.p.ev||"–":x.r.ev||"–")+'</b><small>Auftrag '+esc((x.p?x.p.ord:x.r.ord)||"–")+(x.p&&x.p.pl?' · '+esc(shortName(x.p.pl)):'')+' · Endretoure von '+esc(nmA(x.r,"closedBy"))+', '+fmt(x.r.closedT).slice(0,6)+'</small></span></div>'+
-   '<div class="abgtags">'+(x.B?abgBadge(x.B)+(x.B.more.length?abgTag(x.B.more.length===1?"1 Vorschlag":x.B.more.length+" Vorschläge","grey"):""):abgTag("keine Packliste – nur Retourschein","grey"))+'</div>'+
-   '<div class="abg2"><button class="btn ghost" type="button" data-prv="'+i+'">Ansehen</button><button class="btn" type="button" data-prk="'+i+'">Geprüft</button></div></section>').join(""):'<div class="card mute">Nichts zu prüfen.</div>')+
-  (D.length?'<details class="abgcard abgmore"><summary><b>Zuletzt geprüft</b><small>'+D.length+' diese Woche</small></summary>'+D.map(([id,x])=>{const p=packs.find(q=>q.id===id),r=id.startsWith("r_")?rets.find(q=>"r_"+q.id===id):null;
-   return '<div class="abgev"><span class="abgt"><b>'+esc(p?p.ev||p.ord:r?r.ev:"–")+'</b><small>'+esc(nmA(x,"by"))+', '+fmt(x.t)+'</small></span></div>'}).join("")+'</details>':'');
+   '<div class="abgtags">'+abgTag(abgWait(x.r.closedT),"grey")+(x.B?abgBadge(x.B)+(x.B.more.length?abgTag(x.B.more.length===1?"1 Vorschlag":x.B.more.length+" Vorschläge","grey"):""):abgTag("keine Packliste – nur Retourschein","grey"))+'</div>'+
+   '<div class="abg2"><button class="btn ghost" type="button" data-prv="'+i+'">Ansehen</button><button class="btn" type="button" data-prk="'+i+'">Geprüft</button></div></section>').join(""):'<div class="card mute">Nichts zu prüfen.</div>');
  document.querySelectorAll("[data-prv]").forEach(b=>b.onclick=()=>{const x=L[+b.dataset.prv];if(x.p){curPack=x.p.id;go("pkabg")}else{curRet=x.r.id;go("retopen")}});
- document.querySelectorAll("[data-prk]").forEach(b=>b.onclick=()=>{const x=L[+b.dataset.prk];abgCheck(x.id,x.r.closedT)})}
+ document.querySelectorAll("[data-prk]").forEach(b=>b.onclick=()=>{const x=L[+b.dataset.prk];abgCheckDlg(x.id,x.r.closedT,(x.p?x.p.ev||"":x.r.ev||"")+" · Auftrag "+((x.p?x.p.ord:x.r.ord)||"–"))})}
+ document.querySelectorAll("[data-prt]").forEach(b=>b.onclick=()=>{abgPrT=b.dataset.prt;abgPrView()})}
+/* Übersicht „Geprüft“: alle geprüften Aufträge nach Monat */
+function abgPrDone(){const box=$("#abgprl");if(!box)return;const M=["Jänner","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],v=jvNorm(abgPrQ||"");
+ const A=Object.entries(ABP).map(([id,x])=>{const p=id.startsWith("r_")?null:packs.find(q=>q.id===id),r=id.startsWith("r_")?rets.find(q=>"r_"+q.id===id):null;return{id,x,p,r}}).filter(o=>o.p||o.r)
+  .filter(o=>!v||jvNorm([o.p?o.p.ev:o.r.ev,o.p?o.p.ord:o.r.ord,o.p?o.p.pl:"",o.x.note,nmA(o.x,"by")].join(" ")).includes(v)).sort((a,b)=>(b.x.t||0)-(a.x.t||0));
+ let last="";box.innerHTML=A.length?A.map((o,i)=>{const d=new Date(o.x.t||0),mh=M[d.getMonth()]+" "+d.getFullYear(),B=o.p?abgBal(o.p):null,ev=o.p?o.p.ev:o.r.ev,ord=o.p?o.p.ord:o.r.ord,wait=o.p&&B&&B.R.some(r=>r.closed&&r.art==="end"&&(r.closedT||0)>(o.x.t||0));
+  const h=mh!==last?'<div class="abgmon">'+mh+'</div>':'';last=mh;
+  return h+'<button class="abgcard abgdn" type="button" data-prd="'+i+'"><span class="abgh"><span><b>'+esc(ev||"–")+'</b><small>Auftrag '+esc(ord||"–")+(o.p&&o.p.pl?' · '+esc(shortName(o.p.pl)):'')+' · geprüft '+fmt(o.x.t).slice(0,6)+' von '+esc(nmA(o.x,"by"))+'</small></span></span>'+
+   '<span class="abgtags">'+(B?abgBadge(B):abgTag("nur Retourschein","grey"))+(wait?abgTag("neue Endretoure – wieder zu prüfen","or"):"")+'</span>'+(o.x.note?'<span class="abgnote">'+esc(o.x.note)+'</span>':'')+'</button>'}).join(""):'<div class="card mute">'+(v?"Nichts gefunden.":"Noch keine geprüften Aufträge.")+'</div>';
+ box.querySelectorAll("[data-prd]").forEach(b=>b.onclick=()=>{const o=A[+b.dataset.prd];if(o.p){curPack=o.p.id;go("pkabg")}else{curRet=o.r.id;go("retopen")}})}
 /* ---------- Excel ---------- */
 async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek nicht geladen.");const B=abgBal(p),NAVY="FF114A97",wb=new ExcelJS.Workbook();
  const fill=c=>({type:"pattern",pattern:"solid",fgColor:{argb:c}}),bd={top:{style:"thin",color:{argb:"FFC9D1DC"}},left:{style:"thin",color:{argb:"FFC9D1DC"}},bottom:{style:"thin",color:{argb:"FFC9D1DC"}},right:{style:"thin",color:{argb:"FFC9D1DC"}}};
@@ -213,10 +238,11 @@ async function abgXlFile(r){const p=abgOk()?abgPackOf(r.ord):null;if(!p)return n
 function abgMailOpt(r){const p=abgOk()?abgPackOf(r.ord):null;if(!p)return"";const B=abgBal(p);
  return '<div class="abgbox" style="margin:10px 0"><b class="abglh">Anhänge</b><label class="abgchkl"><input type="checkbox" checked disabled>Retourschein (Excel)</label><label class="abgchkl"><input type="checkbox" id="mtabg" checked><span>Abgleich mit Packliste (Excel)<small class="mute">'+(B.fehlt||B.zuviel?(B.fehlt?B.fehlt+" fehlen":"")+(B.fehlt&&B.zuviel?" · ":"")+(B.zuviel?B.zuviel+" zu viel":""):"alles zurück")+'</small></span></label></div>'}
 /* ---------- Lager Übersicht: Streifen „Zu prüfen“ und Reiter „Fehlt noch“ ---------- */
-function abgPrStrip(){const L=abgToCheck();if(!L.length)return"";const nm=L.slice(0,2).map(x=>x.p?x.p.ev||x.p.ord:x.r.ev).join(", ")+(L.length>2?" …":"");
- return '<button class="abgstrip" type="button" id="abgstrip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span><b>'+(L.length===1?"1 Auftrag":L.length+" Aufträge")+' zu prüfen</b> · '+esc(nm)+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
+function abgPrStrip(){if(!can("abg_p"))return"";const L=abgToCheck();
+ if(!L.length)return '<button class="abgstrip abgnone" type="button" id="abgstrip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span><b>Nichts zu prüfen</b> · Geprüfte Aufträge ansehen</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>';const nm=L.slice(0,2).map(x=>x.p?x.p.ev||x.p.ord:x.r.ev).join(", ")+(L.length>2?" …":"");
+ return '<button class="abgstrip hot" type="button" id="abgstrip"><span class="abgcnt">'+L.length+'</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span><b>'+(L.length===1?"1 Auftrag":L.length+" Aufträge")+' zu prüfen</b> · '+esc(nm)+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
 function abgMissTab(){const G=abgMissing(),Z=abgAllMore().length;
  return{h:"Fehlt noch",e:"Es fehlt nichts. Gezählt werden Aufträge mit Endretoure oder überfällig.",
   L:G.map(g=>{const a=g.at[0];return '<button class="jvln" type="button" data-'+(g.hint?'abgzv="1"':'jp="'+esc(a.p.id)+'" data-jpa="1"')+'><span class="jvlt"><b>'+esc(g.name)+'</b><small>'+(g.hint?'<span class="or">Vielleicht: '+g.hint.q+' kamen bei '+esc(g.hint.from.ev||g.hint.from.ord)+' zu viel zurück</span>':'am ehesten bei '+esc(a.p.ev||a.p.ord)+(a.over?', überfällig':', Endretoure'))+'</small></span><span class="jvlr warn">'+g.n+(g.n===1?' fehlt':' fehlen')+'</span></button>'}),
   foot:Z?'<button class="jvln abgzvl" type="button" data-abgzv="1"><span class="jvlt"><b>Zu viel zurück: '+Z+' offen zum Klären</b></span><span class="jvlr">›</span></button>':""}}
-function abgJvBind(){const s=$("#abgstrip");if(s)s.onclick=()=>go("abgpr");document.querySelectorAll("#jv [data-abgzv]").forEach(b=>b.onclick=()=>go("abgzv"));document.querySelectorAll("#jv [data-jpa]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("pkabg")})}
+function abgJvBind(){const s=$("#abgstrip");if(s)s.onclick=()=>{abgPrT=abgToCheck().length?"zu":"ok";go("abgpr")};document.querySelectorAll("#jv [data-abgzv]").forEach(b=>b.onclick=()=>go("abgzv"));document.querySelectorAll("#jv [data-jpa]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("pkabg")})}

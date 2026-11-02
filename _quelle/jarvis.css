@@ -311,3 +311,18 @@ button.abgev{cursor:pointer}.abgd{flex:none;width:46px;font-size:12.5px;color:va
 .etadd{display:block;width:100%;margin:8px 0 10px;padding:11px;border:2px dashed var(--navy);border-radius:10px;background:none;color:var(--navy);font:inherit;font-weight:700;cursor:pointer}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .etadd,:root:not([data-theme="light"]) .etr>b{color:#8fb6f0;border-color:#8fb6f0}}:root[data-theme="dark"] .etadd,:root[data-theme="dark"] .etr>b{color:#8fb6f0;border-color:#8fb6f0}
 .etrg{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+/* 1.98 Zu prüfen hervorheben, Geprüft mit Notiz, Übersicht */
+.abgstrip.hot{background:#e67e22;border-color:#c96512;color:#fff}
+.abgstrip.hot span,.abgstrip.hot svg{color:#fff}
+.abgstrip.hot .abgcnt{flex:none;background:#fff;color:#a64d00;border-radius:14px;min-width:28px;height:28px;display:grid;place-items:center;font-weight:800;font-size:15px;padding:0 6px}
+.abgstrip.abgnone{background:var(--card);border-color:var(--line)}
+.abgstrip.abgnone svg{color:var(--mute)}.abgstrip.abgnone span{color:var(--mute)}.abgstrip.abgnone b{color:var(--ink)}
+.abgnch{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.abgnc{border:1px solid var(--navy);color:var(--navy);background:none;border-radius:16px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer;text-align:left}
+.abgnc.on{background:var(--navy);color:#fff}
+.abgmon{font-weight:700;color:var(--navy);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;margin:12px 0 6px}
+button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer;border-color:var(--line)}
+.abgdn .abgh{display:flex}.abgdn .abgh>span{display:flex;flex-direction:column}.abgdn .abgtags{display:flex;flex-wrap:wrap;gap:6px}
+.abgnote{display:block;font-size:13px;background:var(--tint,#eef3fa);border-radius:6px;padding:6px 8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .abgstrip.hot{background:#c96512}:root:not([data-theme="light"]) .abgnc{color:#8fb0ea;border-color:#8fb0ea}:root:not([data-theme="light"]) .abgnc.on{background:#8fb0ea;color:#0f1826}:root:not([data-theme="light"]) .abgmon{color:#8fb0ea}}
+:root[data-theme="dark"] .abgstrip.hot{background:#c96512}:root[data-theme="dark"] .abgnc{color:#8fb0ea;border-color:#8fb0ea}:root[data-theme="dark"] .abgnc.on{background:#8fb0ea;color:#0f1826}:root[data-theme="dark"] .abgmon{color:#8fb0ea}

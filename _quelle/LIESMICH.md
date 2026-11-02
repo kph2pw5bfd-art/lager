@@ -234,3 +234,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.97 – Kachel heißt „Defekte“
 - Hauptseite und Einstellungen (Reihenfolge der Kacheln): „Defekt melden“ → „Defekte“. Der Reiter in der Liste heißt weiterhin „Defekt melden“.
+
+## 1.98 – Zu prüfen hervorheben, Geprüft mit Notiz, Übersicht „Geprüft“ (abg.js)
+- Lager Übersicht: Feld „Aufträge zu prüfen“ ist orange mit Anzahl – nur wenn wirklich etwas zu prüfen ist. Sonst neutral „Nichts zu prüfen · Geprüfte Aufträge ansehen“ (nur mit Recht abg_p).
+- „Geprüft“ öffnet abgCheckDlg: freiwillige Notiz, Knöpfe ABG_NOTES („Retoure per Mail an Projektleiter gesendet“, „Fehlmaterial mit Projektleiter geklärt“, „Alles vollständig“). Gespeichert in docs abpr: note. Anzeige im Abgleich bei „✓ Geprüft von …“.
+- Ansicht „Zu prüfen“: Reiter „Zu prüfen (n)“ | „Geprüft“. Zu prüfen mit „wartet seit …“. Geprüft = alle geprüften Aufträge nach Monat, Suche (Veranstaltung, Auftrag, PL, Notiz, wer), Tipp öffnet Abgleich. „Zuletzt geprüft“ (nur diese Woche) entfällt.
+- Test: tests/pruef_t.js
