@@ -1,4 +1,4 @@
-const APPV="1.103";
+const APPV="1.104";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -319,13 +319,13 @@ function jvPkPanel(D){const P=D.pk;if(!P)return"";const now=pkDay(Date.now());
 let jvTab=null,jvMoreOpen=false;
 function jvLine(attr,l,sub,r,cls){return '<button class="jvln" type="button" '+attr+'><span class="jvlt"><b>'+esc(l)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><span class="jvlr '+(cls||"")+'">'+esc(r||"")+'</span></button>'}
 function jvTabs(D){const P=D.pk,urg=D.od.filter(d=>d.urg),T=[];
- if(P){T.push({k:"over",n:P.over.length,l:"Überfällig",red:true});T.push({k:"herr",n:P.herr.length,l:"Heute herrichten"});T.push({k:"back",n:P.back.length,l:"Heute zurück"})}
- if(P&&D.rs&&typeof abgMissing==="function"){const G=abgMissing();T.push({k:"miss",n:G.length,l:"Fehlt noch",red:true})}
+ if(P){T.push({k:"over",n:P.over.length,l:"Dispo abgelaufen",red:true});T.push({k:"herr",n:P.herr.length,l:"Heute herrichten"});T.push({k:"back",n:P.back.length,l:"Heute zurück"})}
+ if(P&&D.rs&&typeof abgMissing==="function"){const G=abgMissing();T.push({k:"miss",n:G.length,l:"Fehlmaterial",red:true})}
  T.push({k:"urg",n:urg.length,l:"Defekte dringend",red:true});
  if(!P){T.push({k:"def",n:D.od.length,l:can("def_s")?"Defekte offen":"Deine Defekte"});if(D.rs)T.push({k:"ret",n:D.open.length,l:"Retourscheine offen"})}
  return T}
 function jvTabList(k,D){const P=D.pk,sd=t=>{const d=Math.round((pkDay(Date.now())-pkDay(t))/864e5);return d<=1?"seit gestern":"seit "+d+" Tagen"},pr=p=>"Auftrag "+(p.ord||"–")+(p.pl?" · "+shortName(p.pl):"");
- if(k==="over")return{h:"Überfällig",e:jvF()?"Nichts überfällig. So soll's sein.":"Nichts überfällig.",L:P.over.map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste",pr(p),sd(p.de),"warn"))};
+ if(k==="over")return{h:"Dispo abgelaufen",e:jvF()?"Keine Dispo abgelaufen. So soll's sein.":"Bei keiner Packliste ist die Dispo abgelaufen.",L:P.over.map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste",pr(p),sd(p.de),"warn"))};
  if(k==="herr")return{h:"Heute herrichten",e:"Heute ist nichts herzurichten.",L:P.herr.map(p=>{const g=pkProg(p),f=pkF(p).length;return jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste","Auftrag "+(p.ord||"–")+(f?" · "+f+" mit Fremdmiete":""),g.d?g.d+" von "+g.n:"offen","")}).concat((P.herrDone||[]).map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste","Auftrag "+(p.ord||"–"),"hergerichtet ✓","ok")))};
  if(k==="back")return{h:"Heute zurück",e:"Heute kommt laut Packlisten nichts zurück.",L:P.back.map(p=>jvLine('data-jp="'+esc(p.id)+'"',p.ev||"Packliste",pr(p),"bis "+pkD(p.de).slice(-5),""))};
  if(k==="urg"){const L=D.od.filter(d=>d.urg);return{h:"Defekte dringend",e:"Keine dringenden Defekte."+(D.od.length?" "+D.od.length+" offene stehen unter „Mehr anzeigen“.":""),L:L.map(d=>jvLine('data-jd="'+esc(d.id)+'"',d.art,(d.ev?d.ev+" · ":"")+"gemeldet "+jvAgo(d.t),"dringend","warn"))}}
@@ -493,7 +493,7 @@ function jarvisView(){$("#t").textContent="Lager Assistent";const D=jvData(),P=j
   '<div class="jvgreet" id="jvg">'+jvGreet()+'</div>'+jvAskHtml()+
   '<div class="jvopts"><button class="jvlink" id="jvvc" type="button">Stimme</button><span aria-hidden="true">·</span><button class="jvlink" id="jvrd" type="button">'+(jvReadOn()?"Vorlesen an":"Vorlesen aus")+'</button><span aria-hidden="true">·</span><button class="jvlink" id="jvhl" type="button">Was kann ich fragen?</button></div></section>'+
   '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
-  (owner?'<p class="jvnote">Wer die Lager Übersicht sieht, stellst du in der Benutzerverwaltung ein (Recht „Lager Übersicht“). Herrichten, Heute zurück und Überfällig kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
+  (owner?'<p class="jvnote">Wer die Lager Übersicht sieht, stellst du in der Benutzerverwaltung ein (Recht „Lager Übersicht“). Herrichten, Heute zurück und Dispo abgelaufen kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
  jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvhl").onclick=jvHelpOpen;
  $("#jvrd").onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");$("#jvrd").textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
