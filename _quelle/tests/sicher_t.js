@@ -10,7 +10,7 @@ let bad=0;const ok=(c,m,x)=>{console.log((c?"OK   ":"FEHLER")+" "+m+(x!==undefin
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(600);
- ok(await p.evaluate(()=>APPV)==="1.106","Version 1.106");
+ ok(await p.evaluate(()=>APPV)==="1.107","Version 1.107");
  ok(toasts.some(t=>/Datensicherung: letzte manuelle noch nie/.test(t)),"Hinweis auf der Hauptseite",toasts.join(" | "));
  /* Packliste und Retourschein löschen */
  await p.evaluate(async()=>{await db.doc("pack/P1").delete();await db.doc("packh/P1").delete();await db.doc("retour/r1").delete();await db.doc("fotos/r1-0").delete()});

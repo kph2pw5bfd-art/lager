@@ -349,3 +349,10 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 .axd{margin:6px 0}.axd summary{cursor:pointer}.axd ul{margin:4px 0 0;padding-left:20px;font-size:13.5px}
 /* 1.105: Zahlen in allen Reitern auf gleicher Höhe (oben ausgerichtet) */
 .jvtab{justify-content:flex-start;padding-top:9px}
+/* 1.107: Push-Nachrichten */
+.psok{background:var(--okbg);border:1px solid var(--ok);color:var(--ok);border-radius:8px;padding:7px 10px;font-size:13.5px;font-weight:600;margin-bottom:6px}
+.pshint{background:#fff1e3;border:1px solid #e67e22;color:#9a4d00;border-radius:8px;padding:8px 10px;font-size:13.5px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pshint{background:#3d2410;color:#f5b878}}:root[data-theme="dark"] .pshint{background:#3d2410;color:#f5b878}
+.pssw{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}.pssw:first-of-type{border-top:0}
+.pssw span{flex:1;display:flex;flex-direction:column}.pssw small{color:var(--mute);font-size:12px}.pssw input{width:22px;height:22px;margin:0;flex:none}
+.pstit{display:flex;flex-direction:column;gap:6px;margin-top:6px}.pstit label{display:flex;align-items:center;gap:8px;font-size:14px}.pstit input{width:auto;margin:0}
