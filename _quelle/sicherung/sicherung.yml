@@ -1,0 +1,36 @@
+name: Nächtliche Sicherung
+on:
+  schedule:
+    - cron: "17 1 * * *"   # jede Nacht 02:17 Uhr Wiener Winterzeit (03:17 Sommerzeit)
+  workflow_dispatch:        # „Run workflow“ = sofort sichern
+permissions:
+  contents: write
+concurrency: sicherung
+jobs:
+  sichern:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Daten holen
+        id: s
+        continue-on-error: true
+        run: node sichern.mjs
+        env:
+          SB_BACKUP_KEY: ${{ secrets.SB_BACKUP_KEY }}
+          SB_ANON: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndoZmVpcG55emZmcmVqYmFrd2ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNjE3MjUsImV4cCI6MjEwODczNzcyNX0.aUo3d2SyIzFX5-a4vQa37FxaBMBI10CzFfnF9roHl0U   # öffentlicher Schlüssel (steht auch in der App)
+      - name: Stand speichern
+        run: |
+          git config user.name "Sicherung"
+          git config user.email "sicherung@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -q -m "Sicherung $(date -u +%Y-%m-%d)"
+          git push
+      - name: Bei Problemen Mail auslösen
+        if: steps.s.outcome != 'success'
+        run: |
+          echo "Die Sicherung hatte ein Problem – bitte das Protokoll von „Daten holen“ ansehen."
+          exit 1

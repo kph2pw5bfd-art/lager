@@ -442,6 +442,11 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 .pkscl{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .pkscl button{display:flex;flex-direction:column;gap:2px;text-align:left;width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font:inherit;cursor:pointer;margin:0}
 .pkscl small{color:var(--mute);font-size:12px}
+/* 1.102: Datensicherung + Papierkorb */
+.bkw{color:var(--bad);font-weight:600}.bkok{color:var(--ok);font-weight:600}
+.bkrow{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.bkrow .bkt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.bkrow .bkt small{color:var(--mute);font-size:12px}
+.bkrow .btn{flex:0 0 auto;width:auto;margin:0}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -467,7 +472,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.101";
+<script>const APPV="1.102";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -3198,6 +3203,68 @@ function pkScanMiss(P,code,kat){const IT=pkItems(P),H=pkH(P),name=kat?kat.name:"
  if(o.querySelector("#psxa"))o.querySelector("#psxa").onclick=()=>{o.remove();pkXDlg(P,null,kat?{t:kat.name,a:kat.nr||"",msg:"Gescannt: "+code+" · "+kat.name}:{t:"",a:"",msg:"Gescannt: "+code+" – nicht in der Artikelliste, bitte Namen eintippen"})};
  o.querySelectorAll("[data-psa]").forEach(b=>b.onclick=()=>{o.remove();const i=+b.dataset.psa;pkScanOpen(P,i,"",{msg:"Alternative: "+name+" ("+code+")",alt:{t:name,a:kat.nr||""}})})}
 
+/* ===== Datensicherung + Papierkorb (ab 1.102, nur Administrator) =====
+   Datenbank: sicherung.sql (Trigger fängt JEDES Löschen in docs → Tabelle papierkorb, 30 Tage; Funktionen papierkorb_liste,
+   papierkorb_zurueck, sicherung_stand). Nächtliche Sicherung über GitHub (Repo lager-sicherung, Schlüssel SB_BACKUP_KEY).
+   App-Verwaltung: Abschnitt „Datensicherung“ (Stand der nächtlichen Sicherung, „Datensicherung herunterladen“) und „Papierkorb“.
+   Hinweis auf der Hauptseite (einmal am Tag): manuelle Sicherung älter als 7 Tage oder nächtliche Sicherung älter als 2 Tage. */
+const BKL="tpc_bk_last",BKH="tpc_bk_hint";
+const bkAdm=()=>typeof realOwner!=="undefined"&&!!realOwner;
+const bkDays=t=>t?Math.floor((Date.now()-t)/864e5):null;
+const bkAgo=t=>{const d=bkDays(t);return d===null?"noch nie":d===0?"heute":d===1?"gestern":"vor "+d+" Tagen"};
+function bkLast(){try{return +localStorage.getItem(BKL)||0}catch(e){return 0}}
+async function bkStand(){try{const {data,error}=await SB.rpc("sicherung_stand");if(error)throw error;return data||null}catch(e){return{err:String(e&&e.message||e)}}}
+async function bkBlock(){if(!bkAdm())return;const app=$("#app");if(!app)return;
+ app.insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Datensicherung</h3><div class="card bkcard" style="cursor:default"><div id="bkst" class="mute">Stand wird geladen …</div>'+
+  '<button class="btn" id="bkdl" type="button" style="margin-top:10px">Datensicherung herunterladen</button><div class="mute" style="font-size:13px;margin-top:6px">Alle Daten inkl. Fotos als eine Datei. Zuletzt auf diesem Gerät: <b id="bkll">'+bkAgo(bkLast())+'</b>.</div></div>'+
+  '<h3 style="margin:18px 0 4px">Papierkorb</h3><p class="mute" style="margin:0 0 8px">Alles, was in der App gelöscht wird, bleibt hier 30 Tage und kann wiederhergestellt werden.</p><button class="btn ghost" id="bktr" type="button">Papierkorb öffnen <span id="bktrn"></span></button>');
+ $("#bkdl").onclick=bkDownload;$("#bktr").onclick=bkTrash;
+ const s=await bkStand(),el=$("#bkst");if(!el)return;
+ if(!s||s.err){el.innerHTML='<span class="bkw">Papierkorb und automatische Sicherung sind noch nicht eingerichtet – <b>sicherung.sql</b> in Supabase ausführen.</span>';$("#bktr").disabled=true;return}
+ if(s.korb)$("#bktrn").textContent="("+s.korb+")";
+ const z=s.zuletzt?Date.parse(s.zuletzt):0,old=!z||bkDays(z)>=2;
+ el.innerHTML='<b>Automatische Sicherung (jede Nacht):</b> '+(z?'<span class="'+(old?'bkw':'bkok')+'">zuletzt '+bkAgo(z)+', '+fmt(z).slice(-5)+' Uhr · '+(s.n||0).toLocaleString("de-AT")+' Einträge</span>':'<span class="bkw">noch keine – GitHub-Sicherung einrichten (siehe Anleitung)</span>')+
+  '<br><span style="font-size:13px">Jetzt in der App: '+(s.jetzt||0).toLocaleString("de-AT")+' Einträge'+(z&&s.n&&s.jetzt<s.n*0.8?' – <span class="bkw">deutlich weniger als bei der letzten Sicherung!</span>':'')+'</span>'}
+/* Alles als eine Datei (JSON) – am Handy über Teilen (In Dateien sichern), am PC als Download */
+async function bkDownload(){const b=$("#bkdl");if(!b||b.disabled)return;b.disabled=true;const t0=b.textContent;
+ try{const all=[];for(let from=0;;from+=300){b.textContent="Wird gesammelt … "+all.length;const {data,error}=await SB.from("docs").select("col,id,data,updated_at").order("col").order("id").range(from,from+299);if(error)throw error;all.push(...data);if(data.length<300)break}
+  const d=new Date(),ymd=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const blob=new Blob([JSON.stringify({app:"TPC Lager App",version:APPV,erstellt:d.toISOString(),von:meName(),anzahl:all.length,profile:PROFS,docs:all})],{type:"application/json"}),name="TPC-Lager-Sicherung_"+ymd+".json";
+  const f=new File([blob],name,{type:"application/json"});let done=false;
+  if(window.matchMedia&&matchMedia("(pointer:coarse)").matches&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:name});done=true}catch(e){if(e&&e.name==="AbortError"){b.disabled=false;b.textContent=t0;return}}}
+  if(!done)await DLX.save({filename:name,data:blob});
+  try{localStorage.setItem(BKL,String(Date.now()))}catch(e){}if($("#bkll"))$("#bkll").textContent="heute";
+  toast("Datensicherung gespeichert: "+all.length.toLocaleString("de-AT")+" Einträge ("+Math.max(1,Math.round(blob.size/1048576))+" MB)",1)}
+ catch(e){console.error(e);errBox("Datensicherung fehlgeschlagen ("+(e&&e.message||e)+"). Bitte mit Netz nochmal versuchen.")}
+ b.disabled=false;b.textContent=t0}
+/* Papierkorb */
+const BK_T={retour:"Retourschein",pack:"Packliste",packh:"Herricht-Stand",defekte:"Defekt",infos:"Info an das Lager",lists:"Materialliste",fotos:"Foto",rkat:"Artikel",artikel:"Artikel (alt)",titel:"Titel",rolle:"Benutzer-Rolle",wbnote:"Besprechungspunkt",jverin:"Erinnerung",fehlartikel:"Fehlender Artikel",abzu:"Zuordnung (zu viel zurück)",plaw:"Antwort Projektleiter",werkstatt:"Werkstatt",lager:"Lager",users:"Benutzer"};
+const bkSide=c=>c==="fotos"||c==="packh";
+function bkGroups(L){const used=new Set(),G=[];
+ L.filter(r=>!bkSide(r.col)).forEach(r=>{const t=Date.parse(r.deleted_at),sib=L.filter(x=>x!==r&&!used.has(x.nr)&&Math.abs(Date.parse(x.deleted_at)-t)<=6e5&&(x.doc_id===r.doc_id||(x.col==="fotos"&&(x.doc_id.startsWith(r.doc_id+"-")||x.doc_id.startsWith(r.doc_id+"r-")))));
+  sib.forEach(x=>used.add(x.nr));used.add(r.nr);G.push({r,sib})});
+ L.filter(r=>!used.has(r.nr)).forEach(r=>G.push({r,sib:[]}));
+ return G.sort((a,b)=>Date.parse(b.r.deleted_at)-Date.parse(a.r.deleted_at))}
+function bkLabel(r){const i=r.info||{},main=i.ev||i.name||i.art||i.nm||i.title||i.txt||i.t||r.doc_id;return{typ:BK_T[r.col]||r.col,main,sub:[i.ord?"Auftrag "+i.ord:"",i.nr?"Nr. "+i.nr:"",i.ps&&r.col==="pack"?"Packschein "+i.ps:""].filter(Boolean).join(" · ")}}
+async function bkTrash(){const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:520px;margin:0;max-height:92vh;overflow:auto"><div class="row" style="align-items:center"><b style="flex:1;font-size:17px">Papierkorb</b><button class="btn ghost s" id="bkx" type="button" style="flex:0 0 auto;width:auto">Schließen</button></div>'+
+  '<p class="mute" style="margin:4px 0 8px;font-size:13px">Gelöschtes bleibt 30 Tage. „Wiederherstellen“ holt den Eintrag samt Fotos bzw. Herricht-Stand zurück.</p><input id="bkq" placeholder="Suchen: Veranstaltung, Auftrag, Artikel …" autocomplete="off"><div id="bkl" class="mute">Wird geladen …</div></div>';
+ document.body.appendChild(o);o.querySelector("#bkx").onclick=()=>o.remove();let L=[];
+ const draw=()=>{const q=o.querySelector("#bkq").value.trim().toLowerCase(),G=bkGroups(L).filter(g=>{if(!q)return true;const l=bkLabel(g.r);return (l.typ+" "+l.main+" "+l.sub).toLowerCase().includes(q)});
+  o.querySelector("#bkl").innerHTML=G.length?G.map(g=>{const l=bkLabel(g.r),nf=g.sib.filter(x=>x.col==="fotos").length,nh=g.sib.some(x=>x.col==="packh");
+   return '<div class="bkrow"><div class="bkt"><small>'+esc(l.typ)+'</small><b>'+esc(l.main)+'</b>'+(l.sub?'<small>'+esc(l.sub)+'</small>':'')+'<small>gelöscht '+fmt(Date.parse(g.r.deleted_at))+(g.r.deleted_by?' von '+esc(nm(g.r.deleted_by)):'')+(nf?' · mit '+nf+(nf===1?' Foto':' Fotos'):'')+(nh?' · mit Herricht-Stand':'')+'</small></div><button class="btn s" type="button" data-bkr="'+g.r.nr+'">Wiederherstellen</button></div>'}).join(""):'<div class="mute" style="padding:10px 0">'+(q?'Nichts gefunden.':'Der Papierkorb ist leer.')+'</div>';
+  o.querySelectorAll("[data-bkr]").forEach(b=>b.onclick=()=>{const g=G.find(x=>String(x.r.nr)===b.dataset.bkr),l=bkLabel(g.r);
+   ask(l.typ+" „"+l.main+"“ wiederherstellen?",async()=>{try{const {data,error}=await SB.rpc("papierkorb_zurueck",{p_nr:g.r.nr});if(error)throw error;
+     toast(data.schon&&!data.ok?"Ist schon wieder vorhanden – nichts überschrieben":"Wiederhergestellt"+(data.ok>1?" ("+data.ok+" Einträge)":"")+(data.schon?" – "+data.schon+" schon vorhanden, nicht überschrieben":""),1);
+     if(db.reloadAll)db.reloadAll();await load()}catch(e){console.error(e);errBox("Wiederherstellen fehlgeschlagen ("+(e&&e.message||e)+").")}})})};
+ const load=async()=>{try{const {data,error}=await SB.rpc("papierkorb_liste");if(error)throw error;L=data||[];draw()}catch(e){o.querySelector("#bkl").innerHTML='<span class="bkw">Papierkorb nicht erreichbar – ist sicherung.sql ausgeführt? ('+esc(e&&e.message||e)+')</span>'}};
+ o.querySelector("#bkq").oninput=draw;load()}
+/* Hinweis auf der Hauptseite: einmal am Tag */
+async function bkHint(){if(!bkAdm())return;const d=new Date().toDateString();try{if(localStorage.getItem(BKH)===d)return;localStorage.setItem(BKH,d)}catch(e){return}
+ const s=await bkStand();if(!s||s.err)return;const z=s.zuletzt?Date.parse(s.zuletzt):0;
+ if(s.schluessel&&(!z||bkDays(z)>=2))return toast("Achtung: Die automatische Sicherung lief "+(z?"zuletzt "+bkAgo(z):"noch nie")+". App-Verwaltung → Datensicherung",1);
+ const m=bkLast();if(!m||bkDays(m)>=7)toast("Datensicherung: letzte manuelle "+bkAgo(m)+". App-Verwaltung → Datensicherung herunterladen",1)}
+
 /* ===== Werkstatt: Reparatur + verwendete Ersatzteile, Ersatzteile-Bericht als PDF (ab 1.95) =====
    Zweck (Jürgen): der Chef will wissen, welche Ersatzteile verbraucht wurden.
    Ablauf: Defekt offen → Werkstatt tippt „Repariert“ → Fenster mit Reparaturbeschreibung, Ersatzteilen (Menge+Einheit, Name Pflicht,
@@ -3536,7 +3603,7 @@ function startView(){$("#t").textContent="Hauptseite";
   T("defnew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>','Defekte',od.length+(od.length===1?' offener Defekt':' offene Defekte')+(ou?', davon '+ou+' dringend':''),ou?'!':'')+
   T("infonew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14h4"/></svg>','Info an das Lager',can("inf_s")?ui+' ungelesen':'Nachricht mit Foto ans Lager',can("inf_s")&&ui?ui:'')+
   (canLager()?T("ret",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h12a5 5 0 0 1 0 10h-3"/><path d="M7 6l-4 4 4 4"/></svg>','Retourschein',rets.length+(rets.length===1?' gespeicherter Schein':' gespeicherte Scheine'),''):'')+
- '</div>'+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px"><button class="btn ghost s" data-g="art">Einstellungen</button>'+(can("v_app")?'<button class="btn ghost s" data-g="appv">App-Verwaltung</button>':'')+(can("v_user")||can("v_rights")?'<button class="btn ghost s" data-g="users">Benutzerverwaltung'+(can("v_user")&&pendingN()?' <span class="hc" style="display:inline-grid;margin-left:6px">'+pendingN()+'</span>':'')+'</button>':'')+'</div>'+'<div style="text-align:center;margin-top:10px"><button class="btn ghost s" id="lgo">Abmelden</button></div><div class="mute" style="text-align:center;font-size:12px;margin-top:14px">Version '+APPV+'</div>';homeSort();
+ '</div>'+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px"><button class="btn ghost s" data-g="art">Einstellungen</button>'+(can("v_app")?'<button class="btn ghost s" data-g="appv">App-Verwaltung</button>':'')+(can("v_user")||can("v_rights")?'<button class="btn ghost s" data-g="users">Benutzerverwaltung'+(can("v_user")&&pendingN()?' <span class="hc" style="display:inline-grid;margin-left:6px">'+pendingN()+'</span>':'')+'</button>':'')+'</div>'+'<div style="text-align:center;margin-top:10px"><button class="btn ghost s" id="lgo">Abmelden</button></div><div class="mute" style="text-align:center;font-size:12px;margin-top:14px">Version '+APPV+'</div>';homeSort();if(typeof bkHint==="function")bkHint();
  document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const v=b.dataset.g;if(v==="defnew"){dpho=null;df="alle";return go("def")}if(v==="infonew")ipho=null;go(v)});$("#lgo").onclick=()=>ask("Wirklich abmelden?",()=>SB.auth.signOut())}
 function editList(c){const w=c.mode==="weiter",o=document.createElement("div");o.className="ov";
  o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Veranstaltung bearbeiten</b><div style="height:8px"></div><label class="mute">'+(w?"Von Veranstaltung":"Veranstaltung")+'</label><input id="ee1"><label class="mute">Auftragsnummer</label><input id="eo1">'+(w?'<label class="mute">Zu Veranstaltung</label><input id="ee2"><label class="mute">Auftragsnummer (Ziel)</label><input id="eo2">':'')+'<div class="row"><button class="btn" id="esv">Speichern</button><button class="btn ghost" id="ecn">Abbrechen</button></div></div>';
@@ -3603,7 +3670,7 @@ async function defEditView(){const d=defs.find(x=>x.id===curDef);if(!d||d.by!==m
 function reqMark(p){let first=null;p.forEach(([id,m])=>{const el=$("#"+id);if(!el)return;el.classList.toggle("bad",m);if(m&&!first)first=el;if(!el._rq){el._rq=1;el.addEventListener("input",()=>{if(el.value.trim())el.classList.remove("bad")})}});if(first)first.scrollIntoView({block:"center",behavior:"smooth"})}
 function artView(){$("#t").textContent="Einstellungen";$("#app").innerHTML='<h3 style="margin:4px 0 4px">Dieses Gerät</h3><p class="mute" style="margin:0 0 8px">Gilt nur für dieses Handy bzw. Tablet.</p>'+prefRow("snd","Töne beim Scannen","Welcher Ton, wählst du darunter aus")+sndBlock()+prefRow("vib","Vibration beim Scannen","Nur auf Android-Geräten")+prefRow("wake","Bildschirm anlassen","Solange die App offen ist")+hoMineBlock()+'<h3 style="margin:18px 0 4px">App</h3><p class="mute" style="margin:0 0 8px">Installierte Version: '+esc(APPV)+'</p><button class="btn ghost" id="upd">Nach Update suchen</button>';
  if($("#pvb"))$("#pvb").onclick=()=>{owner=false;hist=[];view="start";draw()};prefBind();sndBind();hoMineBind();$("#upd").onclick=async()=>{const t=await fetch(HERE,{cache:"reload"}).then(r=>r.text()).catch(()=>"");const m=t.match(/const APPV="([^"]+)"/);if(m&&m[1]!==APPV){toast("Neue Version "+m[1]+" wird geladen …",1);setTimeout(()=>location.reload(),800)}else toast(m?"Die App ist aktuell.":"Keine Verbindung.",!!m)}}
-function appView(){$("#t").textContent="App-Verwaltung";$("#app").innerHTML='<h3 style="margin:4px 0 4px">Artikelliste</h3><p class="mute" style="margin:0 0 8px">Alle Artikel nach Haupt- und Untergruppen geordnet, wie in der Excel-Liste. Einzelne Artikel ansehen, ändern, hinzufügen oder löschen.</p><button class="btn ghost" id="al">Artikelliste öffnen</button>';$("#al").onclick=()=>go("artlist");retAdmin();fehlBlock()}
+function appView(){$("#t").textContent="App-Verwaltung";$("#app").innerHTML='<h3 style="margin:4px 0 4px">Artikelliste</h3><p class="mute" style="margin:0 0 8px">Alle Artikel nach Haupt- und Untergruppen geordnet, wie in der Excel-Liste. Einzelne Artikel ansehen, ändern, hinzufügen oder löschen.</p><button class="btn ghost" id="al">Artikelliste öffnen</button>';$("#al").onclick=()=>go("artlist");retAdmin();fehlBlock();if(typeof bkBlock==="function")bkBlock()}
 function usersView(){$("#t").textContent="Benutzerverwaltung";$("#app").innerHTML='<button class="btn" id="inv" style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/></svg>Benutzer einladen</button>';$("#inv").onclick=invDlg;if(!can("v_user"))$("#inv").remove();else userBlock();if(can("v_rights"))rightsBlock();const h=$("#app h3");if(h)h.style.marginTop="4px"}
 function artListView(){$("#t").textContent="Artikelliste";
  $("#app").innerHTML=nav()+'<div class="card"><input id="an" placeholder="Artikelnummer" maxlength="10"><input id="am" placeholder="Name"><button class="btn" id="as">Speichern</button><button class="btn ghost" id="imp" style="margin-top:8px">Aus Excel importieren</button><input id="impf" type="file" accept=".xlsx" hidden></div>'+

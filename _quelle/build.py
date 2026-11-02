@@ -1,6 +1,6 @@
 import re,json
 s=open("/home/claude/lager_app.html",encoding="utf-8").read()
-shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/tablet.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvask.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvfrag.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/home.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/abg.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/wb.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/au.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkchg.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkdruck.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkextra.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkscan.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/ersatz.js",encoding="utf-8").read()
+shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/tablet.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvask.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvfrag.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/home.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/abg.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/wb.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/au.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkchg.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkdruck.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkextra.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkscan.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/sicher.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/ersatz.js",encoding="utf-8").read()
 def rep(a,b,c=1):
     global s
     n=s.count(a); assert n==c,(a[:80],n); s=s.replace(a,b)
@@ -156,6 +156,9 @@ rep("""if(d.foto)loadTh("dph",d);
  if($("#dfb"))""")
 rep("""if($("#dd"))$("#dd").onclick=()=>db.doc("defekte/"+d.id).update(d.done?""","""if($("#dd"))$("#dd").onclick=()=>!d.done?etDlg(d,true):db.doc("defekte/"+d.id).update(d.done?""")
 rep("""for(let k=0;k<(dd&&dd.fn||0);k++){try{await db.doc("fotos/"+i+"-"+k).delete()}catch(e){}}""","""for(let k=0;k<(dd&&dd.fn||0);k++){try{await db.doc("fotos/"+i+"-"+k).delete()}catch(e){}}for(let k=0;k<(dd&&dd.rfn||0);k++){try{await db.doc("fotos/"+i+"r-"+k).delete()}catch(e){}}""")
+# 1.102: Datensicherung + Papierkorb in der App-Verwaltung, Hinweis auf der Hauptseite
+rep('retAdmin();fehlBlock()}','retAdmin();fehlBlock();if(typeof bkBlock==="function")bkBlock()}')
+rep("Version '+APPV+'</div>';homeSort();","Version '+APPV+'</div>';homeSort();if(typeof bkHint===\"function\")bkHint();")
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},

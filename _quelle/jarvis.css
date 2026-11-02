@@ -339,3 +339,8 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 .pkscl{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .pkscl button{display:flex;flex-direction:column;gap:2px;text-align:left;width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font:inherit;cursor:pointer;margin:0}
 .pkscl small{color:var(--mute);font-size:12px}
+/* 1.102: Datensicherung + Papierkorb */
+.bkw{color:var(--bad);font-weight:600}.bkok{color:var(--ok);font-weight:600}
+.bkrow{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.bkrow .bkt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.bkrow .bkt small{color:var(--mute);font-size:12px}
+.bkrow .btn{flex:0 0 auto;width:auto;margin:0}
