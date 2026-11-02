@@ -102,16 +102,16 @@ function pkDrMail(P){const rows=pkDrRows(P),dev=pkDrDev(rows),H=pkH(P),g=pkProg(
 const pkDrFn=P=>"Packliste_"+String(P.ev||P.ord||"Auftrag").replace(/[^A-Za-z0-9äöüÄÖÜß]+/g,"_").replace(/^_|_$/g,"")+".pdf";
 async function pkDrSave(blob,fn){const dl=typeof claude!=="undefined"&&claude.use?await claude.use("downloads"):null;
  if(dl){await dl.save({filename:fn,data:blob});toast("PDF gespeichert: "+fn,1);return}
- const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fn;document.body.appendChild(a);a.click();a.remove()}
+ const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=fn;a.rel="noopener";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);toast("PDF gespeichert: "+fn,1)}
 function pkDrDlg(P){const mob=wbMobile(),fn=pkDrFn(P),o=document.createElement("div");o.className="ov";let file=null,err=null;
  const ready=pkDrPdf(P).then(b=>{file=new File([new Blob([b],{type:"application/pdf"})],fn,{type:"application/pdf"});return file}).catch(e=>{err=e;console.warn("Packliste PDF",e);throw e});ready.catch(()=>{});
  const body=pkDrMail(P),subj="Packliste "+(P.ord||"")+" – "+(P.ev||"");
  o.innerHTML='<div class="card pkdrd"><b style="font-size:17px">Packliste als PDF</b><div class="mute">'+esc(P.ev||"")+' · Auftrag '+esc(P.ord||"–")+'</div>'+
   '<div class="pkdrf" id="pkdrf">PDF wird erstellt …</div>'+
-  '<div class="pkdrb"><button class="btn" id="pkdrp" type="button">Drucken</button>'+(mob?'':'<button class="btn ghost" id="pkdrs" type="button">Als PDF speichern</button>')+'</div>'+
+  '<div class="pkdrb"><button class="btn" id="pkdrp" type="button">Drucken</button><button class="btn ghost" id="pkdrs" type="button">Als PDF speichern</button></div>'+
   '<b class="pkdrh">An den Monteur schicken</b><textarea id="pkdrt" style="min-height:200px"></textarea>'+
   '<div class="pkdrb">'+(navigator.canShare?'<button class="btn" id="pkdrsh" type="button">Teilen (PDF + Text)</button>':'')+'<a class="btn ghost" id="pkdrm" href="#">Mail öffnen</a><button class="btn ghost" id="pkdrc" type="button">Text kopieren</button></div>'+
-  '<small class="mute" id="pkdrhint">'+(mob?'„Drucken“ öffnet das Teilen-Menü – dort „Drucken“ oder „In Dateien sichern“ wählen.':'„Mail öffnen“ übernimmt nur den Text – die PDF über „Als PDF speichern“ anhängen.')+'</small>'+
+  '<small class="mute" id="pkdrhint">'+(mob?'„Drucken“ öffnet das Teilen-Menü. „Als PDF speichern“ legt die Datei bei den Downloads ab.':'„Mail öffnen“ übernimmt nur den Text – die PDF über „Als PDF speichern“ anhängen.')+'</small>'+
   '<button class="btn ghost" id="pkdrx" type="button" style="margin-top:6px">Schließen</button></div>';
  document.body.appendChild(o);const g=id=>o.querySelector("#"+id),ta=g("pkdrt");ta.value=body;
  const upd=()=>{g("pkdrm").href="mailto:?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(ta.value)};upd();ta.oninput=upd;

@@ -204,3 +204,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - wb.js: pro Punkt (docs `wbnote`) beliebig viele Bemerkungen als eigene Felder `b_<id>` = {txt, by, t, mod:{by,t}} (null = gelöscht; ein Feld pro Bemerkung, damit doc_update zusammenführt). `wbBems(n)` sortiert nach Zeit.
 - Ansicht: unter jedem offenen und erledigten Punkt die Bemerkungen (Name, Datum, „(geändert)“) + „+ Bemerkung“ (Eingabefeld direkt darunter, Enter speichert, Esc bricht ab). „Ändern · Löschen“ bei eigenen, mit `v_app` bei allen. Schreiben darf jeder mit Lager Übersicht (Ansicht `wb` braucht `jv_s`; wbnote hat keine eigene DB-Regel). Erledigt-Liste bleibt beim Bearbeiten aufgeklappt.
 - Bericht/Druck (`wbPaper`) und PDF (`wbPdf`): Bemerkungen klein unter dem Punkt („Name, T.M.: Text“). Erledigte Punkte weiterhin nicht im Ausdruck. Test `tests/wbbem_t.js`.
+
+## Version 1.92
+- Fehler behoben (Jürgen: „Ich kann das PDF nur teilen aber nicht runterladen“): „Als PDF speichern“ gibt es jetzt auch am Handy/Tablet – in „Packliste als PDF“ (`#pkdrs`) und im Wochenbericht (`#wbpdf`). Download über `<a download>` (Blob-URL 60 s gültig) bzw. `claude.use("downloads")`, danach Hinweis „PDF gespeichert: …“.

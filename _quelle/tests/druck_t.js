@@ -39,7 +39,7 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
    fs.writeFileSync(S+"druck_lang.pdf",Buffer.from(b64,"base64"));
   }else{
    await E(()=>{curPack="14501";view="packopen";hist=["start"];draw()});await p.waitForTimeout(300);await p.click("#pkprint");await p.waitForTimeout(1200);
-   ok("Handy: kein „Als PDF speichern“",!(await p.$("#pkdrs")));
+   ok("Handy: „Als PDF speichern“ da",!!(await p.$("#pkdrs")));
    await p.click("#pkdrsh");await p.waitForFunction(()=>window.__sh,null,{timeout:8000});const sh=await E(()=>window.__sh);ok("Handy: Teilen mit PDF + Text",sh.name==="Packliste_Firmenfeier_Parndorf.pdf"&&/Du bekommst:/.test(sh.text));
    await E(()=>window.__sh=null);await p.click("#pkdrp");await p.waitForFunction(()=>window.__sh,null,{timeout:8000});ok("Handy: Drucken = Teilen nur PDF",await E(()=>window.__sh.text===""));
   }
