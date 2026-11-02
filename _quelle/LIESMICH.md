@@ -285,3 +285,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Erkennung im Assistenten: „überfällig“ UND „Dispo (ist) abgelaufen“, „abgelaufene Dispo“ usw. (jvfrag.js, Abschnitt Rücklauf & Dispo).
 - Lager Übersicht: Reiter „Fehl-<br>material“ (Feld `lh` in jvTabs), Reiter oben ausgerichtet (`.jvtab{justify-content:flex-start}`) → Zahlen auf gleicher Höhe.
 - Kleinigkeit: doppelter Punkt nach dem Datum in „Dispo-Ende Mi 28.10.“ entfernt.
+
+## 1.106 – Retourschein-Excel: Differenz richtig (Fehler gemeldet von Jürgen)
+- Spalte „Differenz“ = Retour − Ausgang (vorher Ausgang − Retour): 4 raus, 2 zurück → −2; zu viel → +1. Zahlenformat `+0;-0;0`, fett; bedingte Formatierung: < 0 rot (FFC0392B), > 0 orange (FFE67E22). Umsetzung per rep in build.py (basis.html bleibt unverändert, Funktion `retXl`).
+- Abgleich-Excel (abg.js): Differenz bekommt ebenfalls `+0;-0;0` (Farben hatte es schon).
+- Test `tests/retxl_t.js` (ExcelJS-Attrappe; mit echtem Excel noch nicht geöffnet).

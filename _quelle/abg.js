@@ -212,7 +212,7 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
   const r=ws.addRow([e.code||"",e.name,e.raus,e.nach||"",e.fr||"",e.back,f>0?-f:z>0?z:0,st,bm.join(" · ")]);sr+=e.raus;sn+=e.nach;sf+=e.fr;sb+=e.back;
   const col=f>0?"FFB8322A":z>0?"FF9A4D00":"FF1F6B41",bg=f>0?"FFFBEBEB":z>0?"FFFFF1E3":"FFE3F3E9";
   r.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;c.alignment={vertical:"middle",horizontal:n===2||n===9?"left":"center",wrapText:n===9};if(i%2)c.fill=fill("FFF6F8FB")});
-  r.getCell(7).font={bold:true,color:{argb:col}};r.getCell(8).font={bold:true,color:{argb:col}};r.getCell(8).fill=fill(bg)});
+  r.getCell(7).font={bold:true,color:{argb:col}};r.getCell(7).numFmt='+0;-0;0';r.getCell(8).font={bold:true,color:{argb:col}};r.getCell(8).fill=fill(bg)});
  const t=ws.addRow(["","Gesamt",sr,sn||"",sf||"",sb,(B.fehlt?"−"+B.fehlt:"0")+(B.zuviel?" / +"+B.zuviel:""),"",(B.fehlt?B.fehlt+" fehlen":"nichts fehlt")+(B.zuviel?" · "+B.zuviel+" zu viel":"")]);
  t.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;c.font={bold:true};c.fill=fill("FFEEF3FA");c.alignment={horizontal:n===2||n===9?"left":"center"}});
  const wv=wb.addWorksheet("Verlauf");wv.columns=[{width:17},{width:22},{width:36},{width:10},{width:18}];kopf(wv);head(wv,["Datum","Art","Artikel","Menge","Wer"]);
