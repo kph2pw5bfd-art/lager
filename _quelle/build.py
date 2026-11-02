@@ -142,6 +142,9 @@ rep(""".sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(b.urg?1:0)-(a.urg?1:0)||b.t-a.t)
  $("#app").innerHTML=nav()+defTools()+(canDone()?'<button class="btn ghost" id="etrep" style="margin-bottom:10px">Ersatzteile-Bericht (PDF)</button>':'')+""")
 rep("""bindDefTools();document.querySelectorAll("[data-df]")""","""bindDefTools();if($("#etrep"))$("#etrep").onclick=etRepDlg;document.querySelectorAll("[data-df]")""")
 rep("""fn,foto:fn>0});dpho=null;view="def";draw();""","""fn,foto:fn>0});dpho=null;df="alle";view="def";draw();""")
+# 1.96: Kachel „Defekt melden“ auf der Hauptseite öffnet die Defekte-Liste mit Reiter „Alle“ (melden dann über den Reiter „Defekt melden“)
+rep("""if(v==="defnew")dpho=null;if(v==="infonew")ipho=null;go(v)})""","""if(v==="defnew"){dpho=null;df="alle";return go("def")}if(v==="infonew")ipho=null;go(v)})""")
+rep('let lq="",lqv="",lf="offen",df="offen";','let lq="",lqv="",lf="offen",df="alle";')
 rep("""'<div id="dph" class="thr"></div>':'')+'</div>'+
  (d.by===me?""","""'<div id="dph" class="thr"></div>':'')+'</div>'+etCard(d)+
  (d.by===me?""")

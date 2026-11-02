@@ -439,7 +439,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.95";
+<script>const APPV="1.96";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -3399,7 +3399,7 @@ function startView(){$("#t").textContent="Hauptseite";
   T("infonew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14h4"/></svg>','Info an das Lager',can("inf_s")?ui+' ungelesen':'Nachricht mit Foto ans Lager',can("inf_s")&&ui?ui:'')+
   (canLager()?T("ret",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h12a5 5 0 0 1 0 10h-3"/><path d="M7 6l-4 4 4 4"/></svg>','Retourschein',rets.length+(rets.length===1?' gespeicherter Schein':' gespeicherte Scheine'),''):'')+
  '</div>'+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px"><button class="btn ghost s" data-g="art">Einstellungen</button>'+(can("v_app")?'<button class="btn ghost s" data-g="appv">App-Verwaltung</button>':'')+(can("v_user")||can("v_rights")?'<button class="btn ghost s" data-g="users">Benutzerverwaltung'+(can("v_user")&&pendingN()?' <span class="hc" style="display:inline-grid;margin-left:6px">'+pendingN()+'</span>':'')+'</button>':'')+'</div>'+'<div style="text-align:center;margin-top:10px"><button class="btn ghost s" id="lgo">Abmelden</button></div><div class="mute" style="text-align:center;font-size:12px;margin-top:14px">Version '+APPV+'</div>';homeSort();
- document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const v=b.dataset.g;if(v==="defnew")dpho=null;if(v==="infonew")ipho=null;go(v)});$("#lgo").onclick=()=>ask("Wirklich abmelden?",()=>SB.auth.signOut())}
+ document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const v=b.dataset.g;if(v==="defnew"){dpho=null;df="alle";return go("def")}if(v==="infonew")ipho=null;go(v)});$("#lgo").onclick=()=>ask("Wirklich abmelden?",()=>SB.auth.signOut())}
 function editList(c){const w=c.mode==="weiter",o=document.createElement("div");o.className="ov";
  o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Veranstaltung bearbeiten</b><div style="height:8px"></div><label class="mute">'+(w?"Von Veranstaltung":"Veranstaltung")+'</label><input id="ee1"><label class="mute">Auftragsnummer</label><input id="eo1">'+(w?'<label class="mute">Zu Veranstaltung</label><input id="ee2"><label class="mute">Auftragsnummer (Ziel)</label><input id="eo2">':'')+'<div class="row"><button class="btn" id="esv">Speichern</button><button class="btn ghost" id="ecn">Abbrechen</button></div></div>';
  document.body.appendChild(o);const g=i=>o.querySelector("#"+i);
@@ -3407,7 +3407,7 @@ function editList(c){const w=c.mode==="weiter",o=document.createElement("div");o
  g("ecn").onclick=()=>o.remove();
  g("esv").onclick=async()=>{const e1=g("ee1").value.trim(),e2=w?g("ee2").value.trim():"";if(!e1||(w&&!e2))return errBox("Bitte die Veranstaltung eingeben.");
   try{await db.doc("lists/"+c.id).update({ev1:e1,ord1:g("eo1").value.trim(),ev2:e2,ord2:w?g("eo2").value.trim():"",mod:me,...tabAs("mod"),modT:Date.now()});o.remove();toast("Gespeichert",1)}catch(x){errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}}
-let lq="",lqv="",lf="offen",df="offen";
+let lq="",lqv="",lf="offen",df="alle";
 const chips=(arr,cur,att)=>'<div class="row" style="margin-bottom:10px">'+arr.map(([k,t])=>'<button class="btn ghost s'+(cur===k?' act':'')+'" '+att+'="'+k+'">'+t+'</button>').join("")+'</div>';
 function listTools(){return '<input id="sq" placeholder="Suchen (Veranstaltung, Auftrag, Name)" value="'+esc(lqv)+'">'+chips([["offen","Offen"],["geprüft","Abgeschlossen"],["alle","Alle"]],lf,"data-lf")}
 function bindTools(){const q=$("#sq");q.oninput=()=>{lqv=q.value;lq=lqv.toLowerCase();homeView();const n=$("#sq");n.focus();n.setSelectionRange(n.value.length,n.value.length)};document.querySelectorAll("[data-lf]").forEach(b=>b.onclick=()=>{lf=b.dataset.lf;homeView()})}
