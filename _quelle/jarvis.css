@@ -344,3 +344,6 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 .bkrow{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
 .bkrow .bkt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.bkrow .bkt small{color:var(--mute);font-size:12px}
 .bkrow .btn{flex:0 0 auto;width:auto;margin:0}
+/* 1.103: Vorschau Artikelliste-Import */
+.axn{color:var(--ok);font-weight:700}.axc{color:#b35a00;font-weight:700}.axw{color:var(--bad);font-weight:700}
+.axd{margin:6px 0}.axd summary{cursor:pointer}.axd ul{margin:4px 0 0;padding-left:20px;font-size:13.5px}
