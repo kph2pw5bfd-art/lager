@@ -484,7 +484,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.107";
+<script>const APPV="1.108";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -494,6 +494,10 @@ const SB=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefr
 const HERE=location.origin+location.pathname;
 let ME=null,PROF=null,PROFS=[];
 const LIVE=["lists","artikel","defekte","infos","werkstatt","users","lager","retour","rkat","titel","rolle"];
+/* ab 1.108: abgelaufene Anmeldung (z. B. iPhone lange im Hintergrund) → Anmeldung erneuern und einmal nochmal versuchen */
+async function sbTry(f){let r=await f();if(r&&r.error&&/jwt|token|expired|401|PGRST30/i.test(String(r.error.message||r.error.code||""))){try{await SB.auth.refreshSession()}catch(e){}r=await f()}return r}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&typeof SB!=="undefined"&&SB.auth){try{SB.auth.getSession().then(r=>{const x=r&&r.data&&r.data.session;if(x&&x.expires_at&&x.expires_at*1000-Date.now()<120000)SB.auth.refreshSession().catch(()=>{})}).catch(()=>{})}catch(e){}}});
+const sbErr=e=>{const m=String(e&&(e.message||e.details||e.hint||e.code)||e||"").trim();return m?" ("+m.slice(0,160)+")":""};
 const DBX=(()=>{const subs={};let ch=null;
  const snap=s=>({docs:[...s.rows.values()].map(r=>({id:r.id,data:()=>r.data}))});
  const emit=c=>{const s=subs[c];if(!s||!s.ready)return;const v=snap(s);s.cbs.slice().forEach(f=>{try{f(v)}catch(e){console.error(e)}})};
@@ -513,9 +517,9 @@ const DBX=(()=>{const subs={};let ch=null;
  const api={reloadAll:()=>reload(),local:(c,id,data)=>put(c,id,data),
   collection:c=>({onSnapshot(cb){let s=subs[c];if(!s){s=subs[c]={rows:new Map(),cbs:[],ready:false};load(c)}s.cbs.push(cb);if(s.ready)cb(snap(s));listen();return()=>{s.cbs=s.cbs.filter(f=>f!==cb)}},doc:id=>api.doc(c+"/"+id)}),
   doc:p=>{const i=p.indexOf("/"),c=p.slice(0,i),id=p.slice(i+1);return{
-   async set(d){const {data,error}=await SB.from("docs").upsert({col:c,id,data:d,updated_at:new Date().toISOString()}).select("data").single();if(error)throw error;put(c,id,data.data)},
-   async update(pt){const {data,error}=await SB.rpc("doc_update",{p_col:c,p_id:id,p_patch:pt});if(error)throw error;put(c,id,data)},
-   async delete(){const {error}=await SB.from("docs").delete().eq("col",c).eq("id",id);if(error)throw error;del(c,id)},
+   async set(d){const {data,error}=await sbTry(()=>SB.from("docs").upsert({col:c,id,data:d,updated_at:new Date().toISOString()}).select("data").single());if(error)throw error;put(c,id,data.data)},
+   async update(pt){const {data,error}=await sbTry(()=>SB.rpc("doc_update",{p_col:c,p_id:id,p_patch:pt}));if(error)throw error;put(c,id,data)},
+   async delete(){const {error}=await sbTry(()=>SB.from("docs").delete().eq("col",c).eq("id",id));if(error)throw error;del(c,id)},
    async get(){const {data,error}=await SB.from("docs").select("data").eq("col",c).eq("id",id).maybeSingle();if(error)throw error;return{exists:!!data,data:()=>data?data.data:undefined}}}}};
  return api})();
 const USERX={id:async()=>ME.id,isOwner:async()=>!!PROF&&PROF.role==="admin",
@@ -1179,7 +1183,7 @@ function rMxRead(box,changed){const g=k=>box.querySelector('[data-k="'+k+'"]');c
  const o={};box.querySelectorAll("[data-k]").forEach(c=>{if(c.checked&&!c.disabled)o[c.dataset.k]=true});return o}
 function tDlg(title,val,ok){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>'+esc(title)+'</b><div style="height:8px"></div><input id="tdn" maxlength="40" autocomplete="off"><div class="row"><button class="btn ghost" id="tdc">Abbrechen</button><button class="btn" id="tdo">Speichern</button></div></div>';
  document.body.appendChild(o);const i=o.querySelector("#tdn");i.value=val||"";o.querySelector("#tdc").onclick=()=>o.remove();o.querySelector("#tdo").onclick=()=>{const v=i.value.trim().replace(/\s+/g," ");if(!v){i.classList.add("bad");return}o.remove();ok(v)};setTimeout(()=>i.focus(),60)}
-async function rSave(fn,msg){try{await fn();toast(msg||"Gespeichert",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht dazu?")}}
+async function rSave(fn,msg){try{await fn();toast(msg||"Gespeichert",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen"+sbErr(e)+". Hast du das Recht dazu?")}}
 function rightsBlock(){if(!rightsReady()){$("#app").insertAdjacentHTML("beforeend",'<div class="card" style="border-color:#f2c200;margin-top:14px"><b>Datenbank-Update fehlt</b><p class="mute" style="margin:4px 0 0">Für Titel und Rechte muss einmal die Datei rechte.sql in Supabase ausgeführt werden. Bis dahin gelten die alten Häkchen.</p></div>');return permBlock()}const T=titList(),U=PROFS.filter(p=>p.active).sort((a,b)=>String(a.name).localeCompare(String(b.name),"de"));
  const opt=sel=>'<option value="">– kein Titel –</option>'+T.map(t=>'<option value="'+esc(t.id)+'"'+(t.id===sel?' selected':'')+'>'+esc(t.name)+'</option>').join("");
  $("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Titel der Benutzer</h3><p class="mute" style="margin:0 0 8px">Der Titel bestimmt die Rechte. Unter „Extra-Rechte“ kannst du einer Person zusätzlich etwas erlauben. Administratoren dürfen immer alles.</p>'+

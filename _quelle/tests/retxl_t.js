@@ -15,7 +15,7 @@ let bad=0;const ok=(c,m,x)=>{console.log((c?"OK   ":"FEHLER")+" "+m+(x!==undefin
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
- ok(await p.evaluate(()=>APPV)==="1.107","Version 1.107");
+ ok(await p.evaluate(()=>APPV)==="1.108","Version 1.108");
  const [dl]=await Promise.all([p.waitForEvent("download"),p.evaluate(()=>retXl(rets.find(r=>r.id==="r1")))]);const fp=S+"retxl.json";await dl.saveAs(fp);
  const W=JSON.parse(fs.readFileSync(fp,"utf8"))[0],R=W.rows;const hd=+Object.keys(R).find(i=>R[i][3]&&R[i][3].v==="Ausgang");
  const d=Object.keys(R).filter(i=>+i>hd).map(i=>R[i]);console.log("Zeilen:",d.map(r=>r[2].v+" | Ausgang "+(r[3]&&r[3].v)+" | Retour "+r[4].v+" | "+JSON.stringify(r[5])).join(" || "));
