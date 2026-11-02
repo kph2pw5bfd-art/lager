@@ -430,7 +430,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.93";
+<script>const APPV="1.94";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1408,7 +1408,7 @@ function pkZAskDay(P,main,cur,why0){return new Promise(res=>{const o=document.cr
 async function pkZMove(P,ps){const z=pkZOf(P,ps);if(!z)return;const h=pkH(P)["zd_"+pkZK(ps)]||{};const r=await pkZAskDay({ps,ev:P.ev},P,pkYmd(pkZDay(P,z)),h.why);if(!r)return;
  await pkHSet(P,{["zd_"+pkZK(ps)]:{d:r.d,why:r.why||"",by:me,...tabAs("by"),t:Date.now()}});toast("Zusatz verschoben auf "+pkWd(pkFromYmd(r.d)),1)}
 function pkZFinish(P,ps){const g=pkZProg(P,ps),open=g.n-g.d,k="zf_"+pkZK(ps);
- const go2=()=>pkHSet(P,{[k]:{by:me,...tabAs("by"),t:Date.now()}}).then(()=>{toast("Zusatz hergerichtet",1);const pp=pkZProg(P,ps);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(shortName(P.pl)||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P,ps))});
+ const go2=()=>pkHSet(P,{[k]:{by:me,...tabAs("by"),t:Date.now()}}).then(()=>{toast("Zusatz hergerichtet",1);const pp=pkZProg(P,ps);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(shortName(P.pl)||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P,ps),"Nein")});
  if(open>0)ask("Noch "+open+(open===1?" Position ist":" Positionen sind")+" vom Zusatz nicht hergerichtet. Trotzdem abschließen?",go2);else go2()}
 const pkZReopen=(P,ps)=>ask("Zusatz "+ps+" wieder öffnen?",()=>pkHSet(P,{["zf_"+pkZK(ps)]:{t:0,by:me,...tabAs("by"),ro:Date.now()}}));
 /* Herrichten auf einen anderen Tag verschieben */
@@ -1492,7 +1492,7 @@ async function pkKatMeld(P,x){const nr=String(x.a||"").trim(),nm=String(x.t||"")
  await ref.set({name:o.name||nm,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+(+x.n||0),first:o.first||Date.now(),last:Date.now(),ev:P.ev||"",ord:P.ord||"",by:me,...tabAs("by"),src:"Packliste"})}catch(e){errBox("Melden hat nicht geklappt. Bitte nochmal versuchen.")}}
 /* Abschließen + Info an Projektleiter */
 function pkFinish(P){const pr=pkProg(P),open=pr.n-pr.d;
- const go2=()=>pkHSet(P,{fin:{by:me,...tabAs("by"),t:Date.now()},reo:null}).then(()=>{toast("Herrichten abgeschlossen",1);const pp=pkProg(P);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(shortName(P.pl)||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P))});
+ const go2=()=>pkHSet(P,{fin:{by:me,...tabAs("by"),t:Date.now()},reo:null}).then(()=>{toast("Herrichten abgeschlossen",1);const pp=pkProg(P);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(shortName(P.pl)||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P),"Nein")});
  if(open>0)ask("Noch "+open+(open===1?" Position ist":" Positionen sind")+" nicht hergerichtet. Trotzdem abschließen?",go2);else go2()}
 function pkMailText(P,zps){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[],inc=o=>zps?o.z===String(zps):!o.z||!(pkZOf(P,o.z)||{}).v;
  pkPosAll(P).forEach((x,i)=>{if(!inc(IT[i]))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),nm2=x.t+(x.a?" ("+x.a+")":"")+(IT[i].z?" [Zusatz "+IT[i].z+"]":""),u=x.u?" "+x.u:"";
@@ -3058,7 +3058,7 @@ const nm=i=>names[i]?shortName(names[i]):"…";
 const fmt=t=>new Date(t).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
 const CODE_RE=/^([A-Za-z0-9]{3,10})(?:\s*[-‐‑‒–—―−]+\s*(\d+))?$/;
 const gi=c=>{const o=c.itemsJson?JSON.parse(c.itemsJson):(c.items||{}),n={};Object.keys(o).forEach(k=>{const x=o[k];if(x.id){const q=x.art+"--"+x.id;n[q]={...x,code:q}}else n[k]=x});return n};
-function ask(t,fn){const o=document.createElement('div');o.className='ov';o.innerHTML='<div class="card"><p>'+esc(t)+'</p><div class="row"><button class="btn" id="y">Ja</button><button class="btn ghost" id="n">Abbrechen</button></div></div>';document.body.appendChild(o);o.querySelector('#n').onclick=()=>o.remove();o.querySelector('#y').onclick=()=>{o.remove();fn()}}
+function ask(t,fn,nl){const o=document.createElement('div');o.className='ov';o.innerHTML='<div class="card"><p>'+esc(t)+'</p><div class="row"><button class="btn" id="y">Ja</button><button class="btn ghost" id="n">'+esc(nl||'Abbrechen')+'</button></div></div>';document.body.appendChild(o);o.querySelector('#n').onclick=()=>o.remove();o.querySelector('#y').onclick=()=>{o.remove();fn()}}
 function errBox(t){if(typeof stream!=="undefined"&&(stream||zr))beep(false);if(document.querySelector(".eov"))return;const o=document.createElement("div");o.className="eov";o.innerHTML='<div class="eb"><div style="font-size:19px;font-weight:700;margin-bottom:8px">Fehler</div><div style="margin-bottom:18px"></div><button>OK</button></div>';o.querySelector(".eb div:nth-child(2)").textContent=t;o.querySelector("button").onclick=()=>o.remove();document.body.appendChild(o)}
 function okBox(code){const o0=document.querySelector(".okb");if(o0)o0.remove();const o=document.createElement("div");o.className="okb";o.innerHTML='<div>Artikel erfasst</div><b></b><div class="okn"></div>';o.querySelector("b").textContent=code;o.querySelector(".okn").textContent=artName(code);document.body.appendChild(o);beep(true);setTimeout(()=>o.remove(),3000)}
 function toast(t,ok){if(!ok)return errBox(t);const d=document.createElement("div");d.className="toast"+(ok?" ok":"");d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}

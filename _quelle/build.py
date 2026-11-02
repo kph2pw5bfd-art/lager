@@ -134,6 +134,8 @@ rep(''''<h3 style="margin:18px 0 4px">App</h3>''','''hoMineBlock()+'<h3 style="m
 rep('prefBind();sndBind();$("#upd")','prefBind();sndBind();hoMineBind();$("#upd")')
 # 1.85: Meine Aufträge (au.js) – Kachel unter „Lager Übersicht“
 rep("""(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+""","""(can("au_s")?T("au",AU_ICON,'Meine Aufträge',auSubT(),auHot()):'')+(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+""")
+# 1.94: Ja/Nein-Fragen (z. B. „Soll der Projektleiter eine Info bekommen?“) – ask(t,fn,nl) mit eigenem Nein-Text
+rep("""function ask(t,fn){const o=document.createElement('div');o.className='ov';o.innerHTML='<div class="card"><p>'+esc(t)+'</p><div class="row"><button class="btn" id="y">Ja</button><button class="btn ghost" id="n">Abbrechen</button></div></div>';""","""function ask(t,fn,nl){const o=document.createElement('div');o.className='ov';o.innerHTML='<div class="card"><p>'+esc(t)+'</p><div class="row"><button class="btn" id="y">Ja</button><button class="btn ghost" id="n">'+esc(nl||'Abbrechen')+'</button></div></div>';""")
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},
