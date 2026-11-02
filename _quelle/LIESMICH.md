@@ -215,3 +215,14 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.94
 - „Soll <PL> eine Info bekommen?“ (nach Herrichten/Zusatz abschließen) hat jetzt „Ja / Nein“ statt „Ja / Abbrechen“ (Jürgen). `ask(t,fn,nl)` hat einen optionalen dritten Parameter für den Nein-Text (rep am Ende von build.py); alle anderen Fragen bleiben „Ja / Abbrechen“.
+
+## 1.95 – Werkstatt: Reparatur + Ersatzteile, Ersatzteile-Bericht
+- Neu: `ersatz.js` (in build.py nach pkextra.js eingebunden), Styles `.et*` in jarvis.css.
+- Offener Defekt: Knopf „Repariert“ (statt „Als erledigt markieren“) öffnet das Fenster „Reparatur“: Beschreibung, Ersatzteile (Menge + Einheit, Artikelname Pflicht, TPC-Nr. / Hersteller-Nr. optional), Fotos → „Speichern und erledigt“.
+- Erledigter Defekt: Karte „Reparatur“ + Knopf „Reparatur ändern“ (bzw. „Reparatur / Ersatzteile eintragen“).
+- Vorschläge beim Tippen aus allen bisher eingetragenen Teilen (mit beiden Nummern und „n× verwendet“).
+- Daten im Defekt: `rep`, `et` [{n,u,nm,tnr,hnr}], `rfn` (Fotos `fotos/<id>r-<k>`), `repBy`, `repT`. Kein SQL nötig.
+- Ersatzteile-Bericht (PDF): Knopf in der Defekte-Liste; Zeitraum nach Reparaturdatum (doneT): Dieser Monat / Letzter Monat / Dieses Jahr / Von–bis. Keine Preise.
+- Recht: „Defekte – Bearbeiten“ (def_b) für Eintragen und Bericht.
+- Defekte-Liste: offene oben (dringende zuerst), erledigte unten, jeweils neueste zuerst. Nach „Defekt melden“ öffnet sich der Reiter „Alle“.
+- Test: tests/ersatz_t.js

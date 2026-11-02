@@ -1,6 +1,6 @@
 import re,json
 s=open("/home/claude/lager_app.html",encoding="utf-8").read()
-shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/tablet.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvask.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvfrag.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/home.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/abg.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/wb.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/au.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkchg.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkdruck.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkextra.js",encoding="utf-8").read()
+shim=open("/home/claude/gh/shim.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkparse.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pack.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/tablet.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvask.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/jvfrag.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/home.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/abg.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/wb.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/au.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkchg.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkdruck.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/pkextra.js",encoding="utf-8").read()+"\n"+open("/home/claude/gh/ersatz.js",encoding="utf-8").read()
 def rep(a,b,c=1):
     global s
     n=s.count(a); assert n==c,(a[:80],n); s=s.replace(a,b)
@@ -136,6 +136,21 @@ rep('prefBind();sndBind();$("#upd")','prefBind();sndBind();hoMineBind();$("#upd"
 rep("""(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+""","""(can("au_s")?T("au",AU_ICON,'Meine Aufträge',auSubT(),auHot()):'')+(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+""")
 # 1.94: Ja/Nein-Fragen (z. B. „Soll der Projektleiter eine Info bekommen?“) – ask(t,fn,nl) mit eigenem Nein-Text
 rep("""function ask(t,fn){const o=document.createElement('div');o.className='ov';o.innerHTML='<div class="card"><p>'+esc(t)+'</p><div class="row"><button class="btn" id="y">Ja</button><button class="btn ghost" id="n">Abbrechen</button></div></div>';""","""function ask(t,fn,nl){const o=document.createElement('div');o.className='ov';o.innerHTML='<div class="card"><p>'+esc(t)+'</p><div class="row"><button class="btn" id="y">Ja</button><button class="btn ghost" id="n">'+esc(nl||'Abbrechen')+'</button></div></div>';""")
+# 1.95: Werkstatt – Reparatur + Ersatzteile (ersatz.js), Ersatzteile-Bericht; Defekte-Liste sortiert, nach „Defekt melden“ Reiter „Alle“
+rep(""".sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(b.urg?1:0)-(a.urg?1:0)||b.t-a.t);
+ $("#app").innerHTML=nav()+defTools()+""",""".sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(b.urg&&!b.done?1:0)-(a.urg&&!a.done?1:0)||b.t-a.t);
+ $("#app").innerHTML=nav()+defTools()+(canDone()?'<button class="btn ghost" id="etrep" style="margin-bottom:10px">Ersatzteile-Bericht (PDF)</button>':'')+""")
+rep("""bindDefTools();document.querySelectorAll("[data-df]")""","""bindDefTools();if($("#etrep"))$("#etrep").onclick=etRepDlg;document.querySelectorAll("[data-df]")""")
+rep("""fn,foto:fn>0});dpho=null;view="def";draw();""","""fn,foto:fn>0});dpho=null;df="alle";view="def";draw();""")
+rep("""'<div id="dph" class="thr"></div>':'')+'</div>'+
+ (d.by===me?""","""'<div id="dph" class="thr"></div>':'')+'</div>'+etCard(d)+
+ (d.by===me?""")
+rep("""(d.done?"Wieder auf offen setzen":"Als erledigt markieren")+'</button>'""","""(d.done?"Wieder auf offen setzen":"Repariert")+'</button>'+(d.done?'<button class="btn ghost" id="etedit" style="margin-top:10px">'+(d.rep||etList(d).length||d.rfn?"Reparatur ändern":"Reparatur / Ersatzteile eintragen")+'</button>':'')""")
+rep("""if(d.foto)loadTh("dph",d);
+ if($("#dfb"))""","""if(d.foto)loadTh("dph",d);etBind(d);
+ if($("#dfb"))""")
+rep("""if($("#dd"))$("#dd").onclick=()=>db.doc("defekte/"+d.id).update(d.done?""","""if($("#dd"))$("#dd").onclick=()=>!d.done?etDlg(d,true):db.doc("defekte/"+d.id).update(d.done?""")
+rep("""for(let k=0;k<(dd&&dd.fn||0);k++){try{await db.doc("fotos/"+i+"-"+k).delete()}catch(e){}}""","""for(let k=0;k<(dd&&dd.fn||0);k++){try{await db.doc("fotos/"+i+"-"+k).delete()}catch(e){}}for(let k=0;k<(dd&&dd.rfn||0);k++){try{await db.doc("fotos/"+i+"r-"+k).delete()}catch(e){}}""")
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},

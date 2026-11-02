@@ -1,4 +1,4 @@
-const APPV="1.94";
+const APPV="1.95";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
