@@ -16,7 +16,7 @@ function pkXHtml(P,fin){const X=pkX(P);if(!X.length&&fin)return"";
 function pkXBind(P,fin){const a=$("#pkxadd");if(a)a.onclick=()=>pkXDlg(P,null);
  document.querySelectorAll("[data-pkxe]").forEach(b=>b.onclick=()=>{if(fin)return toast("Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkXDlg(P,b.dataset.pkxe)})}
 /* Hinzufügen / ändern */
-function pkXDlg(P,id){const e=id?(pkH(P)[id]||null):null,o=document.createElement("div");o.className="ov";let pick=e&&e.a?{t:pkXName(e),a:e.a}:null;
+function pkXDlg(P,id,pre){const e=id?(pkH(P)[id]||null):null,o=document.createElement("div");o.className="ov";let pick=e&&e.a?{t:pkXName(e),a:e.a}:pre&&pre.t?{t:pre.t,a:pre.a||""}:null;
  o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0;max-height:92vh;overflow:auto"><b style="font-size:17px">'+(e?'Zusätzliches Material ändern':'Material hinzufügen')+'</b>'+
   '<p class="mute" style="margin:4px 0 10px">Steht nicht im Packschein – wird trotzdem mitgegeben.</p>'+
   '<label class="mute" for="pxt">Artikel</label><div style="position:relative"><input id="pxt" placeholder="Artikel suchen oder frei eintippen" autocomplete="off" style="margin:0"><div id="pxres" class="peres"></div></div>'+
@@ -26,7 +26,7 @@ function pkXDlg(P,id){const e=id?(pkH(P)[id]||null):null,o=document.createElemen
   '<div class="row" style="margin-top:14px"><button class="btn ghost" id="pxx" type="button">Abbrechen</button><button class="btn" id="pxs" type="button">'+(e?'Speichern':'Hinzufügen')+'</button></div>'+
   (e?'<button class="lnk" id="pxd" type="button" style="margin-top:8px;color:var(--bad)">Löschen</button>':'')+'</div>';
  document.body.appendChild(o);const g=k=>o.querySelector("#"+k),K=(typeof rkat!=="undefined"&&Array.isArray(rkat))?rkat:[];
- g("pxt").value=e?pkXName(e):"";g("pxn").value=e?String(e.n):"1";g("pxu").value=e?(e.u||"Stk"):"Stk";g("pxw").value=e?(e.why||""):"";
+ g("pxt").value=e?pkXName(e):(pre&&pre.t)||"";if(pre&&pre.msg)o.querySelector(".card").insertAdjacentHTML("afterbegin",'<div class="pkscm w">'+esc(pre.msg)+'</div>');g("pxn").value=e?String(e.n):"1";g("pxu").value=e?(e.u||"Stk"):"Stk";g("pxw").value=e?(e.why||""):"";
  g("pxt").oninput=()=>{pick=null;const t=g("pxt").value.trim().toLowerCase();if(t.length<2){g("pxres").innerHTML="";return}
   const L=K.filter(a=>String(a.name||"").toLowerCase().includes(t)||String(a.nr||"").toLowerCase().startsWith(t)).slice(0,6);
   g("pxres").innerHTML=L.map((a,j)=>'<button type="button" data-xr="'+j+'"><b>'+esc(a.name)+'</b> <small>'+esc(a.nr||"")+(a.g?' · '+esc(a.g):'')+'</small></button>').join("");
