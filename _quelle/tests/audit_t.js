@@ -30,7 +30,7 @@ const seed=kat.concat([
  const snap=()=>p.evaluate(()=>JSON.stringify(window.__T.docs.map(r=>[r.col,r.id,r.data])));
  const IGN=/^(ed_|edn_)/;/* users/<id>.t = „zuletzt angemeldet“, gewollt */
  const diff=(a,b)=>{const A=new Map(JSON.parse(a).map(x=>[x[0]+"/"+x[1],x[2]])),B=new Map(JSON.parse(b).map(x=>[x[0]+"/"+x[1],x[2]]));const out=[];
-  for(const [k,v] of B){const o=A.get(k);if(!o){out.push("NEU "+k+" "+JSON.stringify(v).slice(0,160));continue}for(const f of new Set([...Object.keys(o),...Object.keys(v)])){if(IGN.test(f))continue;if(JSON.stringify(o[f])!==JSON.stringify(v[f]))out.push("GEÄNDERT "+k+" ."+f+": "+JSON.stringify(o[f]).slice(0,60)+" → "+JSON.stringify(v[f]).slice(0,60))}}
+  for(const [k,v] of B){const o=A.get(k);if(!o){if(Object.keys(v).every(f=>IGN.test(f)))continue;out.push("NEU "+k+" "+JSON.stringify(v).slice(0,160));continue}for(const f of new Set([...Object.keys(o),...Object.keys(v)])){if(IGN.test(f))continue;if(JSON.stringify(o[f])!==JSON.stringify(v[f]))out.push("GEÄNDERT "+k+" ."+f+": "+JSON.stringify(o[f]).slice(0,60)+" → "+JSON.stringify(v[f]).slice(0,60))}}
   for(const k of A.keys())if(!B.has(k))out.push("GELÖSCHT "+k);return out};
  let base=await snap();console.log("Start:",diff(JSON.stringify(seed.map(x=>[x.col,x.id,x.data])),base));
  const step=async(name,fn)=>{try{await fn()}catch(e){console.log("   ("+name+": "+e.message.split("\n")[0]+")")}await p.waitForTimeout(900);const s=await snap();const d=diff(base,s);console.log((d.length?"SCHREIBT ":"ok       ")+name+(d.length?"\n   "+d.join("\n   "):""));base=s};
