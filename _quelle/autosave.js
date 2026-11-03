@@ -4,7 +4,7 @@ const RLS="tpc_retour_backup";let rTimer=null,rChain=Promise.resolve(),rDone={},
 const rNewId=()=>"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function rSnap(){if(!rs||!String(rs.ev||"").trim())return null;if(!rs.id)rs.id=rNewId();rFold();
  /* nur den eigenen Anteil und geänderte Kopfdaten schicken – so überschreibt niemand die Eingaben der anderen */
- const d={["pa_"+me]:JSON.stringify(rs.mine||{})},h=rs.h0;["ev","ord","rem"].forEach(f=>{const v=String(rs[f]||"").trim();if(!h||v!==String(h[f]||"").trim())d[f]=v});return{id:rs.id,d}}
+ const d={["pa_"+me]:JSON.stringify(rs.mine||{})},h=rs.h0;["ev","ord","rem"].forEach(f=>{const v=String(rs[f]||"").trim();if(!h||v!==String(h[f]||"").trim())d[f]=v});Object.keys(rs.mn||{}).forEach(k=>d["mn_"+k]=rs.mn[k]);return{id:rs.id,d}}
 function rBk(){try{return JSON.parse(localStorage.getItem(RLS)||"{}")||{}}catch(e){return{}}}
 function rBkSet(o){try{localStorage.setItem(RLS,JSON.stringify(o))}catch(e){}}
 function rLocal(sn){const o=rBk();o[sn.id]={u:me,d:sn.d};rBkSet(o)}

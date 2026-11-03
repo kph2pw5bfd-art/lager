@@ -1,4 +1,4 @@
-const APPV="1.110";
+const APPV="1.111";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -204,7 +204,7 @@ function rManDlg(pre,pnr){const o=document.createElement("div");o.className="ov"
  g("mok").onclick=()=>{const name=g("mnm").value.trim().replace(/\s+/g," "),nr=g("mnr").value.trim(),q=Math.max(1,parseInt(g("mq").value,10)||1);if(!name){g("mnm").classList.add("bad");return errBox("Bitte den Artikelnamen eingeben.")}
   const cat=rKat().find(a=>(nr&&rNorm(a.nr)===rNorm(nr))||String(a.name).trim().toLowerCase()===name.toLowerCase());o.remove();
   if(cat){rAdd(cat.nr,{nr:cat.nr,name:cat.name,g:cat.g,u:cat.u||""},q);rs.q="";retEdit();toast("Ist schon in der Liste: "+cat.name+" (+"+q+")",1);return}
-  const key="M:"+(rNorm(nr)||rNorm(name)||Date.now());rAdd(key,{nr,name,g:"Manuell",u:"",manual:true},q);rs.q="";retEdit();toast("+"+q+" "+name+" (manuell)",1);rLogMissing(name,nr,q)};
+  const key=rManFind(nr,name)||"M:"+(rNorm(nr)||rNorm(name)||Date.now());rAdd(key,{nr,name,g:"Manuell",u:"",manual:true},q);rs.q="";retEdit();toast("+"+q+" "+name+" (manuell)",1);rLogMissing(name,nr,q)};
  setTimeout(()=>(pre?g("mq"):g("mnm")).focus(),60)}
 
 /* Artikel scannen im Retourschein: Code lesen, dann Zahlenfeld. Bei Artikeln mit ID zählen nur die ersten 4 Ziffern (1234–56 -> 1234). */
@@ -227,7 +227,33 @@ function rManItems(){return Object.keys(rs.items).filter(k=>rs.items[k].manual).
 function rManTile(){const L=rManItems();return L.length?'<button class="rtile grp rmang" data-rmg="1">'+rBdg(L.reduce((a,x)=>a+(x.q||0),0))+'<b>Manuell eingetragene Artikel</b><span class="mute">'+L.length+' Artikel</span></button>':""}
 function rManLevel(){const L=rManItems();if(!L.length){rs.lvl="groups";return retEdit()}$("#t").textContent="Manuell eingetragen";
  rPage('<div class="rgrid">'+L.map(x=>'<button class="rtile rmani" data-rmk="'+esc(x.k)+'">'+rBdg(x.q)+'<b>'+rLbl(x.name)+'</b><span class="mute">'+(x.nr?"Nr. "+esc(x.nr):"ohne Nummer")+'</span></button>').join("")+'</div>');
- document.querySelectorAll("[data-rmk]").forEach(b=>b.onclick=()=>{const x=rs.items[b.dataset.rmk];if(!x)return;const base={...x};delete base.q;rPad({nr:b.dataset.rmk,name:x.name,lbl:x.nr?"Nr. "+x.nr:"Manuell eingetragen"},base)})}
+ document.querySelectorAll("[data-rmk]").forEach(b=>b.onclick=()=>{const x=rs.items[b.dataset.rmk];if(!x)return;const base={...x};delete base.q;rPad({nr:b.dataset.rmk,name:x.name,lbl:x.nr?"Nr. "+x.nr:"Manuell eingetragen"},base);rManEdBtn(b.dataset.rmk)})}
+/* Manuell eingetragenen Artikel umbenennen (Name + Nummer), bis der Schein abgeschlossen ist.
+   Gespeichert als Feld mn_<Schlüssel> {nr,name,by,t} am Retourschein – gilt damit auch für die Anteile der Kollegen (rMnApply). */
+function rManFind(nr,name,not){return Object.keys(rs.items).find(k=>k!==not&&rs.items[k].manual&&((nr&&rNorm(rs.items[k].nr)===rNorm(nr))||String(rs.items[k].name).trim().toLowerCase()===String(name).trim().toLowerCase()))}
+function rMnApply(t,src){if(!src)return t;Object.keys(src).forEach(f=>{const v=src[f];if(!f.startsWith("mn_")||!v||typeof v!=="object")return;const x=t[f.slice(3)];if(x&&x.manual){if(v.name)x.name=v.name;x.nr=v.nr||""}});return t}
+function rManEdBtn(k){const o=[...document.querySelectorAll(".ov")].pop(),m=o&&o.querySelector(".card>.mute");if(!m)return;
+ m.insertAdjacentHTML("afterend",'<button class="lnk" id="rmned" type="button" style="padding:4px 0 0">✎ Name / Nummer ändern</button>');o.querySelector("#rmned").onclick=()=>{o.remove();rManEdit(k)}}
+function rManEdit(k){const x=rs.items[k];if(!x)return;const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Artikel ändern</b><p class="mute" style="margin:4px 0 10px">Gilt für diesen Retourschein ('+(x.q||0)+' Stk). Der Eintrag unter „Fehlende Artikel“ wird mitgeändert.</p><label class="mute" for="men">Artikelname <span class="rq">*</span></label><input id="men" autocomplete="off"><label class="mute" for="menr">Artikelnummer (falls bekannt)</label><input id="menr" inputmode="numeric" autocomplete="off"><div class="row"><button class="btn ghost" id="mecn">Abbrechen</button><button class="btn" id="meok">Speichern</button></div></div>';
+ document.body.appendChild(o);const g=i=>o.querySelector("#"+i);g("men").value=x.name||"";g("menr").value=x.nr||"";g("mecn").onclick=()=>o.remove();
+ g("meok").onclick=()=>{const name=g("men").value.trim().replace(/\s+/g," "),nr=g("menr").value.trim();if(!name){g("men").classList.add("bad");return errBox("Bitte den Artikelnamen eingeben.")}
+  if(name===x.name&&nr===String(x.nr||"")){o.remove();return}o.remove();
+  const cat=rKat().find(a=>(nr&&rNorm(a.nr)===rNorm(nr))||String(a.name).trim().toLowerCase()===name.toLowerCase());
+  if(cat)return ask2("„"+cat.name+"“ steht in der Artikelliste (Nr. "+cat.nr+"). Soll die Menge ("+(x.q||0)+" Stk) dort gezählt werden?","Ja, als „"+cat.name+"“ zählen","Nur umbenennen",()=>rManMove(k,cat.nr,{nr:cat.nr,name:cat.name,g:cat.g,u:cat.u||""}),()=>rManRen(k,nr,name));
+  const ex=rManFind(nr,name,k);if(ex)return rManMove(k,ex,null);
+  rManRen(k,nr,name)};
+ setTimeout(()=>g("men").focus(),60)}
+function rManRen(k,nr,name){const x=rs.items[k];if(!x)return;const on=x.name,onr=x.nr||"";
+ [rs.items,rs.view,rs.mine].forEach(t=>{if(t&&t[k]){t[k].name=name;t[k].nr=nr}});(rs.mn=rs.mn||{})[k]={nr,name,by:me,t:Date.now()};
+ rPersist(true);retEdit();toast("Geändert: "+name,1);rFehlMove(on,onr,name,nr,x.q||0)}
+function rManMove(k,to,base){const x=rs.items[k];if(!x)return;const q=x.q||0,b=base||(()=>{const y={...rs.items[to]};delete y.q;return y})();
+ rAdd(to,b,q);rAdd(k,null,-q);retEdit();toast(q+" Stk jetzt bei „"+b.name+"“",1);rFehlMove(x.name,x.nr||"",base?null:b.name,base?null:(b.nr||""),q)}
+/* Eintrag in „Fehlende Artikel“ mitziehen: alter Name −1 Mal/−Menge (weg, wenn nichts mehr übrig), neuer +1/+Menge. Ohne neuen Namen nur abziehen. */
+async function rFehlMove(on,onr,name,nr,q){const fid=(a,b)=>"m"+((rNorm(b)||rNorm(a)).slice(0,80)),oid=fid(on,onr),nid=name?fid(name,nr):null;if(oid===nid&&name===on)return;
+ try{const ref=db.doc("fehlartikel/"+oid),old=await ref.get();if(old.exists){const o=old.data(),times=(o.times||1)-1,qty=(o.qty||0)-q;if(times<=0||qty<=0)await ref.delete();else await ref.set({...o,times,qty})}
+  if(!nid)return;const nref=db.doc("fehlartikel/"+nid),ne=await nref.get(),n=ne.exists?ne.data():{};
+  await nref.set({...n,name,nr:nr||n.nr||"",times:(n.times||0)+1,qty:(n.qty||0)+q,first:n.first||Date.now(),last:Date.now(),ev:rs?rs.ev:"",ord:rs?rs.ord:"",by:me})}catch(e){console.warn("Fehlende Artikel nicht angepasst",e)}}
 /* ===== Eine Artikelliste für alles =====
    Materialliste, Retourschein und Defekt melden lesen nur noch die Artikelliste (docs 'rkat').
    art (Nummer -> Name) wird daraus gebaut; die frühere Scan-Liste (docs 'artikel') entfällt. */
@@ -543,7 +569,7 @@ function rJ(x){try{return JSON.parse(x||"{}")||{}}catch(e){return{}}}
 function rCp(o){return JSON.parse(JSON.stringify(o||{}))}
 function rAddTo(t,src){Object.keys(src||{}).forEach(k=>{const x=src[k];if(!x||typeof x!=="object")return;if(!t[k])t[k]={...x,q:0};else{const q=t[k].q;Object.assign(t[k],x);t[k].q=q}t[k].q+=(+x.q||0)})}
 function rPos(t){const o={};Object.keys(t).forEach(k=>{if(t[k].q>0)o[k]=t[k]});return o}
-function rView(r){const t={};r._base=r.itemsJson||"{}";rAddTo(t,rJ(r._base));Object.keys(r).forEach(k=>{if(k.startsWith("pa_"))rAddTo(t,rJ(r[k]))});Object.values(t).forEach(x=>{if(x.g==="Händisch")x.g="Manuell"});r.itemsJson=JSON.stringify(rPos(t));return r}
+function rView(r){const t={};r._base=r.itemsJson||"{}";rAddTo(t,rJ(r._base));Object.keys(r).forEach(k=>{if(k.startsWith("pa_"))rAddTo(t,rJ(r[k]))});rMnApply(t,r);Object.values(t).forEach(x=>{if(x.g==="Händisch")x.g="Manuell"});r.itemsJson=JSON.stringify(rPos(t));return r}
 function rOthers(r){const t={};rAddTo(t,rJ(r._base));Object.keys(r).forEach(k=>{if(k.startsWith("pa_")&&k!=="pa_"+me)rAddTo(t,rJ(r[k]))});return t}
 function rEd(r){const it=rIt(r);return{id:r.id,ev:r.ev,ord:r.ord||"",items:it,rem:r.rem||"",mine:rJ(r["pa_"+me]),view:rCp(it),h0:{ev:r.ev||"",ord:r.ord||"",rem:r.rem||""}}}
 /* eigene Änderungen seit dem letzten Abgleich in den eigenen Anteil übernehmen */
@@ -551,7 +577,7 @@ function rFold(){if(!rs)return;if(!rs.mine)rs.mine={};if(!rs.view)rs.view={};con
  ks.forEach(k=>{const a=rs.items[k],b=rs.view[k],d=(a?+a.q||0:0)-(b?+b.q||0:0);if(!d)return;const m={...(rs.mine[k]||{}),...(a||b)};rLogPush(k,a||b,d);m.q=(rs.mine[k]?+rs.mine[k].q||0:0)+d;if(m.q)rs.mine[k]=m;else delete rs.mine[k]});
  rs.view=rCp(rs.items)}
 /* Änderungen anderer in den offenen Schein übernehmen */
-function rRemote(){if(!rs||!rs.id)return;const r=rets.find(x=>x.id===rs.id);if(!r)return;rFold();const t=rOthers(r);rAddTo(t,rs.mine);rs.items=rPos(t);rs.view=rCp(rs.items);
+function rRemote(){if(!rs||!rs.id)return;const r=rets.find(x=>x.id===rs.id);if(!r)return;rFold();const t=rOthers(r);rAddTo(t,rs.mine);rMnApply(t,r);if(rs.mn)Object.keys(rs.mn).forEach(k=>{const v=r["mn_"+k];if(v&&v.t===rs.mn[k].t)delete rs.mn[k]});rMnApply(t,Object.fromEntries(Object.entries(rs.mn||{}).map(([k,v])=>["mn_"+k,v])));rs.items=rPos(t);rs.view=rCp(rs.items);
  if(rs.h0)["ev","ord","rem"].forEach(f=>{const loc=String(rs[f]||""),rem=String(r[f]||"");if(loc===String(rs.h0[f]||"")&&rem!==loc)rs[f]=rem});
  rs.h0={ev:r.ev||"",ord:r.ord||"",rem:r.rem||""}}
 /* Hinweis: wer arbeitet gerade noch an diesem Schein */
