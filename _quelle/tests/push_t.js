@@ -1,4 +1,4 @@
-/* Test 1.109: Push-Nachrichten in der App – Einstellungen, Anmelden (Attrappe für Service Worker/PushManager), Titel, Öffnen per ?go= */
+/* Test 1.110: Push-Nachrichten in der App – Einstellungen, Anmelden (Attrappe für Service Worker/PushManager), Titel, Öffnen per ?go= */
 const {chromium}=require("playwright");const fs=require("fs");const S=(process.env.SP||"/tmp")+"/";
 const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime();
 const seed=[{col:"titel",id:"lagerleiter",data:{name:"Lagerleiter",o:2,r:{abg_p:true,pk_s:true}}},{col:"titel",id:"werkstatt",data:{name:"Werkstatt",o:4,r:{def_s:true}}},{col:"titel",id:"lagerarbeiter",data:{name:"Lagerarbeiter",o:3,r:{pk_s:true}}},
@@ -16,7 +16,7 @@ let bad=0;const ok=(c,m,x)=>{console.log((c?"OK   ":"FEHLER")+" "+m+(x!==undefin
   if(u.includes("/functions/v1/push")){fnCalls.push(r.request().method()+" "+(r.request().postData()||""));return r.fulfill({contentType:"application/json",body:r.request().method()==="GET"?'{"key":"BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U"}':'{"ok":true,"gesendet":1}'})}
   if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/?go=pk:P1");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(2800);
- ok(await p.evaluate(()=>APPV)==="1.109","Version 1.109");
+ ok(await p.evaluate(()=>APPV)==="1.110","Version 1.110");
  ok(await p.evaluate(()=>window.__swurl)==="sw.js","Service Worker angemeldet");
  ok(await p.evaluate(()=>view)==="packopen"&&await p.evaluate(()=>curPack)==="P1","Antippen (?go=pk:P1) öffnet die Packliste");
  ok(await p.evaluate(()=>!/go=/.test(location.search)),"Adresse danach aufgeräumt");

@@ -462,6 +462,13 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 /* ab 1.109: grüner Hinweis unten – weiße, gut lesbare Schrift (allgemeine .ok-Farbe hat sie dunkelgrün gemacht) */
 .toast,.toast.ok{color:#fff!important;font-weight:600;font-size:16px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 .toast.ok{background:#1f6b41}
+/* ab 1.110: Feld „PDF hierher ziehen“ (nur an Geräten mit Maus; Handy/Tablet: Knopf) */
+.pkdrop{order:3;flex:1 1 100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:86px;margin:2px 0 4px;border:2px dashed #9fb4d3;border-radius:12px;color:#2c4f86;background:#f5f8fd;cursor:pointer;text-align:center;padding:10px;transition:background .15s,border-color .15s}
+.pkdrop b{font-size:16px}.pkdrop small{color:#5b6b82;font-size:13px}
+.pkdrop.on{border-color:#114a97;background:#dfeafb;border-style:solid}
+@media (hover:none),(pointer:coarse){.pkdrop{display:none}}
+body.pkdragging .pkdrop{display:flex}
+
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -487,7 +494,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.109";
+<script>const APPV="1.110";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1320,8 +1327,22 @@ function pkHint(p){const s=pkState(p),h=pkHd(p),out=[];
 function pkRow(p){const s=pkState(p),f=pkF(p).length;
  return '<div class="card pkr" data-pk="'+esc(p.id)+'"><div class="row" style="align-items:center"><b style="flex:1;min-width:0">'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(s.c?'<span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>':'')+'</div>'+
   '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div><div class="mute">'+(()=>{const g=pkProg(p);return g.fin?'Hergerichtet ✓ · ':g.d?g.d+' von '+g.n+' hergerichtet · ':''})()+pkPosN(pkPosAll(p).length)+((p.zus||[]).length?' · '+(p.zus.length===1?'1 Zusatz':p.zus.length+' Zusätze'):'')+(f?' · <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div>'+pkHint(p)+'</div>'}
-function pkUpHtml(){return can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden>':''}
-function pkUpBind(){if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)}}}
+function pkUpHtml(){return can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden><div class="pkdrop" id="pkdrop" role="button" tabindex="0"><b>PDF hierher ziehen</b><small>direkt aus der Mail – auch mehrere auf einmal</small></div>':''}
+function pkUpBind(){if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)};const z=$("#pkdrop");if(z){z.onclick=()=>$("#pkfile").click();z.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("#pkfile").click()}}}}}
+/* ab 1.110: PDF aus der Mail ins Feld ziehen. Solange der Hochlade-Knopf sichtbar ist, nimmt die ganze Seite die Datei an
+   (sonst würde der Browser die PDF einfach öffnen und die App verlassen). */
+let pkDragN=0;
+function pkDropOn(){return !!$("#pkdrop")}
+function pkDropHi(on){const z=$("#pkdrop");if(z)z.classList.toggle("on",!!on);document.body.classList.toggle("pkdragging",!!on)}
+function pkDropFiles(dt){const fs=[...(dt&&dt.files||[])];return{pdf:fs.filter(f=>/\.pdf$/i.test(f.name)||f.type==="application/pdf"),other:fs.filter(f=>!(/\.pdf$/i.test(f.name)||f.type==="application/pdf"))}}
+window.addEventListener("dragenter",e=>{if(!pkDropOn())return;const t=[...(e.dataTransfer&&e.dataTransfer.types||[])];if(!t.includes("Files")&&!t.includes("FileGroupDescriptorW")&&!t.includes("FileGroupDescriptor"))return;e.preventDefault();pkDragN++;pkDropHi(true)});
+window.addEventListener("dragover",e=>{if(!pkDropOn())return;e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy"});
+window.addEventListener("dragleave",e=>{if(!pkDropOn())return;pkDragN=Math.max(0,pkDragN-1);if(!pkDragN)pkDropHi(false)});
+window.addEventListener("drop",e=>{if(!pkDropOn())return;e.preventDefault();pkDragN=0;pkDropHi(false);
+ const {pdf,other}=pkDropFiles(e.dataTransfer);
+ if(!pdf.length&&!other.length)return errBox("Es ist keine Datei angekommen. Das klassische Outlook-Programm gibt Anhänge beim Ziehen nicht an den Browser weiter – dann den Anhang zuerst auf den Desktop ziehen und von dort hierher, oder Outlook im Browser bzw. das neue Outlook verwenden.");
+ if(other.length)errBox((other.length===1?"„"+other[0].name+"“ ist keine PDF":other.length+" Dateien sind keine PDF")+" und wurde"+(other.length===1?"":"n")+" nicht übernommen.");
+ if(pdf.length)pkUpload(pdf)});
 function packView(){$("#t").textContent="Alle Packlisten";const G=pkGroups();
  const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
  const cur=sec("Dispo abgelaufen",G.over)+sec("Nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);

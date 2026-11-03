@@ -359,3 +359,10 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 /* ab 1.109: grüner Hinweis unten – weiße, gut lesbare Schrift (allgemeine .ok-Farbe hat sie dunkelgrün gemacht) */
 .toast,.toast.ok{color:#fff!important;font-weight:600;font-size:16px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 .toast.ok{background:#1f6b41}
+/* ab 1.110: Feld „PDF hierher ziehen“ (nur an Geräten mit Maus; Handy/Tablet: Knopf) */
+.pkdrop{order:3;flex:1 1 100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:86px;margin:2px 0 4px;border:2px dashed #9fb4d3;border-radius:12px;color:#2c4f86;background:#f5f8fd;cursor:pointer;text-align:center;padding:10px;transition:background .15s,border-color .15s}
+.pkdrop b{font-size:16px}.pkdrop small{color:#5b6b82;font-size:13px}
+.pkdrop.on{border-color:#114a97;background:#dfeafb;border-style:solid}
+@media (hover:none),(pointer:coarse){.pkdrop{display:none}}
+body.pkdragging .pkdrop{display:flex}
+

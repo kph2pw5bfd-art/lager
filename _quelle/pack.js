@@ -50,8 +50,22 @@ function pkHint(p){const s=pkState(p),h=pkHd(p),out=[];
 function pkRow(p){const s=pkState(p),f=pkF(p).length;
  return '<div class="card pkr" data-pk="'+esc(p.id)+'"><div class="row" style="align-items:center"><b style="flex:1;min-width:0">'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(s.c?'<span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>':'')+'</div>'+
   '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div><div class="mute">'+(()=>{const g=pkProg(p);return g.fin?'Hergerichtet ✓ · ':g.d?g.d+' von '+g.n+' hergerichtet · ':''})()+pkPosN(pkPosAll(p).length)+((p.zus||[]).length?' · '+(p.zus.length===1?'1 Zusatz':p.zus.length+' Zusätze'):'')+(f?' · <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div>'+pkHint(p)+'</div>'}
-function pkUpHtml(){return can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden>':''}
-function pkUpBind(){if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)}}}
+function pkUpHtml(){return can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden><div class="pkdrop" id="pkdrop" role="button" tabindex="0"><b>PDF hierher ziehen</b><small>direkt aus der Mail – auch mehrere auf einmal</small></div>':''}
+function pkUpBind(){if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)};const z=$("#pkdrop");if(z){z.onclick=()=>$("#pkfile").click();z.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("#pkfile").click()}}}}}
+/* ab 1.110: PDF aus der Mail ins Feld ziehen. Solange der Hochlade-Knopf sichtbar ist, nimmt die ganze Seite die Datei an
+   (sonst würde der Browser die PDF einfach öffnen und die App verlassen). */
+let pkDragN=0;
+function pkDropOn(){return !!$("#pkdrop")}
+function pkDropHi(on){const z=$("#pkdrop");if(z)z.classList.toggle("on",!!on);document.body.classList.toggle("pkdragging",!!on)}
+function pkDropFiles(dt){const fs=[...(dt&&dt.files||[])];return{pdf:fs.filter(f=>/\.pdf$/i.test(f.name)||f.type==="application/pdf"),other:fs.filter(f=>!(/\.pdf$/i.test(f.name)||f.type==="application/pdf"))}}
+window.addEventListener("dragenter",e=>{if(!pkDropOn())return;const t=[...(e.dataTransfer&&e.dataTransfer.types||[])];if(!t.includes("Files")&&!t.includes("FileGroupDescriptorW")&&!t.includes("FileGroupDescriptor"))return;e.preventDefault();pkDragN++;pkDropHi(true)});
+window.addEventListener("dragover",e=>{if(!pkDropOn())return;e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy"});
+window.addEventListener("dragleave",e=>{if(!pkDropOn())return;pkDragN=Math.max(0,pkDragN-1);if(!pkDragN)pkDropHi(false)});
+window.addEventListener("drop",e=>{if(!pkDropOn())return;e.preventDefault();pkDragN=0;pkDropHi(false);
+ const {pdf,other}=pkDropFiles(e.dataTransfer);
+ if(!pdf.length&&!other.length)return errBox("Es ist keine Datei angekommen. Das klassische Outlook-Programm gibt Anhänge beim Ziehen nicht an den Browser weiter – dann den Anhang zuerst auf den Desktop ziehen und von dort hierher, oder Outlook im Browser bzw. das neue Outlook verwenden.");
+ if(other.length)errBox((other.length===1?"„"+other[0].name+"“ ist keine PDF":other.length+" Dateien sind keine PDF")+" und wurde"+(other.length===1?"":"n")+" nicht übernommen.");
+ if(pdf.length)pkUpload(pdf)});
 function packView(){$("#t").textContent="Alle Packlisten";const G=pkGroups();
  const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
  const cur=sec("Dispo abgelaufen",G.over)+sec("Nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
