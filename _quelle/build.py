@@ -179,6 +179,8 @@ rep("""init();setTimeout(()=>rSyncLocal(),4000)}""","""init();setTimeout(()=>rSy
 rep('''function toast(t,ok){if(!ok)return errBox(t);const d=document.createElement("div");d.className="toast"+(ok?" ok":"");d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}''',
     '''function toast(t,ok){if(!ok)return errBox(t);const d=document.createElement("div");d.className="toast ok";d.textContent=t;document.body.appendChild(d);
  const lay=()=>{let y=0;[...document.querySelectorAll(".toast")].reverse().forEach(e=>{e.style.transform=y?"translateY(-"+y+"px)":"";y+=e.offsetHeight+8})};lay();setTimeout(()=>{d.remove();lay()},2600)}''')
+# 1.113: „In Arbeit“ nur, solange jemand den Schein offen hat – mit Namen
+rep("""r.draft?' <span class="tag" style="background:#f2c200;color:#1f2a33">In Arbeit</span>':''""","""rWorkTag(r)""")
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},
