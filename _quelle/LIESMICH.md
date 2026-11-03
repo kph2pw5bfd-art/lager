@@ -305,3 +305,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Neuer Name/Nummer gehört zu einem Artikel der Artikelliste → Frage „Ja, als „X“ zählen“ (Menge wird per `rAdd` verschoben, geht mit Anteilen) / „Nur umbenennen“. Gleich wie ein anderer manueller Artikel im Schein → zusammengelegt. `rManDlg` nimmt bei gleichem Namen/gleicher Nummer den vorhandenen manuellen Artikel (`rManFind`).
 - „Fehlende Artikel“ (`rFehlMove`): alter Eintrag −1 Mal/−Menge (gelöscht, wenn nichts übrig), neuer +1/+Menge; beim Verschieben in die Artikelliste nur abziehen. Das Protokoll (rlog) behält bei alten Einträgen den alten Namen.
 - Kein SQL nötig. Test `tests/mned_t.js` (SP-Umgebungsvariable).
+
+## Version 1.112 – Fehler behoben: „Letzte Änderung“ beim bloßen Öffnen (Jürgen, 3.11.)
+- Ursache: `rPersist` schreibt bei jedem Aufruf (auch ohne Änderung, z. B. `retEdit`, Verlassen der App) die lokale Sicherung `tpc_retour_backup`. Kam nichts Neues dazu, kehrte `rWrite` früh zurück, ohne diese Sicherung zu löschen → beim nächsten App-Start schrieb `rSyncLocal` sie mit `mod`/`modT` = jetzt hoch.
+- Jetzt: `rSame(sn, gespeichert)` vergleicht den Anteil/Kopfdaten mit dem gespeicherten Stand – gleich → nicht schreiben, Sicherung löschen (in `rWrite` und `rSyncLocal`, dort auch kein „… wurde gespeichert“-Hinweis). `rBkDrop` löscht die Sicherung auch beim frühen Rücksprung. Echte Änderungen setzen `modT` wie bisher.
+- Test `tests/modt_t.js` (Schein anlegen, Zeiten 1 Std. zurückdrehen, App neu öffnen + Schein öffnen → modT bleibt; echte Änderung → neu).
