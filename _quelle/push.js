@@ -63,3 +63,4 @@ function pushTitleBlock(t){return '<div class="hoh" style="margin-top:12px"><b>B
   PUSH_T.map(([k,l])=>'<label><input type="checkbox" data-pst="'+esc(t.id)+'|'+k+'"'+(pushTitOn(t.id,k)?' checked':'')+'> '+l+'</label>').join("")+'</div>'}
 function pushTitleBind(){document.querySelectorAll("[data-pst]").forEach(c=>c.onchange=()=>{const [id,k]=c.dataset.pst.split("|"),cur={};PUSH_T.forEach(([x])=>cur[x]=pushTitOn(id,x));cur[k]=c.checked;
  rSave(()=>db.doc("titel/"+id).update({push:cur}),"Benachrichtigungen gespeichert")})}
+

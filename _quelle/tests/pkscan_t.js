@@ -13,7 +13,7 @@ let bad=0;const ok=(c,m,x)=>{console.log((c?"OK   ":"FEHLER")+" "+m+(x!==undefin
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(195,420);await p.waitForTimeout(400);
- ok(await p.evaluate(()=>APPV)==="1.108","Version 1.108");
+ ok(await p.evaluate(()=>APPV)==="1.109","Version 1.109");
  await p.click('[data-g="pack"]');await p.waitForTimeout(200);await p.evaluate(()=>go("packall"));await p.waitForTimeout(200);await p.click('[data-pk="P1"]');await p.waitForTimeout(300);
  const order=()=>p.evaluate(()=>[...document.querySelectorAll(".pkl .pkg, .pkl .pkzh, .pkl .pkp")].map(e=>e.classList.contains("pkp")?(e.querySelector(".pkc").textContent||"o")+e.querySelector(".pkt").childNodes[0].textContent.trim():"["+e.textContent.replace(/Entfernen|Verschieben/g,"").trim().slice(0,28)+"]").join(" → "));
  ok(await p.isVisible("#pkscan"),"Knopf „Artikel scannen“ da");

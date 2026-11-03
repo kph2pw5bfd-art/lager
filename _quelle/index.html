@@ -459,6 +459,9 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 .pssw{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}.pssw:first-of-type{border-top:0}
 .pssw span{flex:1;display:flex;flex-direction:column}.pssw small{color:var(--mute);font-size:12px}.pssw input{width:22px;height:22px;margin:0;flex:none}
 .pstit{display:flex;flex-direction:column;gap:6px;margin-top:6px}.pstit label{display:flex;align-items:center;gap:8px;font-size:14px}.pstit input{width:auto;margin:0}
+/* ab 1.109: grüner Hinweis unten – weiße, gut lesbare Schrift (allgemeine .ok-Farbe hat sie dunkelgrün gemacht) */
+.toast,.toast.ok{color:#fff!important;font-weight:600;font-size:16px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.toast.ok{background:#1f6b41}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -484,7 +487,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.108";
+<script>const APPV="1.109";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -3401,6 +3404,7 @@ function pushTitleBlock(t){return '<div class="hoh" style="margin-top:12px"><b>B
 function pushTitleBind(){document.querySelectorAll("[data-pst]").forEach(c=>c.onchange=()=>{const [id,k]=c.dataset.pst.split("|"),cur={};PUSH_T.forEach(([x])=>cur[x]=pushTitOn(id,x));cur[k]=c.checked;
  rSave(()=>db.doc("titel/"+id).update({push:cur}),"Benachrichtigungen gespeichert")})}
 
+
 /* ===== Werkstatt: Reparatur + verwendete Ersatzteile, Ersatzteile-Bericht als PDF (ab 1.95) =====
    Zweck (Jürgen): der Chef will wissen, welche Ersatzteile verbraucht wurden.
    Ablauf: Defekt offen → Werkstatt tippt „Repariert“ → Fenster mit Reparaturbeschreibung, Ersatzteilen (Menge+Einheit, Name Pflicht,
@@ -3548,7 +3552,8 @@ const gi=c=>{const o=c.itemsJson?JSON.parse(c.itemsJson):(c.items||{}),n={};Obje
 function ask(t,fn,nl){const o=document.createElement('div');o.className='ov';o.innerHTML='<div class="card"><p>'+esc(t)+'</p><div class="row"><button class="btn" id="y">Ja</button><button class="btn ghost" id="n">'+esc(nl||'Abbrechen')+'</button></div></div>';document.body.appendChild(o);o.querySelector('#n').onclick=()=>o.remove();o.querySelector('#y').onclick=()=>{o.remove();fn()}}
 function errBox(t){if(typeof stream!=="undefined"&&(stream||zr))beep(false);if(document.querySelector(".eov"))return;const o=document.createElement("div");o.className="eov";o.innerHTML='<div class="eb"><div style="font-size:19px;font-weight:700;margin-bottom:8px">Fehler</div><div style="margin-bottom:18px"></div><button>OK</button></div>';o.querySelector(".eb div:nth-child(2)").textContent=t;o.querySelector("button").onclick=()=>o.remove();document.body.appendChild(o)}
 function okBox(code){const o0=document.querySelector(".okb");if(o0)o0.remove();const o=document.createElement("div");o.className="okb";o.innerHTML='<div>Artikel erfasst</div><b></b><div class="okn"></div>';o.querySelector("b").textContent=code;o.querySelector(".okn").textContent=artName(code);document.body.appendChild(o);beep(true);setTimeout(()=>o.remove(),3000)}
-function toast(t,ok){if(!ok)return errBox(t);const d=document.createElement("div");d.className="toast"+(ok?" ok":"");d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+function toast(t,ok){if(!ok)return errBox(t);const d=document.createElement("div");d.className="toast ok";d.textContent=t;document.body.appendChild(d);
+ const lay=()=>{let y=0;[...document.querySelectorAll(".toast")].reverse().forEach(e=>{e.style.transform=y?"translateY(-"+y+"px)":"";y+=e.offsetHeight+8})};lay();setTimeout(()=>{d.remove();lay()},2600)}
 async function init(){try{db=await claude.use("db");user=await claude.use("user");if(!db||!user)throw 0;me=await user.id();owner=await user.isOwner();realOwner=owner;
  db.collection("lists").onSnapshot(s=>{lists=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);res(lists.flatMap(l=>[l.by,l.mod]));if(view==="scan"&&cur&&!lists.some(l=>l.id===cur)){cur=null;view="home";errBox("Diese Liste wurde gelöscht.")}draw()});
   db.collection("defekte").onSnapshot(s=>{defs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);res(defs.flatMap(d=>[d.by,d.doneBy]));draw()});

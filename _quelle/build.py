@@ -175,8 +175,13 @@ rep("""row.getCell(2).font={bold:true};row.getCell(3).fill=fill("FFFFF8DC")});""
 rep("""hoMineBlock()+'<h3 style="margin:18px 0 4px">App</h3>""","""hoMineBlock()+(typeof pushBlock==="function"?pushBlock():"")+'<h3 style="margin:18px 0 4px">App</h3>""")
 rep("""hoMineBind();$("#upd")""","""hoMineBind();if(typeof pushBind==="function")pushBind();$("#upd")""")
 rep("""init();setTimeout(()=>rSyncLocal(),4000)}""","""init();setTimeout(()=>rSyncLocal(),4000);setTimeout(()=>{if(typeof pushStart==="function")pushStart()},1500)}""")
+# 1.109: grüne Hinweise übereinander statt überlappend
+rep('''function toast(t,ok){if(!ok)return errBox(t);const d=document.createElement("div");d.className="toast"+(ok?" ok":"");d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}''',
+    '''function toast(t,ok){if(!ok)return errBox(t);const d=document.createElement("div");d.className="toast ok";d.textContent=t;document.body.appendChild(d);
+ const lay=()=>{let y=0;[...document.querySelectorAll(".toast")].reverse().forEach(e=>{e.style.transform=y?"translateY(-"+y+"px)":"";y+=e.offsetHeight+8})};lay();setTimeout(()=>{d.remove();lay()},2600)}''')
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},
  open("/home/claude/gh/manifest.webmanifest","w",encoding="utf-8"),ensure_ascii=False,indent=1)
 print(len(s))
+
