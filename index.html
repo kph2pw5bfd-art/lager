@@ -494,7 +494,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.116";
+<script>const APPV="1.117";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -3961,7 +3961,7 @@ function rListBody(){const q=rqv.toLowerCase(),L=rets.filter(r=>(!q||[r.ev,r.ord
  $("#rlist").innerHTML=chips([["alle","Alle"],["offen","Offen"],["zu","Abgeschlossen"]],rf,"data-rf")+(L.length?rGroupList(L,r=>{const it=rIt(r);return '<div class="card'+(r.closed?' rdone':'')+'" data-ro="'+r.id+'" style="cursor:pointer"><b>'+esc(r.ev)+'</b>'+(r.closed?' <span class="tag tdone">Abgeschlossen</span>':rWorkTag(r))+'<div class="mute">'+(r.ord?"Auftragsnummer "+esc(r.ord)+" · ":"")+rTot(it)+" Stück · "+Object.keys(it).length+' Positionen</div><div class="mute">Erstellt: '+esc(nmA(r,"by"))+", "+fmt(r.t)+'</div>'+(r.mod?'<div class="mute">Letzte Änderung: '+esc(nmA(r,"mod"))+", "+fmt(r.modT)+'</div>':"")+rSentLine(r)+((r.fotos||[]).length?'<div class="mute">📷 '+r.fotos.length+(r.fotos.length===1?' Foto':' Fotos')+'</div>':'')+'</div>'}):'<div class="card mute">'+(rets.length?"Kein Retourschein passt zur Suche oder zum Filter.":"Noch kein Retourschein. Starte mit „Neuer Retourschein“.")+'</div>');
  document.querySelectorAll("[data-rf]").forEach(b=>b.onclick=()=>{rf=b.dataset.rf;rListBody()});document.querySelectorAll("[data-ro]").forEach(e=>e.onclick=()=>{curRet=e.dataset.ro;go("retopen")})}
 
-function rBar(){const n=Object.keys(rs.items).length;return '<div style="height:84px"></div><div class="rbar"><div><div style="flex:1"><b style="font-size:19px">'+rTot(rs.items)+'</b> Stück<div class="mute">'+n+' Positionen</div></div><button class="btn" id="rsum" style="width:auto">Schein ansehen</button></div></div>'}
+function rBar(){const n=Object.keys(rs.items).length;return '<div style="height:84px"></div><div class="rbar"><div><div style="flex:1"><b style="font-size:19px">'+rTot(rs.items)+'</b> Stück<div class="mute">'+n+' Positionen</div></div><button class="btn ghost" id="rsum" style="width:auto">Schein ansehen</button><button class="btn" id="rfin" style="width:auto">Fertig</button></div></div>'}
 function rCrumb(){return rWho()+'<div class="rcrumb">'+esc(rs.ev)+(rs.ord?" · Auftragsnummer "+esc(rs.ord):"")+'</div>'}
 function rCnt(f){return rKat().filter(f).reduce((a,x)=>a+(rs.items[x.nr]?rs.items[x.nr].q:0),0)}
 function rBdg(c){return c?'<span class="rbdg">'+c+'</span>':""}
@@ -3991,7 +3991,7 @@ function retEdit(){rPersist();setTimeout(rAbgInject,0);const k=rKat(),L=rs.lvl;
   rPage('<div class="rgrid">'+A.map(a=>{const c=rs.items[a.nr]?rs.items[a.nr].q:0;return '<button class="rtile'+(sub?" big":"")+(c?" sel":"")+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(rShort2(a))+'</b><span class="mute">Nr. '+esc(a.nr)+(a.zub?" · mit Zubehör":"")+'</span></button>'}).join("")+'</div>');
   rTileBind(A)}
  if(L==="sum")return retSum();
- rBindSq();const s=$("#rsum");if(s)s.onclick=()=>{rs.lvl="sum";retEdit()};if(!(document.activeElement&&document.activeElement.id==="rasq"))window.scrollTo(0,0)}
+ rBindSq();const s=$("#rsum");if(s)s.onclick=()=>{rs.lvl="sum";retEdit()};const fz=$("#rfin");if(fz)fz.onclick=()=>rFinish(fz);if(!(document.activeElement&&document.activeElement.id==="rasq"))window.scrollTo(0,0)}
 function rPad(a,base){const o=document.createElement("div");o.className="ov";let v="";const cur=rs.items[a.nr]?rs.items[a.nr].q:0;
  o.innerHTML='<div class="card"><b style="font-size:18px">'+esc(a.name)+'</b><div class="mute">'+(a.lbl!==undefined?esc(a.lbl):'Nr. '+esc(a.nr))+(cur?' · bisher '+cur+' Stück':'')+'</div>'+(cur?'<div class="row seg" style="margin-top:10px"><button id="pma" class="on pm" aria-label="Dazuzählen">+</button><button id="pms" class="pm" aria-label="Abziehen">−</button></div>':'')+'<div class="pdsp" id="pdv">0</div>'+(a.zub?'<div id="pzb"><p class="mute" style="margin:0 0 8px">Zubehör dabei?</p>'+rZub().map((z,i)=>'<label class="zchk"><input type="checkbox" id="rz'+i+'" value="'+esc(z)+'">'+esc(z)+'</label>').join("")+'</div>':"")+'<div class="pgrid">'+[1,2,3,4,5,6,7,8,9].map(n=>'<button data-pn="'+n+'">'+n+'</button>').join("")+'<button class="px" id="pdx" aria-label="Letzte Ziffer löschen oder schließen">✕</button><button data-pn="0">0</button><button class="pok" id="pdo" aria-label="Hinzufügen">✓</button></div></div>';
  document.body.appendChild(o);let sub=false;const d=o.querySelector("#pdv"),upd=()=>{d.textContent=(sub?"− ":"")+(v||"0");d.classList.toggle("on",!!v);d.classList.toggle("minus",sub)};
@@ -4009,10 +4009,7 @@ function retSum(){rPersist();$("#t").textContent="Retourschein prüfen";const R=
  document.querySelectorAll("[data-rq]").forEach(b=>b.onclick=()=>{const x=rs.items[b.dataset.rq];if(!x)return;x.q+=+b.dataset.d;if(x.q<=0)delete rs.items[b.dataset.rq];retSum()});
  document.querySelectorAll("[data-rx]").forEach(b=>b.onclick=()=>{delete rs.items[b.dataset.rx];retSum()});
  $("#rrem").oninput=e=>{rs.rem=e.target.value;rPersist()};$("#rmore").onclick=()=>{rs.lvl="groups";retEdit()};
- $("#rsave").onclick=async()=>{if(!Object.keys(rs.items).length)return errBox("Bitte zuerst Artikel erfassen.");const b=$("#rsave");b.disabled=true;
-  const id=rs.id||("r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),old=rets.find(r=>r.id===id),now=Date.now();
-  clearTimeout(rTimer);await rChain.catch(()=>{});rs.id=id;const sn=rSnap(),d={...sn.d,draft:false};if(old){d.mod=me;d.modT=now}else{d.ev=String(rs.ev).trim();d.ord=String(rs.ord||"").trim();d.rem=String(rs.rem||"").trim();d.itemsJson="{}";d.by=me;d.t=now}
-  try{if(old)await db.doc("retour/"+id).update(d);else await db.doc("retour/"+id).set(d);rDone[id]=JSON.stringify(sn.d);{const o=rBk();delete o[id];rBkSet(o)}curRet=id;rs=null;hist=hist.filter(v=>v!=="retedit");view="retopen";draw();toast("Retourschein gespeichert",1)}catch(x){b.disabled=false;errBox("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}};window.scrollTo(0,0)}
+ $("#rsave").onclick=()=>rFinish($("#rsave"));window.scrollTo(0,0)}
 function retOpen(){setTimeout(rAbgInject,0);const r=rets.find(x=>x.id===curRet);if(!r){view="ret";return retList()}$("#t").textContent="Retourschein";const it=rIt(r),R=rRows(it);
  $("#app").innerHTML=rTabs()+'<div class="card">'+(r.closed?'':'<button class="btn ghost s" id="rhed" style="float:right;margin:0 0 6px 10px">Ändern</button>')+'<b style="font-size:18px">'+esc(r.ev)+'</b><div class="mute">Auftragsnummer: '+esc(r.ord||"–")+'</div><div class="mute">Erstellt: '+esc(nmA(r,"by"))+", "+fmt(r.t)+'</div>'+(r.mod?'<div class="mute">Letzte Änderung: '+esc(nmA(r,"mod"))+", "+fmt(r.modT)+'</div>':"")+rSentAll(r)+'</div>'+
  '<div class="card" style="padding:4px 8px;overflow-x:auto"><table class="rtbl"><thead><tr><th>Artikel</th><th style="text-align:right">Retour</th></tr></thead><tbody>'+R.map(x=>'<tr><td><b>'+esc(x.name)+'</b><div class="mute" style="font-size:13px">'+(x.nr?"Nr. "+esc(x.nr):x.manual?"Manuell eingetragen":"Zubehör")+'</div></td><td style="text-align:right;font-weight:700">'+x.q+'</td></tr>').join("")+'<tr><td style="text-align:right"><b>Gesamt</b></td><td style="text-align:right;font-weight:800">'+rTot(it)+'</td></tr></tbody></table></div>'+
@@ -4069,6 +4066,19 @@ function retBack(){if(view!=="retedit"||!rs)return false;if(rs.q){rs.q="";retEdi
  if(!rs.isNew&&rs.lvl==="sum"){rs=null;toast("Retourschein gespeichert",1);return false}
  const m={manual:"groups",sum:"groups",items:rs.u!==null?"subs":"groups",subs:"groups",groups:rs.isNew?"head":"sum"};const n=m[rs.lvl];
  if(!n){rs=null;if(saved)toast("Retourschein gespeichert (in Arbeit)",1);return false}if(n==="subs")rs.u=null;rs.lvl=n;retEdit();return true}
+
+/* 1.117: „Fertig“ (Leiste unten beim Zählen) und „Retourschein speichern“ (Zusammenfassung) – gemeinsam.
+   Ohne Änderung wird nichts geschrieben (nur ein Entwurf wird als gespeichert markiert) → „Letzte Änderung“ bleibt. Danach zum Retourschein. */
+async function rFinish(b){if(!rs)return;if(!Object.keys(rs.items).length)return errBox("Bitte zuerst Artikel erfassen.");if(b)b.disabled=true;
+ const id=rs.id||rNewId(),old=rets.find(r=>r.id===id),now=Date.now();
+ clearTimeout(rTimer);await rChain.catch(()=>{});rs.id=id;const sn=rSnap();if(!sn){if(b)b.disabled=false;return errBox("Bitte zuerst die Veranstaltung eintragen.")}
+ const same=!!old&&rSame(sn,old);let d=null;
+ if(old)d=same?(old.draft?{draft:false}:null):{...sn.d,draft:false,mod:me,...tabAs("mod"),modT:now};
+ else d={...sn.d,draft:false,ev:String(rs.ev).trim(),ord:String(rs.ord||"").trim(),rem:String(rs.rem||"").trim(),itemsJson:"{}",by:me,...tabAs("by"),t:now};
+ try{if(d){if(old)await db.doc("retour/"+id).update(d);else await db.doc("retour/"+id).set(d)}
+  rDone[id]=JSON.stringify(sn.d);{const o=rBk();delete o[id];rBkSet(o)}curRet=id;rs=null;hist=hist.filter(v=>v!=="retedit");view="retopen";draw();
+  toast(d&&!(old&&same)?"Retourschein gespeichert":"Retourschein gespeichert – keine Änderungen",1)}
+ catch(x){console.error(x);if(b)b.disabled=false;errBox("Speichern fehlgeschlagen"+(typeof sbErr==="function"?sbErr(x):"")+". Bitte nochmal versuchen.")}}
 async function retXl(r,share){const dl=await claude.use("downloads");if(!dl)return toast("Speichern ist hier nicht verfügbar.");if(!window.ExcelJS)return toast("Excel-Bibliothek nicht geladen.");
  try{const NAVY="FF114A97",wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Retourschein",{pageSetup:{orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}});
   ws.columns=[{width:22},{width:44},{width:11},{width:11},{width:11}];[1,2,3].forEach(i=>ws.getRow(i).height=30);

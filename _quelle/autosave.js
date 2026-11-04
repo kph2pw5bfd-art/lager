@@ -29,3 +29,16 @@ function retBack(){if(view!=="retedit"||!rs)return false;if(rs.q){rs.q="";retEdi
  if(!rs.isNew&&rs.lvl==="sum"){rs=null;toast("Retourschein gespeichert",1);return false}
  const m={manual:"groups",sum:"groups",items:rs.u!==null?"subs":"groups",subs:"groups",groups:rs.isNew?"head":"sum"};const n=m[rs.lvl];
  if(!n){rs=null;if(saved)toast("Retourschein gespeichert (in Arbeit)",1);return false}if(n==="subs")rs.u=null;rs.lvl=n;retEdit();return true}
+
+/* 1.117: „Fertig“ (Leiste unten beim Zählen) und „Retourschein speichern“ (Zusammenfassung) – gemeinsam.
+   Ohne Änderung wird nichts geschrieben (nur ein Entwurf wird als gespeichert markiert) → „Letzte Änderung“ bleibt. Danach zum Retourschein. */
+async function rFinish(b){if(!rs)return;if(!Object.keys(rs.items).length)return errBox("Bitte zuerst Artikel erfassen.");if(b)b.disabled=true;
+ const id=rs.id||rNewId(),old=rets.find(r=>r.id===id),now=Date.now();
+ clearTimeout(rTimer);await rChain.catch(()=>{});rs.id=id;const sn=rSnap();if(!sn){if(b)b.disabled=false;return errBox("Bitte zuerst die Veranstaltung eintragen.")}
+ const same=!!old&&rSame(sn,old);let d=null;
+ if(old)d=same?(old.draft?{draft:false}:null):{...sn.d,draft:false,mod:me,modT:now};
+ else d={...sn.d,draft:false,ev:String(rs.ev).trim(),ord:String(rs.ord||"").trim(),rem:String(rs.rem||"").trim(),itemsJson:"{}",by:me,t:now};
+ try{if(d){if(old)await db.doc("retour/"+id).update(d);else await db.doc("retour/"+id).set(d)}
+  rDone[id]=JSON.stringify(sn.d);{const o=rBk();delete o[id];rBkSet(o)}curRet=id;rs=null;hist=hist.filter(v=>v!=="retedit");view="retopen";draw();
+  toast(d&&!(old&&same)?"Retourschein gespeichert":"Retourschein gespeichert – keine Änderungen",1)}
+ catch(x){console.error(x);if(b)b.disabled=false;errBox("Speichern fehlgeschlagen"+(typeof sbErr==="function"?sbErr(x):"")+". Bitte nochmal versuchen.")}}

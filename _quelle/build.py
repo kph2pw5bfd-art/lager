@@ -199,6 +199,12 @@ rep("""<b style="flex:1;font-size:19px">'+esc(d.art)+'</b>'+(d.urg&&!d.done?""",
 rep("""["Gemeldet",etDs(d.t)+" von "+nmA(d,"by")+(d.urg?" · dringend":"")]];""","""["Gemeldet",etDs(d.t)+" von "+nmA(d,"by")+(d.urg?" · dringend":"")]];if(d.fv)meta.unshift(["Fremdversch.",d.fvw?"Ja – "+d.fvw:"Ja"]);""")
 rep("""[[D.length,"Reparaturen"],""","""[[D.length,"Reparaturen"+(D.some(d=>d.fv)?" (davon "+D.filter(d=>d.fv).length+" Fremdverschulden)":"")],""")
 rep("""meta.forEach(([l,v])=>{const vl=wrap(v,F,8.5,CW-78);need(vl.length*10.5+2);txt(l,ML,y-9,{size:8.5,color:GREY});vl.forEach((s,i)=>txt(s,ML+76,y-9-i*10.5,{size:8.5}));""","""meta.forEach(([l,v])=>{const fvL=l==="Fremdversch.",vl=wrap(v,fvL?B:F,8.5,CW-78);need(vl.length*10.5+2);txt(l,ML,y-9,{size:8.5,color:fvL?rgb(.64,.08,.04):GREY,bold:fvL});vl.forEach((s,i)=>txt(s,ML+76,y-9-i*10.5,{size:8.5,bold:fvL,color:fvL?rgb(.64,.08,.04):INK}));""")
+# 1.117: Knopf „Fertig“ in der Leiste beim Zählen (speichert, öffnet den Retourschein); „Retourschein speichern“ nutzt dieselbe Funktion
+rep("""<button class="btn" id="rsum" style="width:auto">Schein ansehen</button>""","""<button class="btn ghost" id="rsum" style="width:auto">Schein ansehen</button><button class="btn" id="rfin" style="width:auto">Fertig</button>""")
+rep("""const s=$("#rsum");if(s)s.onclick=()=>{rs.lvl="sum";retEdit()};""","""const s=$("#rsum");if(s)s.onclick=()=>{rs.lvl="sum";retEdit()};const fz=$("#rfin");if(fz)fz.onclick=()=>rFinish(fz);""")
+_i=s.find('$("#rsave").onclick=async()=>{');_j=s.find('};window.scrollTo(0,0)}',_i)
+assert _i>0 and _j>_i,"rsave"
+s=s[:_i]+'$("#rsave").onclick=()=>rFinish($("#rsave"))'+s[_j+1:]
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},

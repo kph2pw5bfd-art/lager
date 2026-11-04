@@ -336,3 +336,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Anzeige: rotes Schild „FREMDVERSCHULDEN“ in der Defekte-Liste und im Kopf des Defekts (auch erledigt), Kasten „Fremdverschulden: …“ im Defekt. Wer den Defekt gemeldet hat, ändert über „Bearbeiten“; alle anderen mit Recht Defekte-Bearbeiten (Werkstatt) über „+ Fremdverschulden eintragen“ / „Ändern“ (eigener Dialog, ändert nur fv/fvw).
 - Ersatzteile-Bericht: Zeile „Fremdversch.  Ja – …“ (rot, fett) bei der Reparatur, Kachel „Reparaturen (davon n Fremdverschulden)“.
 - Kein SQL. Test `tests/fv_t.js`.
+
+## Version 1.117 – Knopf „Fertig“ beim Zählen (Jürgen, 4.11.: „kein Knopf zum Speichern, ich muss über die Pfeiltasten zurück“; gewählt: „Fertig“ neben „Schein ansehen“, springt zum Retourschein)
+- Leiste unten (`rBar`): „Schein ansehen“ (jetzt ghost) + „Fertig“ (`#rfin`). Gebunden in retEdit neben `#rsum` (rep am Ende von build.py).
+- Neue Funktion `rFinish(btn)` (autosave.js) – auch „Retourschein speichern“ in der Zusammenfassung ruft sie (der alte Handler wird in build.py herausgeschnitten). Ohne Änderung (`rSame`) wird nichts geschrieben (bei Entwurf nur `draft:false`) → „Letzte Änderung“ bleibt (vorher setzte „Retourschein speichern“ immer mod/modT). Danach Ansicht `retopen`. Leer → Hinweis „Bitte zuerst Artikel erfassen.“
+- Test `tests/fertig_t.js` (360 + 390 px).
