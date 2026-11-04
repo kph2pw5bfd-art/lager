@@ -322,3 +322,11 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Anzeige `pkWorkTag`: gelbes Schild „Richtet her · Max M.“ (Tablet „Karl K. (Tablet)“) in `pkRow` (Alle Packlisten), `pkCard`/`pkLine` (Wand schmal/breit) und „Nicht hergerichtet“; in der Packliste `pkWhoHint` „Max M. richtet gerade auch diese Packliste her.“ (ohne eigenes Konto). Übersicht/Alle Packlisten zeichnen sich alle 20 s neu (Ablauf). CSS `.pkwork` in build.py.
 - Kein SQL (pked fällt unter die Standardregel). Test `tests/pkwork_t.js`; `audit_t.js` ignoriert neue Dokumente, die nur Herzschlag-Felder haben.
 - Bekannt (schon vor 1.114): `offline_t`/`pkscan_t` melden nur „Version 1.110“ (fest im Test), `ov_t` hängt vom Datum ab.
+
+## Version 1.115 – Info zum Herrichten (Jürgen, 4.11.; gewählt: beim Hochladen + später, großer Kasten oben, Schild „ℹ Info“ in den Listen, auch im PDF und an den Monteur)
+- Feld „Info zum Herrichten (optional)“ in `pkConfirm` (neue Packliste) und `pkChgDlg` (Zusatz / geänderter Packschein / eigene); Text in `pkUpHi` (überlebt das Neuzeichnen des Dialogs), nach dem Speichern `pkHiUp(Ziel, Zusatz-Nr)`. Neu → eigene Packliste, Zusatz/Zusatz-Ersatz → Haupt-Packliste mit `z`, Ersetzen → Haupt-Packliste.
+- Gespeichert in `packh` (bleibt beim Ersetzen): `hi_<key>` = {txt,by,t,z?,mod?,modT?}, gelöscht = null; über `pkHSet` (Warteschlange, auch ohne Netz). Mehrere Einträge möglich.
+- Anzeige: `pkHiBox` als erstes Element in der Packliste (oranger Kasten, Text 19 px fett, Zeilenumbrüche, Name + Datum, „Zusatz <Nr>“-Abzeichen; dunkel eigene Farben, CSS in build.py). Mit Recht `pk_b`: „Ändern“ (Dialog `pkHiDlg` mit Löschen), „+ Weitere Info“, ohne Info „+ Info zum Herrichten eintragen“ (`pkHiAddLink`) – Klicks per document-Listener. Ohne pk_b nur lesen.
+- `pkWorkTag` zeigt zusätzlich das Schild „ℹ Info“ (Wand schmal/breit, Nicht hergerichtet, Alle Packlisten).
+- PDF (`pkDrPdf`): Kasten „Info zum Herrichten“ vor „Abweichungen“; Monteur-Text (`pkDrMail`): Block „Info:“ nach der Einleitung.
+- Kein SQL. Test `tests/pkhi_t.js` (pdf-lib lokal, pdftotext prüft den Kasten).

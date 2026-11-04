@@ -72,6 +72,7 @@ async function pkDrPdf(P){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb
   need(40,false);seg(20,true,false);txt(title,ML+9,y-13,{size:9.5,bold:true,color:tc});y-=20;
   L.forEach((l,i)=>{const last=i===L.length-1,h=last?17:11.5;if(y-h<MB){pg.drawLine({start:{x:ML,y},end:{x:ML+CW,y},thickness:1.2,color:col});newPage(false);seg(0.01,true,false)}
    seg(h,false,last);txt(l,ML+9,y-8.5,{size:8.5});y-=h});y-=8};
+ {const hi=pkHiList(P);if(hi.length)box("Info zum Herrichten",[].concat(...hi.map(e=>String(e.txt).split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map((l,i)=>(i===0&&e.z?"Zusatz "+e.z+": ":"")+l))),ORL,ORBG)}
  box("Abweichungen zum Packschein ("+dev.D.length+")",dev.D.length?dev.D:["Keine – alles wie im Packschein."],ORL,ORBG);
  box("Noch nicht hergerichtet ("+dev.O.length+")",dev.O,NAVY,TINT);
  y-=2;need(60,false);thead();
@@ -98,7 +99,9 @@ function pkDrMail(P){const rows=pkDrRows(P),dev=pkDrDev(rows),H=pkH(P),g=pkProg(
  const L=order.map(k=>{const e=ag[k],x=[];if(e.alt)x.push("inkl. "+pkDrQ(e.alt,e.u)+" Ersatz");if(e.fz)x.push("davon "+pkDrQ(e.fz,e.u)+" Fremdmiete");if(e.x)x.push((e.x===e.n?"":"davon "+pkDrQ(e.x,e.u)+" ")+"zusätzlich, nicht im Packschein");return "- "+pkDrQ(e.n,e.u)+" "+e.name+(x.length?" ("+x.join(", ")+")":"")});
  const l55=rows.filter(r=>r.l55).map(r=>"- "+pkDrQ(r.soll,pkDrU(r))+" "+r.name);
  const st=g.fin?"hergerichtet am "+fmt(H.fin.t).slice(0,10):"Stand "+fmt(Date.now()).slice(0,10)+" ("+g.d+" von "+g.n+" Positionen hergerichtet)";
+ const hi=pkHiList(P);
  return "Hallo,\n\nanbei die Packliste für "+(P.ev||"")+" (Auftrag "+(P.ord||"–")+"), "+st+".\n\n"+
+  (hi.length?"Info:\n"+hi.map(e=>"- "+(e.z?"Zusatz "+e.z+": ":"")+String(e.txt).trim().replace(/\r?\n/g,"\n  ")).join("\n")+"\n\n":"")+
   (dev.D.length?"Anders als im Packschein:\n"+dev.D.map(d=>"- "+d).join("\n"):"Alles wie im Packschein.")+"\n\n"+
   (dev.O.length?"Noch nicht hergerichtet:\n"+dev.O.map(d=>"- "+d).join("\n")+"\n\n":"")+
   "Du bekommst:\n"+(L.length?L.join("\n"):"- (noch nichts hergerichtet)")+

@@ -38,10 +38,10 @@ function pkChgDlg(P,M,same){return new Promise(res=>{const m=pkMatch(P,M),o=docu
     opt("zus","Als Zusatz anhängen","Kommt zusätzlich dazu, eigener Herricht-Tag.",sel==="zus")+opt("own","Als eigene Packliste","",sel==="own"))+
    (oldL?'<div class="pkcdf"><b class="abglh">Was sich ändert</b>'+(D.length?D.map(d=>'<div class="pkcdr '+pkDiffCls(d)+'"><span>'+esc(d.name)+'</span><b>'+esc(pkDiffTxt(d))+'</b></div>').join(""):'<div class="mute">Keine Änderung bei Artikeln und Mengen.</div>')+
     '<small class="mute">Was schon hergerichtet ist, bleibt. Zu viel Hergerichtetes kommt auf die Liste „Zurücklegen“.</small></div>':'')+
-   '<div class="row" style="margin-top:10px"><button class="btn ghost" id="pkcx" type="button">Abbrechen</button><button class="btn" id="pkco" type="button">'+(mode==="rep"||mode==="repz"?'Ersetzen':mode==="zus"?'Weiter':'Speichern')+'</button></div></div>';
+   pkHiField()+'<div class="row" style="margin-top:10px"><button class="btn ghost" id="pkcx" type="button">Abbrechen</button><button class="btn" id="pkco" type="button">'+(mode==="rep"||mode==="repz"?'Ersetzen':mode==="zus"?'Weiter':'Speichern')+'</button></div></div>';
   o.querySelectorAll("[data-cm]").forEach(b=>b.onclick=()=>{const v=b.dataset.cm;if(v.startsWith("repz:")){mode="repz";zps=v.slice(5)}else{mode=v;zps=null}draw()});
   o.querySelectorAll("[data-ci]").forEach(c=>c.onchange=()=>{c.checked?inc.add(c.dataset.ci):inc.delete(c.dataset.ci);draw()});
-  o.querySelector("#pkcx").onclick=()=>{o.remove();res(null)};
+  o.querySelector("#pkcx").onclick=()=>{o.remove();res(null)};pkHiFieldBind(o);
   o.querySelector("#pkco").onclick=()=>{o.remove();res(mode==="rep"?{mode,inc:[...inc]}:mode==="repz"?{mode,zps}:{mode})}};
  document.body.appendChild(o);draw()})}
 /* Herricht-Stand übernehmen: alte Positionen (mit Schlüssel) -> neue Positionen (mit Schlüssel). Gibt {patch, back:[…], diff} */
