@@ -330,3 +330,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - `pkWorkTag` zeigt zusätzlich das Schild „ℹ Info“ (Wand schmal/breit, Nicht hergerichtet, Alle Packlisten).
 - PDF (`pkDrPdf`): Kasten „Info zum Herrichten“ vor „Abweichungen“; Monteur-Text (`pkDrMail`): Block „Info:“ nach der Einleitung.
 - Kein SQL. Test `tests/pkhi_t.js` (pdf-lib lokal, pdftotext prüft den Kasten).
+
+## Version 1.116 – Defekt: „Fremdverschulden“ (Jürgen, 4.11.; gewählt: Häkchen + optional „Wer / wie?“, Anzeige Liste/Detail/Ersatzteile-Bericht, nachträglich änderbar)
+- Felder am Defekt: `fv` (true/false), `fvw` (Wer / wie?), beim Nachtragen zusätzlich `fvBy`/`fvT`. Patches am Ende von build.py (Formulare „Defekt melden“ `dnfv`/`dnfvw` und „Bearbeiten“ `defv`/`defvw` unter „Dringend“; Feld erscheint erst nach dem Anhaken), Funktionen in ersatz.js (`defFvGet`, `defFvSet`, `defFvTag`, `defFvLine`, `defFvDlg`).
+- Anzeige: rotes Schild „FREMDVERSCHULDEN“ in der Defekte-Liste und im Kopf des Defekts (auch erledigt), Kasten „Fremdverschulden: …“ im Defekt. Wer den Defekt gemeldet hat, ändert über „Bearbeiten“; alle anderen mit Recht Defekte-Bearbeiten (Werkstatt) über „+ Fremdverschulden eintragen“ / „Ändern“ (eigener Dialog, ändert nur fv/fvw).
+- Ersatzteile-Bericht: Zeile „Fremdversch.  Ja – …“ (rot, fett) bei der Reparatur, Kachel „Reparaturen (davon n Fremdverschulden)“.
+- Kein SQL. Test `tests/fv_t.js`.

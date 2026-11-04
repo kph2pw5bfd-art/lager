@@ -134,3 +134,19 @@ function etRepDlg(){const mob=wbMobile(),o=document.createElement("div");o.class
  g("etps2").onclick=async()=>{const x=await mk();if(x)await pkDrSave(x.f,x.fn)};
  if(g("etsh"))g("etsh").onclick=share;
  g("etrx").onclick=()=>o.remove()}
+
+/* ===== Fremdverschulden (1.116) – Felder fv (true/false) und fvw (Wer / wie?) am Defekt ===== */
+function defFvGet(p){const c=$("#"+p+"fv"),w=$("#"+p+"fvw");const on=!!(c&&c.checked);return{fv:on,fvw:on&&w?w.value.trim():""}}
+function defFvSet(p,d){const c=$("#"+p+"fv"),b=$("#"+p+"fvb"),w=$("#"+p+"fvw");if(!c)return;if(d){c.checked=!!d.fv;if(w)w.value=d.fvw||""}const up=()=>{if(b)b.hidden=!c.checked};up();c.addEventListener("change",()=>{up();if(c.checked&&w)setTimeout(()=>w.focus(),30)})}
+function defFvTag(d){return d&&d.fv?'<span class="tag dfv" style="flex:0">FREMDVERSCHULDEN</span> ':""}
+function defFvLine(d){const ed=d.by===me||canDone();
+ if(!d.fv)return ed&&d.by!==me?'<button class="lnk" type="button" id="dfved" style="display:block;padding:6px 0 0">+ Fremdverschulden eintragen</button>':"";
+ return '<div class="dfvl"><b>Fremdverschulden</b>'+(d.fvw?': '+esc(d.fvw):'')+(ed&&d.by!==me?' <button class="lnk" type="button" id="dfved">Ändern</button>':'')+'</div>'}
+function defFvDlg(d){const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:400px;margin:0"><b>Fremdverschulden</b><p class="mute" style="margin:4px 0 8px">'+esc(d.art||"")+(d.ev?' · '+esc(d.ev):'')+'</p>'+
+  '<label style="display:flex;gap:8px;align-items:center;margin:0 0 6px"><input type="checkbox" id="xfv" style="width:auto;margin:0">Fremdverschulden</label><div id="xfvb" hidden><label class="mute" for="xfvw">Wer / wie? (optional)</label><input id="xfvw" autocomplete="off" placeholder="z. B. Bühnenbauer mit Stapler drübergefahren"></div>'+
+  '<div class="row" style="margin-top:10px"><button class="btn ghost" id="xfvc" type="button">Abbrechen</button><button class="btn" id="xfvo" type="button">Speichern</button></div></div>';
+ document.body.appendChild(o);defFvSet("x",d);o.querySelector("#xfvc").onclick=()=>o.remove();
+ o.querySelector("#xfvo").onclick=async()=>{const v=defFvGet("x");o.remove();if(!!d.fv===v.fv&&String(d.fvw||"")===v.fvw)return;
+  try{await db.doc("defekte/"+d.id).update({...v,fvBy:me,fvT:Date.now()});toast(v.fv?"Fremdverschulden eingetragen":"Fremdverschulden entfernt",1)}catch(e){errBox("Speichern fehlgeschlagen"+(typeof sbErr==="function"?sbErr(e):"")+". Hast du das Recht dazu?")}}}
+document.addEventListener("click",ev=>{const b=ev.target.closest&&ev.target.closest("#dfved");if(!b||typeof view==="undefined"||view!=="defopen")return;const d=defs.find(x=>x.id===curDef);if(d)defFvDlg(d)});
