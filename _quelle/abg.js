@@ -7,7 +7,7 @@ let ABZ=[],ABN={},ABP={},abgOn=false;
 function abgSub(){if(abgOn)return;abgOn=true;try{
  db.collection("abzu").onSnapshot(s=>{ABZ=s.docs.map(d=>({id:d.id,...d.data()}));draw()});
  db.collection("abno").onSnapshot(s=>{ABN={};s.docs.forEach(d=>ABN[d.id]=d.data());draw()});
- db.collection("abpr").onSnapshot(s=>{ABP={};s.docs.forEach(d=>ABP[d.id]=d.data());draw()})}catch(e){console.warn(e)}}
+ db.collection("abpr").onSnapshot(s=>{ABP={};s.docs.forEach(d=>ABP[d.id]=d.data());draw()});if(typeof fmSub==="function")fmSub()}catch(e){console.warn(e)}}
 const abgOk=()=>can("pk_s")&&can("ret_s");
 const abgKey=(c,nm)=>c?"c:"+c:"n:"+jvATok(nm).join(" ");
 const rIsEnd=r=>!!r.closed&&r.art!=="teil";
@@ -54,7 +54,7 @@ function abgAllMore(){const out=[];packs.forEach(p=>{const B=abgBal(p);B.more.fo
  return out.sort((a,b)=>((b.last&&(b.last.closedT||b.last.modT||b.last.t))||0)-((a.last&&(a.last.closedT||a.last.modT||a.last.t))||0))}
 function abgMissing(){/* Aufträge mit Endretoure oder abgelaufener Dispo, nicht geklärt; pro Artikel zusammengezählt */
  const G={};packs.forEach(p=>{const kl=(packh[p.id]||{}).klar;if(kl&&kl.t)return;const st=pkState(p).k,B=abgBal(p);if(!(B.hasEnd||st==="over"))return;
-  B.miss.forEach(e=>{const g=G[e.k]=G[e.k]||{k:e.k,name:e.name,n:0,at:[]};const f=e.soll-e.back;g.n+=f;g.at.push({p,f,over:st==="over",end:B.hasEnd})})});
+  B.miss.forEach(e=>{const f=typeof fmOpenQ==="function"?fmOpenQ(p,e):e.soll-e.back;if(f<=0)return;const g=G[e.k]=G[e.k]||{k:e.k,name:e.name,n:0,at:[]};g.n+=f;g.at.push({p,f,over:st==="over",end:B.hasEnd})})});
  return Object.values(G).map(g=>{g.at.sort((a,b)=>(b.over-a.over)||b.f-a.f);g.hint=null;
   for(const a of g.at){const m=abgMoreElse(a.p,{k:g.k});if(m.length){g.hint={from:m[0].p,q:m[0].q};break}}return g}).sort((a,b)=>b.n-a.n)}
 function abgToCheck(){if(!can("abg_p"))return[];const out=[];
@@ -119,7 +119,7 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
  const nums=[[B.raus,"Raus",""],[B.zur,"Zurück",""],[B.fehlt,"Fehlt",B.fehlt?"red":""]].concat(B.zuviel?[[B.zuviel,"Zu viel","or"]]:[]);
  const head='<section class="abgcard"><div class="abgh"><span><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+' · Dispo '+pkDM(p.db)+'–'+pkDM(p.de)+'</small></span><span class="abgpkb">'+abgBadge(B)+'</span></div>'+
   '<div class="abgnums" style="grid-template-columns:repeat('+nums.length+',minmax(0,1fr))">'+nums.map(([n,l,c])=>'<div class="'+c+'"><b>'+n+'</b><span>'+l+'</span></div>').join("")+'</div>'+
-  '<small class="mute">Ohne Fremdmiete'+(B.l55?' und Lager 55':'')+'. Zugeordnet wird nur, was jemand bestätigt hat – Vorschläge ändern nichts an den Zahlen.</small>'+(kl?'<div class="abgdone">✓ Mit Projektleiter geklärt · '+esc(nmA(kl,"by"))+', '+fmt(kl.t).slice(0,6)+'</div>':'')+'</section>';
+  '<small class="mute">Ohne Fremdmiete'+(B.l55?' und Lager 55':'')+'. Zugeordnet wird nur, was jemand bestätigt hat – Vorschläge ändern nichts an den Zahlen.</small>'+(kl?'<div class="abgdone">✓ Mit Projektleiter geklärt · '+esc(nmA(kl,"by"))+', '+fmt(kl.t).slice(0,6)+'</div>':'')+fmHead(p,B)+'</section>';
  const ev=[{t:p.db||p.t,l:"Packliste raus",s:"Packschein "+(p.ps||"–")+(pkProg(p).fin?" · hergerichtet von "+esc(nm(H.fin.by)):""),n:"↑ "+(B.raus-abgZusOut(p)),c:"out"}];
  (p.zus||[]).forEach(z=>ev.push({t:z.t||p.t,l:"Nachlieferung",s:"Zusatz-Packschein "+(z.ps||"–"),n:"↑ "+abgZusOut(p,z.ps),c:"out"}));
  B.R.forEach(r=>ev.push({t:abgRetT(r),l:abgRetLbl(r),s:esc(nmA(r,r.closed?"closedBy":"by")),n:"↓ "+abgRetN(r),c:"in",ret:r.id}));
@@ -128,8 +128,8 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
  const verl='<section class="abgcard"><b class="abglh">Verlauf</b>'+ev.map(x=>'<'+(x.ret?'button type="button" data-abgr="'+esc(x.ret)+'"':'div')+' class="abgev"><span class="abgd">'+pkDM(x.t)+'</span><span class="abgt"><b>'+esc(x.l)+'</b><small>'+x.s+'</small></span><b class="abgn '+x.c+'">'+esc(x.n)+'</b></'+(x.ret?'button':'div')+'>').join("")+'</section>';
  const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr+e.l55?1:2;
  const arts='<section class="abgcard"><div class="abglh" style="display:flex"><b style="flex:1">Artikel</b><small class="mute">raus · zurück</small></div>'+B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).map(e=>{
-  const f=e.soll-e.back,z=e.back-e.soll-e.fr-e.l55,tag=f>0?abgTag("fehlt "+f,"red"):z>0?abgTag(z+" zu viel","or"):!e.soll&&e.l55&&!e.back?abgTag("Lager 55","grey"):abgTag("passt ✓","ok"),sub=[];
-  if(f>0&&typeof plAbgLine==="function")sub.push(plAbgLine(p,e));if(f>0){const h=abgMoreElse(p,e)[0];if(h)sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>Vorschlag: bei '+esc(h.p.ev||h.p.ord)+' kamen '+h.q+' zu viel zurück</span><b>Klären ›</b></button>')}
+  const f=e.soll-e.back,z=e.back-e.soll-e.fr-e.l55,fo=f>0?fmOpenQ(p,e):0,tag=f>0?(fo>0?abgTag("fehlt "+fo,"red"):fmAusN(p.id,e.k)?abgTag("auszutragen","or"):abgTag("geklärt ✓","ok")):z>0?abgTag(z+" zu viel","or"):!e.soll&&e.l55&&!e.back?abgTag("Lager 55","grey"):abgTag("passt ✓","ok"),sub=[];
+  if(f>0&&typeof plAbgLine==="function")sub.push(plAbgLine(p,e));if(f>0)sub.push(fmArtLine(p,e));if(f>0){const h=abgMoreElse(p,e)[0];if(h)sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>Vorschlag: bei '+esc(h.p.ev||h.p.ord)+' kamen '+h.q+' zu viel zurück</span><b>Klären ›</b></button>')}
   if(z>0){const c=abgCands(p,e,z)[0];sub.push('<button class="abgsug" type="button" data-abgzv="1"><span>'+(c?'Vorschlag: fehlen bei '+esc(c.p.ev||c.p.ord):'Kein Vorschlag – fehlt derzeit nirgends')+'</span><b>Klären ›</b></button>')}
   if(e.fr)sub.push('<small class="mute">+ '+pkNum(e.fr)+' Fremdmiete – zählen hier nicht</small>');
   if(e.l55)sub.push('<small class="mute">+ '+pkNum(e.l55)+' über Lager 55 – zählen hier nicht</small>');if(e.via55)sub.push('<small class="mute">'+e.via55+' kam über uns statt Lager 55 zurück</small>');
@@ -247,4 +247,4 @@ function abgMissTab(){const G=abgMissing(),Z=abgAllMore().length;
  return{h:"Fehlmaterial",e:"Es fehlt nichts. Gezählt werden Aufträge mit Endretoure oder abgelaufener Dispo.",
   L:G.map(g=>{const a=g.at[0];return '<button class="jvln" type="button" data-'+(g.hint?'abgzv="1"':'jp="'+esc(a.p.id)+'" data-jpa="1"')+'><span class="jvlt"><b>'+esc(g.name)+'</b><small>'+(g.hint?'<span class="or">Vielleicht: '+g.hint.q+' kamen bei '+esc(g.hint.from.ev||g.hint.from.ord)+' zu viel zurück</span>':'am ehesten bei '+esc(a.p.ev||a.p.ord)+(a.over?', Dispo abgelaufen':', Endretoure'))+'</small></span><span class="jvlr warn">'+g.n+(g.n===1?' fehlt':' fehlen')+'</span></button>'}),
   foot:Z?'<button class="jvln abgzvl" type="button" data-abgzv="1"><span class="jvlt"><b>Zu viel zurück: '+Z+' offen zum Klären</b></span><span class="jvlr">›</span></button>':""}}
-function abgJvBind(){const s=$("#abgstrip");if(s)s.onclick=()=>{abgPrT=abgToCheck().length?"zu":"ok";go("abgpr")};document.querySelectorAll("#jv [data-abgzv]").forEach(b=>b.onclick=()=>go("abgzv"));document.querySelectorAll("#jv [data-jpa]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("pkabg")})}
+function abgJvBind(){const s=$("#abgstrip");if(s)s.onclick=()=>{abgPrT=abgToCheck().length?"zu":"ok";go("abgpr")};const fs=$("#fmstrip");if(fs)fs.onclick=()=>{fmT="offen";go("fmaus")};document.querySelectorAll("#jv [data-abgzv]").forEach(b=>b.onclick=()=>go("abgzv"));document.querySelectorAll("#jv [data-jpa]").forEach(b=>b.onclick=()=>{curPack=b.dataset.jp;go("pkabg")})}

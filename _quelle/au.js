@@ -31,7 +31,7 @@ function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.
  const zlate=(p.zus||[]).some(z=>!pkZFin(p,z)&&pkZDay(p,z)<t0);const hot=!done&&(missShow||over||late||zlate);
  return{p,g,st,B,kl,done,over,late,missShow,S,lab,cls,hot}}
 const auAns=(p,k)=>PLAW.filter(a=>a.pk===p.id&&a.k===k&&a.typ!=="msg");
-const auAnsTxt=a=>{const T={anders:"Ist auf einer anderen Baustelle: "+(a.toEv||"")+(a.toOrd?" ("+a.toOrd+")":""),bau:"Ist noch auf der Baustelle"+(a.bis?", kommt bis "+pkWd(pkFromYmd(a.bis)):""),kunde:"Bleibt beim Kunden",zur:"Ist schon zurück – bitte nachzählen",weiss:"Weiß ich nicht / kläre ich",msg:"Nachricht"};
+const auAnsTxt=a=>{const T={anders:"Ist auf einer anderen Baustelle: "+(a.toEv||"")+(a.toOrd?" ("+a.toOrd+")":""),bau:"Ist noch auf der Baustelle"+(a.bis?", kommt bis "+pkWd(pkFromYmd(a.bis)):""),kunde:"Bleibt beim Kunden",verr:"Dem Kunden verrechnet",zur:"Ist schon zurück – bitte nachzählen",weiss:"Weiß ich nicht / kläre ich",msg:"Nachricht"};
  return (T[a.typ]||"")+(a.txt?(a.typ==="msg"?": ":" – ")+"„"+a.txt+"“":"")};
 const auStepL='<div class="aul"><span>Packliste</span><span>Herrichten</span><span>Draußen</span><span>Retouren</span><span>Erledigt</span></div>';
 function auCard(I){const p=I.p,mine=auIsMine(p),pills=[];
@@ -104,7 +104,7 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
 async function auSave(o,msg){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
  return rSave(()=>db.doc("plaw/"+id).set({...o,by:me,...tabAs("by"),t:Date.now()}),msg)}
 function auAnsDlg(p,e){if(!e)return;const n=e.soll-e.back,o=document.createElement("div");o.className="ov";let typ=null,to=null;
- const O=[["anders","Ist auf einer anderen Baustelle","Auftrag wählen"],["bau","Ist noch auf der Baustelle","kommt bis: Datum (optional)"],["kunde","Bleibt beim Kunden","z. B. Miete verlängert, Verkauf"],["zur","Ist schon zurück","Lager soll nachzählen"],["weiss","Weiß ich nicht / kläre ich",""]];
+ const O=[["anders","Ist auf einer anderen Baustelle","Auftrag wählen"],["bau","Ist noch auf der Baustelle","kommt bis: Datum (optional)"],["kunde","Bleibt beim Kunden","z. B. Miete verlängert, Verkauf"],["verr","Dem Kunden verrechnet","Lager trägt es in epirent aus – Rechnungsnr. gern in die Notiz"],["zur","Ist schon zurück","Lager soll nachzählen"],["weiss","Weiß ich nicht / kläre ich",""]];
  o.innerHTML='<div class="card audlg"><b style="font-size:17px">'+pkNum(n)+' '+esc(auUnit(p,e.k))+' '+esc(e.name)+'</b><div class="mute">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</div>'+
   O.map(([k,t,s])=>'<button class="auopt" type="button" data-ao="'+k+'"><i></i><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+(k==="anders"?'<small class="auto" id="auto"></small>':'')+(k==="bau"?'<input type="date" id="aubis" hidden>':'')+'</span></button>').join("")+
   '<textarea id="autx" placeholder="Notiz (optional)" style="min-height:60px;margin-top:6px"></textarea><div class="row" style="margin-top:8px"><button class="btn ghost" id="aux" type="button">Abbrechen</button><button class="btn" id="auok" type="button" disabled>Antwort ans Lager schicken</button></div></div>';
@@ -114,7 +114,8 @@ function auAnsDlg(p,e){if(!e)return;const n=e.soll-e.back,o=document.createEleme
  o.querySelectorAll("[data-ao]").forEach(b=>b.onclick=ev=>{if(ev.target===bis)return;if(b.dataset.ao==="anders"&&typ==="anders"&&to){to=null;tl.textContent="";}sel(b.dataset.ao)});
  o.querySelector("#aux").onclick=()=>o.remove();
  ok.onclick=()=>{if(!typ)return;const d={pk:p.id,ord:p.ord||"",ev:p.ev||"",k:e.k,name:e.name,n,u:auUnit(p,e.k),typ,txt:o.querySelector("#autx").value.trim()};
-  if(typ==="anders"&&to){d.to=to.id;d.toEv=to.ev||"";d.toOrd=to.ord||""}if(typ==="bau"&&bis.value)d.bis=bis.value;o.remove();auSave(d,"Antwort ans Lager geschickt")}}
+  if(typ==="anders"&&to){d.to=to.id;d.toEv=to.ev||"";d.toOrd=to.ord||""}if(typ==="bau"&&bis.value)d.bis=bis.value;o.remove();auSave(d,"Antwort ans Lager geschickt");
+  if(typ==="verr"){const q=typeof fmOpenQ==="function"?fmOpenQ(p,e):n;if(q>0)rSave(()=>db.doc("fmx/"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)).set({pk:p.id,k:e.k,code:e.code||"",name:e.name,u:auUnit(p,e.k),q,was:"verr",txt:d.txt,by:me,t:Date.now(),aus:null,pl:true}),"Lager trägt es in epirent aus")}}}
 function auMsgDlg(p){const o=document.createElement("div");o.className="ov";
  o.innerHTML='<div class="card audlg"><b style="font-size:17px">Nachricht ans Lager</b><div class="mute">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</div><textarea id="aumt" placeholder="z. B. Abbau verschiebt sich auf Montag" style="min-height:110px;margin-top:8px"></textarea><div class="row" style="margin-top:8px"><button class="btn ghost" id="aux" type="button">Abbrechen</button><button class="btn" id="auok" type="button">Senden</button></div></div>';
  document.body.appendChild(o);const t=o.querySelector("#aumt");o.querySelector("#aux").onclick=()=>o.remove();

@@ -352,3 +352,13 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - „Art ändern“ (`pkArtDlg`, Link in jeder Packliste, nur pk_b); nachträglich auf Verlängerung → `pkVerlExtra` fragt ebenfalls nach dem Mehr.
 - Offen: Push „Neue Packliste“ (Datenbank-Trigger) kommt auch bei diesen Packscheinen.
 - Test `tests/pkart_t.js`.
+
+## Version 1.119 – Fehlmaterial bis zum Austragen (Jürgen, 4.11.; Entwurf https://claude.ai/artifact/1uD7zopKBVgFtRFccSLWo3; gewählt: austragen nur Sonja + Jürgen, PL darf „verrechnet“ setzen, rot ab 7 Tagen, „Mit PL geklärt“ bleibt)
+- Neue Datei `fm.js` (von build.py nach abg.js angehängt), docs `fmx` {pk,k,code,name,u,q,was,bis?,ziel?,zielEv?,txt,by,t,aus,pl?}. was: zur (kommt noch zurück, bleibt offen) / bau (andere Baustelle) / verr (dem Kunden verrechnet) / weg (verloren/gestohlen/kaputt) / nicht (Zählfehler). Kein SQL.
+- Offene Menge pro Auftrag × Artikel = (soll − zurück) − Summe der Einträge außer „zur“ (`fmOpenQ`). `abgMissing` (Reiter Fehlmaterial, Wochenbericht „Noch offen insgesamt“) zählt nur noch die offene Menge; `abgBal` selbst bleibt unverändert (Zahlen „Fehlt“, Mails, Excel = physisch fehlend).
+- Auftragskonto (`pkAbgView`): unter jedem fehlenden Artikel `fmArtLine` (Einträge mit Chip Offen/Noch auszutragen/Ausgetragen/Erledigt, „Rückgängig“, mit fm_a „In epirent ausgetragen ✓“) + Knopf „Was ist mit … ?“ (`fmDlg`, Lager = abgOk; Teilmenge mit −/+; bei verr/weg mit fm_a Häkchen „Schon in epirent ausgetragen“). Tag beim Artikel: „fehlt n“ (offen) / „auszutragen“ / „geklärt ✓“. Kopf: Chips (`fmHead`).
+- Recht `fm_a` (RK, Zeile „Abgleich“ im Rechte-Raster „Fehlmaterial austragen“; Admin immer) → oranger Streifen in der Lager Übersicht (`fmStrip`, vor „Zu prüfen“), Ansicht `fmaus` (Offen/Ausgetragen, nach Auftrag, „Ausgetragen ✓“ → aus {by,t}, „Zurücknehmen“, Excel `fmXl`), Kachel-Zähler (`jvHot`), Briefing-Satz. Rot ab 7 Tagen (`fmOld`).
+- Projektleiter (au.js `auAnsDlg`): neue Antwort „Dem Kunden verrechnet“ → zusätzlich fmx was=verr (pl:true, offene Menge) → landet bei „Noch auszutragen“.
+- Wochenbericht: Liste „Fehlmaterial noch in epirent auszutragen“ in Block 1 (Bildschirm/Druck und Handy-PDF), Zeilen aus `fmWbRows`.
+- „Mit Projektleiter geklärt“ bleibt (Auftrag fällt aus „Fehlmaterial“), die Liste „Noch auszutragen“ gilt unabhängig davon.
+- Test `tests/fm_t.js`.

@@ -28,7 +28,7 @@ function wbData(){const M=wbMeet(),L0=pkAddD(M,-7),L1=M,N1=pkAddD(M,7),t0=pkDay(
   if(h&&pkShifted(p)&&(wbIn(pkDay(p.db||0),L0,L1)||wbIn(pkHDay(p),L0,L1)))dis.push({n:p.ev||"Packliste",d:"Herrichten verschoben "+wbWd(p.db)+" → "+wbWd(pkHDay(p))+(h.why?" · „"+h.why+"“":"")+(h.by?" · "+nmA(h,"by"):""),pk:p.id,t:pkHDay(p)});
   if(okRet&&p.de){const E=pkRets(p).filter(r=>r.closed&&r.art==="end"&&wbIn(r.closedT,L0,L1)).sort((a,b)=>b.closedT-a.closedT)[0];if(E){const x=Math.round((pkDay(E.closedT)-pkDay(p.de))/864e5);
    if(x)dis.push({n:p.ev||"Packliste",d:"Endretoure "+Math.abs(x)+(Math.abs(x)===1?" Tag ":" Tage ")+(x>0?"nach":"vor")+" Dispo-Ende ("+pkDM(p.de)+" → "+pkDM(E.closedT)+")",pk:p.id,t:E.closedT})}}});dis.sort((a,b)=>a.t-b.t)}
- let offen=null;if(okPk&&okRet&&typeof abgMissing==="function"){const G=abgMissing(),P=new Set();let n=0;G.forEach(g=>{n+=g.n;g.at.forEach(a=>P.add(a.p.id))});offen={n,a:P.size}}
+ let offen=null,aus=okPk&&okRet&&typeof fmWbRows==="function"?fmWbRows():[];if(okPk&&okRet&&typeof abgMissing==="function"){const G=abgMissing(),P=new Set();let n=0;G.forEach(g=>{n+=g.n;g.at.forEach(a=>P.add(a.p.id))});offen={n,a:P.size}}
  /* diese Woche */
  const days=[0,1,2,3,4].map(i=>{const t=pkAddD(M,i);return{t,h:[],z:[]}});const slot=t=>{const w=new Date(t).getDay();return w===6?pkAddD(t,-1):w===0?pkAddD(t,-2):t};
  if(okPk)pkZTasks().forEach(p=>{const s=pkSlot(p),dh=days.find(d=>d.t===s.t);if(dh&&wbIn(s.t,M,N1))dh.h.push({p,we:s.we})});
@@ -39,7 +39,7 @@ function wbData(){const M=wbMeet(),L0=pkAddD(M,-7),L1=M,N1=pkAddD(M,7),t0=pkDay(
  /* Punkte */
  const notes=WBN.filter(n=>!n.done).sort((a,b)=>(a.t||0)-(b.t||0)).map(n=>({...n,old:(n.t||0)<L0}));
  const doneN=WBN.filter(n=>n.done&&n.done.t>=pkAddD(M,-28)).sort((a,b)=>b.done.t-a.done.t);
- return{M,L0,N1,herr,zur,over,dis,offen,days,ach,notes,doneN}}
+ return{M,L0,N1,herr,zur,over,dis,offen,aus,days,ach,notes,doneN}}
 /* Offene Defekte, deren Artikel in Packlisten der Woche gebraucht werden – pro Artikel zusammengefasst (ab 1.83: zwei Meldungen zum selben Artikel = eine Zeile) */
 function wbDefNeed(a,b){const G={};defs.filter(d=>!d.done).forEach(d=>{const code=artCode(String(d.anr||"").split(/[-–]/)[0]),k=code?"c:"+code:"n:"+jvATok(d.art).join(" ");
   const g=G[k]=G[k]||{k,name:d.art,A:{code,toks:jvATok(d.art).filter(w=>!/^\d{1,2}$/.test(w)),label:d.art},n:0,urg:0,ids:[]};g.n++;if(d.urg)g.urg++;g.ids.push(d.id)});
@@ -53,7 +53,7 @@ function wbPaper(D,print){const kwL=pkKW(D.L0),kwN=pkKW(D.M),y=new Date(D.M).get
   '<section class="wbsec"><div class="wbbar"><b>1 · Letzte Woche</b><span>KW '+kwL+' · '+pkDM(D.L0)+'–'+pkDM(pkAddD(D.M,-1))+new Date(pkAddD(D.M,-1)).getFullYear()+'</span></div><div class="wbin">'+
    wbList("Hergerichtet",D.herr,false,"Nichts hergerichtet.")+wbList("Zurückgekommen",D.zur,false,"Nichts zurückgekommen.")+
    '<div class="wb2">'+wbList("Dispo abgelaufen",D.over,true,"Bei keinem Auftrag ist die Dispo abgelaufen.")+wbList("Dispodaten stimmten nicht",D.dis,false,"Keine Abweichungen.")+'</div>'+
-   (D.offen?'<div class="wboff">'+(D.offen.n?'<b>Noch offen insgesamt:</b> '+D.offen.n+' Stück Fehlmaterial bei '+D.offen.a+(D.offen.a===1?' Auftrag':' Aufträgen')+' (auch aus früheren Wochen)':'<b>Noch offen insgesamt:</b> kein Fehlmaterial')+'</div>':'')+'</div></section>'+
+   (D.offen?'<div class="wboff">'+(D.offen.n?'<b>Noch offen insgesamt:</b> '+D.offen.n+' Stück Fehlmaterial bei '+D.offen.a+(D.offen.a===1?' Auftrag':' Aufträgen')+' (auch aus früheren Wochen)':'<b>Noch offen insgesamt:</b> kein Fehlmaterial')+'</div>':'')+(D.aus&&D.aus.length?wbList("Fehlmaterial noch in epirent auszutragen",D.aus,true,""):"")+'</div></section>'+
   '<section class="wbsec"><div class="wbbar"><b>2 · Diese Woche</b><span>KW '+kwN+' · '+pkDM(D.M)+'–'+pkDM(pkAddD(D.M,4))+y+'</span></div><div class="wbin">'+
    '<table class="wbt"><thead><tr><th>Tag</th><th>Herrichten</th><th>Kommt zurück</th></tr></thead><tbody>'+D.days.map(d=>'<tr><td><b>'+wbWd(d.t)+'</b></td><td>'+day(d,"h")+'</td><td>'+day(d,"z")+'</td></tr>').join("")+
    '<tr class="wbsum"><td>Summe</td><td>'+nh+(nh===1?' Packliste':' Packlisten')+'</td><td>'+nz+(nz===1?' Rücklauf':' Rückläufe')+'</td></tr></tbody></table>'+
@@ -136,6 +136,7 @@ async function wbPdf(D){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb}=
  list("Dispo abgelaufen",D.over,true,"Bei keinem Auftrag ist die Dispo abgelaufen.");list("Dispodaten stimmten nicht",D.dis,false,"Keine Abweichungen.");
  if(D.offen){const a="Noch offen insgesamt: ",b=D.offen.n?D.offen.n+" Stück Fehlmaterial bei "+D.offen.a+(D.offen.a===1?" Auftrag":" Aufträgen")+" (auch aus früheren Wochen)":"kein Fehlmaterial";
   need(22);pg.drawRectangle({x:IX,y:y-18,width:IW,height:18,color:PINK});txt(a,IX+8,y-12.5,{size:9,bold:true,color:RED});txt(b,IX+8+tw(a,B,9),y-12.5,{size:9});y-=24}
+ if(D.aus&&D.aus.length)list("Fehlmaterial noch in epirent auszutragen",D.aus,true,"");
  secEnd();
  /* 2 · Diese Woche */
  secStart("2 · Diese Woche","KW "+pkKW(D.M)+" · "+pkDM(D.M)+"–"+pkDM(pkAddD(D.M,4))+y0);
