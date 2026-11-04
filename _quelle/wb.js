@@ -32,7 +32,7 @@ function wbData(){const M=wbMeet(),L0=pkAddD(M,-7),L1=M,N1=pkAddD(M,7),t0=pkDay(
  /* diese Woche */
  const days=[0,1,2,3,4].map(i=>{const t=pkAddD(M,i);return{t,h:[],z:[]}});const slot=t=>{const w=new Date(t).getDay();return w===6?pkAddD(t,-1):w===0?pkAddD(t,-2):t};
  if(okPk)pkZTasks().forEach(p=>{const s=pkSlot(p),dh=days.find(d=>d.t===s.t);if(dh&&wbIn(s.t,M,N1))dh.h.push({p,we:s.we})});
- if(okPk)packs.forEach(p=>{const s=pkSlot(p),dh=days.find(d=>d.t===s.t);if(dh&&wbIn(s.t,M,N1))dh.h.push({p,we:s.we});
+ if(okPk)packs.forEach(p=>{if(pkNoH(p))return;const s=pkSlot(p),dh=days.find(d=>d.t===s.t);if(dh&&wbIn(s.t,M,N1))dh.h.push({p,we:s.we});
   if(p.de&&pkState(p).k!=="done"){const de=pkDay(p.de),dz=days.find(d=>d.t===slot(de));if(dz&&wbIn(de,M,N1))dz.z.push({p,we:[ "So","","","","","","Sa"][new Date(de).getDay()]})}});
  const ach=[];if(okPk){wbDefNeed(M,N1).forEach(g=>ach.push(g.name+": "+g.n+(g.n===1?" Stück":" Stück")+" defekt"+(g.urg?(g.n>1?" (davon "+g.urg+" dringend)":" (dringend)"):"")+" – gebraucht "+g.use.map(u=>wbWd(u.t).split(" ")[0]+" für "+u.ev+" ("+u.q+(u.q===1?" Stück)":" Stück)")).join(", ")))}
  if(okRet&&typeof abgToCheck==="function"&&can("abg_p")){const n=abgToCheck().length;if(n)ach.push(n+(n===1?" Endretoure":" Endretouren")+" noch zu prüfen")}

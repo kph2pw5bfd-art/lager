@@ -12,20 +12,23 @@ async function pkLib(){if(pdfLib)return pdfLib;let err=null;for(const b of (wind
 async function pkRead(file){const lib=await pkLib();const buf=new Uint8Array(await file.arrayBuffer());const doc=await lib.getDocument({data:buf}).promise;const it=[];
  for(let p=1;p<=doc.numPages;p++){const tc=await (await doc.getPage(p)).getTextContent();tc.items.forEach(i=>{if(i&&typeof i.str==="string")it.push({p,x:i.transform[4],y:i.transform[5],s:i.str})})}
  try{doc.destroy()}catch(e){}return pkParse(it)}
-function packSub(){db.collection("pack").onSnapshot(s=>{packs=s.docs.map(d=>({id:d.id,...d.data()}));draw()});db.collection("packh").onSnapshot(s=>{packh={};s.docs.forEach(d=>packh[d.id]=d.data());draw()});db.collection("pked").onSnapshot(s=>{pked={};s.docs.forEach(d=>pked[d.id]=d.data());if(typeof view!=="undefined"&&/^pack/.test(view))draw()});if(typeof jvErinSub==="function")jvErinSub()}
+function packSub(){db.collection("pack").onSnapshot(s=>{packs=s.docs.map(d=>({id:d.id,...d.data()}));pkArtFix();draw()});db.collection("packh").onSnapshot(s=>{packh={};s.docs.forEach(d=>packh[d.id]=d.data());draw()});db.collection("pked").onSnapshot(s=>{pked={};s.docs.forEach(d=>pked[d.id]=d.data());if(typeof view!=="undefined"&&/^pack/.test(view))draw()});if(typeof jvErinSub==="function")jvErinSub()}
 const pkDig=s=>String(s||"").replace(/\D/g,"");
 const pkDay=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()};
-function pkRets(p){const o=pkDig(p.ord);return o?rets.filter(r=>pkDig(r.ord)===o):[]}
+function pkRets(p){const r=pkRoot(p),os=new Set([r].concat(pkVerlKids(r)).map(x=>pkDig(x.ord)).filter(Boolean));return os.size?rets.filter(x=>os.has(pkDig(x.ord))):[]}
 /* Herricht-Tag: Dispo-Beginn oder verschoben (packh.hd = {d:"JJJJ-MM-TT", why, by, t}) */
 const pkYmd=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const pkFromYmd=s=>{const m=String(s||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?new Date(+m[1],+m[2]-1,+m[3]).getTime():0};
 function pkHd(p){if(p&&p._z){const h=(packh[p.id]||{})["zd_"+pkZK(p._z)];return h&&pkFromYmd(h.d)?h:null}const h=(packh[p.id]||{}).hd;return h&&pkFromYmd(h.d)?h:null}
-function pkHDay(p){if(p&&p._z){const z=pkZOf(p._p,p._z);return z?pkZDay(p._p,z):0}const h=pkHd(p);return h?pkFromYmd(h.d):(p.db?pkDay(p.db):0)}
+function pkHDay(p){if(p&&p._z){const z=pkZOf(p._p,p._z);return z?pkZDay(p._p,z):0}if(pkNoH(p))return 0;const h=pkHd(p);return h?pkFromYmd(h.d):(p.db?pkDay(p.db):0)}
 const pkShifted=p=>!(p&&p._z)&&!!pkHd(p)&&pkHDay(p)!==(p.db?pkDay(p.db):0);
 const pkWd=t=>t?new Date(t).toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit"}):"–";
 function pkState(p){const t0=pkDay(Date.now()),R=pkRets(p),done=R.some(r=>r.closed&&r.art!=="teil"),hd=pkHDay(p);
  if(done)return{k:"done",l:"Retoure abgeschlossen",c:"ok"};
  const kl=(packh[p.id]||{}).klar;if(kl&&kl.t)return{k:"done",l:"Mit Projektleiter geklärt",c:"ok"};
+ if(pkNoH(p)){if(p.art==="verl"){const o=pkRoot(p);if(o!==p){const so=pkState(o);return so.k==="done"?so:{k:"out",l:"Verlängerung",c:"verl"}}}
+  if(p.de&&pkDay(p.de)<t0)return{k:"over",l:R.length?"Dispo abgelaufen · Retourschein offen":"Dispo abgelaufen",c:"warn"};if(p.de&&pkDay(p.de)===t0)return{k:"back",l:"Heute zurück",c:"hot"};
+  return{k:"out",l:p.art==="bst"?"Von Baustelle":"Verlängerung",c:p.art}}
  if(p.de&&pkDay(p.de)<t0)return{k:"over",l:R.length?"Dispo abgelaufen · Retourschein offen":"Dispo abgelaufen",c:"warn"};
  if(hd&&hd===t0){const g=pkProg(p);return g.fin?{k:"herr",l:"Hergerichtet",c:"ok"}:{k:"herr",l:g.d?"Herrichten "+g.d+"/"+g.n:"Heute herrichten",c:"hot"}}
  if(p.de&&pkDay(p.de)===t0)return{k:"back",l:"Heute zurück",c:"hot"};
@@ -40,7 +43,7 @@ function pkGroups(){const G={over:[],late:[],herr:[],back:[],out:[],next:[],done
 function pkHint(p){const s=pkState(p),h=pkHd(p),out=[];
  if(s.k==="late")out.push('<div class="pkhint '+(s.c==="part"?'part">◐ Teilweise hergerichtet':'warn">⚠ Nicht hergerichtet')+' – '+(pkShifted(p)?'verschoben auf '+pkWd(pkHDay(p))+', ':'')+'Dispo-Beginn war '+pkWd(p.db)+'</div>');
  else if(pkShifted(p))out.push('<div class="pkhint">↻ Herrichten verschoben auf '+pkWd(pkHDay(p))+' (Dispo-Beginn '+pkWd(p.db)+')'+(h.why?' – '+esc(h.why):'')+(h.by?' · '+esc(nm(h.by)):'')+'</div>');
- const H=packh[p.id]||{};
+ if(!p._z)out.push(...pkArtHints(p));const H=packh[p.id]||{};
  if(H.klar&&H.klar.t)out.push('<div class="pkhint">✓ Mit Projektleiter geklärt · '+esc(nmA(H.klar,"by"))+', '+fmt(H.klar.t).slice(0,6)+'</div>');
  Object.keys(H).filter(k=>/^n_/.test(k)&&H[k]&&H[k].txt).sort((a,b)=>H[a].t-H[b].t).forEach(k=>out.push('<div class="pkhint">✎ '+esc(H[k].txt)+' · '+esc(nmA(H[k],"by"))+', '+fmt(H[k].t).slice(0,6)+'</div>'));
  if(!p._z&&(p.chg||[]).length){const c=p.chg.slice().sort((a,b)=>b.t-a.t)[0];if(!(H.fin&&H.fin.t>c.t))out.push('<div class="pkhint warn">↻ Packschein geändert '+fmt(c.t).slice(0,6)+' ('+esc(pkChgLbl(c))+') – Änderungen prüfen</div>')}
@@ -79,7 +82,7 @@ async function pkUpload(files){for(const f of files){let P;const b=$("#pkup");if
   try{P=await pkRead(f)}catch(e){console.warn("Packliste",e);if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}
    errBox(/Packliste|Auftragsnummer|Positionen/.test(String(e&&e.message))?"„"+f.name+"“ sieht nicht wie eine epirent-Packliste aus.":"Die PDF konnte nicht gelesen werden ("+String(e&&e.message||e).slice(0,80)+"). Bitte Internetverbindung prüfen und nochmal versuchen.");continue}
   if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}
-  pkUpHi="";const id=P.ps||("A"+pkDig(P.ord)),cur=packs.find(x=>x.id===id||(P.ps&&String(x.ps)===String(P.ps))),main=cur?null:pkMainFor(P,id);
+  pkUpHi="";pkUpArt=null;const id=P.ps||("A"+pkDig(P.ord)),cur=packs.find(x=>x.id===id||(P.ps&&String(x.ps)===String(P.ps))),main=cur?null:pkMainFor(P,id);
   /* 1.89: gleicher Auftrag schon da -> Vergleich: geändert (ersetzt) / Zusatz / eigene Packliste (pkchg.js) */
   let ok;if(cur||main){const r=await pkChgDlg(P,cur||main,!!cur);if(!r)continue;
    if(r.mode==="rep"){await pkReplace(cur||main,P,r.inc||[]);await pkHiUp(cur||main,null);continue}if(r.mode==="repz"){await pkReplaceZ(main,r.zps,P);await pkHiUp(main,P.ps);continue}ok=r.mode==="zus"?"zus":true}
@@ -90,7 +93,8 @@ async function pkUpload(files){for(const f of files){let P;const b=$("#pkup");if
     await pkHSet(main,{["zd_"+zk]:{d:day,by:me,t:Date.now()},["zf_"+zk]:{t:0},...xp});
  await pkHiUp(main,P.ps);
     toast("Zusatz angehängt – herrichten "+pkWd(pkFromYmd(day))+(xn?" · "+xn+(xn===1?" Position":" Positionen")+" mit zusätzlich Mitgegebenem verrechnet":""),1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}continue}
-  try{await db.doc("pack/"+id).set({...P,zus:[],by:me,t:Date.now()});await pkHiUp({id},null);toast("Packliste gespeichert",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}}}
+  try{const ua=pkUpArt;pkUpArt=null;await db.doc("pack/"+id).set({...P,zus:[],by:me,t:Date.now(),...(ua?{art:ua.art,von:ua.von||"",artBy:me,artT:Date.now()}:{})});await pkHiUp({id},null);
+   toast(ua?(ua.art==="bst"?"Packliste gespeichert – nicht herrichten (von Baustelle)":"Verlängerung gespeichert – nicht herrichten"):"Packliste gespeichert",1);if(ua&&ua.art==="verl"&&ua.von)await pkVerlExtra(P,ua.von)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen. Hast du das Recht „Packlisten hochladen“?")}}}
 /* Gibt es schon eine Packliste mit derselben Auftragsnummer (anderer Packschein)? -> Zusatz. Bereits angehängter Zusatz mit gleicher Nummer -> derselbe Haupt-Packschein */
 function pkMainFor(P,id){const o=pkDig(P.ord);if(!o||packs.some(x=>x.id===id||String(x.ps)===String(P.ps)))return null;
  const z=packs.find(x=>(x.zus||[]).some(q=>String(q.ps)===String(P.ps)));if(z)return z;
@@ -102,9 +106,9 @@ function pkConfirm(P,main){return new Promise(res=>{const id=P.ps||("A"+pkDig(P.
   '<p style="margin:8px 0">'+pkPosN(P.pos.length)+(f?', davon <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</p>'+
   (old?'<p class="pkold">Diese Packliste ist schon da (hochgeladen '+fmt(old.t)+' von '+esc(nm(old.by))+'). Beim Speichern wird sie ersetzt.</p>':'')+
   (main?'<p class="pkzinfo">Zum Auftrag '+esc(P.ord)+' gibt es schon die Packliste <b>'+esc(main.ev||"")+'</b> (Packschein '+esc(main.ps||main.id)+'). '+(again?'Dieser Zusatz ist dort schon angehängt und wird ersetzt. ':'Der Zusatz wird unten angehängt. ')+'Den Herricht-Tag für den Zusatz fragt die App gleich danach.'+(mf&&mf.t?' Die Packliste bleibt hergerichtet – der Zusatz wird für sich hergerichtet.':'')+'</p>':'')+
-  pkHiField()+(main?'<button class="btn" id="pkzok" type="button">Als Zusatz anhängen</button><div style="height:8px"></div><div class="row"><button class="btn ghost" id="pkcn">Abbrechen</button><button class="btn ghost" id="pkok">Als eigene Packliste</button></div></div>'
+  (main?'':'<div id="pkart"></div>')+pkHiField()+(main?'<button class="btn" id="pkzok" type="button">Als Zusatz anhängen</button><div style="height:8px"></div><div class="row"><button class="btn ghost" id="pkcn">Abbrechen</button><button class="btn ghost" id="pkok">Als eigene Packliste</button></div></div>'
    :'<div class="row"><button class="btn ghost" id="pkcn">Abbrechen</button><button class="btn" id="pkok">'+(old?'Ersetzen':'Speichern')+'</button></div></div>');
- document.body.appendChild(o);pkHiFieldBind(o);o.querySelector("#pkcn").onclick=()=>{o.remove();res(false)};o.querySelector("#pkok").onclick=()=>{o.remove();res(true)};if(o.querySelector("#pkzok"))o.querySelector("#pkzok").onclick=()=>{o.remove();res("zus")}})}
+ document.body.appendChild(o);pkHiFieldBind(o);const ast=main?null:pkArtInit(P,o.querySelector("#pkart"));o.querySelector("#pkcn").onclick=()=>{o.remove();res(false)};o.querySelector("#pkok").onclick=()=>{if(ast){if(ast.art==="verl"&&!ast.von)return errBox("Bitte den Auftrag wählen, der verlängert wird.");pkUpArt=ast.art==="norm"?null:{art:ast.art,von:ast.von||""}}o.remove();res(true)};if(o.querySelector("#pkzok"))o.querySelector("#pkzok").onclick=()=>{o.remove();res("zus")}})}
 /* ===== Herrichten (ab 1.58) =====
    Stand pro Packliste in docs 'packh' (id = Packlisten-id), damit jeder mit "Packlisten – Sehen" herrichten kann.
    Pro Position ein eigenes Feld h_<Pos> = {ok, q (vorhanden), alt:[{n,t,a}], fm ("lager"|"miete"), by, t} -> doc_update führt Felder zusammen,
@@ -202,7 +206,7 @@ function pkRowsHtml(p,rows){const D=rows.filter(r=>r.dev);let out=D.length?'<div
   if(!r.dev){const gl=pkGrp(r.x);if(gl!==lg||z!==lz)out+='<div class="pkg">'+esc(gl)+'</div>';lg=gl;lz=z;out+=pkRowHtml(p,r,"")}
   if(last){if(rows.filter(q=>q.z===z).every(q=>q.dev))out+='<div class="mute" style="padding:8px 0;font-size:13px">Alle Positionen stehen oben bei „Abweichungen“.</div>';out+=pkZFoot(p,z);lg=null}});
  return out}
-function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack";return packView()}
+function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack";return packView()}if(pkNoH(p))return pkNoHView(p);
  const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&document.querySelector(".ov"))return;
  $("#t").textContent="Packliste";const s=pkState(p),R=pkRets(p),pr=pkProg(p),H=pr.H,K=pkKeys(p),fin=pr.fin;
  const pct=pr.n?Math.round(pr.d*100/pr.n):0;
@@ -210,7 +214,7 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
  const IT=pkItems(p),rows0=pkSortIdx(p).map(i=>{const x=IT[i].x,h=H[K[i]],st=pkPS(x,h),l55=pkL55(x,h);return{x,i,h,st,z:IT[i].z,l55,dev:!l55&&pkDevRow(x,h,st)}}),rows=rows0.filter(r=>!r.l55&&(pkHf==="alle"||r.st.s!=="ok")),r55=pkHf==="alle"?rows0.filter(r=>r.l55):[];
  $("#app").innerHTML=pkHiBox(p)+'<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;min-width:0;font-size:18px">'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span></div>'+
   '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+
-  pkOffHint()+pkWhoHint(p.id)+'<div class="pkhday"><span>Herrichten: <b>'+pkWd(pkHDay(p))+'</b>'+(pkShifted(p)?' <span class="mute">(verschoben)</span>':'')+'</span>'+(fin?'':'<button class="btn ghost s" id="pkmv" type="button">Verschieben</button>')+'</div>'+pkHint(p)+pkHiAddLink(p)+
+  pkOffHint()+pkWhoHint(p.id)+'<div class="pkhday"><span>Herrichten: <b>'+pkWd(pkHDay(p))+'</b>'+(pkShifted(p)?' <span class="mute">(verschoben)</span>':'')+'</span>'+(fin?'':'<button class="btn ghost s" id="pkmv" type="button">Verschieben</button>')+'</div>'+pkHint(p)+pkHiAddLink(p)+pkArtLink(p)+
   '<details class="pkmore"><summary>Alle Angaben</summary><div class="pkkv"><span>Packschein</span><b>'+esc(p.ps||"–")+'</b>'+(p.sa?'<span>Selbstabholer</span><b>'+esc(p.sa)+'</b>':'')+(p.pk?'<span>Packen</span><b>'+pkD(p.pk)+'</b>':'')+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+(p.eb?'<span>Event</span><b>'+pkD(p.eb)+' – '+pkD(p.ee)+'</b>':'')+'</div><div class="mute" style="font-size:13px;margin-top:6px">Hochgeladen '+fmt(p.t)+' von '+esc(nm(p.by))+'</div></details>'+
   (R.length&&can("ret_s")?R.map(r=>'<button class="btn ghost" data-pkr="'+esc(r.id)+'" style="margin-top:8px">Retourschein öffnen'+(r.closed?(r.art==="teil"?' (Teilretoure)':r.art==="end"?' (Endretoure)':' (abgeschlossen)'):' (offen)')+'</button>').join(""):'')+'</div>'+
   (typeof pkChgCard==="function"?pkChgCard(p):'')+(typeof abgPkCard==="function"?abgPkCard(p):'')+'<div class="card pkprog'+(fin?' fin':'')+'" style="cursor:default"><div class="row" style="align-items:baseline"><b style="flex:1;font-size:17px">'+(fin?'Hergerichtet':pr.d+' von '+pr.n+' Positionen')+'</b>'+(pr.dev?'<span class="pkdev">'+pr.dev+' mit Abweichung</span>':'')+'</div>'+
@@ -375,17 +379,17 @@ const pkAddD=(t,n)=>{const d=new Date(t);d.setDate(d.getDate()+n);return d.getTi
 function pkKW(t){const d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()+3-(d.getDay()+6)%7);const w1=new Date(d.getFullYear(),0,4);return 1+Math.round(((d-w1)/864e5-3+(w1.getDay()+6)%7)/7)}
 const pkDM=t=>{const d=new Date(t);return d.getDate()+"."+(d.getMonth()+1)+"."};
 /* Fach-Tag: Herricht-Tag, Wochenende auf Freitag davor */
-function pkSlot(p){const h=pkHDay(p);if(!h)return{t:0,we:""};const w=new Date(h).getDay();return w===6?{t:pkAddD(h,-1),we:"Sa"}:w===0?{t:pkAddD(h,-2),we:"So"}:{t:h,we:""}}
+function pkSlot(p){const h=pkNoH(p)?(p.db?pkDay(p.db):0):pkHDay(p);if(!h)return{t:0,we:""};const w=new Date(h).getDay();return w===6?{t:pkAddD(h,-1),we:"Sa"}:w===0?{t:pkAddD(h,-2),we:"So"}:{t:h,we:""}}
 function pkOvData(){const t0=pkDay(Date.now()),m0=pkMon(t0),m1=pkAddD(m0,7),m2=pkAddD(m0,14);
  const L=packs.filter(p=>p.db||pkHd(p)).filter(p=>pkState(p).k!=="done").concat(pkZTasks()).map(p=>({p,s:pkSlot(p),g:pkProg(p)}));
- const late=L.filter(o=>pkHDay(o.p)<t0&&!o.g.fin).sort((a,b)=>pkHDay(a.p)-pkHDay(b.p));
+ const late=L.filter(o=>!pkNoH(o.p)&&pkHDay(o.p)<t0&&!o.g.fin).sort((a,b)=>pkHDay(a.p)-pkHDay(b.p));
  const day=(m,i)=>{const t=pkAddD(m,i);return{t,items:L.filter(o=>o.s.t===t).sort((a,b)=>(a.g.fin?1:0)-(b.g.fin?1:0)||(a.p.db||0)-(b.p.db||0))}};
  const w0=[0,1,2,3,4].map(i=>day(m0,i)),w1=[0,1,2,3,4].map(i=>day(m1,i));
  const later=L.filter(o=>o.s.t>=m2).sort((a,b)=>a.s.t-b.s.t);
  const kw=[0,1,2,3].map(k=>{const a=pkAddD(m2,7*k),b=pkAddD(a,7);return{lab:"KW "+pkKW(a)+" · "+pkDM(a)+"–"+pkDM(pkAddD(a,4)),items:later.filter(o=>o.s.t>=a&&o.s.t<b)}});
  const after=pkAddD(m2,28);kw.push({lab:"Danach",items:later.filter(o=>o.s.t>=after)});
  return{t0,m0,m1,m2,late,w0,w1,kw}}
-const pkOpenN=a=>a.filter(o=>!o.g.fin).length;
+const pkOpenN=a=>a.filter(o=>!o.g.fin&&!pkNoH(o.p)).length;
 function pkBadges(o,withShift){const p=o.p,f=pkF(p).length,b=[];
  if(f&&!o.g.fin)b.push('<span class="pkb fr">'+f+' Fremd</span>');
  if(p._z)b.push('<span class="pkb zu">Zusatz</span>');
@@ -395,18 +399,18 @@ function pkBadges(o,withShift){const p=o.p,f=pkF(p).length,b=[];
 const pkTime=p=>!p._z&&p.db&&pkHDay(p)===pkDay(p.db)&&(new Date(p.db).getHours()||new Date(p.db).getMinutes())?new Date(p.db).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"}):"";
 function pkBar(g){return '<div class="pkmb"><div class="pkbar"><i style="width:'+(g.n?Math.round(g.d*100/g.n):0)+'%"></i></div><b>'+g.d+'/'+g.n+'</b></div>'}
 /* Karte (Handy) */
-function pkCard(o){const p=o.p,g=o.g;
+function pkCard(o){const p=o.p,g=o.g;if(pkNoH(p))return pkNoHCard(p,false);
  if(g.fin)return '<button class="pkcard fin" type="button" data-pk="'+esc(p.id)+'"><b>'+esc(p.ev||p.ord)+'</b><span class="pkok">Hergerichtet ✓</span></button>';
  return '<button class="pkcard" type="button" data-pk="'+esc(p.id)+'"><span class="pkct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+(pkTime(p)?'<small>'+pkTime(p)+'</small>':'')+'</span><span class="pkcs">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</span>'+pkWorkTag(p.id,"span")+pkBar(g)+pkBadges(o,true)+'</button>'}
 /* Zeile (breit) */
-function pkLine(o,lab){const p=o.p,g=o.g;
+function pkLine(o,lab){const p=o.p,g=o.g;if(pkNoH(p))return pkNoHCard(p,true,lab);
  return '<button class="pkline'+(g.fin?' fin':'')+'" type="button" data-pk="'+esc(p.id)+'"><span class="pkl1">'+esc(lab||pkTime(p)||"")+'</span><span class="pkl2"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</small>'+(g.fin?'':pkWorkTag(p.id,"span")+pkBadges(o,true))+'</span><span class="pkl3">'+(g.fin?'<span class="pkok">✓</span>':g.n?g.d+'/'+g.n:'')+'</span></button>'}
 function pkLateHtml(D,wide){if(!D.late.length)return"";
  return '<section class="pklate"><h3>Nicht hergerichtet <span>'+D.late.length+'</span></h3>'+D.late.map(o=>{const part=o.g.d>0;
   return '<button class="pklc" type="button" data-pk="'+esc(o.p.id)+'"><span class="pkct"><b>'+esc(o.p.ev||o.p.ord)+'</b><small class="'+(part?'part':'warn')+'">'+(part?'Teilweise hergerichtet':'Nicht hergerichtet')+'</small></span><span class="pkcs">seit '+pkWd(pkHDay(o.p))+' · Auftrag '+esc(o.p.ord||"–")+'</span>'+pkWorkTag(o.p.id,"span")+(part?pkBar(o.g):'')+'</button>'}).join("")+'</section>'}
 function pkDayLabel(t,t0){return PK_WD[new Date(t).getDay()]+" "+pkDM(t)+(t===t0?" · Heute":"")}
 /* vergangener Tag: zusammengeklappt, antippen klappt auf */
-function pkPastSum(d){const n=d.items.length,f=d.items.filter(o=>o.g.fin).length,o2=n-f;
+function pkPastSum(d){const I=d.items.filter(o=>!pkNoH(o.p)),n=I.length,f=I.filter(o=>o.g.fin).length,o2=n-f;if(!n&&d.items.length)return '<span class="mute">nichts herzurichten</span>';
  return n?(f?'<span class="ok">'+f+' hergerichtet ✓</span>':'')+(f&&o2?' · ':'')+(o2?'<b class="warn">'+o2+' nicht fertig</b>':''):'<span class="mute">leer</span>'}
 function packOverView(){$("#t").textContent="Übersicht";const D=pkOvData(),wide=window.innerWidth>=900;pkWideLast=wide;document.body.classList.toggle("pkovw",wide);
  const top='<div class="pkovtop">'+pkUpHtml()+'<button class="btn ghost" id="pkall" type="button">Alle Packlisten</button></div>';
@@ -440,7 +444,7 @@ function pkWorkTag(id,el){const L=pkWorkers(id),P=packs.find(x=>x.id===id),hi=P&
  const t=(hi?'<span class="tag pkhit">ℹ Info</span>':'')+(hi&&L.length?' ':'')+(L.length?'<span class="tag pkwork">Richtet her · '+esc(L.join(", "))+'</span>':'');return el?'<'+el+' class="pkworkw">'+t+'</'+el+'>':' '+t}
 function pkWhoHint(id){const L=pkWorkers(id,true);return L.length?'<div class="rwho"><span>'+esc(L.join(", "))+(L.length>1?" richten":" richtet")+' gerade auch diese Packliste her.</span></div>':""}
 function pkEdSet(id,v){const ref=db.doc("pked/"+id),d={["ed_"+me]:v,...(v&&tabOn()&&TAB.act?{["edn_"+me]:TAB.act.name}:{})};return ref.update(d).catch(x=>{if(/nicht gefunden/i.test(String(x&&x.message||x)))return ref.set(d)}).catch(()=>{})}
-function pkHb(){const P=view==="packopen"&&document.visibilityState==="visible"&&packs.find(x=>x.id===curPack),id=P&&!pkItems(P).every((o,i)=>pkRowFin(P,i))?P.id:null;
+function pkHb(){const P=view==="packopen"&&document.visibilityState==="visible"&&packs.find(x=>x.id===curPack),id=P&&!pkNoH(P)&&!pkItems(P).every((o,i)=>pkRowFin(P,i))?P.id:null;
  if(pkHbId&&pkHbId!==id){pkEdSet(pkHbId,0);pkHbLast=0}
  if(id&&(id!==pkHbId||Date.now()-pkHbLast>30000)){pkHbLast=Date.now();pkEdSet(id,Date.now())}
  pkHbId=id}
@@ -473,3 +477,88 @@ function pkHiDlg(P,k){const e=k?pkH(P)[k]:null,o=document.createElement("div");o
  const x=o.querySelector("#pkhix");if(x)x.onclick=()=>ask("Info löschen?",async()=>{o.remove();await pkHSet(P,{[k]:null});toast("Info gelöscht",1);if(view==="packopen")packOpenView()})}
 document.addEventListener("click",ev=>{if(typeof view==="undefined"||view!=="packopen")return;const b=ev.target.closest&&ev.target.closest("#pkhiadd,#pkhiadd2,[data-hied]");if(!b||!can("pk_b"))return;
  const P=packs.find(x=>x.id===curPack);if(!P)return;ev.stopPropagation();pkHiDlg(P,b.dataset.hied||null)});
+
+/* ===== Packscheine ohne Herrichten (1.118) =====
+   pack.art = "bst" (Material kommt direkt von einer anderen Baustelle) | "verl" (Verlängerung eines laufenden Auftrags, Kopie mit neuer Auftragsnummer) | leer (normal).
+   pack.von = Quell-Auftrag (bst, freiwillig) bzw. verlängerter Auftrag (verl, Pflicht; immer auf das Original zurückgeführt), artBy/artT = wer/wann eingestellt.
+   Einstellen nur mit Recht pk_b (Hochladen bzw. „Art ändern“).
+   Wirkung: kein Herricht-Tag (pkHDay 0) → nie „Heute herrichten“/„Nicht hergerichtet“, auf der Wand als gestrichelte Karte am Dispo-Beginn.
+   Verlängerung: das Original bekommt das späteste Dispo-Ende (_de0 = ursprüngliches), Retourscheine beider Auftragsnummern zählen beim Original (pkRets),
+   der Verlängerungs-Datensatz selbst hat keinen eigenen Abgleich; mehr Material als im Original → automatisch Zusatz am Original (pkVerlExtra).
+   Von Baustelle: zählt als draußen (laut Packschein); beim Quell-Auftrag zählt dasselbe Material als zurück („weitergegeben“, abgBal). */
+let pkUpArt=null;
+const pkNoH=p=>!!p&&!p._z&&(p.art==="bst"||p.art==="verl");
+function pkRoot(p){let x=p,i=0;while(x&&x.art==="verl"&&x.von&&i<6){const n=packs.find(q=>q.id===x.von);if(!n||n===x)break;x=n;i++}return x||p}
+function pkVerlKids(r){return packs.filter(x=>x!==r&&x.art==="verl"&&pkRoot(x)===r)}
+function pkArtFix(){packs.forEach(p=>{const k=pkVerlKids(p);if(!k.length||p.art==="verl")return;const e=Math.max(...k.map(x=>x.de||0));if(e>(p.de||0)){p._de0=p.de;p.de=e}p._verl=k.map(x=>x.id)})}
+const pkArtKey=x=>abgKey(artCode(x.a),pkName(x));
+function pkArtAgg(L){const m={};(L||[]).forEach(x=>{const k=pkArtKey(x);m[k]=m[k]||{x,n:0};m[k].n+=+x.n||0});return m}
+function pkArtCands(P){const own=pkArtAgg(P.pos),ks=Object.keys(own),evn=s=>String(s||"").trim().toLowerCase();
+ return packs.filter(p=>!p._z&&p.art!=="verl"&&p.id!==(P.ps||"")&&pkState(p).k!=="done").map(p=>{const a=pkArtAgg(pkPosAll(p));const same=ks.filter(k=>a[k]).length;
+  return{p,ov:ks.length?same/ks.length:0,dd:p.de&&P.db?Math.round((pkDay(P.db)-pkDay(p.de))/864e5):99,sameEv:!!P.ev&&evn(p.ev)===evn(P.ev),samePl:!!P.pl&&shortName(p.pl)===shortName(P.pl)}})}
+function pkVerlSug(P){const c=pkArtCands(P).filter(c=>c.dd>=-1&&c.dd<=2&&c.sameEv&&c.ov>=0.6).sort((a,b)=>(b.sameEv*2+b.samePl+b.ov)-(a.sameEv*2+a.samePl+a.ov));return c[0]||null}
+function pkBstSug(P){return pkArtCands(P).filter(c=>c.ov>0&&c.dd>=-2&&c.dd<=1).sort((a,b)=>b.ov-a.ov||Math.abs(a.dd)-Math.abs(b.dd)).slice(0,4)}
+/* Auswahl „Was ist das?“ (Hochladen und „Art ändern“) – st = {art:"norm"|"bst"|"verl", von, q, sug} */
+function pkArtInit(P,box,cur){if(!box)return null;const sug=pkVerlSug(P),st={art:cur?cur.art||"norm":sug?"verl":"norm",von:cur?cur.von||"":sug?sug.p.id:"",q:"",sug,pick:false};
+ const rowP=(p,on,extra)=>'<button type="button" class="pkarow'+(on?' on':'')+'" data-avon="'+esc(p.id)+'"><span><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>Auftrag '+esc(p.ord||"–")+' · bis '+pkWd(p.de)+(extra?' · '+extra:'')+'</small></span>'+(on?'<span class="pkachk" aria-hidden="true">✓</span>':'')+'</button>';
+ const draw=()=>{const vp=st.von&&packs.find(x=>x.id===st.von),opt=(k,t,s,inner)=>'<div class="pkaopt'+(st.art===k?' on '+k:'')+'"><label><input type="radio" name="pkart" value="'+k+'"'+(st.art===k?' checked':'')+'><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+'</span></label>'+(st.art===k&&inner?inner:'')+'</div>';
+  const list=k=>{const all=pkArtCands(P);let L;if(st.q){const q=st.q.toLowerCase();L=all.filter(c=>[c.p.ev,c.p.ord,c.p.pl].join(" ").toLowerCase().includes(q)).slice(0,8)}else L=k==="bst"?pkBstSug(P):all.sort((a,b)=>(b.sameEv*2+b.samePl+b.ov)-(a.sameEv*2+a.samePl+a.ov)).slice(0,4);
+   return '<div class="pkapick">'+(vp&&!st.pick?rowP(vp,true)+'<button type="button" class="lnk" data-apick="1">'+(k==="verl"?'Anderen Auftrag wählen':'Ändern')+'</button>':
+    '<input type="search" class="pkaq" placeholder="Veranstaltung oder Auftrag suchen" value="'+esc(st.q)+'" aria-label="Auftrag suchen">'+(L.length?L.map(c=>rowP(c.p,c.p.id===st.von,c.ov?Math.round(c.ov*100)+' % gleiche Artikel':'')).join(""):'<div class="mute" style="font-size:13px">Keine passenden laufenden Aufträge.</div>')+
+    (k==="bst"?'<button type="button" class="pkarow'+(!st.von?' on':'')+'" data-avon=""><span><small>Weiß ich nicht / nicht in der App</small></span></button>':'')+(k==="bst"&&!st.q?'<small class="mute">Vorschläge: Aufträge, deren Dispo um den Dispo-Beginn endet und die gleiche Artikel haben.</small>':''))+'</div>'};
+  box.innerHTML=(st.sug&&!cur?'<div class="pkasug"><b>Sieht aus wie eine Verlängerung</b> von <b>'+esc(st.sug.p.ev||"")+' · Auftrag '+esc(st.sug.p.ord||"–")+'</b>: '+[st.sug.sameEv?'gleiche Veranstaltung':'',st.sug.samePl?'gleicher Projektleiter':'',st.sug.dd===0?'beginnt am Dispo-Ende':'beginnt rund um das Dispo-Ende ('+pkWd(st.sug.p.de)+')',Math.round(st.sug.ov*100)+' % gleiche Artikel'].filter(Boolean).join(', ')+'.</div>':'')+
+   '<div class="pkah">Was ist das?</div>'+opt("norm","Normal herrichten","Kommt auf die Wand, wird hergerichtet.")+
+   opt("bst","Kommt von einer anderen Baustelle","Nicht herrichten – das Material geht direkt von Baustelle zu Baustelle.",'<div class="pkasub">Von welcher? <span>(freiwillig – dort zählt es dann als „weitergegeben“)</span></div>'+list("bst"))+
+   opt("verl","Verlängerung eines laufenden Auftrags","Material ist schon draußen. Nicht herrichten, die Dispo läuft weiter.",list("verl"));
+  box.querySelectorAll('input[name="pkart"]').forEach(r=>r.onchange=()=>{st.art=r.value;st.pick=false;st.q="";if(st.art==="norm")st.von="";else if(st.art==="verl"&&!st.von&&st.sug)st.von=st.sug.p.id;else if(st.art==="verl"){const vp=st.von&&packs.find(x=>x.id===st.von);if(vp&&vp.art==="verl")st.von=pkRoot(vp).id}draw()});
+  box.querySelectorAll("[data-avon]").forEach(b=>b.onclick=()=>{st.von=b.dataset.avon;st.pick=false;st.q="";draw()});
+  box.querySelectorAll("[data-apick]").forEach(b=>b.onclick=()=>{st.pick=true;draw()});
+  const q=box.querySelector(".pkaq");if(q)q.oninput=()=>{st.q=q.value;const pos=q.selectionStart;draw();const n=box.querySelector(".pkaq");if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}};
+ draw();return st}
+const pkArtWho=p=>p.artBy?' · '+esc(nm(p.artBy))+', '+fmt(p.artT||0).slice(0,6):'';
+function pkArtLink(p){return can("pk_b")&&!p._z?'<button class="lnk" type="button" data-artch="'+esc(p.id)+'" style="display:block;padding:4px 0 0">Art ändern (nicht herrichten, Verlängerung …)</button>':""}
+function pkArtHints(p){const out=[];if(p._verl&&p._verl.length){const k=p._verl.map(id=>packs.find(x=>x.id===id)).filter(Boolean).sort((a,b)=>(a.de||0)-(b.de||0));
+  out.push('<div class="pkhint verl">↻ Verlängert bis '+pkWd(p.de)+(p._de0?' (ursprünglich '+pkWd(p._de0)+')':'')+' durch '+k.map(x=>'<a href="#" data-pkgo="'+esc(x.id)+'">Auftrag '+esc(x.ord||x.ps||"")+'</a>').join(", ")+'</div>')}
+ packs.filter(x=>x.art==="bst"&&x.von===p.id).forEach(x=>out.push('<div class="pkhint bst">➜ Material geht direkt weiter an <a href="#" data-pkgo="'+esc(x.id)+'">'+esc(x.ev||"")+' (Auftrag '+esc(x.ord||"–")+')</a> – zählt hier als zurück</div>'));
+ return out}
+function pkNoHTxt(p){if(p.art==="bst"){const s=p.von&&packs.find(x=>x.id===p.von);return s?'kommt von '+esc(s.ev||"")+' · nicht herrichten':'kommt von einer anderen Baustelle · nicht herrichten'}
+ const r=pkRoot(p);return r!==p?'Verlängerung von '+esc(r.ev||"")+' · läuft bis '+pkWd(r.de):'Verlängerung · nichts herrichten'}
+function pkNoHCard(p,wide,lab){const l=p.art==="bst"?"Von Baustelle":"Verlängerung";
+ if(wide)return '<button class="pkline noh '+p.art+'" type="button" data-pk="'+esc(p.id)+'"><span class="pkl1">'+esc(lab||"")+'</span><span class="pkl2"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>'+pkNoHTxt(p)+'</small></span><span class="pkl3"><span class="tag pk'+p.art+'">'+l+'</span></span></button>';
+ return '<button class="pkcard noh '+p.art+'" type="button" data-pk="'+esc(p.id)+'"><span class="pkct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+p.art+'">'+l+'</span></span><span class="pkcs">'+pkNoHTxt(p)+'</span></button>'}
+function pkNoHView(p){$("#t").textContent="Packliste";const s=pkState(p),bst=p.art==="bst",src=bst&&p.von&&packs.find(x=>x.id===p.von),r=bst?null:pkRoot(p),ed=can("pk_b");
+ let cmp="";if(!bst&&r&&r!==p){const A=pkArtAgg(pkItems(r).filter(o=>!(o.z&&String(o.z)===String(p.ps||p.id))).map(o=>o.x)),B=pkArtAgg(p.pos),ks=[...new Set(Object.keys(A).concat(Object.keys(B)))];let same=0;const more=[],less=[];
+  ks.forEach(k=>{const a=A[k]?A[k].n:0,b=B[k]?B[k].n:0,x=(B[k]||A[k]).x;if(a===b)same++;else(b>a?more:less).push({x,d:Math.abs(b-a)})});
+  const z=(r.zus||[]).find(q=>String(q.verl||"")===String(p.id)||String(q.ps)===String(p.ps));
+  cmp='<div class="card" style="cursor:default"><b>Vergleich mit dem Original</b>'+(same?'<div class="pkcmp"><span>'+same+(same===1?' Artikel':' Artikel')+' gleich</span><b class="okc">✓</b></div>':'')+
+   more.map(e=>'<div class="pkcmp"><span>'+esc(pkName(e.x))+'</span><b class="morec">+'+pkNum(e.d)+' '+esc(e.x.u||"Stk")+' mehr</b></div>').join("")+less.map(e=>'<div class="pkcmp"><span>'+esc(pkName(e.x))+'</span><b class="lessc">−'+pkNum(e.d)+' '+esc(e.x.u||"Stk")+' weniger</b></div>').join("")+
+   (more.length?'<p class="mute" style="margin:8px 0 0">'+(z?'Das Mehr wird als <b>Zusatz '+esc(z.ps)+'</b> beim Original hergerichtet.':'Das Mehr ist noch nicht als Zusatz angelegt.')+' <a href="#" data-pkgo="'+esc(r.id)+'">Original öffnen ›</a></p>':'')+(less.length?'<p class="mute" style="margin:6px 0 0">Weniger: kommt vermutlich schon früher zurück – Teilretoure beim Original. Beim Herrichten nichts zu tun.</p>':'')+'</div>'}
+ const box=bst?'<div class="pkartbox bst"><b>Nicht herrichten</b><span>'+(src?'Das Material kommt direkt von <a href="#" data-pkgo="'+esc(src.id)+'"><b>'+esc(src.ev||"")+'</b> (Auftrag '+esc(src.ord||"–")+')</a>.':'Das Material kommt direkt von einer anderen Baustelle.')+'</span><small>Eingestellt'+pkArtWho(p)+'</small></div>'
+  :'<div class="pkartbox verl"><b>↻ Verlängerung'+(r&&r!==p?' von '+esc(r.ev||""):'')+'</b><span>'+(r&&r!==p?'Auftrag '+esc(r.ord||"–")+' – das Material ist schon draußen. Nicht herrichten.':'Der verlängerte Auftrag ist nicht (mehr) in der App.')+'</span>'+(r&&r!==p?'<a href="#" data-pkgo="'+esc(r.id)+'">Original-Auftrag öffnen ›</a>':'')+'<small>Eingestellt'+pkArtWho(p)+'</small></div>';
+ const pos=pkPosAll(p);
+ $("#app").innerHTML=pkHiBox(p)+'<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;min-width:0;font-size:18px">'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+(s.c||"")+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span></div>'+
+  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.ps?' · Packschein '+esc(p.ps):'')+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+box+
+  (ed?'<div class="row" style="gap:14px;margin-top:6px"><button class="lnk" type="button" data-artch="'+esc(p.id)+'">Art ändern</button>'+(bst?'<button class="lnk" type="button" id="pkselbst">Doch selbst herrichten</button>':'')+'</div>':'')+pkHint(p)+pkHiAddLink(p)+'</div>'+cmp+
+  '<div class="card pknoh" style="cursor:default;padding:0;overflow:hidden"><div class="pknohh '+p.art+'">Material laut Packschein (nur zur Info)</div>'+pos.map(x=>'<div class="pknohr"><b>'+pkNum(+x.n||0)+' '+esc(x.u||"Stk")+'</b><span>'+esc(pkName(x))+(x.f>0?' <span class="pkfr">davon '+pkNum(x.f)+' Fremdmiete</span>':'')+'</span></div>').join("")+'</div>'+
+  (bst?abgPkCard(p):(r&&r!==p?abgPkCard(r):''))+
+  (can("pk_l")?'<button class="btn ghost" id="pkdel" type="button" style="color:var(--bad)">Packliste löschen</button>':'');
+ if(typeof abgPkBind==="function")abgPkBind();
+ const sb=$("#pkselbst");if(sb)sb.onclick=()=>ask("Doch selbst herrichten? Die Packliste kommt dann wie gewohnt auf die Wand.",()=>pkArtSave(p,{art:"",von:""}));
+ if($("#pkdel"))$("#pkdel").onclick=()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
+async function pkArtSave(p,v){try{await db.doc("pack/"+p.id).update({art:v.art||"",von:v.von||"",artBy:me,artT:Date.now()});toast(v.art==="bst"?"Gespeichert – nicht herrichten (von Baustelle)":v.art==="verl"?"Gespeichert – Verlängerung":"Gespeichert – wird normal hergerichtet",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen"+(typeof sbErr==="function"?sbErr(e):"")+". Hast du das Recht „Packlisten hochladen“?")}}
+function pkArtDlg(p){if(!can("pk_b"))return;const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0;max-height:90vh;overflow:auto"><b>Art der Packliste</b><p class="mute" style="margin:4px 0 8px">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</p><div id="pkart2"></div><div class="row" style="margin-top:10px"><button class="btn ghost" id="pkac" type="button">Abbrechen</button><button class="btn" id="pkao" type="button">Speichern</button></div></div>';
+ document.body.appendChild(o);const st=pkArtInit({...p,ps:p.id},o.querySelector("#pkart2"),{art:p.art||"norm",von:p.von||""});o.querySelector("#pkac").onclick=()=>o.remove();
+ o.querySelector("#pkao").onclick=async()=>{if(st.art==="verl"&&!st.von)return errBox("Bitte den Auftrag wählen, der verlängert wird.");const v={art:st.art==="norm"?"":st.art,von:st.art==="norm"?"":st.von||""};
+  if(v.art===(p.art||"")&&v.von===(p.von||"")){o.remove();return}o.remove();await pkArtSave(p,v);if(v.art==="verl"&&v.von)await pkVerlExtra(p,v.von)}}
+/* Verlängerung mit mehr Material als im Original → das Mehr als Zusatz am Original herrichten */
+async function pkVerlExtra(P,vonId){const v=packs.find(x=>x.id===vonId);if(!v)return;const r=pkRoot(v),pid=P.ps||P.id;if((r.zus||[]).some(z=>String(z.verl||"")===String(pid)))return;
+ const A=pkArtAgg(pkPosAll(r)),B=pkArtAgg(P.pos),extra=[];let i=0;Object.keys(B).forEach(k=>{const d=B[k].n-(A[k]?A[k].n:0);if(d>0){const x=B[k].x;extra.push({p:"V"+(++i),n:d,u:x.u||"Stk",t:x.t,a:x.a||"",f:0})}});
+ if(!extra.length)return;const zP={...P,ps:pid,pos:extra};
+ const ok=await new Promise(res=>ask2("Die Verlängerung hat mehr Material als das Original ("+extra.map(x=>pkNum(x.n)+" "+(x.u||"Stk")+" "+pkName(x)).join(", ")+"). Als Zusatz beim Original herrichten?","Ja, als Zusatz","Nein",()=>res(true),()=>res(false)));if(!ok)return;
+ const day=await pkZAskDay(zP,r);if(!day)return;
+ try{const zus=(r.zus||[]).filter(z=>String(z.ps)!==String(pid)).concat([{ps:pid,ev:P.ev,t:Date.now(),by:me,pos:extra,v:2,verl:String(pid)}]);await db.doc("pack/"+r.id).update({zus});const zk=pkZK(pid);
+  await pkHSet(r,{["zd_"+zk]:{d:day,by:me,t:Date.now()},["zf_"+zk]:{t:0}});toast("Mehr-Material als Zusatz beim Original – herrichten "+pkWd(pkFromYmd(day)),1)}catch(e){console.error(e);errBox("Zusatz konnte nicht angelegt werden. Hast du das Recht „Packlisten hochladen“?")}}
+document.addEventListener("click",ev=>{const t=ev.target.closest&&ev.target.closest("[data-pkgo],[data-artch]");if(!t)return;ev.preventDefault();ev.stopPropagation();
+ if(t.dataset.artch){const p=packs.find(x=>x.id===t.dataset.artch);if(p)pkArtDlg(p);return}
+ if(packs.some(x=>x.id===t.dataset.pkgo)){curPack=t.dataset.pkgo;go("packopen")}},true);

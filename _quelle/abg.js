@@ -11,10 +11,10 @@ function abgSub(){if(abgOn)return;abgOn=true;try{
 const abgOk=()=>can("pk_s")&&can("ret_s");
 const abgKey=(c,nm)=>c?"c:"+c:"n:"+jvATok(nm).join(" ");
 const rIsEnd=r=>!!r.closed&&r.art!=="teil";
-const abgPackOf=ord=>{const o=pkDig(ord);if(!o)return null;return packs.find(p=>pkDig(p.ord)===o)||null};
+const abgPackOf=ord=>{const o=pkDig(ord);if(!o)return null;const p=packs.find(p=>pkDig(p.ord)===o)||null;return p?pkRoot(p):null};
 const abgN=n=>String(n);
 /* Konto eines Auftrags. ov = {id, items} ersetzt beim Zählen den eigenen, noch nicht gespeicherten Retourschein */
-function abgBal(p,ov){const H=pkH(p),M={};
+function abgBal(p,ov){if(p&&p.art==="verl"&&pkRoot(p)!==p)return{p,L:[],R:[],miss:[],more:[],has:false,closed:false,hasEnd:false,endR:null,raus:0,zur:0,fehlt:0,zuviel:0,l55:0};const H=pkH(p),M={};
  const get=(k,c,nm)=>M[k]=M[k]||{k,code:c||"",name:nm,raus:0,nach:0,fr:0,l55:0,soll:0,back0:0,zin:0,zout:0,back:0,via55:0};
  const add=(c,nm,zus,q,f)=>{const e=get(abgKey(c,nm),c,nm);e.soll+=q;e.fr+=f;if(zus)e.nach+=q+f;else e.raus+=q+f};
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
@@ -25,6 +25,8 @@ function abgBal(p,ov){const H=pkH(p),M={};
  if(typeof pkX==="function")pkX(p).forEach(e=>add(artCode(e.a),pkXName(e),false,+e.n||0,0));
  R.forEach(r=>{const it=ov&&ov.id&&r.id===ov.id?ov.items:rIt(r);Object.values(it||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0})});
  if(ov&&!ov.id)Object.values(ov.items||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0});
+ /* 1.118: Material, das direkt an eine andere Baustelle weitergeht („Von Baustelle“ mit diesem Auftrag als Quelle), zählt hier als zurück */
+ packs.forEach(b=>{if(b.art!=="bst"||b.von!==p.id)return;(b.pos||[]).forEach(x=>{const own=Math.max(0,(+x.n||0)-(+x.f||0)),c=artCode(x.a),e=get(abgKey(c,pkName(x)),c,pkName(x));e.back0+=own;e.weit=(e.weit||0)+own})});
  ABZ.forEach(z=>{if(z.from===p.id)get(z.k,z.code,z.name).zout+=+z.q||0;if(z.to===p.id)get(z.k,z.code,z.name).zin+=+z.q||0});
  const L=Object.values(M).filter(e=>e.soll||e.back0||e.fr||e.zin||e.zout||e.l55);L.forEach(e=>{e.back=Math.max(0,e.back0-e.zout+e.zin);e.via55=Math.min(e.l55,Math.max(0,e.back-e.soll-e.fr))});
  const miss=L.filter(e=>e.soll>e.back),more=L.filter(e=>e.back>e.soll+e.fr+e.l55);
@@ -81,7 +83,7 @@ const abgRetLbl=r=>!r.closed?"Retourschein offen":r.art==="teil"?"Teilretoure":r
 const abgRetT=r=>r.closed?(r.closedT||r.modT||r.t):(r.modT||r.t);
 const abgRetN=r=>Object.values(rIt(r)).filter(i=>i.g!=="Zubehör").reduce((a,i)=>a+(+i.q||0),0);
 /* Karte in der Packliste (Herricht-Ansicht) */
-function abgPkCard(p){if(!abgOk())return"";const B=abgBal(p);if(!B.has)return"";
+function abgPkCard(p){if(!abgOk())return"";if(p&&p.art==="verl")p=pkRoot(p);const B=abgBal(p);if(!B.has)return"";
  return '<button class="card abgpk" type="button" data-abgo="'+esc(p.id)+'"><span class="abgpkt"><b>Abgleich mit Retouren</b><small>'+B.zur+' von '+B.raus+' zurück'+(B.hasEnd?' · Endretoure':'')+'</small></span><span class="abgpkb">'+abgBadge(B)+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
 function abgPkBind(){document.querySelectorAll("[data-abgo]").forEach(b=>b.onclick=()=>{curPack=b.dataset.abgo;go("pkabg")})}
 /* Zeile im Retourschein (beim Zählen und in der Ansicht) */
