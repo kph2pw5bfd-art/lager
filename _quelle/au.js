@@ -1,3 +1,7 @@
+/* 1.126: Alle Positionen hergerichtet, aber (Zusatz/Packliste) noch nicht abgeschlossen → wie „Hergerichtet“ anzeigen, mit letztem Datum und allen, die hergerichtet haben (Jürgen, 5.11.) */
+function auHerrAll(p,zps){const g=pkProgOf(p,zps,false);if(!g.n||g.d<g.n)return null;const H=pkH(p);let t=0;const W=[];
+ pkItems(p).forEach(o=>{if((o.z||null)!==zps)return;const h=H[o.k];if(!h||pkL55(o.x,h))return;if((h.t||0)>t)t=h.t||0;let w="";try{w=nmA(h,"by")}catch(e){}if(w&&!W.includes(w))W.push(w)});
+ return {t,who:W.join(", ")}}
 /* ===== Meine Aufträge (ab 1.85) – Lager-Stand für Projektleiter =====
    Recht au_s = Aufträge sehen (alle, eigene oben), au_b = auf eigene Aufträge antworten.
    Eigene = Projektleiter in der Packliste ist man selbst (Name aus dem Profil, Reihenfolge/Groß-Klein/Akzente egal).
@@ -37,7 +41,7 @@ const auStepL='<div class="aul"><span>Packliste</span><span>Herrichten</span><sp
 function auCard(I){const p=I.p,mine=auIsMine(p),pills=[];
  if(I.missShow)pills.push(abgTag(I.B.hasEnd?"Endretoure – "+I.B.fehlt+(I.B.fehlt===1?" Stück fehlt":" Stück fehlen"):I.B.fehlt+" Stück noch draußen","red"));
  if(I.missShow&&mine&&I.B.miss.some(e=>!auAns(p,e.k).length))pills.push(abgTag("Noch nicht beantwortet","or"));
- if(!I.done)(p.zus||[]).forEach(z=>{if(pkZFin(p,z))return;const d=pkZDay(p,z),late=d<pkDay(Date.now());pills.push(abgTag("Nachlieferung "+(late?"noch nicht hergerichtet":"herrichten "+pkDM(d)),late?"red":"blue"))});
+ if(!I.done)(p.zus||[]).forEach(z=>{if(pkZFin(p,z)||auHerrAll(p,String(z.ps)))return;const d=pkZDay(p,z),late=d<pkDay(Date.now());pills.push(abgTag("Nachlieferung "+(late?"noch nicht hergerichtet":"herrichten "+pkDM(d)),late?"red":"blue"))});
  if(I.g.dev&&!I.done)pills.push(abgTag("Herrichten: "+I.g.dev+(I.g.dev===1?" Abweichung":" Abweichungen"),"or"));
  if(I.B.zuviel&&!I.done)pills.push(abgTag(I.B.zuviel+" mehr zurück","grey"));
  const sub=I.over?"Dispo-Ende war "+pkDM(p.de):I.done?"Dispo "+pkDM(p.db)+" – "+pkDM(p.de):I.st.k==="herr"?"Herrichten heute":"Dispo "+pkDM(p.db)+" – "+pkDM(p.de);
@@ -75,10 +79,10 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  $("#t").textContent=p.ev||"Auftrag";const I=auInfo(p),B=I.B,H=pkH(p),mine=auIsMine(p),act=mine&&can("au_b"),g=I.g,fr=pkF(p).length;
  const te=(c,t,s)=>'<div class="aute"><span class="audot '+c+'">'+(c==="d"?"✓":c==="r"||c==="w"?"!":"")+'</span><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+'</span></div>';
  const dev=auDevLines(p),hd=pkHd(p);
- const herr=pkNoH(p)?te("d",p.art==="bst"?"Kein Herrichten – kommt von einer Baustelle":"Verlängerung – kein Herrichten",pkNoHTxt(p)):g.fin?te(g.dev?"w":"d","Hergerichtet",fmt(H.fin.t).slice(0,6)+' von '+esc(nmA(H.fin,"by"))+(dev.length?'<span class="audev">'+dev.map(esc).join("<br>")+'</span>':'')):
-  g.d?te("n","Wird hergerichtet",g.d+" von "+g.n+" Positionen"):I.late?te("r","Noch nicht hergerichtet","geplant war "+pkWd(pkHDay(p))):te("","Herrichten",(pkShifted(p)?"verschoben auf "+pkWd(pkHDay(p))+" (Dispo-Beginn "+pkWd(p.db)+")":"geplant "+pkWd(pkHDay(p)))+(hd&&hd.why?" – "+esc(hd.why):""));
+ let ha=null;const herr=pkNoH(p)?te("d",p.art==="bst"?"Kein Herrichten – kommt von einer Baustelle":"Verlängerung – kein Herrichten",pkNoHTxt(p)):g.fin?te(g.dev?"w":"d","Hergerichtet",fmt(H.fin.t).slice(0,6)+' von '+esc(nmA(H.fin,"by"))+(dev.length?'<span class="audev">'+dev.map(esc).join("<br>")+'</span>':'')):
+  (ha=auHerrAll(p,null))?te(g.dev?"w":"d","Hergerichtet",(ha.t?fmt(ha.t).slice(0,6):"")+(ha.who?" von "+esc(ha.who):"")+(dev.length?'<span class="audev">'+dev.map(esc).join("<br>")+'</span>':'')):g.d?te("n","Wird hergerichtet",g.d+" von "+g.n+" Positionen"):I.late?te("r","Noch nicht hergerichtet","geplant war "+pkWd(pkHDay(p))):te("","Herrichten",(pkShifted(p)?"verschoben auf "+pkWd(pkHDay(p))+" (Dispo-Beginn "+pkWd(p.db)+")":"geplant "+pkWd(pkHDay(p)))+(hd&&hd.why?" – "+esc(hd.why):""));
  const t00=pkDay(Date.now()),zusT=(p.zus||[]).map(z=>{const zg=pkZProg(p,z.ps),zf=pkZFin(p,z),zd=pkZDay(p,z),zdev=auDevLines(p,String(z.ps)),lab="Nachlieferung (Zusatz "+esc(z.ps)+")";
-  return zf?te(zg.dev?"w":"d",lab,"hergerichtet "+fmt(zf.t).slice(0,6)+" von "+esc(nmA(zf,"by"))+(zdev.length?'<span class="audev">'+zdev.map(esc).join("<br>")+'</span>':"")):zg.d?te("n",lab,"wird hergerichtet: "+zg.d+" von "+zg.n+" Positionen"):zd<t00?te("r",lab,"noch nicht hergerichtet – geplant war "+pkWd(zd)):te("",lab,"herrichten "+(zd===t00?"heute":pkWd(zd))+" · "+pkPosN((z.pos||[]).length))}).join("");
+  const za=zf?null:auHerrAll(p,String(z.ps));return zf?te(zg.dev?"w":"d",lab,"hergerichtet "+fmt(zf.t).slice(0,6)+" von "+esc(nmA(zf,"by"))+(zdev.length?'<span class="audev">'+zdev.map(esc).join("<br>")+'</span>':"")):za?te(zg.dev?"w":"d",lab,"hergerichtet"+(za.t?" "+fmt(za.t).slice(0,6):"")+(za.who?" von "+esc(za.who):"")+(zdev.length?'<span class="audev">'+zdev.map(esc).join("<br>")+'</span>':"")):zg.d?te("n",lab,"wird hergerichtet: "+zg.d+" von "+zg.n+" Positionen"):zd<t00?te("r",lab,"noch nicht hergerichtet – geplant war "+pkWd(zd)):te("",lab,"herrichten "+(zd===t00?"heute":pkWd(zd))+" · "+pkPosN((z.pos||[]).length))}).join("");
  const verlT=(p._verl||[]).map(id=>packs.find(x=>x.id===id)).filter(Boolean).map(x=>te("n","Verlängert bis "+pkWd(x.de),"Auftrag "+esc(x.ord||"–")+(p._de0?" · ursprünglich bis "+pkWd(p._de0):""))).join("")+packs.filter(x=>x.art==="bst"&&x.von===p.id).map(x=>te("n","Material geht weiter","an "+esc(x.ev||"")+" (Auftrag "+esc(x.ord||"–")+")")).join("");
  const chgT=verlT+(p.chg||[]).slice().sort((a,b)=>a.t-b.t).map(c=>te("w","Packschein geändert",esc(pkChgLbl(c))+" · "+fmt(c.t).slice(0,6)+(c.diff&&c.diff.length?'<span class="audev">'+c.diff.map(d=>esc(d.name)+": "+esc(pkDiffTxt(d))).join("<br>")+'</span>':""))).join("");
  const outT=I.over?te("r","Dispo abgelaufen","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Draußen","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Draußen","ab "+pkWd(auOutDay(p)));

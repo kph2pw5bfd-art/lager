@@ -404,3 +404,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Teil-Reparatur: „Repariert“ (#dd) ruft `wsRepair(d)` – bei Stückzahl > 1 Fenster „Wie viele sind repariert? k von n“, dann `etDlg(d,true,k)`. Erst beim Speichern der Reparatur legt `wsSplit` den Rest als neue offene Meldung an (alle Felder außer Reparatur/Erledigt, n = Rest, `teilVon`, Meldungs-Fotos kopiert) und das Original bekommt n = k und wird erledigt. Abbrechen ändert nichts.
 - Nebenbei: Uhrzeit im Lager Assistenten im Dunkelmodus jetzt hellblau (war Dunkelblau auf Dunkel).
 - Test `tests/ws_t.js`.
+
+## Version 1.126 – Meine Aufträge: „Hergerichtet“ sobald alle Positionen fertig sind (Jürgen, 5.11.)
+- Gemeldet: Bei einer Nachlieferung stand „wird hergerichtet: 4 von 4 Positionen“, weil der Zusatz nicht über „Zusatz abschließen“ beendet wurde; Datum und Name fehlten.
+- `auHerrAll(p,zps)` in au.js: alle Positionen (ohne Lager 55) abgehakt → Zeitleiste zeigt „hergerichtet TT.MM. von <alle, die hergerichtet haben>“ (Datum = letzte Position, Namen wie gespeichert inkl. „(Tablet)“). Gilt für Zusätze und die Packliste selbst; Abweichungen darunter wie beim Abschluss. Das Schild „Nachlieferung …“ in der Liste verschwindet dann ebenfalls.
+- Test `tests/auzus_t.js`.
