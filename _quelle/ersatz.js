@@ -19,7 +19,7 @@ function etCard(d){const L=etList(d),rf=+d.rfn||0;if(!d.rep&&!L.length&&!rf)retu
 function etBind(d){if((+d.rfn||0)&&$("#etph"))loadTh("etph",{id:d.id+"r",fn:+d.rfn});
  if($("#etedit"))$("#etedit").onclick=()=>etDlg(d,false)}
 /* Fenster „Reparatur“ – fin=true: danach als erledigt markieren */
-async function etDlg(d,fin){const o=document.createElement("div");o.className="ov";let L=etList(d).map(e=>({...e}));const ph=[],n0=+d.rfn||0;
+async function etDlg(d,fin,part){const o=document.createElement("div");o.className="ov";let L=etList(d).map(e=>({...e}));const ph=[],n0=+d.rfn||0;
  o.innerHTML='<div class="card etd"><b style="font-size:17px">Reparatur</b><div class="mute">'+esc(d.art)+(d.ev?' · '+esc(d.ev):'')+'</div>'+
   '<label class="mute" for="etrep" style="margin-top:10px;display:block">Was wurde gemacht? (optional)</label><textarea id="etrep" placeholder="z. B. Stecker getauscht, Kabel 20 cm gekürzt" style="min-height:80px"></textarea>'+
   '<b class="eth">Verwendete Ersatzteile</b><div id="etl"></div><button class="etadd" id="etadd" type="button">+ Ersatzteil</button>'+
@@ -40,6 +40,7 @@ async function etDlg(d,fin){const o=document.createElement("div");o.className="o
    Object.keys(pc).filter(k=>k.startsWith(d.id+"r-")).forEach(k=>delete pc[k]);
    const up={rep:g("etrep").value.trim(),et:L.map(e=>({n:+e.n||0,u:e.u||"Stk",nm:e.nm,tnr:e.tnr||"",hnr:e.hnr||""})),rfn:n,repBy:me,...tabAs("repBy"),repT:Date.now()};
    if(fin)Object.assign(up,{done:true,doneBy:me,...tabAs("doneBy"),doneT:Date.now()});
+   if(fin&&part&&typeof wsSplit==="function"&&part<dxQ(d)){await wsSplit(d,part);up.n=part}/* 1.125: Teil-Reparatur – Rest bleibt offen */
    await db.doc("defekte/"+d.id).update(up);o.remove();toast(fin?"Repariert – Defekt erledigt":"Gespeichert",1)}
   catch(x){g("ets").disabled=false;toast("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}}
 /* Fenster „Ersatzteil hinzufügen / ändern“ – cb(teil) oder cb(null) = löschen */

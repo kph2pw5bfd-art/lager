@@ -494,7 +494,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.124";
+<script>const APPV="1.125";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1020,7 +1020,7 @@ function jarvisView(){$("#t").textContent="Lager Assistent";const D=jvData(),P=j
   '<div class="jvgreet" id="jvg">'+jvGreet()+'</div>'+jvAskHtml()+
   '<div class="jvopts"><button class="jvlink" id="jvvc" type="button">Stimme</button><span aria-hidden="true">·</span><button class="jvlink" id="jvrd" type="button">'+(jvReadOn()?"Vorlesen an":"Vorlesen aus")+'</button><span aria-hidden="true">·</span><button class="jvlink" id="jvhl" type="button">Was kann ich fragen?</button></div></section>'+
   '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
-  (owner?'<p class="jvnote">Wer die Lager Übersicht sieht, stellst du in der Benutzerverwaltung ein (Recht „Lager Übersicht“). Herrichten, Heute zurück und Dispo abgelaufen kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
+  (owner?'<p class="jvnote"><button type="button" class="jvlink" id="wsadm">Werkstatt Übersicht ansehen ›</button></p>':'')+(owner?'<p class="jvnote">Wer die Lager Übersicht sieht, stellst du in der Benutzerverwaltung ein (Recht „Lager Übersicht“). Herrichten, Heute zurück und Dispo abgelaufen kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
  jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvhl").onclick=jvHelpOpen;
  $("#jvrd").onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");$("#jvrd").textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
@@ -3822,7 +3822,7 @@ function etCard(d){const L=etList(d),rf=+d.rfn||0;if(!d.rep&&!L.length&&!rf)retu
 function etBind(d){if((+d.rfn||0)&&$("#etph"))loadTh("etph",{id:d.id+"r",fn:+d.rfn});
  if($("#etedit"))$("#etedit").onclick=()=>etDlg(d,false)}
 /* Fenster „Reparatur“ – fin=true: danach als erledigt markieren */
-async function etDlg(d,fin){const o=document.createElement("div");o.className="ov";let L=etList(d).map(e=>({...e}));const ph=[],n0=+d.rfn||0;
+async function etDlg(d,fin,part){const o=document.createElement("div");o.className="ov";let L=etList(d).map(e=>({...e}));const ph=[],n0=+d.rfn||0;
  o.innerHTML='<div class="card etd"><b style="font-size:17px">Reparatur</b><div class="mute">'+esc(d.art)+(d.ev?' · '+esc(d.ev):'')+'</div>'+
   '<label class="mute" for="etrep" style="margin-top:10px;display:block">Was wurde gemacht? (optional)</label><textarea id="etrep" placeholder="z. B. Stecker getauscht, Kabel 20 cm gekürzt" style="min-height:80px"></textarea>'+
   '<b class="eth">Verwendete Ersatzteile</b><div id="etl"></div><button class="etadd" id="etadd" type="button">+ Ersatzteil</button>'+
@@ -3843,6 +3843,7 @@ async function etDlg(d,fin){const o=document.createElement("div");o.className="o
    Object.keys(pc).filter(k=>k.startsWith(d.id+"r-")).forEach(k=>delete pc[k]);
    const up={rep:g("etrep").value.trim(),et:L.map(e=>({n:+e.n||0,u:e.u||"Stk",nm:e.nm,tnr:e.tnr||"",hnr:e.hnr||""})),rfn:n,repBy:me,...tabAs("repBy"),repT:Date.now()};
    if(fin)Object.assign(up,{done:true,doneBy:me,...tabAs("doneBy"),...tabAs("doneBy"),doneT:Date.now()});
+   if(fin&&part&&typeof wsSplit==="function"&&part<dxQ(d)){await wsSplit(d,part);up.n=part}/* 1.125: Teil-Reparatur – Rest bleibt offen */
    await db.doc("defekte/"+d.id).update(up);o.remove();toast(fin?"Repariert – Defekt erledigt":"Gespeichert",1)}
   catch(x){g("ets").disabled=false;toast("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}}
 /* Fenster „Ersatzteil hinzufügen / ändern“ – cb(teil) oder cb(null) = löschen */
@@ -4194,6 +4195,77 @@ function dxDefScanHit(raw){const v=String(raw||"").trim(),m=v.match(CODE_RE),nr=
  dxDQ=c;const k=typeof art!=="undefined"&&art[c],nm=k?k.name:"Nr. "+c,open=vdefs().filter(d=>!d.done&&dxDefMatch(d));
  if(open.length===1){beep(true);curDef=open[0].id;go("defopen");toast("Offener Defekt: "+nm,1);return}
  if(df==="erledigt")df="alle";beep(!!open.length);defView();toast(open.length?open.length+" offene Defekte: "+nm:"Kein offener Defekt zu "+nm,1)}
+
+/* ===== 1.125 – Werkstatt Übersicht (Jürgen, 5.11.; Entwurf https://claude.ai/artifact/9fRKHYxduFBgmCML6zbGA9;
+   gewählt: nur für die Werkstatt heißt die Kachel „Lager Übersicht“ dann „Werkstatt Übersicht“ und zeigt diese Ansicht;
+   KEIN Stand „In Arbeit / Wartet auf Teil“; KEIN Reiter „Gebraucht“ (dafür müsste die App den Lagerstand kennen);
+   Teil-Reparatur: bei Stückzahl fragt „Repariert“ „Wie viele?“, der Rest bleibt als eigene offene Meldung).
+   Werkstatt = Titelname enthält „Werkstatt“. Admin kann die Ansicht über den Link in der Lager Übersicht ansehen (wsForce). ===== */
+(function(){try{const st=document.createElement("style");st.textContent=
+'.wsbig{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 4px}.wsbig button{border:0;border-radius:12px;padding:16px 10px;font:inherit;font-weight:800;font-size:17px;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:84px;justify-content:center}.wsbig button small{font-weight:600;font-size:12.5px;opacity:.92}.wsbig .wsrep{background:#1e9e55}.wsbig .wsnew{background:var(--navy)}'+
+'.wscard{background:var(--card);border:1.5px solid var(--navy);border-radius:12px;padding:12px;margin-bottom:12px}.wscard.plain{border:1px solid var(--line)}'+
+'.wstabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}.wstab{border:1px solid var(--line);border-radius:10px;padding:8px 4px;background:var(--card);color:var(--mute);font:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:center}.wstab b{display:block;font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums}.wstab.red b{color:#b8322a}.wstab.on{background:var(--navy);border-color:var(--navy);color:#dbe6f7}.wstab.on b{color:#fff}'+
+'.wsit{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;border:1px solid var(--line);border-left:5px solid #c0392b;border-radius:8px;padding:9px 11px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer;margin-bottom:7px}.wsit.urg{background:#fdecea}.wsit .r1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.wsit b{font-size:15px}.wsit small{color:var(--mute);font-size:13px}'+
+'.wssub{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:0 0 6px}.wsrow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:15px}.wsrow:first-of-type{border-top:0}.wsrow b{font-variant-numeric:tabular-nums}'+
+'.wslinks{display:flex;justify-content:space-between;gap:10px;margin-top:6px}.wslinks button,.wsback{background:none;border:0;color:var(--navy);font:inherit;font-weight:700;cursor:pointer;padding:6px 0}.wsnote{font-size:13px;color:var(--mute);margin:0 0 8px}'+
+'.wsq{display:flex;align-items:center;justify-content:center;gap:14px;margin:14px 0}.wsq button{width:52px;height:48px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font:inherit;font-size:24px;cursor:pointer;color:var(--ink)}.wsq b{font-size:26px;min-width:90px;text-align:center;font-variant-numeric:tabular-nums}'+
+'@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .jvclock{color:#8fb0ea}:root:not([data-theme="light"]) .wsit.urg{background:#3d1512}:root:not([data-theme="light"]) .wslinks button,:root:not([data-theme="light"]) .wsback{color:#8fb0ea}:root:not([data-theme="light"]) .wstab.red b{color:#ff9d92}}'+
+':root[data-theme="dark"] .jvclock{color:#8fb0ea}:root[data-theme="dark"] .wsit.urg{background:#3d1512}:root[data-theme="dark"] .wslinks button,:root[data-theme="dark"] .wsback{color:#8fb0ea}:root[data-theme="dark"] .wstab.red b{color:#ff9d92}';
+document.head.appendChild(st)}catch(e){}})();
+let wsForce=false,wsTab=null,wsIn=false,wsPrev=0;
+function wsIs(){if(wsForce)return true;try{const t=typeof hoTit==="function"?hoTit(hoMyTitle()):null;return !!(t&&/werkstatt/i.test(t.name||""))}catch(e){return false}}
+try{Object.defineProperty(HO_NAME,"jarvis",{get:()=>wsIs()?"Werkstatt Übersicht":"Lager Übersicht",enumerable:true})}catch(e){}
+const wsLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+/* Besuch: beim Betreten merken, wann man zuletzt da war */
+/* Besuch endet erst auf der Hauptseite oder wenn die App in den Hintergrund geht – Defekt öffnen und zurück zählt nicht als neuer Besuch */
+setInterval(()=>{if(typeof view==="undefined")return;if(wsIn&&(view==="start"||document.visibilityState==="hidden")){wsLS("tpc_ws_seen",String(Date.now()));wsIn=false}if(wsForce&&view==="start")wsForce=false},800);
+const wsOpen=()=>vdefs().filter(d=>!d.done);
+const wsUrg=()=>wsOpen().filter(d=>d.urg);
+function wsHot(){return wsUrg().length}
+function wsWeek(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return +d}
+function wsLine(d){let who="";try{who=nmA(d,"by")}catch(e){}const ago=fmt(d.t);
+ return '<button type="button" class="wsit'+(d.urg?' urg':'')+'" data-wsd="'+esc(d.id)+'"><span class="r1"><b>'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+'</b>'+(d.urg?'<span class="tag" style="background:#7a0f08;color:#fff">DRINGEND</span>':'')+'</span><small>'+[d.desc,d.ev,who,ago].filter(Boolean).map(esc).join(" · ")+(d.fv?' · Fremdverschulden':'')+(d.ret?' · beim Zählen gemeldet':'')+'</small></button>'}
+function wsView(){if(!wsIn){wsIn=true;const s=+wsLS("tpc_ws_seen")||0;wsPrev=s||Date.now()-864e5}
+ $("#t").textContent="Werkstatt Übersicht";const O=wsOpen().sort((a,b)=>b.t-a.t),U=O.filter(d=>d.urg),N=O.filter(d=>d.t>wsPrev);
+ if(!wsTab)wsTab=U.length?"urg":N.length?"neu":"alle";const L=wsTab==="urg"?U:wsTab==="neu"?N:O.slice().sort((a,b)=>(b.urg?1:0)-(a.urg?1:0)||b.t-a.t);
+ const w0=wsWeek(),all=vdefs(),rep=all.filter(d=>d.done&&(d.doneT||0)>=w0).reduce((s,d)=>s+dxQ(d),0),neu=all.filter(d=>d.t>=w0).reduce((s,d)=>s+dxQ(d),0),last=all.filter(d=>d.done&&d.doneT).sort((a,b)=>b.doneT-a.doneT).slice(0,4);
+ const tab=(k,l,n,red)=>'<button type="button" class="wstab'+(wsTab===k?' on':'')+(red&&n?' red':'')+'" data-wst="'+k+'"><b>'+n+'</b>'+l+'</button>';
+ $("#app").innerHTML='<div class="jv" id="wsv"><section class="jvhead"><div class="jvhrow"><div class="jvtime"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div></div></div><div class="jvgreet">'+esc(jvGreet())+'</div>'+
+  '<div class="wsbig"><button type="button" class="wsrep" id="wsrep">Repariert melden<small>Teil scannen</small></button><button type="button" class="wsnew" id="wsnew">Defekt erfassen<small>neu melden</small></button></div></section>'+
+  '<div class="wscard"><div class="wstabs">'+tab("urg","Dringend",U.length,1)+tab("neu","Neu",N.length)+tab("alle","Alle offen",O.length)+'</div>'+
+  (wsTab==="neu"?'<p class="wsnote">Seit deinem letzten Besuch ('+fmt(wsPrev)+')</p>':'')+
+  (L.length?L.map(wsLine).join(""):'<p class="wsnote">'+(wsTab==="urg"?'Keine dringenden Defekte.':wsTab==="neu"?'Nichts Neues seit deinem letzten Besuch.':'Keine offenen Defekte. Sauber!')+'</p>')+'</div>'+
+  '<div class="wscard plain"><div class="wssub">Diese Woche</div><div class="wsrow"><span>Repariert</span><b>'+rep+' Stk</b></div><div class="wsrow"><span>Neu gemeldet</span><b>'+neu+' Stk</b></div>'+
+  (last.length?'<div class="wssub" style="margin-top:12px">Zuletzt repariert</div>'+last.map(d=>'<div class="wsrow"><span>'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+'</span><small class="mute">'+fmt(d.doneT)+'</small></div>').join(""):'')+
+  '<div class="wslinks">'+(can("def_b")?'<button type="button" id="wsrepb">Ersatzteile-Bericht ›</button>':'<span></span>')+'<button type="button" id="wsall">Alle Defekte ›</button></div></div>'+
+  (wsForce?'<button type="button" class="wsback" id="wsback">‹ Zurück zur Lager Übersicht</button>':'')+'</div>';
+ if(typeof jvClock==="function")jvClock();
+ document.querySelectorAll("[data-wst]").forEach(b=>b.onclick=()=>{wsTab=b.dataset.wst;wsView()});
+ document.querySelectorAll("[data-wsd]").forEach(b=>b.onclick=()=>{curDef=b.dataset.wsd;go("defopen")});
+ $("#wsrep").onclick=()=>rScanCam(wsScanHit);$("#wsnew").onclick=()=>{dpho=null;go("defnew")};
+ $("#wsall").onclick=()=>{df="alle";go("def")};const rb=$("#wsrepb");if(rb)rb.onclick=etRepDlg;const bk=$("#wsback");if(bk)bk.onclick=()=>{wsForce=false;draw()}}
+/* Repariert melden: Teil scannen → offene Meldungen zum Artikel */
+function wsScanHit(raw){const v=String(raw||"").trim(),m=v.match(CODE_RE),nr=m?m[1].toUpperCase():(v.split(/[\s\-‐‑‒–—―−]+/)[0]||"").toUpperCase(),c=artCode(nr)||nr;
+ if(!c){beep(false);return errBox("Kein Code erkannt.")}
+ const k=typeof art!=="undefined"&&art[c],nm=k?k.name:"Nr. "+c,old=dxDQ;dxDQ=c;const L=wsOpen().filter(dxDefMatch).sort((a,b)=>(b.urg?1:0)-(a.urg?1:0)||a.t-b.t);dxDQ=old;
+ if(!L.length){beep(false);return errBox("Kein offener Defekt zu „"+nm+"“.")}beep(true);
+ if(L.length===1)return wsGoRepair(L[0]);
+ const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0;max-height:90vh;overflow:auto"><b style="font-size:18px">'+esc(nm)+'</b><p class="mute" style="margin:2px 0 10px">'+L.length+' offene Meldungen – welche ist repariert?</p>'+L.map(wsLine).join("")+'<button class="btn ghost" type="button" id="wsx" style="margin-top:6px">Abbrechen</button></div>';
+ document.body.appendChild(o);o.querySelector("#wsx").onclick=()=>o.remove();o.addEventListener("click",e=>{if(e.target===o)o.remove()});
+ o.querySelectorAll("[data-wsd]").forEach(b=>b.onclick=()=>{o.remove();wsGoRepair(L.find(d=>d.id===b.dataset.wsd))})}
+function wsGoRepair(d){if(!d)return;curDef=d.id;go("defopen");if(can("def_b"))setTimeout(()=>wsRepair(d),150)}
+/* „Repariert“ – bei Stückzahl erst fragen, wie viele */
+function wsRepair(d){const n=dxQ(d);if(n<=1)return etDlg(d,true);let k=n;const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:400px;margin:0"><b style="font-size:18px">Wie viele sind repariert?</b><p class="mute" style="margin:2px 0 0">'+n+' × '+esc(d.art)+'</p><div class="wsq"><button type="button" id="wsqm" aria-label="Weniger">−</button><b id="wsqv">'+k+' von '+n+'</b><button type="button" id="wsqp" aria-label="Mehr">+</button></div><p class="mute" id="wsqh" style="font-size:13px;min-height:18px;margin:0 0 10px"></p><div class="row"><button class="btn ghost" type="button" id="wsqx">Abbrechen</button><button class="btn" type="button" id="wsqo">Weiter</button></div></div>';
+ document.body.appendChild(o);const q=s=>o.querySelector(s),upd=()=>{q("#wsqv").textContent=k+" von "+n;q("#wsqh").textContent=k<n?(n-k)+" Stk bleiben als offener Defekt stehen.":"Alle Stück repariert."};upd();
+ q("#wsqm").onclick=()=>{if(k>1){k--;upd()}};q("#wsqp").onclick=()=>{if(k<n){k++;upd()}};q("#wsqx").onclick=()=>o.remove();
+ q("#wsqo").onclick=()=>{o.remove();etDlg(d,true,k<n?k:0)}}
+/* Rest einer Meldung als eigene offene Meldung anlegen (vor dem Speichern der Reparatur) */
+async function wsSplit(d,k){const n=dxQ(d),id=Date.now().toString(36)+Math.random().toString(36).slice(2,5),skip=/^(id|rep|et|rfn|repBy|repBy_as|repT|done|doneBy|doneBy_as|doneT|fb|edT)$/;
+ const c={};Object.keys(d).forEach(f=>{if(!skip.test(f))c[f]=d[f]});c.n=n-k;c.done=false;c.teilVon=d.id;
+ const fn=+d.fn||0;let m=0;try{if(fn){for(let i=0;i<fn;i++){const sn=await db.doc("fotos/"+d.id+"-"+i).get();if(sn.exists){await db.doc("fotos/"+id+"-"+m).set(sn.data());m++}}}else if(d.foto){const sn=await db.doc("fotos/"+d.id).get();if(sn.exists){await db.doc("fotos/"+id+"-0").set(sn.data());m=1}}}catch(e){}
+ c.fn=m;c.foto=m>0;await db.doc("defekte/"+id).set(c);return id}
+document.addEventListener("click",e=>{const t=e.target&&e.target.closest&&e.target.closest("#wsadm");if(t){wsForce=true;wsTab=null;draw()}});
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -4223,7 +4295,7 @@ function draw(){if(!db)return;document.body.classList.toggle("jvon",view==="jarv
  tabHead();
  if(view.startsWith("ret")&&!canLager()){view="start";hist=[]}
  if(view.startsWith("ret")){const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&$("#app").contains(ae))return;return retDraw()}
- if(view==="jarvis"&&can("jv_s"))return jarvisView();
+ if(view==="jarvis"&&can("jv_s"))return wsIs()?wsView():jarvisView();
  if(view==="jarvis"){view="start";hist=[]}
  if(view==="au"&&can("au_s"))return auView();
  if(view==="auopen"&&can("au_s"))return auOpenView();
@@ -4386,7 +4458,7 @@ function defOpenView(){const d=defs.find(x=>x.id===curDef);if(!d||!(can("def_s")
  if(d.foto)loadTh("dph",d);etBind(d);
  if($("#dfb"))$("#dfb").onchange=()=>db.doc("defekte/"+d.id).update({fb:$("#dfb").value.trim()});
  if($("#ded"))$("#ded").onclick=()=>go("defedit");
- if($("#dd"))$("#dd").onclick=()=>!d.done?etDlg(d,true):db.doc("defekte/"+d.id).update(d.done?{done:false,doneBy:"",doneT:0}:{done:true,doneBy:me,...tabAs("doneBy"),doneT:Date.now()});
+ if($("#dd"))$("#dd").onclick=()=>!d.done?wsRepair(d):db.doc("defekte/"+d.id).update(d.done?{done:false,doneBy:"",doneT:0}:{done:true,doneBy:me,...tabAs("doneBy"),doneT:Date.now()});
 }
 let hist=[];
 function go(v){try{document.activeElement.blur()}catch(e){}stop();hist.push(view);view=v;draw()}
@@ -4394,7 +4466,7 @@ function back(){try{document.activeElement.blur()}catch(e){}stop();let v;do{v=hi
 function startView(){$("#t").textContent="Hauptseite";
  const od=vdefs().filter(d=>!d.done),ou=od.filter(d=>d.urg).length,ol=lists.filter(l=>!l.chk).length,ui=infos.filter(i=>!i.read).length;
  const T=(g,ic,t,sub,hot)=>'<button class="hb" data-g="'+g+'"><span class="hi">'+ic+'</span><span class="ht"><b>'+t+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</span>'+(hot?'<span class="hc">'+hot+'</span>':'')+'<svg class="hv" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>';
- $("#app").innerHTML='<div class="hgrid">'+(can("jv_s")?T("jarvis",JV_ICON,'Lager Übersicht','Briefing, heute, Dispo abgelaufen, Defekte',jvHot()).replace('class="hb"','class="hb hbjv"'):'')+(can("au_s")?T("au",AU_ICON,'Meine Aufträge',auSubT(),auHot()):'')+(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+
+ $("#app").innerHTML='<div class="hgrid">'+(can("jv_s")?(wsIs()?T("jarvis",JV_ICON,'Werkstatt Übersicht','Dringend, neu gemeldet, diese Woche',wsHot()):T("jarvis",JV_ICON,'Lager Übersicht','Briefing, heute, Dispo abgelaufen, Defekte',jvHot())).replace('class="hb"','class="hb hbjv"'):'')+(can("au_s")?T("au",AU_ICON,'Meine Aufträge',auSubT(),auHot()):'')+(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+
   T("new",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/></svg>','Material vor Ort erfassen',ol+(ol===1?' offene Liste':' offene Listen'),ol)+
   T("defnew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>','Defekte',od.length+(od.length===1?' offener Defekt':' offene Defekte')+(ou?', davon '+ou+' dringend':''),ou?'!':'')+
   T("infonew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14h4"/></svg>','Info an das Lager',can("inf_s")?ui+' ungelesen':'Nachricht mit Foto ans Lager',can("inf_s")&&ui?ui:'')+
