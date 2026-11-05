@@ -234,6 +234,8 @@ rep('+(r.rem?"\\nBemerkungen: "+r.rem:"")+"\\n\\nDie vollständige','+(r.rem?"\\
 rep('hr.values=["Artikelnr.","Artikel","Ausgang","Retour","Differenz"];','hr.values=["Artikelnr.","Artikel","Ausgang","Retour","Differenz",...(dxRetN(r.id)?["davon defekt"]:[])];')
 rep("""row.values=[x.nr||"",x.name,null,x.q,{formula:'IF(C'+rw+'="","",D'+rw+'-C'+rw+')',result:""}];""","""row.values=[x.nr||"",x.name,null,x.q,{formula:'IF(C'+rw+'="","",D'+rw+'-C'+rw+')',result:""},...(dxRetN(r.id)?[dxRetXl(r,x.k)]:[])];""")
 rep('for(let n=1;n<=5;n++){const c=row.getCell(n);','for(let n=1;n<=(dxRetN(r.id)?6:5);n++){const c=row.getCell(n);if(n===6&&row.getCell(6).value)c.font={bold:true,color:{argb:"FFC0392B"}};')
+# 1.123: Vorschläge Veranstaltung/Auftragsnummer auch im Retourschein (dxEvSug in defx.js)
+rep('$("#rev").oninput=rHi;$("#rord").oninput=rHi;','$("#rev").oninput=rHi;$("#rord").oninput=rHi;dxEvSug($("#rev"),$("#rord"));')
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},

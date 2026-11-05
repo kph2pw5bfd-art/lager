@@ -95,6 +95,7 @@ function dxForm(p,d){const g=id=>document.getElementById(p+id);const fa=g("art")
  fe.addEventListener("input",refresh);fe.addEventListener("change",refresh);if(fo){fo.addEventListener("input",refresh);fo.addEventListener("change",refresh)}
  /* Etikett-Foto / Scan setzen Werte ohne Ereignis → kurz nachsehen, solange das Formular offen ist */
  const tm=setInterval(()=>{if(!document.body.contains(fe))return clearInterval(tm);refresh();if(dxNorm(fa.value)!==fa._lv){fa._lv=dxNorm(fa.value);paint()}},600);
+ dxEvSug(fe,fo);
  refresh()}
 function dxQrHit(p,raw){const r=typeof gbParse==="function"?gbParse(raw):{bad:true};
  if(!r.ord){beep(false);return errBox(r.old?"Altes Etikett – der QR-Code zeigt nur auf die Homepage. Bitte „Etikett fotografieren“ verwenden.":"Kein Gitterbox-Etikett erkannt. Bitte „Etikett fotografieren“ verwenden.")}
@@ -164,3 +165,41 @@ function dxRetXl(r,nr){const n=dxRetN(r&&r.id,nr);return n||null}
 function dxDefLines(d){let h='';if(dxQ(d)>1)h+='<div class="mute">Stückzahl: <b>'+dxQ(d)+' Stk</b></div>';
  if(d.ret){const r=(typeof rets!=="undefined"?rets:[]).find(x=>x.id===d.ret);h+='<div class="mute">Gemeldet beim Zählen'+(r&&can("ret_s")?' – <a href="#" data-dxr="'+esc(d.ret)+'" style="color:var(--navy);font-weight:600">Retourschein öffnen</a>':'')+'</div>'}
  setTimeout(()=>document.querySelectorAll("[data-dxr]").forEach(a=>a.onclick=e=>{e.preventDefault();curRet=a.dataset.dxr;go("retopen")}),0);return h}
+
+/* ===== 1.123 – Veranstaltung / Auftragsnummer vorschlagen (Jürgen, 5.11.: „Wenn ich kein Etikett auf der Box habe“; gewählt:
+   laufende Aufträge zuerst, darunter Erledigte; auch im Retourschein). Quellen: Packlisten, Retourscheine, frühere Defekte.
+   Ein Auftrag = eine Zeile (Schlüssel Auftragsnummer, nur Ziffern); Antippen füllt Veranstaltung UND Auftragsnummer. ===== */
+(function(){try{const st=document.createElement("style");st.textContent=
+'.dxsug .dxev{display:flex;flex-direction:column;align-items:stretch;gap:2px}.dxev .dxevt{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.dxev .dxevt span{font-weight:600}.dxev small{white-space:normal!important}'+
+'.dxst.warn{background:#fdecea;color:#a3150b}.dxst.hot{background:#fff1e0;color:#8a4300}.dxst.ok{background:#e3f3e8;color:#1f6b41}.dxst.run{background:#e8f0fb;color:#0b3570}'+
+'@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dxst.warn{background:#4a1612;color:#ffb4a8}:root:not([data-theme="light"]) .dxst.hot{background:#3a2610;color:#ffcf99}:root:not([data-theme="light"]) .dxst.ok{background:#16402a;color:#9fe0b8}:root:not([data-theme="light"]) .dxst.run{background:#16294a;color:#c7dbff}}'+
+':root[data-theme="dark"] .dxst.warn{background:#4a1612;color:#ffb4a8}:root[data-theme="dark"] .dxst.hot{background:#3a2610;color:#ffcf99}:root[data-theme="dark"] .dxst.ok{background:#16402a;color:#9fe0b8}:root[data-theme="dark"] .dxst.run{background:#16294a;color:#c7dbff}';
+document.head.appendChild(st)}catch(e){}})();
+const dxDig=s=>String(s||"").replace(/\D/g,"");
+const dxDM=t=>{if(!t)return "";const d=new Date(t);return String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."};
+/* alle bekannten Aufträge */
+function dxOrders(){const M={},put=(ev,ord,o)=>{ev=String(ev||"").trim();ord=String(ord||"").trim();if(!ev&&!ord)return;const k=dxDig(ord)?"o:"+dxDig(ord):"e:"+dxNorm(ev);
+  const x=M[k]=M[k]||{ev:"",ord:"",t:0};if(!x.ev&&ev)x.ev=ev;if(!x.ord&&ord)x.ord=ord;Object.assign(x,o||{},{t:Math.max(x.t||0,(o&&o.t)||0)});if(o&&o.p){x.ev=ev||x.ev;x.ord=ord||x.ord}};
+ if(typeof packs!=="undefined")packs.forEach(p=>{if(p._z)return;let s=null;try{s=typeof pkState==="function"?pkState(p):null}catch(e){}
+  put(p.ev,p.ord,{p:1,db:p.db,de:p.de,pl:p.pl,st:s,act:!!(s&&s.k!=="done"),t:p.de||p.db||p.t||0})});
+ if(typeof rets!=="undefined")rets.forEach(r=>put(r.ev,r.ord,{t:r.modT||r.t||0,ret:1,rop:!r.closed}));
+ if(typeof defs!=="undefined")defs.forEach(d=>put(d.ev,d.ord,{t:d.t||0}));
+ /* ohne Packliste: offener Retourschein zählt als laufend */
+ return Object.values(M).map(x=>(x.p?x:{...x,act:!!x.rop}))}
+function dxOrdFind(q,mode){const T=dxNorm(q).split(" ").filter(Boolean),D=dxDig(q);if(!T.length)return [];
+ const L=dxOrders().filter(x=>{if(mode==="ord"&&D.length>=2)return dxDig(x.ord).includes(D);const h=" "+dxNorm(x.ev+" "+x.ord)+" ";return T.every(t=>h.includes(t))||(D.length>=3&&dxDig(x.ord).includes(D))});
+ const A=L.filter(x=>x.act).sort((a,b)=>(a.de||a.t||9e15)-(b.de||b.t||9e15)),B=L.filter(x=>!x.act).sort((a,b)=>(b.t||0)-(a.t||0));
+ return {A:A.slice(0,8),B:B.slice(0,Math.max(3,8-A.length))}}
+function dxStTag(x){const s=x.st;if(s)return '<span class="dxst '+({warn:"warn",hot:"hot",ok:"ok"}[s.c]||"run")+'">'+esc(s.k==="over"?"Dispo abgelaufen":s.l)+'</span>';return x.act?'<span class="dxst run">Retourschein offen</span>':''}
+function dxEvSug(fe,fo,cb){if(!fe||fe._dxev)return;fe._dxev=1;fe.removeAttribute("list");
+ const mk=inp=>{const w=document.createElement("div");w.className="dxwrap";inp.parentNode.insertBefore(w,inp);w.appendChild(inp);const s=document.createElement("div");s.className="dxsug";s.hidden=true;w.appendChild(s);inp.setAttribute("autocomplete","off");return s};
+ const sE=mk(fe),sO=fo?mk(fo):null;
+ const pick=x=>{fe.value=x.ev||fe.value;if(fo&&x.ord)fo.value=x.ord;fe.classList.remove("bad");sE.hidden=true;if(sO)sO.hidden=true;
+  [fe,fo].forEach(i=>{if(i){i.dispatchEvent(new Event("input"));i.dispatchEvent(new Event("change"))}});cb&&cb(x)};
+ const show=(inp,box,mode)=>{const q=inp.value.trim();if(q.length<2){box.hidden=true;return}const R=dxOrdFind(q,mode),all=[...R.A,...R.B];
+  if(!all.length||(all.length===1&&dxNorm(all[0].ev)===dxNorm(fe.value)&&(!fo||dxDig(all[0].ord)===dxDig(fo.value)))){box.hidden=true;return}
+  const row=(x,i)=>'<button type="button" class="dxev" data-dxo="'+i+'"><span class="dxevt"><span>'+dxMark(x.ev||"–",mode==="ord"?"":q)+'</span>'+dxStTag(x)+'</span><small>'+[x.ord?esc(x.ord):"ohne Auftragsnummer",x.db||x.de?"Dispo "+dxDM(x.db)+"–"+dxDM(x.de):"",x.pl?"PL "+esc(typeof shortName==="function"?shortName(x.pl):x.pl):""].filter(Boolean).join(" · ")+'</small></button>';
+  box.innerHTML=(R.A.length?'<div class="dxg">Laufende Aufträge</div>'+R.A.map((x,i)=>row(x,i)).join(""):'')+(R.B.length?'<div class="dxg">Erledigt / älter</div>'+R.B.map((x,i)=>row(x,R.A.length+i)).join(""):'');
+  box.hidden=false;box.querySelectorAll("[data-dxo]").forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>pick(all[+b.dataset.dxo])})};
+ const bind=(inp,box,mode)=>{inp.addEventListener("input",e=>{if(e.isTrusted!==false)show(inp,box,mode)});inp.addEventListener("focus",()=>show(inp,box,mode));inp.addEventListener("blur",()=>setTimeout(()=>box.hidden=true,180));inp.addEventListener("keydown",e=>{if(e.key==="Escape")box.hidden=true})};
+ bind(fe,sE,"ev");if(fo)bind(fo,sO,"ord")}
