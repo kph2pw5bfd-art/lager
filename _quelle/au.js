@@ -42,7 +42,7 @@ function auCard(I){const p=I.p,mine=auIsMine(p),pills=[];
  if(I.missShow)pills.push(abgTag(I.B.hasEnd?"Endretoure – "+I.B.fehlt+(I.B.fehlt===1?" Stück fehlt":" Stück fehlen"):I.B.fehlt+" Stück noch draußen","red"));
  if(I.missShow&&mine&&I.B.miss.some(e=>!auAns(p,e.k).length))pills.push(abgTag("Noch nicht beantwortet","or"));
  if(!I.done)(p.zus||[]).forEach(z=>{if(pkZFin(p,z)||auHerrAll(p,String(z.ps)))return;const d=pkZDay(p,z),late=d<pkDay(Date.now());pills.push(abgTag("Nachlieferung "+(late?"noch nicht hergerichtet":"herrichten "+pkDM(d)),late?"red":"blue"))});
- if(I.g.dev&&!I.done)pills.push(abgTag("Herrichten: "+I.g.dev+(I.g.dev===1?" Abweichung":" Abweichungen"),"or"));
+ if(I.g.dev&&!I.done)pills.push(abgTag(I.g.dev+(I.g.dev===1?" Abweichung":" Abweichungen")+" zum Packschein","or"));
  if(I.B.zuviel&&!I.done)pills.push(abgTag(I.B.zuviel+" mehr zurück","grey"));
  const sub=I.over?"Dispo-Ende war "+pkDM(p.de):I.done?"Dispo "+pkDM(p.db)+" – "+pkDM(p.de):I.st.k==="herr"?"Herrichten heute":"Dispo "+pkDM(p.db)+" – "+pkDM(p.de);
  return '<button class="aucard'+(mine?' mine':'')+(I.hot?' hot':'')+'" type="button" data-au="'+esc(p.id)+'"><span class="auct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+abgTag(I.lab,I.cls==="b"?"blue":I.cls==="g"?"grey":I.cls)+'</span>'+

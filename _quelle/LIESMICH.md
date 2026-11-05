@@ -409,3 +409,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Gemeldet: Bei einer Nachlieferung stand „wird hergerichtet: 4 von 4 Positionen“, weil der Zusatz nicht über „Zusatz abschließen“ beendet wurde; Datum und Name fehlten.
 - `auHerrAll(p,zps)` in au.js: alle Positionen (ohne Lager 55) abgehakt → Zeitleiste zeigt „hergerichtet TT.MM. von <alle, die hergerichtet haben>“ (Datum = letzte Position, Namen wie gespeichert inkl. „(Tablet)“). Gilt für Zusätze und die Packliste selbst; Abweichungen darunter wie beim Abschluss. Das Schild „Nachlieferung …“ in der Liste verschwindet dann ebenfalls.
 - Test `tests/auzus_t.js`.
+
+## Version 1.127 – Wortlaut Schild in „Meine Aufträge“ (Jürgen, 5.11.)
+- „Herrichten: 1 Abweichung“ → „1 Abweichung zum Packschein“ / „n Abweichungen zum Packschein“ (au.js, Kartenschilder).
