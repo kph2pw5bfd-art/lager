@@ -76,7 +76,7 @@ function auDevNet(p,zps){const H=pkH(p),M=[],add=(nm,u,d,t)=>{let e=M.find(x=>x.
   (st.s!=="open"?st.alt:[]).forEach(a=>{const k=pkKat({a:a.a});add(k?k.name:a.t,u,+a.n||0)});
   if(h&&h.fm==="lager"&&x.f>0&&st.s!=="open")add(n,u,0,pkNum(x.f)+" "+u+" aus dem Lager statt Fremdmiete")});
  if(!zps&&typeof pkX==="function")pkX(p).forEach(e=>add(pkXName(e),e.u||"Stk",+e.n||0,"zusätzlich mitgegeben"+(e.why?" – "+e.why:"")));
- return M.filter(e=>e.d||e.t.length).map(e=>e.nm+(e.d?" "+(e.d>0?"+":"−")+pkNum(Math.abs(e.d))+" "+e.u:"")+(e.t.length?" ("+e.t.join(", ")+")":""))}
+ return M.filter(e=>e.d||e.t.length).map(e=>(e.d?(e.d>0?"+":"−")+pkNum(Math.abs(e.d))+" "+e.u+" ":"")+e.nm+(e.t.length?" ("+e.t.join(", ")+")":""))}/* 1.131: Zahl vor dem Namen (Jürgen) */
 function auDevLines(p,zps){const H=pkH(p),K=pkKeys(p),IT=pkItems(p),L=[];pkPosAll(p).forEach((x,i)=>{if((IT[i].z||null)!==(zps||null))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x);
  const u=" "+(x.u||"Stk");if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
  const ov=pkOver(x,h,st);if(ov)L.push(n+": "+pkNum(h.q)+" von "+pkNum(st.need)+u+" – "+pkNum(ov)+u+" mehr als im Packschein");

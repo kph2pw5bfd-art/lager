@@ -427,3 +427,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.130 – Material: Zusätze unten zusätzlich einzeln (Jürgen, 5.11.; gewählt: „Zusätzlich unten“ – oben bleibt alles zusammengerechnet)
 - `amZus(p)` in aumat.js: pro Zusatz ein Block „Zusatz <Nr>“ mit Stand (hergerichtet TT.MM. von … / wird hergerichtet x von y / herrichten <Tag>), Spalten Soll · Raus pro Position (Ersatz „stattdessen …“, Fremdmiete, Lager 55). Nur bei Filter „Alle“, Suche wirkt mit. Kein Rein/Diff (Retoure kommt gemeinsam).
+
+## Version 1.131 – Abweichungen: Zahl vor dem Artikel (Jürgen, 5.11.)
+- `auDevNet`: „−1 Stk Zähler-VT Wiener Netze 125A“ / „+1 Stk Zähler VT 63A“ statt Name vorne.
