@@ -236,6 +236,12 @@ rep("""row.values=[x.nr||"",x.name,null,x.q,{formula:'IF(C'+rw+'="","",D'+rw+'-C
 rep('for(let n=1;n<=5;n++){const c=row.getCell(n);','for(let n=1;n<=(dxRetN(r.id)?6:5);n++){const c=row.getCell(n);if(n===6&&row.getCell(6).value)c.font={bold:true,color:{argb:"FFC0392B"}};')
 # 1.123: Vorschläge Veranstaltung/Auftragsnummer auch im Retourschein (dxEvSug in defx.js)
 rep('$("#rev").oninput=rHi;$("#rord").oninput=rHi;','$("#rev").oninput=rHi;$("#rord").oninput=rHi;dxEvSug($("#rev"),$("#rord"));')
+# 1.124: Defekte-Liste – Suche, Scan, Erledigte einklappen (defx.js)
+rep('const l=vdefs().filter(d=>df==="alle"||(df==="offen")===!d.done)','const l=vdefs().filter(d=>df==="alle"||(df==="offen")===!d.done).filter(dxDefMatch)')
+rep('$("#app").innerHTML=nav()+defTools()+','const dxF=document.activeElement&&document.activeElement.id==="dxdq"?document.activeElement.selectionStart:null;$("#app").innerHTML=nav()+defTools()+dxDefSearch()+')
+rep("(l.length?l.map(d=>'<div class=\"sw\">","dxDefRows(l,d=>'<div class=\"sw\">")
+rep("</div></div></div>').join(\"\"):'<div class=\"card mute\">Keine Defekte gemeldet.</div>');","</div></div></div>');")
+rep('bindDefTools();if($("#etrep"))','bindDefTools();dxDefBind(dxF);if($("#etrep"))')
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},

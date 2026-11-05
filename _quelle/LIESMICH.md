@@ -390,3 +390,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Quellen `dxOrders()`: Packlisten (ohne Zusatz-Einträge, Status `pkState`, Dispo, PL), Retourscheine, Defekte; Schlüssel = Auftragsnummer (nur Ziffern), sonst Veranstaltungsname. „Laufende Aufträge“ = Packliste nicht erledigt bzw. (ohne Packliste) offener Retourschein, sortiert nach Dispo-Ende; darunter „Erledigt / älter“ nach Datum, zusammen max. 8–11 Zeilen. Zeile: Veranstaltung, Status-Schild, Auftragsnummer · Dispo TT.MM.–TT.MM. · PL.
 - Eingebaut in „Defekt melden“/„Bearbeiten“ (dxForm) und beim neuen/zu bearbeitenden Retourschein (Kopf, `#rev`/`#rord`, Patch in build.py).
 - Test `tests/evsug_t.js`.
+
+## Version 1.124 – Defekte-Liste: Suche, Scan, Erledigte eingeklappt (Jürgen, 5.11.: Norbert muss lange scrollen; gewählt: Scan ja, Erledigte einklappen)
+- In `defx.js` (Abschnitt 1.124), Patches in build.py auf defView: Suchfeld `#dxdq` + Scan-Knopf `#dxdsc` unter den Reitern. Suche (`dxDQ`, `dxDefMatch`) über Artikel, Nummer, Veranstaltung, Auftrag, Beschreibung, Fremdverschulden, Reparatur, Rückmeldung, gemeldet von; alle Wörter müssen vorkommen. Reine Nummer passt auch über den Artikelnamen (Defekte ohne Nummer). Suchtext bleibt beim Neuzeichnen, Fokus/Cursor werden wiederhergestellt.
+- Scan (`dxDefScanHit`): Nummer (ID wird abgeschnitten) als Suche; genau ein offener Defekt → öffnet ihn, sonst gefilterte Liste + Hinweis.
+- Reiter „Alle“ (`dxDefRows`): offene oben, Erledigte nur über „Erledigte anzeigen (n)“ (`dxDoneOpen`); bei aktiver Suche werden Erledigte immer gezeigt (Überschrift „Erledigt (n)“). Zeile „n Treffer · Suche löschen“.
+- Test `tests/defsuch_t.js`; `ersatz_t.js` und `defkachel_t.js` an das Einklappen angepasst.

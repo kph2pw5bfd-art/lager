@@ -203,3 +203,38 @@ function dxEvSug(fe,fo,cb){if(!fe||fe._dxev)return;fe._dxev=1;fe.removeAttribute
   box.hidden=false;box.querySelectorAll("[data-dxo]").forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>pick(all[+b.dataset.dxo])})};
  const bind=(inp,box,mode)=>{inp.addEventListener("input",e=>{if(e.isTrusted!==false)show(inp,box,mode)});inp.addEventListener("focus",()=>show(inp,box,mode));inp.addEventListener("blur",()=>setTimeout(()=>box.hidden=true,180));inp.addEventListener("keydown",e=>{if(e.key==="Escape")box.hidden=true})};
  bind(fe,sE,"ev");if(fo)bind(fo,sO,"ord")}
+
+/* ===== 1.124 – Suche + Scan in der Defekte-Liste, Erledigte eingeklappt (Jürgen, 5.11.: Norbert muss lange scrollen; gewählt: Scan ja, einklappen)
+   Suche über Artikel, Nummer, Veranstaltung, Auftrag, Beschreibung, Fremdverschulden, Reparatur, gemeldet von (Wörter beliebig).
+   Scan → Artikelnummer als Suche; genau EIN offener Treffer → öffnet ihn. Reiter „Alle“: Erledigte unter „Erledigte anzeigen (n)“;
+   bei einer Suche werden Erledigte immer mit durchsucht und gezeigt. ===== */
+(function(){try{const st=document.createElement("style");st.textContent=
+'.dxdone{display:block;width:100%;margin:6px 0 10px;padding:12px 14px;border:1.5px dashed var(--line);border-radius:10px;background:none;color:var(--navy);font:inherit;font-weight:700;cursor:pointer;text-align:center}'+
+'.dxhit{font-size:13.5px;color:var(--mute);margin:-2px 0 8px;display:flex;justify-content:space-between;gap:10px}.dxhit button{background:none;border:0;color:var(--navy);font:inherit;font-weight:700;cursor:pointer;padding:0}'+
+'.dxdh{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:14px 0 6px}'+
+'@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dxdone,:root:not([data-theme="light"]) .dxhit button{color:#8fb0ea}}:root[data-theme="dark"] .dxdone,:root[data-theme="dark"] .dxhit button{color:#8fb0ea}';
+document.head.appendChild(st)}catch(e){}})();
+let dxDQ="",dxDoneOpen=false;
+function dxDefHay(d){let who="";try{who=nmA(d,"by")}catch(e){}return dxNorm([d.art,d.anr,d.ev,d.ord,d.desc,d.fvw,d.rep,d.fb,who].filter(Boolean).join(" "))}
+function dxDefMatch(d){const q=dxDQ.trim();if(!q)return true;const T=dxNorm(q).split(" ").filter(Boolean),h=" "+dxDefHay(d)+" ";if(T.length&&T.every(t=>h.includes(t)))return true;
+ if(/^[A-Za-z0-9]{3,10}$/.test(q)){const c=artCode(q);if(!c)return false;if(artCode(String(d.anr||"").split(/[\s\-‐‑‒–—―−]+/)[0])===c)return true;const k=typeof art!=="undefined"&&art[c];if(k&&dxNorm(k.name)===dxNorm(d.art))return true}return false}
+function dxDefSearch(){return '<div class="srow"><input id="dxdq" type="search" placeholder="Artikel, Nr., Veranstaltung" value="'+esc(dxDQ)+'" autocomplete="off" enterkeyhint="search"><button class="btn grey scb" id="dxdsc" type="button" aria-label="Artikel scannen und Defekte dazu zeigen" title="Artikel scannen"><svg width="24" height="20" viewBox="0 0 26 22" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M3 1v20M7 1v20M12 1v20M16 1v20M20 1v20M24 1v20"/></svg></button></div>'}
+function dxDefRows(l,fn){const q=dxDQ.trim();let h="";
+ if(q)h+='<div class="dxhit"><span>'+(l.length?l.length+' Treffer':'Keine Treffer für „'+esc(q)+'“')+'</span><button type="button" id="dxdqx">Suche löschen</button></div>';
+ if(!l.length)return h+(q?'':'<div class="card mute">'+(df==="offen"?'Keine offenen Defekte.':'Keine Defekte gemeldet.')+'</div>');
+ if(df!=="alle")return h+l.map(fn).join("");
+ const O=l.filter(d=>!d.done),E=l.filter(d=>d.done);h+=O.length?O.map(fn).join(""):(q?'':'<div class="card mute">Keine offenen Defekte.</div>');
+ if(!E.length)return h;
+ if(q)return h+'<div class="dxdh">Erledigt ('+E.length+')</div>'+E.map(fn).join("");
+ return h+(dxDoneOpen?'<button type="button" class="dxdone" id="dxdtog">Erledigte ausblenden ('+E.length+')</button>'+E.map(fn).join(""):'<button type="button" class="dxdone" id="dxdtog">Erledigte anzeigen ('+E.length+')</button>')}
+function dxDefBind(foc){const i=document.getElementById("dxdq");if(!i)return;
+ i.oninput=()=>{dxDQ=i.value;defView()};
+ if(foc!==null&&foc!==undefined){i.focus();try{i.setSelectionRange(foc,foc)}catch(e){}}
+ const x=document.getElementById("dxdqx");if(x)x.onclick=()=>{dxDQ="";defView()};
+ const t=document.getElementById("dxdtog");if(t)t.onclick=()=>{dxDoneOpen=!dxDoneOpen;defView()};
+ const s=document.getElementById("dxdsc");if(s)s.onclick=()=>rScanCam(dxDefScanHit)}
+function dxDefScanHit(raw){const v=String(raw||"").trim(),m=v.match(CODE_RE),nr=m?m[1].toUpperCase():(v.split(/[\s\-‐‑‒–—―−]+/)[0]||"").toUpperCase(),c=artCode(nr)||nr;
+ if(!c){beep(false);return errBox("Kein Code erkannt.")}
+ dxDQ=c;const k=typeof art!=="undefined"&&art[c],nm=k?k.name:"Nr. "+c,open=vdefs().filter(d=>!d.done&&dxDefMatch(d));
+ if(open.length===1){beep(true);curDef=open[0].id;go("defopen");toast("Offener Defekt: "+nm,1);return}
+ if(df==="erledigt")df="alle";beep(!!open.length);defView();toast(open.length?open.length+" offene Defekte: "+nm:"Kein offener Defekt zu "+nm,1)}

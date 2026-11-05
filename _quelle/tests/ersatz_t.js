@@ -11,7 +11,7 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
  const E=(f,a)=>p.evaluate(f,a);
  await E(()=>{df="alle";curDef=null;view="def";hist=["start"];draw()});await p.waitForTimeout(300);
- const ord=await E(()=>[...document.querySelectorAll("[data-df]")].map(e=>e.dataset.df).join(""));ok("Sortierung: dringend offen, offen neu→alt, erledigt neu→alt",ord==="cbaed",ord);
+ await E(()=>{dxDoneOpen=true;defView()});const ord=await E(()=>[...document.querySelectorAll("[data-df]")].map(e=>e.dataset.df).join(""));ok("Sortierung: dringend offen, offen neu→alt, erledigt neu→alt",ord==="cbaed",ord);
  ok("Knopf Bericht",!!(await p.$("#etrep")));
  /* Melden → Alle */
  await E(()=>{df="offen";go("defnew")});await p.waitForTimeout(200);await p.fill("#dnart","Testartikel");await p.fill("#dnev","Fest");await p.click("#dnsend");await p.waitForTimeout(500);await p.click("#dxfin");await p.waitForTimeout(300);

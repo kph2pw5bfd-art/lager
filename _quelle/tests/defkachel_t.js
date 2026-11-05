@@ -10,6 +10,6 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  
  ok("Kachel heißt Defekte",/^Defekte/.test((await p.innerText('[data-g="defnew"] .ht b')).trim()));
  await p.click('[data-g="defnew"]');await p.waitForTimeout(300);
- ok("Kachel öffnet Liste mit Reiter Alle",await p.evaluate(()=>view==="def"&&df==="alle"&&document.querySelector('[data-dfl="alle"]').classList.contains("act")&&document.querySelectorAll("[data-df]").length===2));
+ ok("Kachel öffnet Liste mit Reiter Alle",await p.evaluate(()=>view==="def"&&df==="alle"&&document.querySelector('[data-dfl="alle"]').classList.contains("act")&&document.querySelectorAll("[data-df]").length===1&&/Erledigte anzeigen \(1\)/.test((document.getElementById("dxdtog")||{}).textContent||"")));
  await p.click('[data-v="defnew"]');await p.waitForTimeout(200);ok("Reiter Defekt melden → Formular",!!(await p.$("#dnart")));
  ok("keine JS-Fehler",!errs.length,errs.join(" / "));console.log("FEHLER GESAMT:",F);await b.close()})();
