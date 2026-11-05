@@ -14,8 +14,8 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  const ord=await E(()=>[...document.querySelectorAll("[data-df]")].map(e=>e.dataset.df).join(""));ok("Sortierung: dringend offen, offen neu→alt, erledigt neu→alt",ord==="cbaed",ord);
  ok("Knopf Bericht",!!(await p.$("#etrep")));
  /* Melden → Alle */
- await E(()=>{df="offen";go("defnew")});await p.waitForTimeout(200);await p.fill("#dnart","Testartikel");await p.fill("#dnev","Fest");await p.click("#dnsend");await p.waitForTimeout(500);
- ok("Nach Melden Reiter Alle",await E(()=>view==="def"&&df==="alle"&&document.querySelector('[data-dfl="alle"]').classList.contains("act")));
+ await E(()=>{df="offen";go("defnew")});await p.waitForTimeout(200);await p.fill("#dnart","Testartikel");await p.fill("#dnev","Fest");await p.click("#dnsend");await p.waitForTimeout(500);await p.click("#dxfin");await p.waitForTimeout(300);
+ ok("Nach Melden → Fertig: Reiter Alle",await E(()=>view==="def"&&df==="alle"&&document.querySelector('[data-dfl="alle"]').classList.contains("act")));
  /* Repariert */
  await E(()=>{curDef="b";go("defopen")});await p.waitForTimeout(300);ok("Knopf Repariert",(await p.innerText("#dd")).trim()==="Repariert");
  await p.click("#dd");await p.waitForTimeout(300);await p.fill("#etrep","Schalter getauscht");

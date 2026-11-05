@@ -42,7 +42,7 @@ function wbData(){const M=wbMeet(),L0=pkAddD(M,-7),L1=M,N1=pkAddD(M,7),t0=pkDay(
  return{M,L0,N1,herr,zur,over,dis,offen,aus,days,ach,notes,doneN}}
 /* Offene Defekte, deren Artikel in Packlisten der Woche gebraucht werden – pro Artikel zusammengefasst (ab 1.83: zwei Meldungen zum selben Artikel = eine Zeile) */
 function wbDefNeed(a,b){const G={};defs.filter(d=>!d.done).forEach(d=>{const code=artCode(String(d.anr||"").split(/[-–]/)[0]),k=code?"c:"+code:"n:"+jvATok(d.art).join(" ");
-  const g=G[k]=G[k]||{k,name:d.art,A:{code,toks:jvATok(d.art).filter(w=>!/^\d{1,2}$/.test(w)),label:d.art},n:0,urg:0,ids:[]};g.n++;if(d.urg)g.urg++;g.ids.push(d.id)});
+  const g=G[k]=G[k]||{k,name:d.art,A:{code,toks:jvATok(d.art).filter(w=>!/^\d{1,2}$/.test(w)),label:d.art},n:0,urg:0,ids:[]};{const q=Math.max(1,parseInt(d.n,10)||1);g.n+=q;if(d.urg)g.urg+=q}g.ids.push(d.id)});
  return Object.values(G).map(g=>{const m=jvMatcher(g.A);g.use=packs.filter(p=>{const t=pkHDay(p);return t>=a&&t<b&&pkState(p).k!=="done"}).map(p=>{const c=jvArtCnt(p,m);return{p,t:pkHDay(p),ev:p.ev||p.ord,q:c.out+c.plan}}).filter(u=>u.q>0).sort((x,y)=>x.t-y.t);return g}).filter(g=>g.use.length).sort((x,y)=>y.urg-x.urg||x.use[0].t-y.use[0].t)}
 /* ---------- Bericht (Bildschirm und Druck) ---------- */
 function wbList(title,rows,red,empty){return '<div class="wbl"><div class="wblh'+(red?' red':'')+'"><b>'+esc(title)+'</b><b>'+rows.length+'</b></div>'+(rows.length?rows.map(r=>'<div class="wbr"><b>'+esc(r.n)+'</b><span>'+esc(r.d)+'</span>'+(r.r?'<em class="'+(r.cls||"")+'">'+esc(r.r)+'</em>':'')+'</div>').join(""):'<div class="wbe">'+esc(empty)+'</div>')+'</div>'}

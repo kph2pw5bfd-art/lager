@@ -494,7 +494,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.121";
+<script>const APPV="1.122";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1040,7 +1040,7 @@ async function fehlBlock(){$("#app").insertAdjacentHTML("beforeend",'<h3 style="
 /* Betreff und Text für den Mailversand */
 function rMailSubj(r){return "Retourschein "+r.ev+(r.ord?" – Auftragsnummer "+r.ord:"")}
 function rMailBody(r){const it=rIt(r),n=Object.keys(it).length,st=r.closed?"Abgeschlossen":"In Bearbeitung";
- return "Hallo,\n\nanbei der Retourschein für folgende Veranstaltung:\n\nVeranstaltung: "+r.ev+"\nAuftragsnummer: "+(r.ord||"–")+"\nStatus: "+st+"\nPositionen: "+n+" ("+rTot(it)+" Stück)"+(r.rem?"\nBemerkungen: "+r.rem:"")+"\n\nDie vollständige Liste ist als Excel-Datei im Anhang.\n\nLiebe Grüße\n"+meName()}
+ return "Hallo,\n\nanbei der Retourschein für folgende Veranstaltung:\n\nVeranstaltung: "+r.ev+"\nAuftragsnummer: "+(r.ord||"–")+"\nStatus: "+st+"\nPositionen: "+n+" ("+rTot(it)+" Stück)"+(r.rem?"\nBemerkungen: "+r.rem:"")+dxRetMail(r)+"\n\nDie vollständige Liste ist als Excel-Datei im Anhang.\n\nLiebe Grüße\n"+meName()}
 
 /* Versand per Mail vermerken */
 const RTO="tpc_mail_empf";
@@ -3021,7 +3021,7 @@ function wbData(){const M=wbMeet(),L0=pkAddD(M,-7),L1=M,N1=pkAddD(M,7),t0=pkDay(
  return{M,L0,N1,herr,zur,over,dis,offen,aus,days,ach,notes,doneN}}
 /* Offene Defekte, deren Artikel in Packlisten der Woche gebraucht werden – pro Artikel zusammengefasst (ab 1.83: zwei Meldungen zum selben Artikel = eine Zeile) */
 function wbDefNeed(a,b){const G={};defs.filter(d=>!d.done).forEach(d=>{const code=artCode(String(d.anr||"").split(/[-–]/)[0]),k=code?"c:"+code:"n:"+jvATok(d.art).join(" ");
-  const g=G[k]=G[k]||{k,name:d.art,A:{code,toks:jvATok(d.art).filter(w=>!/^\d{1,2}$/.test(w)),label:d.art},n:0,urg:0,ids:[]};g.n++;if(d.urg)g.urg++;g.ids.push(d.id)});
+  const g=G[k]=G[k]||{k,name:d.art,A:{code,toks:jvATok(d.art).filter(w=>!/^\d{1,2}$/.test(w)),label:d.art},n:0,urg:0,ids:[]};{const q=Math.max(1,parseInt(d.n,10)||1);g.n+=q;if(d.urg)g.urg+=q}g.ids.push(d.id)});
  return Object.values(G).map(g=>{const m=jvMatcher(g.A);g.use=packs.filter(p=>{const t=pkHDay(p);return t>=a&&t<b&&pkState(p).k!=="done"}).map(p=>{const c=jvArtCnt(p,m);return{p,t:pkHDay(p),ev:p.ev||p.ord,q:c.out+c.plan}}).filter(u=>u.q>0).sort((x,y)=>x.t-y.t);return g}).filter(g=>g.use.length).sort((x,y)=>y.urg-x.urg||x.use[0].t-y.use[0].t)}
 /* ---------- Bericht (Bildschirm und Druck) ---------- */
 function wbList(title,rows,red,empty){return '<div class="wbl"><div class="wblh'+(red?' red':'')+'"><b>'+esc(title)+'</b><b>'+rows.length+'</b></div>'+(rows.length?rows.map(r=>'<div class="wbr"><b>'+esc(r.n)+'</b><span>'+esc(r.d)+'</span>'+(r.r?'<em class="'+(r.cls||"")+'">'+esc(r.r)+'</em>':'')+'</div>').join(""):'<div class="wbe">'+esc(empty)+'</div>')+'</div>'}
@@ -3953,6 +3953,173 @@ function defFvDlg(d){const o=document.createElement("div");o.className="ov";
  o.querySelector("#xfvo").onclick=async()=>{const v=defFvGet("x");o.remove();if(!!d.fv===v.fv&&String(d.fvw||"")===v.fvw)return;
   try{await db.doc("defekte/"+d.id).update({...v,fvBy:me,fvT:Date.now()});toast(v.fv?"Fremdverschulden eingetragen":"Fremdverschulden entfernt",1)}catch(e){errBox("Speichern fehlgeschlagen"+(typeof sbErr==="function"?sbErr(e):"")+". Hast du das Recht dazu?")}}}
 document.addEventListener("click",ev=>{const b=ev.target.closest&&ev.target.closest("#dfved");if(!b||typeof view==="undefined"||view!=="defopen")return;const d=defs.find(x=>x.id===curDef);if(d)defFvDlg(d)});
+
+/* ===== 1.122 – Defekte schneller melden (Jürgen, 5.11.; Entwurf https://claude.ai/artifact/CfJLc8YRezZnoUsn9DmLYR)
+   Teil A – Formular „Defekt melden“ / „Bearbeiten“ (dxForm):
+   · Karte VERANSTALTUNG steht vor ARTIKEL, neuer Knopf „QR scannen“ (Gitterbox-Etikett TPC:<Auftrag>, wie 1.121)
+   · Artikel aus der Packliste der Veranstaltung als Knöpfe (Packschein + Zusätze, ohne Fremdmiete, Reihenfolge Artikelliste)
+   · Vorschläge beim Tippen aus der Artikelliste (Name + Nummer, Wörter in beliebiger Reihenfolge), Nummer wird mit eingetragen
+   · Stückzahl (Feld n, Jürgen: „eine Meldung mit Stückzahl“), Standard 1
+   · nach dem Absenden „+ Nächster Defekt von dieser Veranstaltung“ (Veranstaltung/Auftrag bleiben stehen, dxKeep)
+   Teil B – Retourschein-Zahlenfeld: Zeile „davon defekt“ (jeder, der zählen darf). Pro Schein + Artikel EINE Meldung mit
+   Stückzahl (Felder ret, rnr). Auf 0 → Rückfrage „löschen?“; ohne Recht Defekte-Löschen wird sie als gelöscht markiert (del).
+   Kein SQL nötig. ===== */
+(function(){try{const st=document.createElement("style");st.textContent=
+'.dxrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.dxrow .btn{margin:0!important;display:flex;align-items:center;justify-content:center;gap:8px;min-width:0}'+
+'.dxchips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}.dxchip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 11px;font:inherit;font-size:14px;cursor:pointer;min-height:38px;text-align:left}.dxchip small{color:var(--mute);font-size:12px;margin-left:5px}.dxchip.on{background:var(--navy);border-color:var(--navy);color:#fff}.dxchip.on small{color:#dbe6f7}'+
+'.dxhint{font-size:13.5px;color:var(--mute);margin:0 0 8px}.dxwrap{position:relative}.dxsug{position:absolute;left:0;right:0;top:100%;margin-top:-6px;z-index:20;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 22px rgba(0,0,0,.18);max-height:300px;overflow:auto}'+
+'.dxsug button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:10px 12px;font:inherit;font-size:15px;color:var(--ink);cursor:pointer}.dxsug button:first-child{border-top:0}.dxsug button small{color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}.dxsug .dxg{background:var(--bg);font-size:12px;font-weight:700;color:var(--mute);padding:5px 12px}.dxsug b{color:var(--navy)}'+
+'.dxq{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 6px}.dxq .fmqs b{min-width:56px}'+
+'.dxlock{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);border:1.5px solid var(--navy);border-radius:8px;padding:10px 12px}.dxlock b{display:block}.dxlock small{color:var(--mute);font-size:13px}.dxlock button{background:none;border:0;color:var(--navy);font:inherit;font-weight:700;cursor:pointer;padding:6px}'+
+'.dxok{background:var(--okbg,#e3f3e8);border:1.5px solid #1e9e55;border-radius:10px;padding:12px;margin-bottom:10px}.dxok b{color:#1e7a46;font-size:17px;display:block}'+
+'.dxli{border-left:5px solid #c0392b;background:var(--card);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-bottom:6px}.dxli small{display:block;color:var(--mute)}'+
+'.dxpad{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fdecea;color:#7a0f08;border-radius:10px;padding:8px 10px;margin:10px 0 0}.dxpad b{font-size:15px}.dxpad small{display:block;font-size:12.5px;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46vw}.dxpad .fmqs{background:#fff;border-color:#e3a59f}.dxpad .fmqs button{background:#fbe1de;color:#7a0f08;width:44px;height:40px;font-size:20px}.dxpad .fmqs b{min-width:40px}'+
+'.dxdt{display:inline-block;align-self:flex-start;background:#fdecea;color:#a3150b;border:1.5px solid #c0392b;border-radius:999px;font-size:11.5px;font-weight:800;padding:1px 8px;margin-top:4px}'+
+'.dxret{display:flex;gap:10px;align-items:center;justify-content:space-between;background:#fdecea;color:#7a0f08;border-left:5px solid #c0392b;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:14.5px}.dxret button{background:none;border:0;color:inherit;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap}'+
+'.dxst{background:var(--line);border-radius:10px;padding:2px 9px;font-size:13px;font-weight:700;white-space:nowrap}'+
+'@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dxpad,:root:not([data-theme="light"]) .dxret,:root:not([data-theme="light"]) .dxdt{background:#3d1512;color:#ffd2ca}:root:not([data-theme="light"]) .dxpad .fmqs{background:#1d2633;border-color:#6b2a24}:root:not([data-theme="light"]) .dxpad .fmqs button{background:#4a1612;color:#ffd2ca}:root:not([data-theme="light"]) .dxok b,:root:not([data-theme="light"]) .dxsug b,:root:not([data-theme="light"]) .dxlock button{color:#8fd3a8}:root:not([data-theme="light"]) .dxsug b,:root:not([data-theme="light"]) .dxlock button{color:#8fb0ea}}'+
+':root[data-theme="dark"] .dxpad,:root[data-theme="dark"] .dxret,:root[data-theme="dark"] .dxdt{background:#3d1512;color:#ffd2ca}:root[data-theme="dark"] .dxsug b,:root[data-theme="dark"] .dxlock button{color:#8fb0ea}:root[data-theme="dark"] .dxok b{color:#8fd3a8}';
+document.head.appendChild(st)}catch(e){}})();
+
+const dxNorm=s=>String(s||"").toLowerCase().replace(/[‐‑‒–—―−\-_/]+/g," ").replace(/[^0-9a-zäöüß]+/g," ").replace(/\s+/g," ").trim();
+const dxQ=d=>Math.max(1,parseInt(d&&d.n,10)||1);
+let dxKeep=null;
+/* Packliste zur Veranstaltung / Auftragsnummer */
+function dxPackFor(ev,ord){try{if(typeof packs==="undefined"||!packs.length)return null;
+ if(ord&&typeof abgPackOf==="function"){const p=abgPackOf(ord);if(p)return p}
+ const e=dxNorm(ev);if(!e)return null;const L=packs.filter(p=>!p._z&&dxNorm(p.ev)===e);if(!L.length)return null;
+ const day=p=>typeof pkHDay==="function"?pkHDay(p)||0:0;L.sort((a,b)=>day(b)-day(a));
+ const p=L.find(p=>typeof pkState!=="function"||pkState(p).k!=="done")||L[0];return typeof pkRoot==="function"?pkRoot(p):p}catch(e){return null}}
+/* Artikel der Packliste, zusammengefasst, ohne Fremdmiete */
+function dxPackArts(p){if(!p||typeof pkItems!=="function")return [];const M={};
+ pkItems(p).forEach(o=>{const x=o.x||{},q=(+x.n||0)-(+x.f||0);if(q<=0)return;const c=typeof artCode==="function"?artCode(x.a):"",nmx=typeof pkName==="function"?pkName(x):(x.t||""),k=c||"n:"+dxNorm(nmx);if(!nmx)return;
+  const g=M[k]=M[k]||{name:nmx,nr:c,q:0,u:x.u||"Stk"};g.q+=q});
+ const K=typeof rKat==="function"?rKat():[],ix=a=>{const i=a.nr?K.findIndex(k=>artCode(k.nr)===a.nr):-1;return i<0?1e6:i};
+ return Object.values(M).sort((a,b)=>ix(a)-ix(b))}
+/* schon gemeldete Stück zu dieser Veranstaltung + Artikel (offen) */
+function dxReported(ev,ord,name){const o=typeof pkDig==="function"?pkDig(ord):String(ord||"").replace(/\D/g,""),e=dxNorm(ev),a=dxNorm(name);
+ return (typeof defs!=="undefined"?defs:[]).filter(d=>!d.done&&!d.del&&dxNorm(d.art)===a&&((o&&String(d.ord||"").replace(/\D/g,"")===o)||(!o&&e&&dxNorm(d.ev)===e))).reduce((s,d)=>s+dxQ(d),0)}
+/* Vorschläge aus der Artikelliste */
+function dxSuggest(q,packArts){const T=dxNorm(q).split(" ").filter(Boolean);if(!T.length)return [];
+ const hit=s=>{const h=" "+dxNorm(s)+" ";return T.every(t=>h.includes(t))};
+ const seen={},A=[],B=[];(packArts||[]).forEach(a=>{if(hit(a.name+" "+(a.nr||""))){seen[dxNorm(a.name)]=1;A.push({name:a.name,nr:a.nr,pk:1})}});
+ (typeof rKat==="function"?rKat():[]).forEach(k=>{if(!k||!k.name||seen[dxNorm(k.name)])return;if(hit(k.name+" "+(k.nr||""))){seen[dxNorm(k.name)]=1;B.push({name:k.name,nr:artCode(k.nr)||""})}});
+ return {A:A.slice(0,6),B:B.slice(0,10-Math.min(6,A.length))}}
+function dxMark(name,q){let s=esc(name);dxNorm(q).split(" ").filter(t=>t.length>1).forEach(t=>{try{s=s.replace(new RegExp("("+t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","i"),"<b>$1</b>")}catch(e){}});return s}
+function dxQty(p){const e=document.getElementById(p+"n");return Math.max(1,parseInt(e&&e.dataset.v,10)||1)}
+
+/* ---------- Teil A: Formular ---------- */
+function dxForm(p,d){const g=id=>document.getElementById(p+id);const fa=g("art"),fn=g("nr"),fe=g("ev"),fo=g("ord");if(!fa||!fe||fa._dx)return;fa._dx=1;
+ const cA=fa.closest(".card"),cE=fe.closest(".card");if(cA&&cE&&cA!==cE)cA.parentNode.insertBefore(cE,cA);
+ /* QR-Knopf neben „Etikett fotografieren“ */
+ const lab=g("lab");if(lab&&!g("qr")){const row=document.createElement("div");row.className="dxrow";lab.parentNode.insertBefore(row,lab);
+  row.innerHTML='<button class="btn" id="'+p+'qr" type="button"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>QR scannen</button>';row.appendChild(lab);
+  g("qr").onclick=()=>rScanCam(raw=>dxQrHit(p,raw))}
+ /* Veranstaltung bleibt beim nächsten Defekt stehen */
+ if(p==="dn"&&dxKeep){fe.value=dxKeep.ev||"";if(fo)fo.value=dxKeep.ord||"";const box=document.createElement("div");box.className="dxlock";box.id="dnlock";
+  box.innerHTML='<span><b>'+esc(dxKeep.ev||"–")+'</b><small>'+(dxKeep.ord?'Auftrag '+esc(dxKeep.ord)+' · ':'')+'bleibt für den nächsten Defekt stehen</small></span><button type="button" id="dnunlock">Ändern</button>';
+  const kids=[...cE.children].filter(x=>!x.classList.contains("dsh"));kids.forEach(x=>{x.dataset.dxh=x.hidden?"1":"";x.hidden=true});cE.appendChild(box);
+  g("unlock").onclick=()=>{box.remove();kids.forEach(x=>x.hidden=x.dataset.dxh==="1")};dxKeep=null}
+ /* Stückzahl */
+ if(fn&&!g("n")){const w=document.createElement("div");w.className="dxq";let v=d?dxQ(d):1;
+  w.innerHTML='<label class="mute" style="margin:0">Stückzahl</label><span class="fmqs" id="'+p+'n" data-v="'+v+'"><button type="button" aria-label="Weniger">−</button><b>'+v+' Stk</b><button type="button" aria-label="Mehr">+</button></span>';
+  fn.insertAdjacentElement("afterend",w);const s=g("n"),bs=s.querySelectorAll("button"),set=x=>{v=Math.max(1,Math.min(999,x));s.dataset.v=v;s.querySelector("b").textContent=v+" Stk"};bs[0].onclick=()=>set(v-1);bs[1].onclick=()=>set(v+1)}
+ /* Packlisten-Knöpfe */
+ const chips=document.createElement("div");chips.id=p+"chips";const lbl=fa.previousElementSibling;(lbl&&lbl.tagName==="LABEL"?lbl:fa).insertAdjacentElement("beforebegin",chips);
+ let PA=[],key="";
+ const pick=(name,nr)=>{fa.value=name;fa.classList.remove("bad");if(fn&&nr!==undefined){const old=fn.value.trim();if(!(old&&nr&&artCode(old.split(/[\s\-‐‑‒–—―−]+/)[0])===nr))fn.value=nr||""}sug.hidden=true;paint()};
+ const paint=()=>{const ev=fe.value.trim(),ord=fo?fo.value.trim():"";if(!PA.length){chips.innerHTML=ev?'<p class="dxhint">Keine Packliste zu dieser Veranstaltung gefunden – Artikel unten suchen.</p>':'<p class="dxhint">Zuerst die Veranstaltung wählen – dann stehen hier die Artikel aus der Packliste.</p>';return}
+  const cur=dxNorm(fa.value);
+  chips.innerHTML='<div class="mute" style="font-size:13px;margin-bottom:4px">Aus der Packliste antippen:</div><div class="dxchips">'+PA.map((a,i)=>{const r=dxReported(ev,ord,a.name)-(d&&dxNorm(d.art)===dxNorm(a.name)&&!d.done?dxQ(d):0);return '<button type="button" class="dxchip'+(dxNorm(a.name)===cur?' on':'')+'" data-dxc="'+i+'">'+esc(a.name)+'<small>'+(typeof pkNum==="function"?pkNum(a.q):a.q)+' '+esc(a.u||"Stk")+(r>0?' · '+r+' gemeldet':'')+'</small></button>'}).join("")+'</div>';
+  chips.querySelectorAll("[data-dxc]").forEach(b=>b.onclick=()=>{const a=PA[+b.dataset.dxc];pick(a.name,a.nr||"")})};
+ const refresh=()=>{const ev=fe.value.trim(),ord=fo?fo.value.trim():"",k=ev+"|"+ord;if(k===key)return;key=k;
+  const P=dxPackFor(ev,ord);PA=dxPackArts(P);
+  if(P&&fo&&!ord&&P.ord&&dxNorm(P.ev)===dxNorm(ev)){fo.value=P.ord;key=ev+"|"+P.ord}
+  if(P&&!ev&&P.ev){fe.value=P.ev;fe.classList.remove("bad");key=P.ev+"|"+(fo?fo.value.trim():"")}
+  paint()};
+ /* Vorschläge */
+ const wrap=document.createElement("div");wrap.className="dxwrap";fa.parentNode.insertBefore(wrap,fa);wrap.appendChild(fa);
+ const sug=document.createElement("div");sug.className="dxsug";sug.hidden=true;sug.setAttribute("role","listbox");wrap.appendChild(sug);fa.setAttribute("autocomplete","off");
+ fa.placeholder="Name oder Nummer tippen, z. B. 125 Maxi";
+ const showSug=()=>{const q=fa.value.trim();if(q.length<2){sug.hidden=true;return}const R=dxSuggest(q,PA);if(!R.A.length&&!R.B.length){sug.hidden=true;return}
+  sug.innerHTML=(R.A.length?'<div class="dxg">In der Packliste</div>'+R.A.map((a,i)=>'<button type="button" data-dxs="A'+i+'"><span>'+dxMark(a.name,q)+'</span><small>'+esc(a.nr||"–")+'</small></button>').join(""):'')+
+   (R.B.length?'<div class="dxg">Artikelliste</div>'+R.B.map((a,i)=>'<button type="button" data-dxs="B'+i+'"><span>'+dxMark(a.name,q)+'</span><small>'+esc(a.nr||"–")+'</small></button>').join(""):'');
+  sug.hidden=false;sug.querySelectorAll("[data-dxs]").forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>{const s=b.dataset.dxs,a=R[s[0]][+s.slice(1)];pick(a.name,a.nr||"")}})};
+ fa.addEventListener("input",()=>{showSug();paint()});fa.addEventListener("focus",showSug);
+ fa.addEventListener("blur",()=>setTimeout(()=>{sug.hidden=true;if(fn&&!fn.value.trim()){const k=(typeof rKat==="function"?rKat():[]).find(x=>dxNorm(x.name)===dxNorm(fa.value));if(k)fn.value=artCode(k.nr)||""}},180));
+ fa.addEventListener("keydown",e=>{if(e.key==="Escape")sug.hidden=true});
+ fe.addEventListener("input",refresh);fe.addEventListener("change",refresh);if(fo){fo.addEventListener("input",refresh);fo.addEventListener("change",refresh)}
+ /* Etikett-Foto / Scan setzen Werte ohne Ereignis → kurz nachsehen, solange das Formular offen ist */
+ const tm=setInterval(()=>{if(!document.body.contains(fe))return clearInterval(tm);refresh();if(dxNorm(fa.value)!==fa._lv){fa._lv=dxNorm(fa.value);paint()}},600);
+ refresh()}
+function dxQrHit(p,raw){const r=typeof gbParse==="function"?gbParse(raw):{bad:true};
+ if(!r.ord){beep(false);return errBox(r.old?"Altes Etikett – der QR-Code zeigt nur auf die Homepage. Bitte „Etikett fotografieren“ verwenden.":"Kein Gitterbox-Etikett erkannt. Bitte „Etikett fotografieren“ verwenden.")}
+ const fe=document.getElementById(p+"ev"),fo=document.getElementById(p+"ord");if(!fe)return;beep(true);
+ const P=dxPackFor("",r.ord),R=(typeof rets!=="undefined"?rets:[]).find(x=>rNorm(x.ord)===rNorm(r.ord)),ev=(P&&P.ev)||(R&&R.ev)||"";
+ if(fo)fo.value=r.ord;if(ev){fe.value=ev;fe.classList.remove("bad");toast("Auftrag "+r.ord+" · "+ev,1)}else{errBox("Auftrag "+r.ord+" erkannt, aber keine Packliste dazu gefunden. Bitte die Veranstaltung eintragen.");setTimeout(()=>fe.focus(),300)}
+ fe.dispatchEvent(new Event("change"))}
+/* nach dem Absenden: Bestätigung + „Nächster Defekt“ (verstecktes #dnart hält draw() vom Neuzeichnen ab) */
+function dxDone(o){const ev=o.ev||"",ord=o.ord||"",e=dxNorm(ev),od=String(ord).replace(/\D/g,""),t0=new Date();t0.setHours(0,0,0,0);
+ const L=(typeof defs!=="undefined"?defs:[]).filter(d=>!d.del&&d.t>=+t0&&(od?String(d.ord||"").replace(/\D/g,"")===od:dxNorm(d.ev)===e));
+ if(o.id&&!L.some(d=>d.id===o.id))L.unshift({id:o.id,art:o.art,n:o.n,desc:o.desc,by:me,...tabAs("by"),t:Date.now(),urg:o.urg});L.sort((a,b)=>b.t-a.t);
+ $("#t").textContent="Defekt gemeldet";
+ $("#app").innerHTML=nav()+'<input id="dnart" hidden><div class="dxok"><b>✓ Defekt gemeldet</b>'+(o.n>1?o.n+' × ':'')+esc(o.art)+(o.desc?' – '+esc(o.desc):'')+'</div>'+
+  '<button class="btn" id="dxnext" type="button" style="margin-bottom:10px">+ Nächster Defekt von dieser Veranstaltung</button><button class="btn ghost" id="dxfin" type="button" style="margin-bottom:16px">Fertig</button>'+
+  '<div class="mute" style="margin-bottom:6px">Von '+esc(ev||"–")+' heute gemeldet ('+L.reduce((s,d)=>s+dxQ(d),0)+' Stk):</div>'+L.map(d=>'<div class="dxli"><b>'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+'</b>'+(d.urg?' <span class="tag" style="background:#7a0f08;color:#fff">DRINGEND</span>':'')+'<small>'+(d.desc?esc(d.desc)+' · ':'')+esc(nmA(d,"by"))+' · '+fmt(d.t).slice(-5)+'</small></div>').join("");
+ bindNav();window.scrollTo(0,0);
+ $("#dxnext").onclick=()=>{dxKeep={ev,ord};dpho=null;defNewView();window.scrollTo(0,0)};
+ $("#dxfin").onclick=()=>{df="alle";view="def";draw()}}
+
+/* ---------- Teil B: Retourschein „davon defekt“ ---------- */
+const dxRetDefs=(rid,nr)=>rid?(typeof defs!=="undefined"?defs:[]).filter(d=>!d.del&&d.ret===rid&&(nr===undefined||d.rnr===nr)):[];
+const dxRetN=(rid,nr)=>dxRetDefs(rid,nr).reduce((s,d)=>s+dxQ(d),0);
+const dxMayEdit=d=>d.by===me||can("def_b");
+function dxPadRow(a){const n=rs?dxRetN(rs.id,a.nr):0,L=rs?dxRetDefs(rs.id,a.nr):[],ds=L.map(d=>d.desc).filter(Boolean).join(" · ");
+ return '<div class="dxpad" id="dxpad"><span><b>davon defekt</b>'+(n?'<small>'+(ds?esc(ds):'gemeldet – ohne Beschreibung')+'</small>':'<small>geht gleich an die Werkstatt</small>')+'</span><span class="fmqs"><button type="button" id="dxm" aria-label="Ein defektes Stück weniger">−</button><b id="dxn">'+n+'</b><button type="button" id="dxp" aria-label="Ein defektes Stück mehr">+</button></span></div>'}
+function dxPadBind(o,a){const row=o.querySelector("#dxpad");if(!row||!rs)return;
+ const redo=()=>{const x=o.querySelector("#dxpad");if(x){x.outerHTML=dxPadRow(a);dxPadBind(o,a)}};
+ row.querySelector("#dxp").onclick=async()=>{const open=dxRetDefs(rs.id,a.nr).find(d=>!d.done);
+  if(open){if(!dxMayEdit(open))return errBox("Diese Meldung hat jemand anderer angelegt. Ändern kann sie nur die Werkstatt.");try{await db.doc("defekte/"+open.id).update({n:dxQ(open)+1,edT:Date.now()});open.n=dxQ(open)+1;redo();toast("Defekt: "+open.n+" Stk "+a.name,1)}catch(e){toast("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}return}
+  dxDefDlg(a,()=>{redo();if(typeof retEdit==="function"&&view==="retedit")dxRetTiles()})};
+ row.querySelector("#dxm").onclick=()=>{const L=dxRetDefs(rs.id,a.nr),open=L.find(d=>!d.done);
+  if(!L.length)return;if(!open)return toast("Schon repariert – bitte in den Defekten ändern.");if(!dxMayEdit(open))return errBox("Diese Meldung hat jemand anderer angelegt. Ändern kann sie nur die Werkstatt.");
+  if(dxQ(open)>1){db.doc("defekte/"+open.id).update({n:dxQ(open)-1,edT:Date.now()}).then(()=>{open.n=dxQ(open)-1;redo()}).catch(()=>toast("Speichern fehlgeschlagen. Bitte nochmal versuchen."));return}
+  ask2("Defektmeldung „"+a.name+"“ löschen?","Löschen","Behalten",async()=>{try{await dxDel(open);redo();dxRetTiles();toast("Defektmeldung gelöscht",1)}catch(e){toast("Löschen fehlgeschlagen. Bitte nochmal versuchen.")}},()=>{})}}
+async function dxDel(d){if(can("def_l")){await db.doc("defekte/"+d.id).delete();try{for(let k=0;k<(d.fn||0);k++)await db.doc("fotos/"+d.id+"-"+k).delete()}catch(e){}}
+ else await db.doc("defekte/"+d.id).update({del:true,delBy:me,delT:Date.now()});d.del=true;if(typeof defs!=="undefined")defs=defs.filter(x=>x.id!==d.id)}
+function dxDefDlg(a,done){const o=document.createElement("div");o.className="ov";o.style.zIndex="60";let fot=[];const code=artCode(String(a.nr||"").split(/[-–]/)[0])||"";
+ o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0;max-height:92vh;overflow:auto"><b style="font-size:18px">Defekt: '+esc(a.name)+'</b><div class="mute" style="margin-bottom:8px">'+esc(rs.ev||"–")+(rs.ord?' · Auftrag '+esc(rs.ord):'')+(code?' · Nr. '+esc(code):'')+'</div>'+
+  '<label class="mute" for="dxds">Was ist kaputt? (optional)</label><textarea id="dxds" placeholder="Kurz beschreiben – oft reicht das Foto"></textarea>'+
+  '<label style="display:flex;gap:8px;align-items:center;margin:4px 0 10px"><input type="checkbox" id="dxu" style="width:auto;margin:0">Dringend</label>'+
+  '<label style="display:flex;gap:8px;align-items:center;margin:0 0 6px"><input type="checkbox" id="dxfv" style="width:auto;margin:0">Fremdverschulden</label><div id="dxfvb" hidden><label class="mute" for="dxfvw">Wer / wie? (optional)</label><input id="dxfvw" autocomplete="off" placeholder="z. B. Bühnenbauer mit Stapler drübergefahren"></div>'+
+  '<button class="btn ghost" id="dxph" type="button">Foto aufnehmen</button><input id="dxpf" type="file" accept="image/*" capture="environment" hidden><div id="dxpv" class="thr"></div>'+
+  '<div style="display:grid;gap:8px;margin-top:8px"><button class="btn" id="dxok" type="button">Defekt melden</button><button class="btn ghost" id="dxlater" type="button">Später beschreiben</button><button class="btn ghost" id="dxx" type="button">Abbrechen</button></div></div>';
+ document.body.appendChild(o);const q=s=>o.querySelector(s);
+ q("#dxfv").onchange=()=>{q("#dxfvb").hidden=!q("#dxfv").checked;if(q("#dxfv").checked)q("#dxfvw").focus()};
+ q("#dxph").onclick=()=>q("#dxpf").click();
+ q("#dxpf").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;if(fot.length>=6)return toast("Maximal 6 Fotos.");try{fot.push(await shrink(f));showTh("dxpv",fot,"dxph")}catch(x){toast("Foto konnte nicht gelesen werden.")}};
+ q("#dxx").onclick=()=>o.remove();
+ const save=async full=>{const bs=o.querySelectorAll("button");bs.forEach(b=>b.disabled=true);if(!rs.id&&typeof rNewId==="function")rs.id=rNewId();
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5),fv=full&&q("#dxfv").checked;
+  try{const fn=full?await savePhotos(id,fot):0;const doc={art:a.name,anr:code,ev:String(rs.ev||"").trim(),ord:String(rs.ord||"").trim(),n:1,ret:rs.id,rnr:a.nr,desc:full?q("#dxds").value.trim():"",by:me,...tabAs("by"),...tabAs("by"),t:Date.now(),done:false,urg:full&&q("#dxu").checked,fv,fvw:fv?q("#dxfvw").value.trim():"",fn,foto:fn>0};
+   await db.doc("defekte/"+id).set(doc);if(typeof defs!=="undefined"&&!defs.some(x=>x.id===id))defs=[{id,...doc},...defs];o.remove();toast("Defekt gemeldet: "+a.name,1);done&&done()}
+  catch(x){bs.forEach(b=>b.disabled=false);toast("Senden fehlgeschlagen. Bitte nochmal versuchen.")}};
+ q("#dxok").onclick=()=>save(true);q("#dxlater").onclick=()=>save(false)}
+/* Schild „n defekt“ auf den Kacheln beim Zählen */
+function dxRetTiles(){if(!rs||!rs.id)return;document.querySelectorAll(".rtile[data-ra]").forEach(b=>{const n=dxRetN(rs.id,b.dataset.ra),ex=b.querySelector(".dxdt");if(ex)ex.remove();if(n)b.insertAdjacentHTML("beforeend",'<span class="dxdt">'+n+' defekt</span>')})}
+/* Retourschein ansehen: Streifen „n Defekte gemeldet“ */
+function dxRetOpen(){const ex=document.getElementById("dxret");if(ex)ex.remove();if(view!=="retopen")return;const L=dxRetDefs(curRet);if(!L.length)return;
+ const n=L.reduce((s,d)=>s+dxQ(d),0),el=document.createElement("div");el.className="dxret";el.id="dxret";
+ el.innerHTML='<span><b>'+n+' Stk defekt gemeldet</b> von diesem Retourschein<br><small>'+L.map(d=>esc((dxQ(d)>1?dxQ(d)+' × ':'')+d.art)).join(", ")+'</small></span>'+(can("def_s")||L.every(d=>d.by===me)?'<button type="button" id="dxreta">Ansehen ›</button>':'');
+ const app=document.getElementById("app"),c=app&&app.querySelector(".card");if(!c)return;c.insertAdjacentElement("beforebegin",el);
+ const b=document.getElementById("dxreta");if(b)b.onclick=()=>{if(L.length===1){curDef=L[0].id;go("defopen")}else{df="alle";go("def")}}}
+/* Mail-Text und Excel */
+function dxRetMail(r){const L=dxRetDefs(r&&r.id);if(!L.length)return "";return "\nDefekt zurückgekommen: "+L.map(d=>dxQ(d)+" Stk "+d.art+(d.desc?" ("+d.desc+")":"")).join("; ")}
+function dxRetXl(r,nr){const n=dxRetN(r&&r.id,nr);return n||null}
+/* Defekt ansehen: Zeile Stückzahl + Herkunft Retourschein */
+function dxDefLines(d){let h='';if(dxQ(d)>1)h+='<div class="mute">Stückzahl: <b>'+dxQ(d)+' Stk</b></div>';
+ if(d.ret){const r=(typeof rets!=="undefined"?rets:[]).find(x=>x.id===d.ret);h+='<div class="mute">Gemeldet beim Zählen'+(r&&can("ret_s")?' – <a href="#" data-dxr="'+esc(d.ret)+'" style="color:var(--navy);font-weight:600">Retourschein öffnen</a>':'')+'</div>'}
+ setTimeout(()=>document.querySelectorAll("[data-dxr]").forEach(a=>a.onclick=e=>{e.preventDefault();curRet=a.dataset.dxr;go("retopen")}),0);return h}
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -3968,7 +4135,7 @@ function toast(t,ok){if(!ok)return errBox(t);const d=document.createElement("div
  const lay=()=>{let y=0;[...document.querySelectorAll(".toast")].reverse().forEach(e=>{e.style.transform=y?"translateY(-"+y+"px)":"";y+=e.offsetHeight+8})};lay();setTimeout(()=>{d.remove();lay()},2600)}
 async function init(){try{db=await claude.use("db");user=await claude.use("user");if(!db||!user)throw 0;me=await user.id();owner=await user.isOwner();realOwner=owner;
  db.collection("lists").onSnapshot(s=>{lists=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);res(lists.flatMap(l=>[l.by,l.mod]));if(view==="scan"&&cur&&!lists.some(l=>l.id===cur)){cur=null;view="home";errBox("Diese Liste wurde gelöscht.")}draw()});
-  db.collection("defekte").onSnapshot(s=>{defs=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);res(defs.flatMap(d=>[d.by,d.doneBy]));draw()});
+  db.collection("defekte").onSnapshot(s=>{defs=s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>!d.del).sort((a,b)=>b.t-a.t);res(defs.flatMap(d=>[d.by,d.doneBy]));draw()});
  db.collection("infos").onSnapshot(s=>{infos=s.docs.map(d=>({id:d.id,...d.data()}));res(infos.flatMap(i=>[i.by,i.readBy]));draw()});
  db.collection("werkstatt").onSnapshot(s=>{werk={};s.docs.forEach(d=>werk[d.id]=d.data());draw()});
  db.collection("lager").onSnapshot(s=>{lagr={};s.docs.forEach(d=>lagr[d.id]=d.data());draw()});rightsSub();
@@ -4124,21 +4291,21 @@ function werkBlock(){const ids=Object.keys(usr).filter(i=>i!==me&&profActive(i))
 function shrink(f){return new Promise((ok,no)=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{let mx=1000,q=.7,out;for(let k=0;k<6;k++){const sc=Math.min(1,mx/Math.max(i.naturalWidth,i.naturalHeight)),cv=document.createElement("canvas");cv.width=Math.round(i.naturalWidth*sc);cv.height=Math.round(i.naturalHeight*sc);cv.getContext("2d").drawImage(i,0,0,cv.width,cv.height);out=cv.toDataURL("image/jpeg",q);if(out.length<170000)break;q=Math.max(.4,q-.1);mx=Math.round(mx*.8)}URL.revokeObjectURL(u);ok(out)};i.onerror=()=>{URL.revokeObjectURL(u);no()};i.src=u})}
 function defView(){$("#t").textContent="Defekte";
  const l=vdefs().filter(d=>df==="alle"||(df==="offen")===!d.done).sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(b.urg&&!b.done?1:0)-(a.urg&&!a.done?1:0)||b.t-a.t);
- $("#app").innerHTML=nav()+defTools()+(canDone()?'<button class="btn ghost" id="etrep" style="margin-bottom:10px">Ersatzteile-Bericht (PDF)</button>':'')+(l.length?l.map(d=>'<div class="sw"><button class="del" data-dd="'+d.id+'">Löschen</button><div class="fg dc'+(d.done?" done":"")+'" data-df="'+d.id+'"><div class="row" style="align-items:center"><b style="flex:1">'+esc(d.art)+(d.anr?' <span class="mute" style="font-weight:400">'+esc(d.anr)+'</span>':'')+'</b>'+(d.urg&&!d.done?'<span class="tag" style="flex:0;background:#7a0f08;color:#fff">DRINGEND</span> ':'')+defFvTag(d)+'<span class="tag" style="flex:0">'+(d.done?"Erledigt":"Offen")+'</span></div><div class="mute">'+esc(d.ev)+' · '+fmt(d.t)+' · '+esc(nmA(d,"by"))+'</div></div></div>').join(""):'<div class="card mute">Keine Defekte gemeldet.</div>');
+ $("#app").innerHTML=nav()+defTools()+(canDone()?'<button class="btn ghost" id="etrep" style="margin-bottom:10px">Ersatzteile-Bericht (PDF)</button>':'')+(l.length?l.map(d=>'<div class="sw"><button class="del" data-dd="'+d.id+'">Löschen</button><div class="fg dc'+(d.done?" done":"")+'" data-df="'+d.id+'"><div class="row" style="align-items:center"><b style="flex:1">'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+(d.anr?' <span class="mute" style="font-weight:400">'+esc(d.anr)+'</span>':'')+'</b>'+(d.urg&&!d.done?'<span class="tag" style="flex:0;background:#7a0f08;color:#fff">DRINGEND</span> ':'')+defFvTag(d)+'<span class="tag" style="flex:0">'+(d.done?"Erledigt":"Offen")+'</span></div><div class="mute">'+esc(d.ev)+' · '+fmt(d.t)+' · '+esc(nmA(d,"by"))+'</div></div></div>').join(""):'<div class="card mute">Keine Defekte gemeldet.</div>');
  bindNav();
  bindDefTools();if($("#etrep"))$("#etrep").onclick=etRepDlg;document.querySelectorAll("[data-df]").forEach(e=>e.onclick=()=>{if(e.dataset.just)return;curDef=e.dataset.df;go("defopen")});if(can("def_l"))swipe()}
 function defNewView(){setTimeout(()=>defFvSet("dn",null),0);$("#t").textContent="Defekt melden";
  $("#app").innerHTML=nav()+'<div class="card"><div class="dsh">Artikel</div><button class="btn" id="dnsc" style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px"><svg width="26" height="22" viewBox="0 0 26 22" fill="none" stroke="#fff" stroke-width="2.4"><path d="M3 1v20M7 1v20M12 1v20M16 1v20M20 1v20M24 1v20"/></svg>Artikel scannen</button><input id="dnsf" type="file" accept="image/*" capture="environment" hidden><label class="mute">Artikel <span class="rq">*</span></label><input id="dnart" placeholder="z.B. VT 125A Maxi 2"><label class="mute">Artikelnummer (optional)</label><input id="dnnr" placeholder="z. B. 1234 oder 1234–56"></div><div class="card"><div class="dsh">Veranstaltung</div><button class="btn grey camb" id="dnlab" type="button" style="margin-bottom:12px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span id="dnlabt">Etikett fotografieren</span></button><input type="file" id="dnlabf" accept="image/*" capture="environment" hidden><label class="mute">Veranstaltung <span class="rq">*</span></label><input id="dnev" list="evs2"><datalist id="evs2">'+[...new Set([...lists.flatMap(l=>[l.ev1,l.ev2]),...defs.map(d=>d.ev)].filter(Boolean))].map(e=>'<option value="'+esc(e)+'">').join("")+'</datalist><label class="mute">Auftragsnummer (optional)</label><input id="dnord" inputmode="numeric" autocomplete="off"></div><div class="card"><div class="dsh">Defekt</div><label class="mute">Beschreibung des Defekts (optional)</label><textarea id="dnds" placeholder="Kurz beschreiben, was kaputt ist – oft reicht das Foto"></textarea><label style="display:flex;gap:8px;align-items:center;margin:4px 0 10px"><input type="checkbox" id="dnu" style="width:auto;margin:0">Dringend</label><label style="display:flex;gap:8px;align-items:center;margin:0 0 6px"><input type="checkbox" id="dnfv" style="width:auto;margin:0">Fremdverschulden</label><div id="dnfvb" hidden><label class="mute" for="dnfvw">Wer / wie? (optional)</label><input id="dnfvw" autocomplete="off" placeholder="z. B. Bühnenbauer mit Stapler drübergefahren"></div><button class="btn ghost" id="dnph">Foto aufnehmen</button><input id="dnpf" type="file" accept="image/*" capture="environment" hidden><div id="dnpv" class="thr"></div><div class="mute" style="margin-bottom:8px"><span class="rq">*</span> Pflichtfeld</div><button class="btn" id="dnsend">Defekt melden</button></div>';
- bindNav();defLabelBind("dn");$("#dnph").onclick=()=>$("#dnpf").click();
+ bindNav();defLabelBind("dn");dxForm("dn");$("#dnph").onclick=()=>$("#dnpf").click();
  $("#dnsc").onclick=()=>defScan($("#dnsf"));
  $("#dnsf").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const v=await decodeImg(f);if(!v)return errBox("Kein Code erkannt. Bitte nah, gerade und scharf fotografieren.");defScanHit(v)};
  $("#dnpf").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if((dpho||[]).length>=6)return toast("Maximal 6 Fotos.");dpho=[...(dpho||[]),await shrink(f)];showTh("dnpv",dpho,"dnph");e.target.value=""}catch(x){toast("Foto konnte nicht gelesen werden.")}};
  $("#dnsend").onclick=async()=>{const a=$("#dnart").value.trim(),ev=$("#dnev").value.trim(),ds=$("#dnds").value.trim(),miss=[!a&&"Artikel",!ev&&"Veranstaltung"].filter(Boolean);if(miss.length){reqMark([["dnart",!a],["dnev",!ev]]);return errBox("Bitte ausfüllen: "+miss.join(", "))}$("#dnsend").disabled=true;
   const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-  try{const fn=await savePhotos(id,dpho);await db.doc("defekte/"+id).set({art:a,anr:$("#dnnr").value.trim(),ev,desc:$("#dnds").value.trim(),ord:$("#dnord").value.trim(),by:me,...tabAs("by"),t:Date.now(),done:false,urg:$("#dnu").checked,...defFvGet("dn"),fn,foto:fn>0});dpho=null;df="alle";view="def";draw();toast("Defekt gemeldet",1)}catch(x){$("#dnsend").disabled=false;toast("Senden fehlgeschlagen. Bitte nochmal versuchen.")}}}
+  try{const fn=await savePhotos(id,dpho);await db.doc("defekte/"+id).set({art:a,anr:$("#dnnr").value.trim(),ev,desc:$("#dnds").value.trim(),ord:$("#dnord").value.trim(),by:me,...tabAs("by"),t:Date.now(),done:false,urg:$("#dnu").checked,n:dxQty("dn"),...defFvGet("dn"),fn,foto:fn>0});dpho=null;dxDone({id,art:a,ev,ord:$("#dnord").value.trim(),desc:ds,n:dxQty("dn"),urg:$("#dnu").checked})}catch(x){$("#dnsend").disabled=false;toast("Senden fehlgeschlagen. Bitte nochmal versuchen.")}}}
 function defOpenView(){const d=defs.find(x=>x.id===curDef);if(!d||!(can("def_s")||d.by===me)){view="def";return defView()}
  $("#t").textContent="Defekt";
- $("#app").innerHTML=nav()+'<div class="card dc'+(d.done?" done":"")+'" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;font-size:19px">'+esc(d.art)+'</b>'+defFvTag(d)+(d.urg&&!d.done?'<span class="tag" style="flex:0;background:#7a0f08;color:#fff">DRINGEND</span> ':'')+'<span class="tag" style="flex:0">'+(d.done?"Erledigt":"Offen")+'</span></div>'+(d.anr?'<div class="mute">Artikelnummer: '+esc(d.anr)+'</div>':'')+'<div class="mute">Veranstaltung: '+esc(d.ev)+'</div>'+(d.ord?'<div class="mute">Auftragsnummer: '+esc(d.ord)+'</div>':'')+'<div class="mute">Gemeldet: '+esc(nmA(d,"by"))+', '+fmt(d.t)+'</div>'+(d.edT?'<div class="mute">Bearbeitet: '+fmt(d.edT)+'</div>':'')+(d.done?'<div class="mute">Erledigt: '+esc(nmA(d,"doneBy"))+', '+fmt(d.doneT)+'</div>':'')+
+ $("#app").innerHTML=nav()+'<div class="card dc'+(d.done?" done":"")+'" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;font-size:19px">'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+'</b>'+defFvTag(d)+(d.urg&&!d.done?'<span class="tag" style="flex:0;background:#7a0f08;color:#fff">DRINGEND</span> ':'')+'<span class="tag" style="flex:0">'+(d.done?"Erledigt":"Offen")+'</span></div>'+(d.anr?'<div class="mute">Artikelnummer: '+esc(d.anr)+'</div>':'')+'<div class="mute">Veranstaltung: '+esc(d.ev)+'</div>'+(d.ord?'<div class="mute">Auftragsnummer: '+esc(d.ord)+'</div>':'')+dxDefLines(d)+'<div class="mute">Gemeldet: '+esc(nmA(d,"by"))+', '+fmt(d.t)+'</div>'+(d.edT?'<div class="mute">Bearbeitet: '+fmt(d.edT)+'</div>':'')+(d.done?'<div class="mute">Erledigt: '+esc(nmA(d,"doneBy"))+', '+fmt(d.doneT)+'</div>':'')+
  defFvLine(d)+'<p style="white-space:pre-wrap;margin:10px 0">'+(d.desc?esc(d.desc):'<span class="mute">Keine Beschreibung.</span>')+'</p>'+(canDone()||d.fb?'<label class="mute">Rückmeldung der Werkstatt</label><input id="dfb" placeholder="z. B. Ersatzteil bestellt" '+(canDone()?'':'disabled ')+'value="'+esc(d.fb)+'">':'')+(d.foto?'<div id="dph" class="thr"></div>':'')+'</div>'+etCard(d)+
  (d.by===me?'<button class="btn ghost" id="ded" style="margin-bottom:10px">Bearbeiten</button>':'')+(canDone()?'<button class="btn'+(d.done?' ghost':'')+'" id="dd" style="'+(d.done?'':'background:var(--ok)')+'">'+(d.done?"Wieder auf offen setzen":"Repariert")+'</button>'+(d.done?'<button class="btn ghost" id="etedit" style="margin-top:10px">'+(d.rep||etList(d).length||d.rfn?"Reparatur ändern":"Reparatur / Ersatzteile eintragen")+'</button>':''):'<div class="mute" style="text-align:center">Nur die Werkstatt kann Defekte als erledigt markieren.</div>');
  bindNav();
@@ -4212,7 +4379,7 @@ async function defEditView(){const d=defs.find(x=>x.id===curDef);if(!d||d.by!==m
  $("#t").textContent="Defekt bearbeiten";
  $("#app").innerHTML=nav()+'<div class="card"><div class="dsh">Artikel</div><label class="mute">Artikel <span class="rq">*</span></label><input id="deart"><label class="mute">Artikelnummer (optional)</label><input id="denr"></div><div class="card"><div class="dsh">Veranstaltung</div><button class="btn grey camb" id="delab" type="button" style="margin-bottom:12px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span id="delabt">Etikett fotografieren</span></button><input type="file" id="delabf" accept="image/*" capture="environment" hidden><label class="mute">Veranstaltung <span class="rq">*</span></label><input id="deev"><label class="mute">Auftragsnummer (optional)</label><input id="deord" inputmode="numeric" autocomplete="off"></div><div class="card"><div class="dsh">Defekt</div><label class="mute">Beschreibung des Defekts (optional)</label><textarea id="deds"></textarea><label style="display:flex;gap:8px;align-items:center;margin:4px 0 10px"><input type="checkbox" id="deu" style="width:auto;margin:0">Dringend</label><label style="display:flex;gap:8px;align-items:center;margin:0 0 6px"><input type="checkbox" id="defv" style="width:auto;margin:0">Fremdverschulden</label><div id="defvb" hidden><label class="mute" for="defvw">Wer / wie? (optional)</label><input id="defvw" autocomplete="off" placeholder="z. B. Bühnenbauer mit Stapler drübergefahren"></div><div id="dep" class="thr"><span class="mute">Fotos werden geladen …</span></div><button class="btn ghost" id="deph">Foto hinzufügen</button><input id="depf" type="file" accept="image/*" capture="environment" hidden><div class="mute" style="margin-bottom:8px"><span class="rq">*</span> Pflichtfeld</div><button class="btn" id="desv" disabled>Änderungen speichern</button></div>';
  $("#deart").value=d.art||"";$("#denr").value=d.anr||"";$("#deev").value=d.ev||"";$("#deord").value=d.ord||"";$("#deds").value=d.desc||"";$("#deu").checked=!!d.urg;defFvSet("de",d);
- bindNav();defLabelBind("de");const n0=d.fn||(d.foto?1:0),arr=[];
+ bindNav();defLabelBind("de");dxForm("de",d);const n0=d.fn||(d.foto?1:0),arr=[];
  $("#deph").onclick=()=>$("#depf").click();
  $("#depf").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;if(arr.length>=6)return toast("Maximal 6 Fotos.");try{arr.push(await shrink(f));showTh("dep",arr,"deph")}catch(x){toast("Foto konnte nicht gelesen werden.")}};
  for(let k=0;k<n0;k++){const key=d.fn?d.id+"-"+k:d.id;let u=pc[key];if(!u){try{const sn=await db.doc("fotos/"+key).get();if(sn.exists){u=sn.data().d;pc[key]=u}}catch(e){}}if(u)arr.push(u)}
@@ -4220,7 +4387,7 @@ async function defEditView(){const d=defs.find(x=>x.id===curDef);if(!d||d.by!==m
  $("#desv").onclick=async()=>{const a=$("#deart").value.trim(),ev=$("#deev").value.trim(),ds=$("#deds").value.trim(),miss=[!a&&"Artikel",!ev&&"Veranstaltung"].filter(Boolean);if(miss.length){reqMark([["deart",!a],["deev",!ev]]);return errBox("Bitte ausfüllen: "+miss.join(", "))}$("#desv").disabled=true;
   try{const n=await savePhotos(d.id,arr);for(let k=n;k<n0;k++){try{await db.doc("fotos/"+d.id+"-"+k).delete()}catch(e){}}if(!d.fn&&d.foto){try{await db.doc("fotos/"+d.id).delete()}catch(e){}}
    Object.keys(pc).filter(k=>k===d.id||k.startsWith(d.id+"-")).forEach(k=>delete pc[k]);
-   await db.doc("defekte/"+d.id).update({art:a,anr:$("#denr").value.trim(),ev,desc:$("#deds").value.trim(),ord:$("#deord").value.trim(),urg:$("#deu").checked,...defFvGet("de"),fn:n,foto:n>0,edT:Date.now()});
+   await db.doc("defekte/"+d.id).update({art:a,anr:$("#denr").value.trim(),ev,desc:$("#deds").value.trim(),ord:$("#deord").value.trim(),urg:$("#deu").checked,n:dxQty("de"),...defFvGet("de"),fn:n,foto:n>0,edT:Date.now()});
    view="defopen";draw();toast("Gespeichert",1)}catch(x){$("#desv").disabled=false;toast("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}}
 function reqMark(p){let first=null;p.forEach(([id,m])=>{const el=$("#"+id);if(!el)return;el.classList.toggle("bad",m);if(m&&!first)first=el;if(!el._rq){el._rq=1;el.addEventListener("input",()=>{if(el.value.trim())el.classList.remove("bad")})}});if(first)first.scrollIntoView({block:"center",behavior:"smooth"})}
 function artView(){$("#t").textContent="Einstellungen";$("#app").innerHTML='<h3 style="margin:4px 0 4px">Dieses Gerät</h3><p class="mute" style="margin:0 0 8px">Gilt nur für dieses Handy bzw. Tablet.</p>'+prefRow("snd","Töne beim Scannen","Welcher Ton, wählst du darunter aus")+sndBlock()+prefRow("vib","Vibration beim Scannen","Nur auf Android-Geräten")+prefRow("wake","Bildschirm anlassen","Solange die App offen ist")+hoMineBlock()+(typeof pushBlock==="function"?pushBlock():"")+(typeof gbPrefBlock==="function"?gbPrefBlock():"")+'<h3 style="margin:18px 0 4px">App</h3><p class="mute" style="margin:0 0 8px">Installierte Version: '+esc(APPV)+'</p><button class="btn ghost" id="upd">Nach Update suchen</button>';
@@ -4292,10 +4459,10 @@ function retEdit(){rPersist();setTimeout(rAbgInject,0);const k=rKat(),L=rs.lvl;
   rPage('<div class="rgrid">'+A.map(a=>{const c=rs.items[a.nr]?rs.items[a.nr].q:0;return '<button class="rtile'+(sub?" big":"")+(c?" sel":"")+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(rShort2(a))+'</b><span class="mute">Nr. '+esc(a.nr)+(a.zub?" · mit Zubehör":"")+'</span></button>'}).join("")+'</div>');
   rTileBind(A)}
  if(L==="sum")return retSum();
- rBindSq();const s=$("#rsum");if(s)s.onclick=()=>{rs.lvl="sum";retEdit()};const fz=$("#rfin");if(fz)fz.onclick=()=>rFinish(fz);if(!(document.activeElement&&document.activeElement.id==="rasq"))window.scrollTo(0,0)}
+ rBindSq();const s=$("#rsum");if(s)s.onclick=()=>{rs.lvl="sum";retEdit()};const fz=$("#rfin");if(fz)fz.onclick=()=>rFinish(fz);dxRetTiles();if(!(document.activeElement&&document.activeElement.id==="rasq"))window.scrollTo(0,0)}
 function rPad(a,base){const o=document.createElement("div");o.className="ov";let v="";const cur=rs.items[a.nr]?rs.items[a.nr].q:0;
- o.innerHTML='<div class="card"><b style="font-size:18px">'+esc(a.name)+'</b><div class="mute">'+(a.lbl!==undefined?esc(a.lbl):'Nr. '+esc(a.nr))+(cur?' · bisher '+cur+' Stück':'')+'</div>'+(cur?'<div class="row seg" style="margin-top:10px"><button id="pma" class="on pm" aria-label="Dazuzählen">+</button><button id="pms" class="pm" aria-label="Abziehen">−</button></div>':'')+'<div class="pdsp" id="pdv">0</div>'+(a.zub?'<div id="pzb"><p class="mute" style="margin:0 0 8px">Zubehör dabei?</p>'+rZub().map((z,i)=>'<label class="zchk"><input type="checkbox" id="rz'+i+'" value="'+esc(z)+'">'+esc(z)+'</label>').join("")+'</div>':"")+'<div class="pgrid">'+[1,2,3,4,5,6,7,8,9].map(n=>'<button data-pn="'+n+'">'+n+'</button>').join("")+'<button class="px" id="pdx" aria-label="Letzte Ziffer löschen oder schließen">✕</button><button data-pn="0">0</button><button class="pok" id="pdo" aria-label="Hinzufügen">✓</button></div></div>';
- document.body.appendChild(o);let sub=false;const d=o.querySelector("#pdv"),upd=()=>{d.textContent=(sub?"− ":"")+(v||"0");d.classList.toggle("on",!!v);d.classList.toggle("minus",sub)};
+ o.innerHTML='<div class="card"><b style="font-size:18px">'+esc(a.name)+'</b><div class="mute">'+(a.lbl!==undefined?esc(a.lbl):'Nr. '+esc(a.nr))+(cur?' · bisher '+cur+' Stück':'')+'</div>'+(cur?'<div class="row seg" style="margin-top:10px"><button id="pma" class="on pm" aria-label="Dazuzählen">+</button><button id="pms" class="pm" aria-label="Abziehen">−</button></div>':'')+(rs&&rs.ev?dxPadRow(a):'')+'<div class="pdsp" id="pdv">0</div>'+(a.zub?'<div id="pzb"><p class="mute" style="margin:0 0 8px">Zubehör dabei?</p>'+rZub().map((z,i)=>'<label class="zchk"><input type="checkbox" id="rz'+i+'" value="'+esc(z)+'">'+esc(z)+'</label>').join("")+'</div>':"")+'<div class="pgrid">'+[1,2,3,4,5,6,7,8,9].map(n=>'<button data-pn="'+n+'">'+n+'</button>').join("")+'<button class="px" id="pdx" aria-label="Letzte Ziffer löschen oder schließen">✕</button><button data-pn="0">0</button><button class="pok" id="pdo" aria-label="Hinzufügen">✓</button></div></div>';
+ document.body.appendChild(o);dxPadBind(o,a);let sub=false;const d=o.querySelector("#pdv"),upd=()=>{d.textContent=(sub?"− ":"")+(v||"0");d.classList.toggle("on",!!v);d.classList.toggle("minus",sub)};
  const ma=o.querySelector("#pma"),ms=o.querySelector("#pms"),zb=o.querySelector("#pzb"),mode=m=>{sub=m;ma.classList.toggle("on",!m);ms.classList.toggle("on",m);if(zb)zb.hidden=m;upd()};if(ma){ma.onclick=()=>mode(false);ms.onclick=()=>mode(true)}
  o.querySelectorAll("[data-pn]").forEach(b=>b.onclick=()=>{if(v.length<4){v=(v+b.dataset.pn).replace(/^0+/,"");upd()}});
  o.querySelector("#pdx").onclick=()=>{if(v){v=v.slice(0,-1);upd()}else o.remove()};
@@ -4311,7 +4478,7 @@ function retSum(){rPersist();$("#t").textContent="Retourschein prüfen";const R=
  document.querySelectorAll("[data-rx]").forEach(b=>b.onclick=()=>{delete rs.items[b.dataset.rx];retSum()});
  $("#rrem").oninput=e=>{rs.rem=e.target.value;rPersist()};$("#rmore").onclick=()=>{rs.lvl="groups";retEdit()};
  $("#rsave").onclick=()=>rFinish($("#rsave"));window.scrollTo(0,0)}
-function retOpen(){setTimeout(rAbgInject,0);const r=rets.find(x=>x.id===curRet);if(!r){view="ret";return retList()}$("#t").textContent="Retourschein";const it=rIt(r),R=rRows(it);
+function retOpen(){setTimeout(rAbgInject,0);setTimeout(dxRetOpen,0);const r=rets.find(x=>x.id===curRet);if(!r){view="ret";return retList()}$("#t").textContent="Retourschein";const it=rIt(r),R=rRows(it);
  $("#app").innerHTML=rTabs()+'<div class="card">'+(r.closed?'':'<button class="btn ghost s" id="rhed" style="float:right;margin:0 0 6px 10px">Ändern</button>')+'<b style="font-size:18px">'+esc(r.ev)+'</b><div class="mute">Auftragsnummer: '+esc(r.ord||"–")+'</div><div class="mute">Erstellt: '+esc(nmA(r,"by"))+", "+fmt(r.t)+'</div>'+(r.mod?'<div class="mute">Letzte Änderung: '+esc(nmA(r,"mod"))+", "+fmt(r.modT)+'</div>':"")+rSentAll(r)+'</div>'+
  '<div class="card" style="padding:4px 8px;overflow-x:auto"><table class="rtbl"><thead><tr><th>Artikel</th><th style="text-align:right">Retour</th></tr></thead><tbody>'+R.map(x=>'<tr><td><b>'+esc(x.name)+'</b><div class="mute" style="font-size:13px">'+(x.nr?"Nr. "+esc(x.nr):x.manual?"Manuell eingetragen":"Zubehör")+'</div></td><td style="text-align:right;font-weight:700">'+x.q+'</td></tr>').join("")+'<tr><td style="text-align:right"><b>Gesamt</b></td><td style="text-align:right;font-weight:800">'+rTot(it)+'</td></tr></tbody></table></div>'+
  (r.rem?'<div class="card"><div class="mute">Bemerkungen</div>'+esc(r.rem)+'</div>':"")+rPhotoBlock(r)+
@@ -4382,16 +4549,16 @@ async function rFinish(b){if(!rs)return;if(!Object.keys(rs.items).length)return 
  catch(x){console.error(x);if(b)b.disabled=false;errBox("Speichern fehlgeschlagen"+(typeof sbErr==="function"?sbErr(x):"")+". Bitte nochmal versuchen.")}}
 async function retXl(r,share){const dl=await claude.use("downloads");if(!dl)return toast("Speichern ist hier nicht verfügbar.");if(!window.ExcelJS)return toast("Excel-Bibliothek nicht geladen.");
  try{const NAVY="FF114A97",wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Retourschein",{pageSetup:{orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}});
-  ws.columns=[{width:22},{width:44},{width:11},{width:11},{width:11}];[1,2,3].forEach(i=>ws.getRow(i).height=30);
+  ws.columns=[{width:22},{width:44},{width:11},{width:11},{width:11},{width:13}];[1,2,3].forEach(i=>ws.getRow(i).height=30);
   ws.addImage(wb.addImage({base64:LOGO,extension:"png"}),{tl:{col:0.1,row:0.15},ext:{width:140,height:87}});
   ws.mergeCells("B1:E2");const t=ws.getCell("B1");t.value="Retourschein";t.font={size:22,bold:true,color:{argb:NAVY}};t.alignment={vertical:"middle"};
   ws.mergeCells("B3:E3");const t2=ws.getCell("B3");t2.value="TPC Lager App";t2.font={size:11,color:{argb:"FF667385"}};
   const thin={style:"thin",color:{argb:"FFD5DBE5"}},bd={top:thin,left:thin,bottom:thin,right:thin},fill=h=>({type:"pattern",pattern:"solid",fgColor:{argb:h}});
   const info=[["Veranstaltung",r.ev],["Auftragsnummer",r.ord||"–"],["Erstellt",nmA(r,"by")+", "+fmt(r.t).slice(0,10)],["Letzte Änderung",r.mod?nmA(r,"mod")+", "+fmt(r.modT).slice(0,10):"–"],["Bemerkungen",r.rem||"–"]];
   let rw=5;info.forEach(([k,v])=>{ws.mergeCells("B"+rw+":E"+rw);const a=ws.getCell("A"+rw),b=ws.getCell("B"+rw);a.value=k;b.value=String(v);a.font={bold:true};a.fill=fill("FFEEF2F8");a.border=bd;b.border=bd;b.alignment={wrapText:true,vertical:"top"};rw++});
-  rw++;const hd0=rw,hr=ws.getRow(rw);hr.values=["Artikelnr.","Artikel","Ausgang","Retour","Differenz"];hr.height=22;hr.eachCell(x=>{x.fill=fill(NAVY);x.font={bold:true,color:{argb:"FFFFFFFF"}};x.alignment={horizontal:"center",vertical:"middle"};x.border=bd});
-  rRows(rIt(r)).filter(x=>x.q>0).forEach((x,i)=>{rw++;const row=ws.getRow(rw);row.values=[x.nr||"",x.name,null,x.q,{formula:'IF(C'+rw+'="","",D'+rw+'-C'+rw+')',result:""}];
-   const f=i%2?fill("FFF6F8FB"):null;for(let n=1;n<=5;n++){const c=row.getCell(n);c.border=bd;c.alignment={horizontal:n>=3?"center":"left",vertical:"middle"};if(f)c.fill=f}row.getCell(2).font={bold:true};row.getCell(3).fill=fill("FFFFF8DC");row.getCell(5).numFmt='+0;-0;0';row.getCell(5).font={bold:true}});
+  rw++;const hd0=rw,hr=ws.getRow(rw);hr.values=["Artikelnr.","Artikel","Ausgang","Retour","Differenz",...(dxRetN(r.id)?["davon defekt"]:[])];hr.height=22;hr.eachCell(x=>{x.fill=fill(NAVY);x.font={bold:true,color:{argb:"FFFFFFFF"}};x.alignment={horizontal:"center",vertical:"middle"};x.border=bd});
+  rRows(rIt(r)).filter(x=>x.q>0).forEach((x,i)=>{rw++;const row=ws.getRow(rw);row.values=[x.nr||"",x.name,null,x.q,{formula:'IF(C'+rw+'="","",D'+rw+'-C'+rw+')',result:""},...(dxRetN(r.id)?[dxRetXl(r,x.k)]:[])];
+   const f=i%2?fill("FFF6F8FB"):null;for(let n=1;n<=(dxRetN(r.id)?6:5);n++){const c=row.getCell(n);if(n===6&&row.getCell(6).value)c.font={bold:true,color:{argb:"FFC0392B"}};c.border=bd;c.alignment={horizontal:n>=3?"center":"left",vertical:"middle"};if(f)c.fill=f}row.getCell(2).font={bold:true};row.getCell(3).fill=fill("FFFFF8DC");row.getCell(5).numFmt='+0;-0;0';row.getCell(5).font={bold:true}});
   if(rw>hd0)try{const a="E"+(hd0+1);ws.addConditionalFormatting({ref:a+":E"+rw,rules:[{type:"expression",priority:1,formulae:["AND(ISNUMBER("+a+"),"+a+"<0)"],style:{font:{bold:true,color:{argb:"FFC0392B"}}}},{type:"expression",priority:2,formulae:["AND(ISNUMBER("+a+"),"+a+">0)"],style:{font:{bold:true,color:{argb:"FFE67E22"}}}}]})}catch(e){console.warn(e)}
   await rXlPhotos(wb,r,ws,rw);const buf=await wb.xlsx.writeBuffer(),fn="Retourschein_"+String(r.ev).replace(/[^A-Za-z0-9äöüÄÖÜß]+/g,"_")+"_"+new Date(r.t).toISOString().slice(0,10)+".xlsx";
   const XT="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",blob=new Blob([buf],{type:XT});
