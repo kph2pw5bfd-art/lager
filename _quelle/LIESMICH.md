@@ -365,3 +365,12 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.120 – Retourschein-Excel ohne Uhrzeiten (Jürgen, 5.11.)
 - In `retXl` stehen bei „Erstellt“ und „Letzte Änderung“ nur noch Name + Datum (`fmt(..).slice(0,10)`), rep am Ende von build.py. Test-Zeile in `tests/retxl_t.js`.
+
+## Version 1.121 – Gitterbox-Etiketten mit QR + Druckstation; PDF drucken am PC (Jürgen, 5.11.)
+- Neue Datei `etik.js` (in build.py nach fm.js, Logo `etik-logo.png` als `__ETLOGO__` eingesetzt). Eigener QR-Encoder (Byte-Modus, ECC M, Version 1–6), Inhalt `TPC:<Auftragsnummer>`.
+- Zwei Etiketten 100×100 mm wie in GoLabel: „Projektlabel“ und „Projektlabel mit Inhalt“ (Gewicht bleibt leer, kg wird händisch geschrieben). Keine Boxanzahl.
+- Packliste → „Gitterbox-Etikett drucken“ (`#pketik`): Art, Anzahl, Inhalt (Chips aus der Packliste). „An die Druckstation“ legt einen Auftrag in docs `druck` an, „Hier drucken“ druckt direkt.
+- Druckstation (Einstellungen → Etiketten-Druckstation, View `druckst`): Laptop im Lager mit Godex G530 (USB), Chrome mit `--kiosk-printing`. Häkchen „Dieses Gerät ist die Druckstation“ (localStorage `tpc_druckst`), Herzschlag in docs `druckst/main` alle 20 s, Aufträge neu → druckt → ok/fehler. Anleitung: `druck/ANLEITUNG.md`.
+- Retourscheine: QR-Knopf `#rqr` scannt Etikett → öffnet den Retourschein zur Auftragsnummer; alter Homepage-QR → Hinweis.
+- `wbMobile` in wb.js: installierte App am PC galt als Handy → Teilen-Fenster statt Drucken. Jetzt nur iPhone/iPad/Android.
+- Test: `tests/etik_t.js`.

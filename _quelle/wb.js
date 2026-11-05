@@ -104,7 +104,7 @@ function wbLoadPdf(){if(window.PDFLib)return Promise.resolve();if(wbPdfP)return 
  wbPdfP=WB_PDF_URLS.reduce((pr,u)=>pr.catch(()=>new Promise((ok,no)=>{const s=document.createElement("script");s.src=u;s.onload=()=>window.PDFLib?ok():no(new Error("leer"));s.onerror=()=>{s.remove();no(new Error("Laden fehlgeschlagen"))};document.head.appendChild(s)})),Promise.reject(new Error("start"))).catch(e=>{wbPdfP=null;throw e});return wbPdfP}
 const WB_WIN="€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ";
 const wbTx=s=>String(s==null?"":s).replace(/→/g,"->").replace(/✓/g,"ok").replace(/[  ]/g," ").replace(/[^\x20-\x7e\xa0-\xff]/g,c=>WB_WIN.includes(c)?c:"?");
-const wbMobile=()=>/iPhone|iPad|iPod|Android/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)||!!(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||!!navigator.standalone;
+const wbMobile=()=>/iPhone|iPad|iPod|Android/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 async function wbPdf(D){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb}=PDFLib;const doc=await PDFDocument.create();
  const F=await doc.embedFont(StandardFonts.Helvetica),B=await doc.embedFont(StandardFonts.HelveticaBold);
  const W=595.28,HP=841.89,ML=34,MR=34,MT=34,MB=44,CW=W-ML-MR,IX=ML+10,IW=CW-20,WHITE=rgb(1,1,1);
