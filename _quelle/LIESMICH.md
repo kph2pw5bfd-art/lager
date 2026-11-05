@@ -424,3 +424,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Material: SOLL = vom Lager laut Packschein (Packschein − Fremdmiete − Lager 55, Feld `sl`); vorher zählte Soll Lager 55 mit (Jürgen: 582 Soll / 572 raus, obwohl nichts fehlte). Fremdmiete-Zeile: „laut Packschein 20 Stk, davon 6 Stk Fremdmiete …“.
 - Reihenfolge: rkat kommt ungeordnet aus der Datenbank (Snapshot), darum wechselte die Reihenfolge. Jetzt `pkRanks()` (wie beim Herrichten), sonst erste Packschein-Position – in aumat.js (`amRows`) und defx.js (Packlisten-Knöpfe, Vorschläge).
 - Tests: `amat_t.js` erweitert, `au_t.js` angepasst.
+
+## Version 1.130 – Material: Zusätze unten zusätzlich einzeln (Jürgen, 5.11.; gewählt: „Zusätzlich unten“ – oben bleibt alles zusammengerechnet)
+- `amZus(p)` in aumat.js: pro Zusatz ein Block „Zusatz <Nr>“ mit Stand (hergerichtet TT.MM. von … / wird hergerichtet x von y / herrichten <Tag>), Spalten Soll · Raus pro Position (Ersatz „stattdessen …“, Fremdmiete, Lager 55). Nur bei Filter „Alle“, Suche wirkt mit. Kein Rein/Diff (Retoure kommt gemeinsam).

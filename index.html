@@ -494,7 +494,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.129";
+<script>const APPV="1.130";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -4292,7 +4292,7 @@ document.addEventListener("click",e=>{const t=e.target&&e.target.closest&&e.targ
 '.amg{padding:6px 10px;font-size:12.5px;font-weight:800;color:var(--navy);background:#eef3fb;border-top:1px solid var(--line)}.amg.l55{color:var(--mute);background:var(--bg)}'+
 '.amr{border-top:1px solid var(--line);font-size:14px}.amr .n{min-width:0;overflow-wrap:anywhere}.amr .n small{display:block;font-size:12px;color:var(--mute);line-height:1.35}.amr .n small.or{color:#b35400;font-weight:600}.amr .n small.red{color:#b8322a;font-weight:600}.amr .n small.pl{color:var(--navy)}'+
 '.amr .q{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}.amr .q.m{color:var(--mute);font-weight:500}.amr .q.or{color:#b35400}.amr .q.red{color:#b8322a}.amr .q.ok{color:#1f6b41}.amr.dev{background:#fff6ea}.amr.l55{color:var(--mute)}'+
-'.ame{padding:12px;color:var(--mute);font-size:14px}'+
+'.ame{padding:12px;color:var(--mute);font-size:14px}.amz{margin-top:12px}.amz .amg{border-top:0;display:flex;flex-direction:column;gap:1px}.amz .amg small{font-weight:600;color:var(--mute);font-size:12px}'+
 '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .amg{background:#16294a;color:#8fb0ea}:root:not([data-theme="light"]) .amr.dev{background:#3a2610}:root:not([data-theme="light"]) .amr .n small.or,:root:not([data-theme="light"]) .amr .q.or,:root:not([data-theme="light"]) .amk .or b{color:#ffb066}:root:not([data-theme="light"]) .amr .n small.red,:root:not([data-theme="light"]) .amr .q.red,:root:not([data-theme="light"]) .amk .red b{color:#ff9d92}:root:not([data-theme="light"]) .amr .q.ok{color:#8fd3a8}:root:not([data-theme="light"]) .amr .n small.pl{color:#8fb0ea}}'+
 ':root[data-theme="dark"] .amg{background:#16294a;color:#8fb0ea}:root[data-theme="dark"] .amr.dev{background:#3a2610}:root[data-theme="dark"] .amr .n small.or,:root[data-theme="dark"] .amr .q.or,:root[data-theme="dark"] .amk .or b{color:#ffb066}:root[data-theme="dark"] .amr .n small.red,:root[data-theme="dark"] .amr .q.red,:root[data-theme="dark"] .amk .red b{color:#ff9d92}:root[data-theme="dark"] .amr .q.ok{color:#8fd3a8}:root[data-theme="dark"] .amr .n small.pl{color:#8fb0ea}';
 document.head.appendChild(st)}catch(e){}})();
@@ -4338,7 +4338,19 @@ function amBody(p,B,I){const R=amRows(p,B),ph2=!!(B.R&&B.R.length),endish=!!(B.h
   rows+='<div class="amr'+(e.isDev?' dev':'')+(e.only55?' l55':'')+'"><span class="n">'+esc(e.name)+notes.join("")+'</span>'+(ph2?(e.only55?dash:'<span class="q m">'+n(e.raus)+'</span>')+cB+cD:c1+cR+cB)+'</div>'});
  return kpi+'<div class="amch">'+F.map(f=>'<button type="button" data-amf="'+f[0]+'" class="'+(amF===f[0]?'on':'')+'">'+esc(f[1])+(f[0]==="alle"?'':' '+f[2])+'</button>').join("")+'</div>'+
   '<input class="amq" id="amq" type="search" placeholder="Artikel suchen …" value="'+esc(amQ)+'" autocomplete="off">'+
-  '<div class="amt">'+head+(rows||'<div class="ame">Nichts gefunden.</div>')+'</div>'}
+  '<div class="amt">'+head+(rows||'<div class="ame">Nichts gefunden.</div>')+'</div>'+amZus(p)}
+/* 1.130: Zusätze unten zusätzlich einzeln anführen (oben bleibt alles zusammengerechnet) – Jürgen, 5.11. */
+function amZus(p){if(amF!=="alle"||!(p.zus||[]).length)return "";const H=pkH(p),n=v=>pkNum(v),q=amQ.trim(),T=q?dxNorm(q).split(" ").filter(Boolean):[];
+ return (p.zus||[]).map(z=>{const ps=String(z.ps||""),zf=pkZFin(p,z),za=zf?null:auHerrAll(p,ps),g=pkZProg(p,ps);
+  const st=zf?"hergerichtet "+fmt(zf.t).slice(0,6)+" von "+nmA(zf,"by"):za?"hergerichtet"+(za.t?" "+fmt(za.t).slice(0,6):"")+(za.who?" von "+za.who:""):g.d?"wird hergerichtet: "+g.d+" von "+g.n+" Positionen":"herrichten "+pkWd(pkZDay(p,z));
+  let rows="";pkItems(p).forEach(o=>{if(o.z!==ps)return;const x=o.x,h=H[o.k],l55=pkL55(x,h),pst=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),nm=pkName(x),u=" "+(x.u||"Stk");
+   if(T.length&&!T.every(t=>(" "+dxNorm(nm+" "+(x.a||""))+" ").includes(t)))return;
+   const raus=l55?null:pst.s==="open"?null:h&&h.ok?own:Math.min(own,+pst.q||0)+pkOver(x,h,pst),dev=!l55&&pkDevRow(x,h,pst),notes=[];
+   (pst.s!=="open"?pst.alt||[]:[]).forEach(al=>notes.push('<small class="or">stattdessen '+n(+al.n||0)+u+' '+esc(al.t)+'</small>'));
+   if(f>0)notes.push('<small class="red">laut Packschein '+n(+x.n||0)+u+', davon '+n(f)+u+' Fremdmiete</small>');if(l55)notes.push('<small>Lager 55 – holt Fahrer/Monteur</small>');
+   rows+='<div class="amr'+(dev?' dev':'')+(l55?' l55':'')+'"><span class="n">'+esc(nm)+notes.join("")+'</span><span class="q m">'+n(own)+'</span>'+(raus===null?'<span class="q m">–</span>':'<span class="q'+(raus!==own?' or':'')+'">'+n(raus)+'</span>')+'<span></span></div>'});
+  if(!rows)return "";
+  return '<div class="amt amz"><div class="amg">Zusatz '+esc(ps)+'<small>'+esc(st)+'</small></div><div class="amh"><span>Artikel</span><span>Soll</span><span>Raus</span><span></span></div>'+rows+'</div>'}).join("")}
 function auMat(p,B,I){if(amPk!==p.id){amPk=p.id;amF="alle";amQ=""}const ph2=!!(B.R&&B.R.length),cnt=pkPosAll(p).length;
  setTimeout(()=>amBind(p,B,I),0);
  return '<details class="card aucd aumat" id="amd"'+(amOpen[p.id]?' open':'')+'><summary><b>Material</b><small>'+pkPosN(cnt)+((p.zus||[]).length?' · '+(p.zus.length===1?'1 Zusatz':p.zus.length+' Zusätze'):'')+(ph2?' · Retouren da':'')+'</small></summary><div id="amb">'+amBody(p,B,I)+'</div></details>'}

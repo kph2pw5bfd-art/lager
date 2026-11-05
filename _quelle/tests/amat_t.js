@@ -16,7 +16,7 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
   return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(400);
  await p.evaluate(()=>{curAu="A";go("auopen")});await p.waitForTimeout(400);await p.click("#amd summary");await p.waitForTimeout(200);
- const rows=()=>p.evaluate(()=>[...document.querySelectorAll(".amr")].map(r=>[...r.children].map(c=>c.textContent.trim()).join(" | ")));
+ const rows=()=>p.evaluate(()=>[...document.querySelectorAll(".amt:not(.amz) .amr")].map(r=>[...r.children].map(c=>c.textContent.trim()).join(" | ")));
  let R=await rows();console.log(R.map(r=>"     "+r).join("\n"));
  ok("Spalten Soll · Raus · Rein",(await p.textContent(".amh"))==="ArtikelSollRausRein");
  ok("Zusatz zusammengerechnet",R.some(r=>/^125A Kabel 50m.*inkl\. 4 Stk aus Zusatz 20260741 \| 16 \| 16 \| –/.test(r)));
@@ -28,11 +28,14 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  ok("Reihenfolge fest (wie Herrichten)",await p.evaluate(()=>{const a=JSON.stringify(amRows(packs.find(x=>x.id==="A"),abgBal(packs.find(x=>x.id==="A"))).map(e=>e.name));rkat.reverse();pkRkRef=null;const b=JSON.stringify(amRows(packs.find(x=>x.id==="A"),abgBal(packs.find(x=>x.id==="A"))).map(e=>e.name));rkat.reverse();pkRkRef=null;return a===b}));
  ok("Zusätzlich mitgegeben",R.some(r=>/32A Kabel 50m.*2 Stk zusätzlich mitgegeben \(nicht im Packschein\) \| 0 \| 2/.test(r)));
  ok("Lager 55 am Ende",/Lager 55/.test(R[R.length-1])||/Schuko 20m \| 30 \| – \| –/.test(R[R.length-1]));
- const grp=await p.evaluate(()=>[...document.querySelectorAll(".amg")].map(g=>g.textContent));console.log("     Gruppen:",J(grp));ok("Gruppen, „Nicht in der Artikelliste“ vor Lager 55",grp[grp.length-1].startsWith("Lager 55")&&grp[grp.length-2]==="Nicht in der Artikelliste");
+ const grp=await p.evaluate(()=>[...document.querySelectorAll(".amt:not(.amz) .amg")].map(g=>g.textContent));console.log("     Gruppen:",J(grp));ok("Gruppen, „Nicht in der Artikelliste“ vor Lager 55",grp[grp.length-1].startsWith("Lager 55")&&grp[grp.length-2]==="Nicht in der Artikelliste");
  const ch=await p.evaluate(()=>[...document.querySelectorAll("[data-amf]")].map(b=>b.textContent));ok("Filter vor Retoure "+J(ch),J(ch)===J(["Alle","Abweichungen 3","Fremdmiete 1","Lager 55 1"]));
+ const zb=await p.evaluate(()=>{const b=document.querySelector(".amz");return b?b.innerText.replace(/\s+/g," "):""});console.log("     Zusatz-Block:",zb);
+ ok("Zusatz unten extra (Kopf mit Stand, 125A Kabel 50m 4 / 4)",/Zusatz 20260741 hergerichtet \d\d\.\d\d\. von Jürgen H\./.test(zb)&&/125A Kabel 50m 4 4/.test(zb));
  await p.screenshot({path:S+"amat_1.png",fullPage:true});
- await p.click('[data-amf="dev"]');await p.waitForTimeout(150);ok("Filter Abweichungen: 3 Zeilen",(await rows()).length===3);
- await p.click('[data-amf="alle"]');await p.click("#amq");await p.type("#amq","125 kabel");await p.waitForTimeout(150);ok("Suche „125 kabel“ → 2",(await rows()).length===2&&await p.evaluate(()=>document.activeElement.id==="amq"));
+ await p.click('[data-amf="dev"]');await p.waitForTimeout(150);ok("Filter Abweichungen: 3 Zeilen",(await p.$$(".amt:not(.amz) .amr")).length===3);
+ ok("Zusatz-Block nur bei „Alle“",!(await p.$(".amz")));
+ await p.click('[data-amf="alle"]');await p.click("#amq");await p.type("#amq","125 kabel");await p.waitForTimeout(150);ok("Suche „125 kabel“ → 2 (+1 im Zusatz)",(await p.$$(".amt:not(.amz) .amr")).length===2&&(await p.$$(".amz .amr")).length===1&&await p.evaluate(()=>document.activeElement.id==="amq"));
  await p.fill("#amq","");await p.evaluate(()=>{const e=document.getElementById("amq");e.dispatchEvent(new Event("input"))});
  /* Retoure dazu: neuer Kontext mit Retourschein von Anfang an */
  const seed2=[...seed,{col:"retour",id:"rA",data:{ev:"Weihnachtsmarkt Spittelberg 2026",ord:"260079601",itemsJson:"{}",pa_u1:J({"1109":{nr:"1109",name:"125A Kabel 50m",g:"Kabel",u:"125A",q:12},"1048":{nr:"1048",name:"Verteiler 125A Maxi 2",g:"Verteiler",u:"125A",q:8},"1081":{nr:"1081",name:"Schuko 20m",g:"Kabel",u:"Schuko",q:2},"1098":{nr:"1098",name:"32A Kabel 50m",g:"Kabel",u:"32A",q:3}}),by:"u1",t:D(0),closed:true,closedT:D(0),art:"teil"}}];
@@ -47,7 +50,7 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  ok("Nach Retoure: Spalten Raus · Rein · Diff",(await p.textContent(".amh"))==="ArtikelRausReinDiff");
  ok("Diff 125A 50m −4, Maxi 0, 32A +1",R.some(r=>/^125A Kabel 50m.*\| 16 \| 12 \| −4/.test(r))&&R.some(r=>/Verteiler 125A Maxi 2.*\| 8 \| 8 \| 0/.test(r))&&R.some(r=>/32A Kabel 50m.*\| 2 \| 3 \| \+1/.test(r)));
  const ch2=await p.evaluate(()=>[...document.querySelectorAll("[data-amf]")].map(b=>b.textContent));ok("Filter nach Retoure "+J(ch2),ch2.includes("Schon zurück 4")&&ch2.some(c=>/^Noch draußen/.test(c)));
- await p.click('[data-amf="back"]');await p.waitForTimeout(150);ok("Schon zurück: 4",(await rows()).length===4);
+ await p.click('[data-amf="back"]');await p.waitForTimeout(150);ok("Schon zurück: 4",(await p.$$(".amt:not(.amz) .amr")).length===4);
  await p.click('[data-amf="out"]');await p.waitForTimeout(150);const out=await rows();ok("Noch draußen: nur negative Diff",out.length>0&&out.every(r=>/\| −\d/.test(r)));
  await p.screenshot({path:S+"amat_2.png",fullPage:true});
  ok("kein seitliches Scrollen",await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
