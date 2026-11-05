@@ -38,7 +38,7 @@ function dxPackFor(ev,ord){try{if(typeof packs==="undefined"||!packs.length)retu
 function dxPackArts(p){if(!p||typeof pkItems!=="function")return [];const M={};
  pkItems(p).forEach(o=>{const x=o.x||{},q=(+x.n||0)-(+x.f||0);if(q<=0)return;const c=typeof artCode==="function"?artCode(x.a):"",nmx=typeof pkName==="function"?pkName(x):(x.t||""),k=c||"n:"+dxNorm(nmx);if(!nmx)return;
   const g=M[k]=M[k]||{name:nmx,nr:c,q:0,u:x.u||"Stk"};g.q+=q});
- const K=typeof rKat==="function"?rKat():[],ix=a=>{const i=a.nr?K.findIndex(k=>artCode(k.nr)===a.nr):-1;return i<0?1e6:i};
+ const RK=typeof pkRanks==="function"?pkRanks():{},ix=a=>a.nr&&a.nr in RK?RK[a.nr]:1e6;/* 1.129: feste Reihenfolge wie beim Herrichten */
  return Object.values(M).sort((a,b)=>ix(a)-ix(b))}
 /* schon gemeldete Stück zu dieser Veranstaltung + Artikel (offen) */
 function dxReported(ev,ord,name){const o=typeof pkDig==="function"?pkDig(ord):String(ord||"").replace(/\D/g,""),e=dxNorm(ev),a=dxNorm(name);
@@ -48,6 +48,7 @@ function dxSuggest(q,packArts){const T=dxNorm(q).split(" ").filter(Boolean);if(!
  const hit=s=>{const h=" "+dxNorm(s)+" ";return T.every(t=>h.includes(t))};
  const seen={},A=[],B=[];(packArts||[]).forEach(a=>{if(hit(a.name+" "+(a.nr||""))){seen[dxNorm(a.name)]=1;A.push({name:a.name,nr:a.nr,pk:1})}});
  (typeof rKat==="function"?rKat():[]).forEach(k=>{if(!k||!k.name||seen[dxNorm(k.name)])return;if(hit(k.name+" "+(k.nr||""))){seen[dxNorm(k.name)]=1;B.push({name:k.name,nr:artCode(k.nr)||""})}});
+ const RK=typeof pkRanks==="function"?pkRanks():{},rk=x=>x.nr&&x.nr in RK?RK[x.nr]:1e6;B.sort((x,y)=>rk(x)-rk(y)||String(x.name).localeCompare(y.name,"de",{numeric:true}));
  return {A:A.slice(0,6),B:B.slice(0,10-Math.min(6,A.length))}}
 function dxMark(name,q){let s=esc(name);dxNorm(q).split(" ").filter(t=>t.length>1).forEach(t=>{try{s=s.replace(new RegExp("("+t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","i"),"<b>$1</b>")}catch(e){}});return s}
 function dxQty(p){const e=document.getElementById(p+"n");return Math.max(1,parseInt(e&&e.dataset.v,10)||1)}

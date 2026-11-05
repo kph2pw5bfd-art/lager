@@ -17,7 +17,7 @@
 document.head.appendChild(st)}catch(e){}})();
 let amF="alle",amQ="",amOpen={},amPk=null;
 function amRows(p,B){const H=pkH(p),M={},num=v=>pkNum(v);
- const get=(k,nm,code,u)=>M[k]=M[k]||{k,name:nm,code:code||"",u:u||"Stk",ps:0,zus:{},dev:[],ers:[],devBy:"",x:0,raus:0,fr:0,l55:0,back:0};
+ let ord=0;const get=(k,nm,code,u)=>M[k]=M[k]||{k,first:ord++,name:nm,code:code||"",u:u||"Stk",ps:0,zus:{},dev:[],ers:[],devBy:"",x:0,raus:0,fr:0,l55:0,back:0};
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],c=artCode(x.a),nm=pkName(x),e=get(abgKey(c,nm),nm,c,x.u),st=pkPS(x,h);e.ps+=+x.n||0;if(o.z)e.zus[o.z]=(e.zus[o.z]||0)+(+x.n||0);
   if(pkDevRow(x,h,st)&&h){let w="";try{w=nmA(h,"by")}catch(er){}e.devBy=[w,h.t?fmt(h.t).slice(0,6):""].filter(Boolean).join(" ")}
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const kk=pkKat({a:a.a}),an=kk?kk.name:a.t,ac=artCode(a.a),ea=get(abgKey(ac,an),an,ac,x.u);if(!ea.ers.includes(nm))ea.ers.push(nm)})});
@@ -26,10 +26,11 @@ function amRows(p,B){const H=pkH(p),M={},num=v=>pkNum(v);
  const dl=[...auDevLines(p,null),...(p.zus||[]).flatMap(z=>auDevLines(p,String(z.ps)))];
  Object.values(M).forEach(e=>{const pre=e.name+": ";dl.forEach(l=>{if(l.startsWith(pre))e.dev.push(l.slice(pre.length))})});
  (B.L||[]).forEach(b=>{const e=M[b.k]||get(b.k,b.name,b.code);e.raus=b.soll;e.fr=b.fr;e.l55=b.l55;e.back=b.back});
- const K=typeof rKat==="function"?rKat():[],ix=e=>{const i=e.code?K.findIndex(k=>artCode(k.nr)===e.code):-1;return i<0?1e6:i};
+ /* feste Reihenfolge wie beim Herrichten (pkRanks = Artikelliste nach Gruppe/Untergruppe/Position), sonst Packschein-Reihenfolge – rkat kommt ungeordnet aus der Datenbank */
+ const RK=typeof pkRanks==="function"?pkRanks():{},ix=e=>e.code&&e.code in RK?RK[e.code]:1e6;
  return Object.values(M).map(e=>{const only55=e.l55>0&&!e.raus&&!e.fr;e.grp=only55?"Lager 55 – holt Fahrer/Monteur":pkGrp({a:e.code});
-  e.diff=e.back<e.raus?e.back-e.raus:Math.max(0,e.back-e.raus-e.fr-e.l55);e.isDev=e.dev.length>0||e.ers.length>0||e.x>0;e.ans=(typeof auAns==="function"?auAns(p,e.k)[0]:null)||null;e.only55=only55;return e})
-  .filter(e=>e.ps||e.raus||e.back||e.x||e.l55).sort((a,b)=>(a.only55-b.only55)||(a.grp==="Nicht in der Artikelliste")-(b.grp==="Nicht in der Artikelliste")||ix(a)-ix(b)||String(a.name).localeCompare(b.name,"de"))}
+  e.sl=Math.max(0,e.ps-e.fr-(only55?0:e.l55));e.diff=e.back<e.raus?e.back-e.raus:Math.max(0,e.back-e.raus-e.fr-e.l55);e.isDev=e.dev.length>0||e.ers.length>0||e.x>0;e.ans=(typeof auAns==="function"?auAns(p,e.k)[0]:null)||null;e.only55=only55;return e})
+  .filter(e=>e.ps||e.raus||e.back||e.x||e.l55).sort((a,b)=>(a.only55-b.only55)||(a.grp==="Nicht in der Artikelliste")-(b.grp==="Nicht in der Artikelliste")||ix(a)-ix(b)||a.first-b.first)}
 function amFilters(R,ph2,endish){const F=[["alle","Alle",R.length],["dev","Abweichungen",R.filter(e=>e.isDev).length],["fr","Fremdmiete",R.filter(e=>e.fr>0).length],["l55","Lager 55",R.filter(e=>e.l55>0).length]];
  if(ph2){F.push(endish?["miss","Fehlmaterial",R.filter(e=>e.diff<0).length]:["out","Noch draußen",R.filter(e=>e.diff<0).length]);F.push(["back","Schon zurück",R.filter(e=>e.back>0).length])}
  return F.filter(f=>f[0]==="alle"||f[2]>0)}
@@ -39,7 +40,7 @@ function amBody(p,B,I){const R=amRows(p,B),ph2=!!(B.R&&B.R.length),endish=!!(B.h
  const L=R.filter(amPass),n=v=>pkNum(v),dash='<span class="q m">–</span>';
  const sum=k=>R.reduce((a,e)=>a+(+e[k]||0),0),raus=sum("raus"),back=R.reduce((a,e)=>a+Math.min(e.back,e.raus),0),devN=R.filter(e=>e.isDev).length,miss=R.reduce((a,e)=>a+(e.diff<0?-e.diff:0),0),more=R.reduce((a,e)=>a+(e.diff>0?e.diff:0),0);
  const kpi=ph2?'<div class="amk"><div><b>'+n(raus)+'</b>raus</div><div><b>'+n(back)+'</b>rein</div><div class="'+(miss?'red':'')+'"><b>'+n(miss)+'</b>'+(endish?'Fehlmaterial':'noch draußen')+'</div><div class="'+(more?'or':'')+'"><b>'+n(more)+'</b>zu viel</div></div>'
-  :'<div class="amk"><div><b>'+n(sum("ps"))+'</b>Soll</div><div><b>'+n(raus)+'</b>raus</div><div class="'+(devN?'or':'')+'"><b>'+devN+'</b>Abweich.</div><div><b>'+n(sum("fr"))+'</b>Fremdmiete</div></div>';
+  :'<div class="amk"><div><b>'+n(R.filter(e=>!e.only55).reduce((a,e)=>a+e.sl,0))+'</b>Soll</div><div><b>'+n(raus)+'</b>raus</div><div class="'+(devN?'or':'')+'"><b>'+devN+'</b>Abweich.</div><div><b>'+n(sum("fr"))+'</b>Fremdmiete</div></div>';
  const head='<div class="amh"><span>Artikel</span>'+(ph2?'<span>Raus</span><span>Rein</span><span>Diff</span>':'<span>Soll</span><span>Raus</span><span>Rein</span>')+'</div>';
  let g0=null,rows="";L.forEach(e=>{if(e.grp!==g0){g0=e.grp;rows+='<div class="amg'+(e.only55?' l55':'')+'">'+esc(g0)+'</div>'}
   const notes=[];const u=" "+(e.u||"Stk");
@@ -47,11 +48,11 @@ function amBody(p,B,I){const R=amRows(p,B),ph2=!!(B.R&&B.R.length),endish=!!(B.h
   e.dev.forEach(d=>notes.push('<small class="or">'+esc(d)+'</small>'));if(e.isDev&&e.devBy&&(amF==="dev"))notes.push('<small>'+esc(e.devBy)+'</small>');
   if(e.ers.length)notes.push('<small class="or">Ersatz für '+e.ers.map(esc).join(", ")+'</small>');
   if(e.x)notes.push('<small class="or">'+n(e.x)+u+' zusätzlich mitgegeben (nicht im Packschein)</small>');
-  if(e.fr>0)notes.push('<small class="red">davon '+n(e.fr)+u+' Fremdmiete – kommt nicht vom Lager</small>');
+  if(e.fr>0)notes.push('<small class="red">laut Packschein '+n(e.ps)+u+', davon '+n(e.fr)+u+' Fremdmiete – kommt nicht vom Lager</small>');
   if(e.l55>0&&!e.only55)notes.push('<small>'+n(e.l55)+u+' über Lager 55</small>');
   if(e.only55&&e.back>0)notes.push('<small>'+n(e.back)+u+' kam über uns statt Lager 55 zurück</small>');if(e.ans)notes.push('<small class="pl">'+esc(auAnsTxt(e.ans))+'</small>');
   if(e.u&&e.u!=="Stk")notes.push('<small>Menge in '+esc(e.u)+'</small>');
-  const c1=e.only55?'<span class="q m">'+n(e.l55)+'</span>':'<span class="q m">'+n(e.ps)+'</span>',cR=e.only55?dash:'<span class="q'+(e.raus!==e.ps-e.fr&&!e.only55?' or':'')+'">'+n(e.raus)+'</span>',cB=e.back?'<span class="q ok">'+n(e.back)+'</span>':dash;
+  const c1=e.only55?'<span class="q m">'+n(e.l55)+'</span>':'<span class="q m">'+n(e.sl)+'</span>',cR=e.only55?dash:'<span class="q'+(e.raus!==e.sl?' or':'')+'">'+n(e.raus)+'</span>',cB=e.back?'<span class="q ok">'+n(e.back)+'</span>':dash;
   const cD=e.only55&&!e.back?dash:'<span class="q '+(e.diff<0?'red':e.diff>0?'or':'m')+'">'+(e.diff>0?'+'+n(e.diff):e.diff<0?'−'+n(-e.diff):'0')+'</span>';
   rows+='<div class="amr'+(e.isDev?' dev':'')+(e.only55?' l55':'')+'"><span class="n">'+esc(e.name)+notes.join("")+'</span>'+(ph2?(e.only55?dash:'<span class="q m">'+n(e.raus)+'</span>')+cB+cD:c1+cR+cB)+'</div>'});
  return kpi+'<div class="amch">'+F.map(f=>'<button type="button" data-amf="'+f[0]+'" class="'+(amF===f[0]?'on':'')+'">'+esc(f[1])+(f[0]==="alle"?'':' '+f[2])+'</button>').join("")+'</div>'+

@@ -21,7 +21,11 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  ok("Spalten Soll · Raus · Rein",(await p.textContent(".amh"))==="ArtikelSollRausRein");
  ok("Zusatz zusammengerechnet",R.some(r=>/^125A Kabel 50m.*inkl\. 4 Stk aus Zusatz 20260741 \| 16 \| 16 \| –/.test(r)));
  ok("Teilmenge + Ersatz",R.some(r=>/Verteiler 125A Maxi 2.*8 von 9 Stk.*stattdessen 1 Stk Verteiler 63A Indu \| 9 \| 8/.test(r))&&R.some(r=>/Verteiler 63A Indu.*Ersatz für Verteiler 125A Maxi 2 \| 0 \| 1/.test(r)));
- ok("Fremdmiete",R.some(r=>/125A Kabel 25m.*6 Stk Fremdmiete.*\| 20 \| 14/.test(r)));
+ ok("Fremdmiete",R.some(r=>/125A Kabel 25m.*6 Stk Fremdmiete.*\| 14 \| 14/.test(r)));
+ ok("Soll ohne Fremdmiete/Lager 55: 41 Soll, 43 raus",/^41Soll43raus/.test((await p.textContent(".amk")).replace(/\s/g,"")));
+ const tl=await p.evaluate(()=>[...document.querySelectorAll(".audev")].map(e=>e.innerText).join(" | "));console.log("     Zeitleiste:",tl);
+ ok("Zeitleiste: Abweichungen kurz",/Abweichungen:/.test(tl)&&/Verteiler 125A Maxi 2 −1 Stk/.test(tl)&&/Verteiler 63A Indu \+1 Stk/.test(tl)&&/32A Kabel 50m \+2 Stk \(zusätzlich mitgegeben – Kunde wollte mehr\)/.test(tl));
+ ok("Reihenfolge fest (wie Herrichten)",await p.evaluate(()=>{const a=JSON.stringify(amRows(packs.find(x=>x.id==="A"),abgBal(packs.find(x=>x.id==="A"))).map(e=>e.name));rkat.reverse();pkRkRef=null;const b=JSON.stringify(amRows(packs.find(x=>x.id==="A"),abgBal(packs.find(x=>x.id==="A"))).map(e=>e.name));rkat.reverse();pkRkRef=null;return a===b}));
  ok("Zusätzlich mitgegeben",R.some(r=>/32A Kabel 50m.*2 Stk zusätzlich mitgegeben \(nicht im Packschein\) \| 0 \| 2/.test(r)));
  ok("Lager 55 am Ende",/Lager 55/.test(R[R.length-1])||/Schuko 20m \| 30 \| – \| –/.test(R[R.length-1]));
  const grp=await p.evaluate(()=>[...document.querySelectorAll(".amg")].map(g=>g.textContent));console.log("     Gruppen:",J(grp));ok("Gruppen, „Nicht in der Artikelliste“ vor Lager 55",grp[grp.length-1].startsWith("Lager 55")&&grp[grp.length-2]==="Nicht in der Artikelliste");

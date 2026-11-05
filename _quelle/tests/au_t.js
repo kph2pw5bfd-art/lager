@@ -48,7 +48,7 @@ async function run(b,role,rolle,extra,fn){const docs=base.concat(rolle?[{col:"ro
   await p.click('[data-auf="done"]');await p.waitForTimeout(200);ok("Erledigt-Filter",(await T(".aucard .auct b"))==="Sommerfest Rust | Winterwunder Mörbisch",await T(".aucard .auct b"));
   await p.click('[data-auf="lauf"]');await p.waitForTimeout(200);await p.fill("#auq","wiesel");await p.waitForTimeout(200);ok("Suche",(await T(".aucard .auct b"))==="Messe Wieselburg");await p.fill("#auq","");await p.waitForTimeout(200);
   await p.click('[data-au="A"]');await p.waitForTimeout(300);console.log("Zeitleiste:",await T(".aute"));
-  ok("Abweichung beim Herrichten genannt",/3 von 4 Stk.*stattdessen 1 Stk Kabel CEE 32A 50m/.test(await T(".audev")),await T(".audev"));
+  ok("Abweichung beim Herrichten genannt (kurz, 1.129)",/Abweichungen:.*32A Kabel 25m −1 Stk.*32A Kabel 50m \+1 Stk/.test(await T(".audev")),await T(".audev"));
   console.log("Fehlt noch:",await T(".aucd.red"));await p.screenshot({path:S+"au_detail.png",fullPage:true});
   ok("Fehlt noch mit Einheit",/2 Stk 32A Kabel 25m/.test(await T(".aucd.red")),await T(".aucd.red"));
   await p.click(".aumat summary");await p.waitForTimeout(150);ok("Material als Tabelle (1.128)",/RAUS REIN DIFF/i.test(await T(".aumat"))&&/davon 2 Stk Fremdmiete/.test(await T(".aumat")),await T(".aumat"));
