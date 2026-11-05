@@ -97,8 +97,7 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const M=PLAW.filter(a=>a.pk===p.id&&a.typ==="msg");
  const msgs=M.length?'<section class="card aucd"><b class="ausec">Nachrichten ans Lager</b>'+M.map(ansH).join("")+'</section>':'';
  const H2=pkH(p),K=pkKeys(p);
- const mat='<details class="card aucd aumat"><summary><b>Material</b><small>'+pkPosN(pkPosAll(p).length)+'</small></summary>'+pkPosAll(p).map((x,i)=>{const h=H2[K[i]],st=pkPS(x,h),l55=pkL55(x,h);
-  return '<div class="aurow"><b class="auq m">'+auQ(x.n,x.u)+'</b><span class="aun">'+esc(pkName(x))+(x.f>0&&!(h&&h.fm==="lager")?' <small class="red">davon '+pkNum(x.f)+' '+esc(x.u||"Stk")+' Fremdmiete</small>':'')+'</span><span class="aust">'+(l55?'Lager 55':st.s==="open"?'':st.s==="part"||pkOver(x,h,st)?'<span class="or">'+pkNum(st.s==="part"?st.q:h.q)+' '+esc(x.u||"Stk")+' da</span>':'✓')+'</span></div>'}).join("")+'</details>';
+ const mat=auMat(p,B,I);/* 1.128: aumat.js */
  $("#app").innerHTML='<section class="card aucd"><div class="aukv"><span>Auftrag</span><b>'+esc(p.ord||"–")+'</b><span>Projektleiter</span><b>'+esc(shortName(p.pl)||"–")+(mine?' <small class="mute">(du)</small>':'')+'</b><span>Dispo</span><b>'+pkD(p.db)+' – '+pkD(p.de)+'</b>'+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+'</div></section>'+
   tl+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+mat+
   (!mine?'<p class="mute" style="font-size:12px;margin:8px 2px">Antworten kann nur der Projektleiter dieses Auftrags.</p>':'');

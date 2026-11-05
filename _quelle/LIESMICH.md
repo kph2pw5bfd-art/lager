@@ -412,3 +412,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.127 – Wortlaut Schild in „Meine Aufträge“ (Jürgen, 5.11.)
 - „Herrichten: 1 Abweichung“ → „1 Abweichung zum Packschein“ / „n Abweichungen zum Packschein“ (au.js, Kartenschilder).
+
+## Version 1.128 – „Material“ in Meine Aufträge als Übersicht für Projektleiter (Jürgen, 5.11.; Entwurf https://claude.ai/artifact/8LeMr5yo3ZJW4Rh8PP97NL; gewählt: Spalten SOLL · RAUS · REIN, nach der ersten Retoure RAUS · REIN · DIFF; Gruppen; Filter inkl. „Schon zurück“; kein PDF)
+- Neue Datei `aumat.js` (nach ws.js angehängt); au.js ruft `auMat(p,B,I)` statt der alten Liste.
+- `amRows`: pro Artikel (abgKey) zusammengefasst – Packschein + Zusätze („inkl. … aus Zusatz …“), Ersatz als eigene Zeile („Ersatz für …“), zusätzlich Mitgegebenes (pkX), Abweichungstexte aus `auDevLines` (dem Artikel über „Name: “ zugeordnet), Fremdmiete, Lager 55 (eigene graue Gruppe am Ende, „kam über uns statt Lager 55 zurück“), letzte PL-Antwort (auAns). Zahlen aus `abgBal`: RAUS = .soll, REIN = .back, DIFF = REIN − RAUS (negativ = fehlt; zu viel nur über Fremdmiete/Lager 55 hinaus), SOLL = Summe laut Packschein(en). Gruppen nach `pkGrp`, Reihenfolge Artikelliste, „Nicht in der Artikelliste“ vor Lager 55.
+- Oben 4 Zahlen: vor Retoure Soll · raus · Abweichungen · Fremdmiete, danach raus · rein · noch draußen/Fehlmaterial · zu viel. Filter (nur mit Inhalt): Alle · Abweichungen · Fremdmiete · Lager 55 · (nach Retoure) Noch draußen bzw. Fehlmaterial (Endretoure oder Dispo abgelaufen) · Schon zurück. Suche. Auf/zu-Zustand pro Auftrag gemerkt (Sitzung).
+- Test `tests/amat_t.js`; `au_t.js` angepasst.
