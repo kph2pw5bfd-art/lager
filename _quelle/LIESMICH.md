@@ -362,3 +362,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Wochenbericht: Liste „Fehlmaterial noch in epirent auszutragen“ in Block 1 (Bildschirm/Druck und Handy-PDF), Zeilen aus `fmWbRows`.
 - „Mit Projektleiter geklärt“ bleibt (Auftrag fällt aus „Fehlmaterial“), die Liste „Noch auszutragen“ gilt unabhängig davon.
 - Test `tests/fm_t.js`.
+
+## Version 1.120 – Retourschein-Excel ohne Uhrzeiten (Jürgen, 5.11.)
+- In `retXl` stehen bei „Erstellt“ und „Letzte Änderung“ nur noch Name + Datum (`fmt(..).slice(0,10)`), rep am Ende von build.py. Test-Zeile in `tests/retxl_t.js`.

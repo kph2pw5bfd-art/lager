@@ -207,6 +207,8 @@ assert _i>0 and _j>_i,"rsave"
 s=s[:_i]+'$("#rsave").onclick=()=>rFinish($("#rsave"))'+s[_j+1:]
 # 1.119: Ansicht „Noch auszutragen“ (fm.js)
 rep('if(view==="abgpr"&&can("abg_p"))return abgPrView();','if(view==="abgpr"&&can("abg_p"))return abgPrView();\n if(view==="fmaus"&&can("fm_a"))return fmAusView();')
+# 1.120: Retourschein-Excel ohne Uhrzeiten bei „Erstellt“ / „Letzte Änderung“ (nur Datum)
+rep('''["Erstellt",nmA(r,"by")+", "+fmt(r.t)],["Letzte Änderung",r.mod?nmA(r,"mod")+", "+fmt(r.modT):"–"]''','''["Erstellt",nmA(r,"by")+", "+fmt(r.t).slice(0,10)],["Letzte Änderung",r.mod?nmA(r,"mod")+", "+fmt(r.modT).slice(0,10):"–"]''')
 open("/home/claude/gh/index.html","w",encoding="utf-8").write(s)
 json.dump({"name":"TPC Lager","short_name":"TPC Lager","description":"Lager-App von The Power Company","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#114a97","theme_color":"#114a97","lang":"de",
  "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},

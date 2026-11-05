@@ -17,7 +17,7 @@ let bad=0;const ok=(c,m,x)=>{console.log((c?"OK   ":"FEHLER")+" "+m+(x!==undefin
  await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
  ok(await p.evaluate(()=>APPV)==="1.110","Version 1.110");
  const [dl]=await Promise.all([p.waitForEvent("download"),p.evaluate(()=>retXl(rets.find(r=>r.id==="r1")))]);const fp=S+"retxl.json";await dl.saveAs(fp);
- const W=JSON.parse(fs.readFileSync(fp,"utf8"))[0],R=W.rows;const hd=+Object.keys(R).find(i=>R[i][3]&&R[i][3].v==="Ausgang");
+ const W=JSON.parse(fs.readFileSync(fp,"utf8"))[0],R=W.rows;{const all=JSON.stringify(R),cr=Object.values(R).find(r=>Object.values(r).some(c=>c&&c.v==="Erstellt"));const crTxt=cr?JSON.stringify(cr):"";console.log((cr&&/\d{2}\.\d{2}\.\d{4}"/.test(crTxt)&&!/\d{2}:\d{2}/.test(crTxt)?"OK   ":"FEHLT")+" 1.120: „Erstellt“ ohne Uhrzeit ("+crTxt.slice(0,120)+")");}const hd=+Object.keys(R).find(i=>R[i][3]&&R[i][3].v==="Ausgang");
  const d=Object.keys(R).filter(i=>+i>hd).map(i=>R[i]);console.log("Zeilen:",d.map(r=>r[2].v+" | Ausgang "+(r[3]&&r[3].v)+" | Retour "+r[4].v+" | "+JSON.stringify(r[5])).join(" || "));
  ok(d.every(r=>/^IF\(C(\d+)="","",D\1-C\1\)$/.test(r[5].v.formula)),"Formel = Retour − Ausgang",d[0][5].v.formula);
  ok(d.every(r=>r[5].f==="+0;-0;0"),"Zahlenformat mit Vorzeichen (+2 / −2 / 0)");
