@@ -453,3 +453,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Darunter: Knöpfe Meine Aufträge / Nachricht ans Lager, „Frag mich“ (jvAskHtml/jvAskBind, Vorlesen an/aus, „Was kann ich fragen?“), Heute, Diese Woche / Nächste Woche (Herrichten · Zusatz · Raus · Zurück; Wochenende beim Freitag), Draußen (Stk draußen; Dispo abgelaufen / Endretoure mit Fehlmaterial rot, zuerst), Neu seit letztem Besuch (hergerichtet + Abweichungen, Zusatz hergerichtet, Retouren; localStorage `tpc_pl_seen`, geschrieben auf der Hauptseite/im Hintergrund).
 - Fragen: in jvfrag.js/jvask.js `can("pk_s")` → `jvPkOk()` = pk_s ODER (plIs() und au_s) – Projektleiter können ohne Packlisten-Recht nach Material/Aufträgen fragen (Datenbank erlaubt pack lesen mit „Aufträge“). Antwortzeile mit Packliste öffnet ohne pk_s den Auftrag in Meine Aufträge.
 - Test `tests/pl_t.js`.
+
+## Version 1.137 – Projektleiter Übersicht: eine Zeile pro Auftrag und Tag (Jürgen, 6.11.: „ein wenig zu viel Info“)
+- `plEvents`: Ereignisse pro Auftrag zusammengefasst – Herrichten + Raus am selben Tag → nur „Raus“ (✓ = hergerichtet, sonst bei Heute „noch nicht hergerichtet“ bzw. „x/y hergerichtet“), Zusatz am selben Tag steckt im Herrichten/Raus. In der Woche Zusatztext nur bei „Zurück · Fehlmaterial“.

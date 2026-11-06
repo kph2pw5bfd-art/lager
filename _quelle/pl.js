@@ -48,7 +48,14 @@ function plEvents(M,t){const E=[];M.forEach(I=>{const p=I.p;
   if(!pkNoH(p)&&day(pkHDay(p))===t)E.push({c:"h",l:"Herrichten",p,ok:!!I.g.fin,x:I.g.fin?"":(I.g.d?I.g.d+"/"+I.g.n:"")});
   (p.zus||[]).forEach(z=>{if(day(pkZDay(p,z))===t){const f=pkZFin(p,z)||auHerrAll(p,String(z.ps));E.push({c:"z",l:"Zusatz",p,ok:!!f,x:""})}});
   if(p.db&&day(p.db)===t)E.push({c:"x",l:"Raus",p,ok:false,x:""});
-  if(p.de&&day(p.de)===t)E.push({c:"r",l:"Zurück",p,ok:!!I.B.hasEnd,x:I.B.hasEnd&&I.B.fehlt?"Fehlmaterial":""})});return E}
+  if(p.de&&day(p.de)===t)E.push({c:"r",l:"Zurück",p,ok:!!I.B.hasEnd,x:I.B.hasEnd&&I.B.fehlt?"Fehlmaterial":""})});
+ /* 1.137: eine Zeile pro Auftrag und Tag (Jürgen: „zu viel Info“) – Herrichten + Raus am selben Tag → nur „Raus“ (✓ = hergerichtet), Zusatz am selben Tag wie Herrichten → mit drin */
+ const O=[];E.forEach(e=>{let g=O.find(x=>x.p===e.p);if(!g)O.push(g={p:e.p,E:[]});g.E.push(e)});
+ return O.map(g=>{const f=c=>g.E.find(e=>e.c===c),h=f("h"),z=f("z"),x=f("x"),r=f("r");
+  if(r&&!h&&!z&&!x)return r;
+  if(x)return{c:"x",l:"Raus",p:g.p,ok:(h?h.ok:true)&&(z?z.ok:true),x:h&&!h.ok?(h.x?h.x+" hergerichtet":"noch nicht hergerichtet"):"",both:!!r};
+  if(h)return{...h,ok:h.ok&&(z?z.ok:true)};
+  if(z)return z;return r})}
 function plDraussen(M){return M.filter(I=>!I.done&&(I.B.R.length||I.g.fin&&auOutDay(I.p)&&auOutDay(I.p)<=pkDay(Date.now())||I.over)).map(I=>{const out=I.B.L.reduce((a,e)=>a+Math.max(0,e.soll-e.back),0);return{I,out}}).filter(x=>x.out>0||x.I.over).sort((a,b)=>(b.I.over?1:0)-(a.I.over?1:0)||(a.I.p.de||0)-(b.I.p.de||0))}
 function plNews(M){const N=[];M.forEach(I=>{const p=I.p,H=pkH(p);
   const fin=H.fin&&H.fin.t?H.fin:auHerrAll(p,null);if(fin&&fin.t>plPrev){const L=auDevNet(p,null);N.push({t:fin.t,b:esc(p.ev||"")+" hergerichtet",s:L.length?L.map(esc).join(" · "):"ohne Abweichungen",p,r:fmt(fin.t).slice(0,6)})}
@@ -68,10 +75,10 @@ function plView(){plSeenSub();if(!plIn2){plIn2=true;try{plPrev=+localStorage.get
  h+='<div class="plbig">'+(can("au_s")?'<button type="button" id="plau">Meine Aufträge</button>':'')+'<button type="button" class="g" id="plmsg">Nachricht ans Lager</button></div>';
  h+='<section class="plsec plask"><h4>Frag mich<span><button type="button" id="plrd">'+(jvReadOn()?'Vorlesen an':'Vorlesen aus')+'</button> · <button type="button" id="plhelp">Was kann ich fragen?</button></span></h4>'+jvAskHtml()+'<p class="mute" style="margin:6px 0 0;font-size:13px">z. B. „Auf welcher Baustelle sind 50m 32A?“ · „Wie viele Defender Midi sind draußen?“ · „Was kommt heute zurück?“</p></section>';
  const today=plEvents(M,t0);
- h+='<section class="plsec"><h4>Heute</h4>'+(today.length?today.map(e=>'<button type="button" class="plli" data-plp="'+esc(e.p.id)+'"><span><b>'+esc(e.p.ev||"")+'</b><small>'+(e.ok?"erledigt":e.x||"Auftrag "+esc(e.p.ord||"–"))+'</small></span><span class="r'+(e.ok?' ok':'')+'">'+e.l+(e.ok?' ✓':'')+'</span></button>').join(""):'<p class="mute" style="margin:0">Heute passiert bei deinen Aufträgen nichts.</p>')+'</section>';
+ h+='<section class="plsec"><h4>Heute</h4>'+(today.length?today.map(e=>'<button type="button" class="plli" data-plp="'+esc(e.p.id)+'"><span><b>'+esc(e.p.ev||"")+'</b><small>'+(e.ok?(e.c==="r"?"zurück":"hergerichtet"):e.x||"Auftrag "+esc(e.p.ord||"–"))+'</small></span><span class="r'+(e.ok?' ok':'')+'">'+e.l+(e.ok?' ✓':'')+'</span></button>').join(""):'<p class="mute" style="margin:0">Heute passiert bei deinen Aufträgen nichts.</p>')+'</section>';
  const m0=pkAddD(pkMon(t0),7*plWk),days=[0,1,2,3,4].map(i=>pkAddD(m0,i)),WD=["Mo","Di","Mi","Do","Fr"];
  h+='<section class="plsec"><h4>'+(plWk?'Nächste Woche':'Diese Woche')+'<button type="button" id="plwk">'+(plWk?'‹ Diese Woche':'Nächste Woche ›')+'</button></h4>'+days.map((t,i)=>{const E=plEvents(M,t);
-  return '<div class="plday'+(t===t0?' today':'')+'"><span class="dh">'+WD[i]+'<small>'+pkDM(t)+'</small></span><span class="plev">'+(E.length?E.map(e=>'<button type="button" data-plp="'+esc(e.p.id)+'"><span class="plpill '+e.c+'">'+e.l+'</span><span>'+esc(e.p.ev||"")+(e.ok?' ✓':'')+(e.x?' <small class="mute">· '+esc(e.x)+'</small>':'')+'</span></button>').join(""):'<span class="mute">–</span>')+'</span></div>'}).join("")+'</section>';
+  return '<div class="plday'+(t===t0?' today':'')+'"><span class="dh">'+WD[i]+'<small>'+pkDM(t)+'</small></span><span class="plev">'+(E.length?E.map(e=>'<button type="button" data-plp="'+esc(e.p.id)+'"><span class="plpill '+e.c+'">'+e.l+'</span><span>'+esc(e.p.ev||"")+(e.ok?' ✓':'')+(e.x&&e.c==="r"?' <small class="mute">· '+esc(e.x)+'</small>':'')+'</span></button>').join(""):'<span class="mute">–</span>')+'</span></div>'}).join("")+'</section>';
  const DR=plDraussen(M);
  h+='<section class="plsec"><h4>Draußen <span>'+(DR.length===1?'1 Auftrag':DR.length+' Aufträge')+'</span></h4>'+(DR.length?DR.map(({I,out})=>'<button type="button" class="plli" data-plp="'+esc(I.p.id)+'"><span><b>'+esc(I.p.ev||"")+'</b><small>'+(I.B.hasEnd?'Endretoure zurück · Fehlmaterial':I.over?'Dispo abgelaufen '+pkDM(I.p.de):'bis '+pkDM(I.p.de))+(!I.B.hasEnd&&I.B.R.some(r=>r.closed&&r.art==="teil")?' · Teilretoure zurück':'')+'</small></span><span class="r'+(I.over||I.B.hasEnd?' red':'')+'">'+pkNum(out)+' Stk</span></button>').join(""):'<p class="mute" style="margin:0">Gerade ist nichts draußen.</p>')+'</section>';
  const N=plNews(M);
