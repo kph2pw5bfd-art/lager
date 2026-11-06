@@ -494,7 +494,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.135";
+<script>const APPV="1.136";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1020,7 +1020,7 @@ function jarvisView(){$("#t").textContent="Lager Assistent";const D=jvData(),P=j
   '<div class="jvgreet" id="jvg">'+jvGreet()+'</div>'+jvAskHtml()+
   '<div class="jvopts"><button class="jvlink" id="jvvc" type="button">Stimme</button><span aria-hidden="true">·</span><button class="jvlink" id="jvrd" type="button">'+(jvReadOn()?"Vorlesen an":"Vorlesen aus")+'</button><span aria-hidden="true">·</span><button class="jvlink" id="jvhl" type="button">Was kann ich fragen?</button></div></section>'+
   '<div class="jvgrid"><div class="jvcol" id="jvl">'+P.left+'</div><div class="jvcol" id="jvr">'+P.right+'</div></div>'+
-  (owner?'<p class="jvnote"><button type="button" class="jvlink" id="wsadm">Werkstatt Übersicht ansehen ›</button></p>':'')+(owner?'<p class="jvnote">Wer die Lager Übersicht sieht, stellst du in der Benutzerverwaltung ein (Recht „Lager Übersicht“). Herrichten, Heute zurück und Dispo abgelaufen kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
+  (owner?'<p class="jvnote"><button type="button" class="jvlink" id="wsadm">Werkstatt Übersicht ansehen ›</button> · <button type="button" class="jvlink" id="pladm">Projektleiter Übersicht ansehen ›</button></p>':'')+(owner?'<p class="jvnote">Wer die Lager Übersicht sieht, stellst du in der Benutzerverwaltung ein (Recht „Lager Übersicht“). Herrichten, Heute zurück und Dispo abgelaufen kommen aus den hochgeladenen Packlisten.</p>':'')+'</div>';
  jvClock();jvBind();jvAskBind();$("#jvsp").onclick=jvSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvhl").onclick=jvHelpOpen;
  $("#jvrd").onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");$("#jvrd").textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()}}
 async function rLogMissing(name,nr,q){try{const id="m"+((rNorm(nr)||rNorm(name)).slice(0,80)||Date.now().toString(36)),ref=db.doc("fehlartikel/"+id),old=await ref.get(),o=old.exists?old.data():{};
@@ -1979,7 +1979,7 @@ function jvListen(SR){if(jvIOS&&jvMicDead&&!jvRecOn)return jvKbdMic();if(jvRecOn
 /* Antwort anzeigen + sprechen. A = {q, say:[Sätze], rows:[{l,r,pk?,ret?,cls?}], acts:[{l,fn}]} */
 /* ---- Hilfen ---- */
 const jvDayName=t=>{const d=pkDay(Date.now()),x=Math.round((t-d)/864e5);return x===0?"heute":x===1?"morgen":x===-1?"gestern":PK_WD[new Date(t).getDay()]+" "+pkDM(t)};
-function jvPacksVisible(){return can("pk_s")?packs:[]}
+function jvPacksVisible(){return jvPkOk()?packs:[]}
 function jvPkRow(p,extra){const g=pkProg(p);return{l:(p.ev||p.ord||"Packliste")+(p.ord?" · "+p.ord:""),r:extra||(g.fin?"hergerichtet ✓":g.d?g.d+"/"+g.n:"offen"),pk:p.id,cls:g.fin?"ok":g.d?"ok":"warn"}}
 function jvFindPacks(q){const n=jvNorm(q),dig=(n.match(/\d{6,}/)||[""])[0],P=jvPacksVisible();
  if(dig){const L=P.filter(p=>pkDig(p.ord)===dig||pkDig(p.ord).startsWith(dig)||String(p.ps)===dig);if(L.length)return L}
@@ -2000,7 +2000,7 @@ function jvOrder(q,open){const L=jvFindPacks(q),R=jvFindRets(q);
  if(typeof jvNotes==="function")jvNotes(p).forEach(x=>say.push("Notiz von "+nmA(x,"by")+": "+x.txt));
  const acts=[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}];RR.forEach(r=>acts.push({l:"Retourschein öffnen",fn:()=>{curRet=r.id;go("retopen")}}));
  return{say,acts}}
-function jvHerr(q){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const n=jvNorm(q),t0=pkDay(Date.now());
+function jvHerr(q){if(!jvPkOk())return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const n=jvNorm(q),t0=pkDay(Date.now());
  if(/nicht hergerichtet|liegen|teilweise|vergessen/.test(n)){const L=pkGroups().late.concat(pkZTasks().filter(z=>pkHDay(z)<t0&&!pkProg(z).fin));
   if(!L.length)return{say:[jvF()?"Nichts liegengeblieben. Vorbildlich.":"Es ist nichts liegengeblieben."]};
   return{say:[L.length===1?"Eine Packliste ist nicht fertig hergerichtet:":L.length+" Packlisten sind nicht fertig hergerichtet:"].concat(L.slice(0,4).map(p=>{const g=pkProg(p);return (p.ev||p.ord)+(g.d?", teilweise, "+g.d+" von "+g.n:", nicht angefangen")+"."})),rows:L.map(p=>jvPkRow(p,pkProg(p).d?"teilweise "+pkProg(p).d+"/"+pkProg(p).n:"nicht hergerichtet"))}}
@@ -2013,11 +2013,11 @@ function jvHerr(q){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Pa
  const say=[(lab==="heute"?"Heute":lab.charAt(0).toUpperCase()+lab.slice(1))+" "+(L.length===1?"ist eine Packliste":"sind "+L.length+" Packlisten")+" dran"+(open.length<L.length?", "+(L.length-open.length)+" davon schon hergerichtet":"")+"."];
  open.slice(0,5).forEach(p=>{const g=pkProg(p);say.push((p.ev||p.ord)+(a!==b?", "+jvDayName(pkHDay(p)):"")+(g.d?", "+g.d+" von "+g.n+" fertig":"")+(pkF(p).length?", "+pkF(p).length+" mit Fremdmiete":"")+".")});
  return{say,rows:L.map(p=>jvPkRow(p,(a!==b?pkWd(pkHDay(p))+" · ":"")+(pkProg(p).fin?"✓":pkProg(p).d+"/"+pkProg(p).n)))}}
-function jvBack(q){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const t=/morgen/.test(jvNorm(q))?pkAddD(pkDay(Date.now()),1):pkDay(Date.now()),lab=t===pkDay(Date.now())?"heute":"morgen";
+function jvBack(q){if(!jvPkOk())return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const t=/morgen/.test(jvNorm(q))?pkAddD(pkDay(Date.now()),1):pkDay(Date.now()),lab=t===pkDay(Date.now())?"heute":"morgen";
  const L=jvPacksVisible().filter(p=>p.de&&pkDay(p.de)===t&&pkState(p).k!=="done");
  if(!L.length)return{say:["Zurück kommt "+lab+" laut Packlisten nichts."]};
  return{say:[(lab==="heute"?"Heute":"Morgen")+" sollte"+(L.length===1?"":"n")+" zurückkommen: "+jvList(L.map(p=>p.ev||p.ord))+"."].concat(jvF()?["Hoffentlich vollständig."]:[]),rows:L.map(p=>jvPkRow(p,"Dispo-Ende "+pkD(p.de).slice(-5)))}}
-function jvOver(){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const L=pkGroups().over;
+function jvOver(){if(!jvPkOk())return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const L=pkGroups().over;
  if(!L.length)return{say:[jvF()?"Keine Dispo abgelaufen. So soll's sein.":"Bei keinem Auftrag ist die Dispo abgelaufen."]};
  return{say:[L.length===1?"Bei einem Auftrag ist die Dispo abgelaufen:":"Bei "+L.length+" Aufträgen ist die Dispo abgelaufen:"].concat(L.slice(0,4).map(p=>(p.ev||p.ord)+", Dispo-Ende "+String(jvDayName(pkDay(p.de))).replace(/\.$/,"")+".")),rows:L.map(p=>jvPkRow(p,"seit "+pkWd(p.de)))}}
 function jvDef(q){const n=jvNorm(q),D=jvData();
@@ -2095,9 +2095,9 @@ function jvArtCnt(p,m){if(p.art==="verl"&&pkRoot(p)!==p)m=()=>false;const H=pkH(
  if(typeof pkX==="function")pkX(p).forEach(e=>{if(m(artCode(e.a),(e.nm||"")+" "+pkXName(e)))out+=+e.n||0});
  pkRets(p).forEach(r=>Object.values(rIt(r)).forEach(it=>{if(it.g!=="Zubehör"&&m(artCode(it.nr),it.name))back+=+it.q||0}));
  return{out,plan,back,l55,rest:Math.max(0,out-back)}}
-function jvOutSum(A){if(!can("pk_s"))return 0;const m=jvMatcher(A);let s=0;packs.forEach(p=>{if(pkState(p).k!=="done")s+=jvArtCnt(p,m).rest});return s}
+function jvOutSum(A){if(!jvPkOk())return 0;const m=jvMatcher(A);let s=0;packs.forEach(p=>{if(pkState(p).k!=="done")s+=jvArtCnt(p,m).rest});return s}
 /* „Auf welcher Baustelle sind 50m 32A?“ / „Wo ist Artikel 1098?“ / „Wie viele … sind auf Baustellen?“ */
-function jvWhereA(A,count){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),L=[],P=[];let sum=0,sumP=0;
+function jvWhereA(A,count){if(!jvPkOk())return JV_NOPK;const m=jvMatcher(A),L=[],P=[];let sum=0,sumP=0;
  packs.forEach(p=>{const s=pkState(p);if(s.k==="done")return;const c=jvArtCnt(p,m);
   if(c.rest){L.push({p,q:c.rest,back:c.back,l55:c.l55,over:s.k==="over"});sum+=c.rest}
   if(c.plan){P.push({p,q:c.plan});sumP+=c.plan}});
@@ -2117,13 +2117,13 @@ function jvWhereA(A,count){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),L
  if(A.byText)say.push("Gesucht nach dem Namen – mit der Artikelnummer geht's genauer.");
  return{say,rows}}
 /* „Auf welcher Veranstaltung war Artikel X zuletzt?“ */
-function jvLastA(A){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),t0=Date.now();
+function jvLastA(A){if(!jvPkOk())return JV_NOPK;const m=jvMatcher(A),t0=Date.now();
  const L=packs.filter(p=>(p.db||0)<=t0&&pkItems(p).some(o=>m(artCode(o.x.a),o.x.t+" "+pkName(o.x))||(pkH(p)[o.k]&&(pkH(p)[o.k].alt||[]).some(a=>m(artCode(a.a),a.t))))).sort((a,b)=>(b.db||0)-(a.db||0));
  if(!L.length)return{say:[A.label+" war laut Packlisten noch auf keiner Veranstaltung."]};
  const p=L[0],c=jvArtCnt(p,m);
  return{say:[A.label+" war zuletzt bei "+jvEv(p)+" (Auftrag "+(p.ord||"–")+"), Dispo "+pkDM(p.db)+" bis "+pkDM(p.de)+(c.out?", "+jvStk(c.out):"")+"."],rows:L.slice(0,5).map(p=>({l:jvEv(p),sub:"Auftrag "+(p.ord||"–"),r:pkDM(p.db)+"–"+pkDM(p.de),pk:p.id}))}}
 /* „Ist Artikel X am Dienstag verfügbar?“ – wie viele sind an dem Tag draußen (Bestand kennt die App nicht) */
-function jvAvailA(A,D){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),t=D.t,L=[];let sum=0;
+function jvAvailA(A,D){if(!jvPkOk())return JV_NOPK;const m=jvMatcher(A),t=D.t,L=[];let sum=0;
  packs.forEach(p=>{const s=pkState(p);if(s.k==="done")return;const a=Math.min(pkHDay(p)||pkDay(p.db||0),pkDay(p.db||0)),e=p.de?pkDay(p.de):a;
   const on=(a<=t&&t<=e)||(s.k==="over"&&t>=jvToday());if(!on)return;const c=jvArtCnt(p,m),q=Math.max(0,c.out+c.plan-c.back);if(q){L.push({p,q,over:s.k==="over"});sum+=q}});
  const dl=D.lab==="heute"?"heute":D.lab==="morgen"?"morgen":jvDL(D.t);
@@ -2131,7 +2131,7 @@ function jvAvailA(A,D){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),t=D.t
  return{say:[A.label+": "+dl+" sind laut Packlisten "+jvStk(sum)+" verplant, auf "+L.length+(L.length===1?" Veranstaltung.":" Veranstaltungen."),"Den Gesamtbestand im Lager kenne ich nicht."],
   rows:L.sort((a,b)=>(b.over-a.over)||((a.p.de||0)-(b.p.de||0))).map(o=>({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–"),r:jvStk(o.q)+" · "+(o.over?"Dispo abgelaufen":"bis "+pkWd(o.p.de)),cls:o.over?"warn":"ok",pk:o.p.id})).concat([{sum:true,l:"Summe "+(D.lab==="heute"?"heute":pkDM(D.t)),r:jvStk(sum)}])}}
 /* „Zu welchem Auftrag könnten 4 Stück Kabel A gehören?“ – Vorschlag nach Artikel + Menge */
-function jvBelongA(A,n){if(!can("pk_s"))return JV_NOPK;const m=jvMatcher(A),t0=jvToday(),L=[];
+function jvBelongA(A,n){if(!jvPkOk())return JV_NOPK;const m=jvMatcher(A),t0=jvToday(),L=[];
  packs.forEach(p=>{const s=pkState(p);if(s.k==="done"||!(s.k==="over"||s.k==="out"||s.k==="back"))return;const c=jvArtCnt(p,m);if(c.rest>0)L.push({p,q:c.rest,over:s.k==="over",fit:n?(c.rest===n?2:c.rest>n?1:0):1})});
  if(!L.length)return{say:["Ich finde keinen laufenden Auftrag, bei dem "+A.label+" noch draußen ist."]};
  L.sort((a,b)=>b.fit-a.fit||(b.over-a.over)||((b.p.de||0)-(a.p.de||0)));
@@ -2158,12 +2158,12 @@ const JV_OSTOP=new Set(("wann endet endete ende enden dispo von vom auftrag auft
  "was fehlt fehlen fehlen beim bei noch öffne öffnen mach zeig zeige retourschein retourscheins für war alles zurück zurückgekommen markiere markier als geklärt geklaert erledigt nicht mehr zurücknehmen rückgängig "+
  "notiere notier notiz zu schreib schreibe retoure an schick schicke sende eine einen nachfrage gegenüber im vergleich zur zum veranstaltung baustelle ist's mit dem ein und hat haben es gibt ob ganz komplett vollständig "+
  "erinnere erinner erinnerung heute morgen übermorgen um uhr halb auf aus lass mich bitte mal jetzt so da dann").split(" "));
-function jvPkFind(q){const n=jvNorm(q),dig=(n.match(/\d{6,}/)||[""])[0],P=can("pk_s")?packs:[];
+function jvPkFind(q){const n=jvNorm(q),dig=(n.match(/\d{6,}/)||[""])[0],P=jvPkOk()?packs:[];
  if(dig)return P.filter(p=>pkDig(p.ord)===dig||pkDig(p.ord).startsWith(dig)||String(p.ps)===dig);
  const T=n.split(" ").filter(w=>w&&!JV_OSTOP.has(w)&&!/^\d{1,5}$/.test(w)&&!JV_STOP.has(w));if(!T.length)return null;
  const L=P.filter(p=>{const e=jvNorm(p.ev);return T.every(w=>e.includes(w))});
  const act=L.filter(p=>pkState(p).k!=="done");return act.length?act:L}
-function jvOnePk(q,fn){if(!can("pk_s"))return JV_NOPK;const L=jvPkFind(q);
+function jvOnePk(q,fn){if(!jvPkOk())return JV_NOPK;const L=jvPkFind(q);
  if(L===null)return{say:["Welchen Auftrag meinst du? Sag die Auftragsnummer oder die Veranstaltung."]};
  if(!L.length)return{say:[jvF()?"Zu diesem Auftrag finde ich nichts. Vielleicht noch nicht hochgeladen?":"Zu diesem Auftrag finde ich keine Packliste."]};
  if(L.length>1)return{say:["Da passen "+L.length+" Packlisten. Welche meinst du?"],rows:L.slice(0,8).map(p=>({...jvPkRow(p),pk:null,fn:()=>fn(p)}))};
@@ -2173,23 +2173,23 @@ function jvRetFind(q){if(!can("ret_s"))return[];const n=jvNorm(q),dig=(n.match(/
  const T=n.split(" ").filter(w=>w&&!JV_OSTOP.has(w)&&!JV_STOP.has(w)&&!/^\d{1,5}$/.test(w));if(!T.length)return null;
  return rets.filter(r=>{const e=jvNorm(r.ev);return T.every(w=>e.includes(w))})}
 /* ---------- Rücklauf & Dispo ---------- */
-function jvOverDays(n){if(!can("pk_s"))return JV_NOPK;const m=n.match(/(\d+|[a-zäöü]+)\s*(tag|tage|tagen|woche|wochen)/),k=m?(jvZ(m[1])||1)*(/woche/.test(m[2])?7:1):3;
+function jvOverDays(n){if(!jvPkOk())return JV_NOPK;const m=n.match(/(\d+|[a-zäöü]+)\s*(tag|tage|tagen|woche|wochen)/),k=m?(jvZ(m[1])||1)*(/woche/.test(m[2])?7:1):3;
  const t0=jvToday(),L=pkGroups().over.filter(p=>(t0-pkDay(p.de))/864e5>k);
  if(!L.length)return{say:["Bei keinem Auftrag ist die Dispo länger als "+(k%7===0&&k>=7?(k/7===1?"eine Woche":k/7+" Wochen"):k+" Tage")+" abgelaufen."]};
  return{say:[L.length===1?"Bei einem Auftrag ist die Dispo länger als "+k+" Tage abgelaufen:":"Bei "+L.length+" Aufträgen ist die Dispo länger als "+k+" Tage abgelaufen:"].concat(L.slice(0,4).map(p=>jvEv(p)+", "+jvSince(p.de)+".")),rows:L.map(p=>jvPkRow(p,"Dispo abgelaufen "+jvSince(p.de)))}}
-function jvOverLongest(){if(!can("pk_s"))return JV_NOPK;const L=pkGroups().over;if(!L.length)return{say:["Bei keinem Auftrag ist die Dispo abgelaufen."]};const p=L[0];
+function jvOverLongest(){if(!jvPkOk())return JV_NOPK;const L=pkGroups().over;if(!L.length)return{say:["Bei keinem Auftrag ist die Dispo abgelaufen."]};const p=L[0];
  return{say:["Am längsten abgelaufen ist die Dispo bei "+jvEv(p)+", Auftrag "+(p.ord||"–")+": Dispo-Ende war "+jvDL(p.de)+", also "+jvSince(p.de)+"."+(jvF()?" Zeit für einen Anruf.":"")+(jvPl(p)?" Projektleiter: "+jvPl(p)+".":"")],rows:L.slice(0,5).map(p=>jvPkRow(p,"Dispo abgelaufen "+jvSince(p.de)))}}
 const jvPl=p=>shortName(p.pl)||"";
-function jvBackDay(D){if(!can("pk_s"))return JV_NOPK;const L=packs.filter(p=>p.de&&pkDay(p.de)===D.t);
+function jvBackDay(D){if(!jvPkOk())return JV_NOPK;const L=packs.filter(p=>p.de&&pkDay(p.de)===D.t);
  if(!L.length)return{say:[(D.lab==="gestern"?"Gestern hätte":"Am "+pkDM(D.t)+" hätte")+" laut Packlisten nichts zurückkommen sollen."]};
  const ok=L.filter(p=>pkState(p).k==="done"),no=L.filter(p=>pkState(p).k!=="done");
  return{say:[(D.lab==="gestern"?"Gestern":jvDL(D.t))+" hätte"+(L.length===1?"":"n")+" "+(L.length===1?"eine Packliste":L.length+" Packlisten")+" zurückkommen sollen."].concat(ok.length?[jvList(ok.map(jvEv))+(ok.length===1?" ist":" sind")+" zurück."]:[]).concat(no.length?[jvList(no.map(jvEv))+(no.length===1?" fehlt":" fehlen")+" noch."]:[]),
   rows:L.map(p=>jvPkRow(p,pkState(p).k==="done"?"zurück ✓":"noch nicht zurück"))}}
-function jvBackWeek(){if(!can("pk_s"))return JV_NOPK;const t0=jvToday(),e=pkAddD(pkMon(t0),6),L=packs.filter(p=>p.de&&pkDay(p.de)>=t0&&pkDay(p.de)<=e&&pkState(p).k!=="done").sort((a,b)=>a.de-b.de);
+function jvBackWeek(){if(!jvPkOk())return JV_NOPK;const t0=jvToday(),e=pkAddD(pkMon(t0),6),L=packs.filter(p=>p.de&&pkDay(p.de)>=t0&&pkDay(p.de)<=e&&pkState(p).k!=="done").sort((a,b)=>a.de-b.de);
  if(!L.length)return{say:["Diese Woche kommt laut Packlisten nichts mehr zurück."]};
  return{say:["Diese Woche kommen noch "+(L.length===1?"eine Packliste":L.length+" Packlisten")+" zurück:"].concat(L.slice(0,5).map(p=>jvEv(p)+", "+jvDayName(pkDay(p.de))+".")),rows:L.map(p=>jvPkRow(p,"Dispo-Ende "+pkWd(p.de)))}}
 function jvDispo(q){return jvOnePk(q,p=>({say:["Die Dispo von "+jvEv(p)+" (Auftrag "+(p.ord||"–")+") "+(p.de&&pkDay(p.de)<jvToday()?"endete":"endet")+" am "+jvDL(p.de)+(new Date(p.de).getHours()?" um "+jvTime(p.de):"")+"."].concat(pkState(p).k==="over"?["Die Dispo ist abgelaufen."]:[]),rows:[jvPkRow(p,"Dispo "+pkDM(p.db)+"–"+pkDM(p.de))]}))}
-function jvPlOpen(q){if(!can("pk_s"))return JV_NOPK;const n=jvNorm(q).replace(/^.*?projektleiter(in)?\s*/,"").replace(/\b(sind|noch|offen|offene|aufträge|auftrag|von|welche|hat|was|alles)\b/g," ").trim();
+function jvPlOpen(q){if(!jvPkOk())return JV_NOPK;const n=jvNorm(q).replace(/^.*?projektleiter(in)?\s*/,"").replace(/\b(sind|noch|offen|offene|aufträge|auftrag|von|welche|hat|was|alles)\b/g," ").trim();
  const T=n.split(" ").filter(w=>w.length>1);if(!T.length)return{say:["Welcher Projektleiter? Sag zum Beispiel „Aufträge von Projektleiter Marvin“."]};
  const L=packs.filter(p=>{const s=jvNorm(p.pl);return s&&T.every(w=>s.split(" ").some(x=>x.startsWith(w)))&&pkState(p).k!=="done"}).sort((a,b)=>(a.de||0)-(b.de||0));
  if(!L.length)return{say:["Für Projektleiter „"+T.join(" ")+"“ finde ich keine offenen Aufträge."]};
@@ -2199,19 +2199,19 @@ function jvNoMail(){if(!can("ret_s"))return JV_NORET;const L=rets.filter(r=>r.cl
  if(!L.length)return{say:[jvF()?"Für alles Zurückgekommene ist die Retoure geschrieben. Ordnung muss sein.":"Für alle abgeschlossenen Retourscheine ist eine Retoure verschickt."]};
  return{say:[(L.length===1?"Ein abgeschlossener Retourschein ist":L.length+" abgeschlossene Retourscheine sind")+" noch nicht per Mail verschickt:"].concat(L.slice(0,4).map(r=>(r.ev||"")+(r.ord?", Auftrag "+r.ord:"")+".")),rows:L.map(r=>({l:r.ev||"Retourschein",sub:"Auftrag "+(r.ord||"–"),r:"abgeschlossen "+jvAgo(r.closedT||r.t),cls:"warn",ret:r.id}))}}
 /* ---------- Herrichten ---------- */
-function jvRed(D){if(!can("pk_s"))return JV_NOPK;const L=packs.filter(p=>pkHDay(p)===D.t&&pkState(p).k!=="done"&&pkF(p).length);
+function jvRed(D){if(!jvPkOk())return JV_NOPK;const L=packs.filter(p=>pkHDay(p)===D.t&&pkState(p).k!=="done"&&pkF(p).length);
  if(!L.length)return{say:[(D.lab==="heute"?"Heute":jvCap(D.lab))+" gibt es keine roten Zahlen."]};
  const say=[(D.lab==="heute"?"Heute":jvCap(D.lab))+" gibt es Fremdmiete bei "+(L.length===1?"einer Packliste:":L.length+" Packlisten:")];
  const rows=L.map(p=>{const H=pkH(p),K=pkKeys(p),F=pkItems(p).filter(o=>o.x.f>0),open=F.filter(o=>!(H[o.k]&&H[o.k].fm)).length;say.push(jvEv(p)+": "+F.length+(F.length===1?" Position":" Positionen")+(open?", "+open+" noch nicht geklärt":", alles geklärt")+".");return{l:jvEv(p),sub:"Auftrag "+(p.ord||"–"),r:F.length+" Fremd"+(open?" · "+open+" offen":" · geklärt"),cls:open?"warn":"ok",pk:p.id}});
  return{say,rows}}
-function jvPkStarted(){if(!can("pk_s"))return JV_NOPK;const L=packs.filter(p=>{const g=pkProg(p);return g.d>0&&!g.fin&&pkState(p).k!=="done"}).sort((a,b)=>pkHDay(a)-pkHDay(b));
+function jvPkStarted(){if(!jvPkOk())return JV_NOPK;const L=packs.filter(p=>{const g=pkProg(p);return g.d>0&&!g.fin&&pkState(p).k!=="done"}).sort((a,b)=>pkHDay(a)-pkHDay(b));
  if(!L.length)return{say:["Es gibt keine angefangenen Packscheine."]};
  return{say:[(L.length===1?"Ein Packschein ist":L.length+" Packscheine sind")+" angefangen, aber nicht fertig:"].concat(L.slice(0,4).map(p=>{const g=pkProg(p);return jvEv(p)+", "+g.d+" von "+g.n+"."})),rows:L.map(p=>jvPkRow(p,pkProg(p).d+"/"+pkProg(p).n+" · "+pkWd(pkHDay(p))))}}
 function jvPkMissing(q){return jvOnePk(q,p=>{const H=pkH(p),L=[];pkItems(p).forEach(o=>{if(pkL55(o.x,H[o.k]))return;const st=pkPS(o.x,H[o.k]);if(st.s==="open")L.push({o,t:"offen",n:st.need});else if(st.s==="part")L.push({o,t:"fehlen "+pkNum(st.need-st.q),n:st.need-st.q,part:1})});
  const g=pkProg(p);if(!L.length)return{say:[jvEv(p)+": "+(g.fin?"hergerichtet, ":"")+"es fehlt nichts."],acts:[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}]};
  return{say:[jvEv(p)+": "+L.length+(L.length===1?" Position ist":" Positionen sind")+" noch nicht komplett."].concat(L.slice(0,5).map(x=>(x.part?pkNum(x.n)+" fehlen bei ":"Offen: "+pkNum(x.n)+" ")+pkName(x.o.x)+".")),
   rows:L.map(x=>({l:pkName(x.o.x),r:x.t,cls:x.part?"warn":"ok",pk:p.id})),acts:[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}]}})}
-function jvAlt(n){if(!can("pk_s"))return JV_NOPK;const mine=/\bich\b/.test(n),L=[];
+function jvAlt(n){if(!jvPkOk())return JV_NOPK;const mine=/\bich\b/.test(n),L=[];
  packs.forEach(p=>{if(pkState(p).k==="done")return;const H=pkH(p);pkItems(p).forEach(o=>{const h=H[o.k];if(h&&(h.alt||[]).length&&(!mine||h.by===me))h.alt.forEach(a=>L.push({p,x:o.x,a,h}))})});
  if(!L.length)return{say:[mine?"Du hast in keiner laufenden Packliste eine Alternative eingetragen.":"In keiner laufenden Packliste ist eine Alternative eingetragen."]};
  return{say:[(mine?"Du hast ":"Es gibt ")+(L.length===1?"eine Alternative":L.length+" Alternativen")+(mine?" eingetragen:":":")].concat(L.slice(0,4).map(o=>jvEv(o.p)+": "+pkNum(o.a.n)+"× "+o.a.t+" statt "+pkName(o.x)+".")),
@@ -2263,7 +2263,7 @@ function jvDefEv(q){const n=jvNorm(q).replace(/^.*?\b(von|bei|auf)\b\s*(der |dem
 function jvDefWeek(){const m=pkMon(jvToday()),L=defs.filter(d=>d.done&&(d.doneT||0)>=m).sort((a,b)=>b.doneT-a.doneT);
  if(!L.length)return{say:["Diese Woche wurde noch nichts repariert."]};
  return{say:["Diese Woche "+(L.length===1?"wurde ein Defekt":"wurden "+L.length+" Defekte")+" repariert"+(L.length<=4?": "+jvList(L.map(d=>d.art))+".":".")],rows:L.map(jvDefRow)}}
-function jvDefNeed(){if(!can("pk_s"))return JV_NOPK;const t0=jvToday(),G=wbDefNeed(t0,pkAddD(pkMon(t0),7));
+function jvDefNeed(){if(!jvPkOk())return JV_NOPK;const t0=jvToday(),G=wbDefNeed(t0,pkAddD(pkMon(t0),7));
  if(!G.length)return{say:["Kein defekter Artikel wird diese Woche in einer Packliste gebraucht."]};
  return{say:[(G.length===1?"Ja, ein Artikel:":"Ja, "+G.length+" Artikel:")].concat(G.slice(0,4).map(g=>g.name+": "+g.n+" Stück defekt"+(g.urg?", "+g.urg+" dringend":"")+", gebraucht "+g.use.map(u=>jvDayName(u.t)+" für "+u.ev+" ("+jvStk(u.q)+")").join(" und ")+".")),
   rows:G.flatMap(g=>g.use.map(u=>({l:g.name,sub:u.ev+" · "+jvStk(u.q)+" gebraucht · "+g.n+" defekt",r:pkWd(u.t),cls:g.urg?"warn":"ok",pk:u.p.id})))}}
@@ -2302,13 +2302,13 @@ function jvInfLast(){const L=infos.slice().sort((a,b)=>b.t-a.t);if(!L.length)ret
  return{say:["Neueste Nachricht von "+nmA(i,"by")+", "+jvAgo(i.t)+" um "+jvTime(i.t)+": "+String(i.text||"(nur Foto)")],speak:["Neueste Nachricht von "+nmA(i,"by")+".",String(i.text||"Nur ein Foto.")],rows:[jvInfRow(i)]}}
 /* ---------- Rückblick ---------- */
 function jvClosedPacks(){return packs.filter(p=>pkRets(p).some(rIsEnd)).map(p=>({p,ct:Math.max(...pkRets(p).filter(rIsEnd).map(r=>r.closedT||0)),B:jvBal(p)})).sort((a,b)=>b.ct-a.ct)}
-function jvLastMissing(){if(!can("ret_s")||!can("pk_s"))return JV_NORET;const L=jvClosedPacks().filter(o=>o.B.miss.length);
+function jvLastMissing(){if(!can("ret_s")||!jvPkOk())return JV_NORET;const L=jvClosedPacks().filter(o=>o.B.miss.length);
  if(!L.length)return{say:["Bei keiner abgeschlossenen Retoure fehlte laut Abgleich etwas."]};const o=L[0];
  return{say:["Zuletzt fehlte etwas bei "+jvEv(o.p)+" (Auftrag "+(o.p.ord||"–")+", Retoure "+pkDM(o.ct)+"): "+jvList(o.B.miss.slice(0,4).map(e=>jvStk(e.soll-e.back)+" "+e.name))+"."],rows:L.slice(0,6).map(o=>({l:jvEv(o.p),sub:"Retoure "+pkDM(o.ct),r:o.B.miss.reduce((a,e)=>a+e.soll-e.back,0)+" Stk fehlen",cls:"warn",pk:o.p.id}))}}
-function jvTopMissing(){if(!can("ret_s")||!can("pk_s"))return JV_NORET;const M={};jvClosedPacks().forEach(o=>o.B.miss.forEach(e=>{const x=M[e.k]=M[e.k]||{n:e.name,a:0,q:0};x.a++;x.q+=e.soll-e.back}));
+function jvTopMissing(){if(!can("ret_s")||!jvPkOk())return JV_NORET;const M={};jvClosedPacks().forEach(o=>o.B.miss.forEach(e=>{const x=M[e.k]=M[e.k]||{n:e.name,a:0,q:0};x.a++;x.q+=e.soll-e.back}));
  const L=Object.values(M).sort((a,b)=>b.a-a.a||b.q-a.q);if(!L.length)return{say:["Bisher fehlte bei keiner abgeschlossenen Retoure etwas."]};
  return{say:["Am häufigsten fehlt "+L[0].n+": bei "+L[0].a+(L[0].a===1?" Auftrag":" Aufträgen")+", zusammen "+jvStk(L[0].q)+"."].concat(L.length>1?["Danach: "+jvList(L.slice(1,4).map(x=>x.n))+"."]:[]),rows:L.slice(0,10).map(x=>({l:x.n,sub:x.a+(x.a===1?" Auftrag":" Aufträge"),r:jvStk(x.q),cls:"warn"}))}}
-function jvMonthBad(){if(!can("ret_s")||!can("pk_s"))return JV_NORET;const d=new Date();d.setDate(1);d.setHours(0,0,0,0);const L=jvClosedPacks().filter(o=>o.ct>=d.getTime()&&o.B.miss.length);
+function jvMonthBad(){if(!can("ret_s")||!jvPkOk())return JV_NORET;const d=new Date();d.setDate(1);d.setHours(0,0,0,0);const L=jvClosedPacks().filter(o=>o.ct>=d.getTime()&&o.B.miss.length);
  const mn=d.toLocaleDateString("de-AT",{month:"long"});if(!L.length)return{say:["Im "+mn+" war jede abgeschlossene Retoure vollständig."]};
  return{say:["Im "+mn+" "+(L.length===1?"war ein Auftrag":"waren "+L.length+" Aufträge")+" unvollständig"+(L.length<=3?": "+jvList(L.map(o=>jvEv(o.p)))+".":".")],rows:L.map(o=>({l:jvEv(o.p),sub:"Retoure "+pkDM(o.ct),r:o.B.miss.reduce((a,e)=>a+e.soll-e.back,0)+" Stk fehlen",cls:"warn",pk:o.p.id}))}}
 function jvRetWeek(){if(!can("ret_s"))return JV_NORET;const m=pkMon(jvToday()),C=rets.filter(r=>r.closed&&(r.closedT||0)>=m),N=rets.filter(r=>(r.t||0)>=m);
@@ -2403,7 +2403,7 @@ function jvShow(A,speak){jvLast=A;const box=$("#jvans");if(!box)return;const R=A
    '<button class="jvrow" type="button" data-ja="'+i+'"><span>'+esc(r.l)+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</span><span class="'+(r.cls||"ok")+'">'+esc(r.r||"")+'</span></button>').join("")+'</div>':'')+
   (A.acts&&A.acts.length?'<div class="jvacts">'+A.acts.map((a,i)=>'<button class="jvact" type="button" data-jact="'+i+'">'+esc(a.l)+'</button>').join("")+'</div>':'');
  box.querySelectorAll("[data-ja]").forEach(b=>b.onclick=()=>{const r=R[+b.dataset.ja];
-  if(r.fn){const B=r.fn();if(B){B.q=A.q;jvShowRes(B)}}else if(r.pk){curPack=r.pk;go("packopen")}else if(r.ret){curRet=r.ret;go("retopen")}else if(r.def){curDef=r.def;go("defopen")}
+  if(r.fn){const B=r.fn();if(B){B.q=A.q;jvShowRes(B)}}else if(r.pk){if(!can("pk_s")&&can("au_s")){curAu=r.pk;go("auopen")}else{curPack=r.pk;go("packopen")}}else if(r.ret){curRet=r.ret;go("retopen")}else if(r.def){curDef=r.def;go("defopen")}
   else if(r.inf){curInfo=r.inf;go("infoopen")}else if(r.ml&&typeof lists!=="undefined"&&lists.some(c=>c.id===r.ml)){cur=r.ml;go("scan")}});
  box.querySelectorAll("[data-jact]").forEach(b=>b.onclick=()=>A.acts[+b.dataset.jact].fn());
  box.querySelector(".jvax").onclick=()=>{jvStop();jvLast=null;box.innerHTML=""};
@@ -2422,7 +2422,7 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
  if(/^(bitte )?(füge|füg|trag|trage|nimm)\b.*(retourschein|retoure)/.test(n))return jvRetAdd(raw);
  if(/(neue[nrs]?|anlegen|erstelle).*retourschein|retourschein.*(neu|anlegen|erstellen)/.test(n)){if(!can("ret_b"))return{say:["Dafür fehlt dir das Recht für Retourscheine."]};go("ret");return{say:["Ich öffne die Retourscheine."],quiet:true}}
  if(/info (an|ans|für) (das )?lager|nachricht (an|ans) (das )?lager/.test(n)){ipho=null;go("infonew");return{say:["Info an das Lager."],quiet:true}}
- if(/^(übersicht|packlisten|zur übersicht|zeig (die )?übersicht)$/.test(n)){if(!can("pk_s"))return JV_NOPK;go("pack");return{say:["Übersicht."],quiet:true}}
+ if(/^(übersicht|packlisten|zur übersicht|zeig (die )?übersicht)$/.test(n)){if(!jvPkOk())return JV_NOPK;go("pack");return{say:["Übersicht."],quiet:true}}
  /* IDs, Materiallisten, Nachrichten */
  if(/\bid\b|\bids\b/.test(n)||/\b\d{3,4}\s*[-–]\s*\d{1,3}\b/.test(raw))return jvIdWhere(raw);
  if(/materialliste/.test(n))return jvMlToday();
@@ -2485,7 +2485,7 @@ function jvAnswer(q){const n=jvNorm(q),raw=String(q);
 function jvAsk(q){q=String(q||"").trim();if(!q)return;jvStop();let A;try{A=jvAnswer(q)}catch(e){console.error(e);A={say:["Da ist bei mir etwas schiefgegangen. Bitte nochmal versuchen."]}}
  jvFin(A,q);const inp=$("#jvaq");if(inp)inp.value="";jvMs("");if(view==="jarvis")jvShow(A,!A.quiet);else jvLast=A}
 /* Zähler auf der Kachel „Lager Übersicht“: Aufträge mit abgelaufener Dispo + dringende Defekte + fällige Erinnerungen */
-function jvHot(){let n=0;try{if(can("pk_s"))n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length;if(typeof abgToCheck==="function")n+=abgToCheck().length;if(typeof plUnread==="function")n+=plUnread().length;if(typeof fmAus==="function"&&can("fm_a"))n+=fmAus().length}catch(e){}return n?String(n):""}
+function jvHot(){let n=0;try{if(jvPkOk())n+=pkGroups().over.length;n+=defs.filter(d=>!d.done&&d.urg).length;n+=jvErinDue().length;if(typeof abgToCheck==="function")n+=abgToCheck().length;if(typeof plUnread==="function")n+=plUnread().length;if(typeof fmAus==="function"&&can("fm_a"))n+=fmAus().length}catch(e){}return n?String(n):""}
 
 /* ===== Hauptseite sortieren (ab 1.75) =====
    Reihenfolge der Kacheln: eigene Reihenfolge (docs „hord“, id = Benutzer) → Vorgabe vom Titel (titel.ho) → Vorschlag nach Titelname.
@@ -4240,7 +4240,7 @@ function dxDefScanHit(raw){const v=String(raw||"").trim(),m=v.match(CODE_RE),nr=
 document.head.appendChild(st)}catch(e){}})();
 let wsForce=false,wsTab=null,wsIn=false,wsPrev=0;
 function wsIs(){if(wsForce)return true;try{const t=typeof hoTit==="function"?hoTit(hoMyTitle()):null;return !!(t&&/werkstatt/i.test(t.name||""))}catch(e){return false}}
-try{Object.defineProperty(HO_NAME,"jarvis",{get:()=>wsIs()?"Werkstatt Übersicht":"Lager Übersicht",enumerable:true})}catch(e){}
+try{Object.defineProperty(HO_NAME,"jarvis",{get:()=>wsIs()?"Werkstatt Übersicht":"Lager Übersicht",enumerable:true,configurable:true})}catch(e){}
 const wsLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
 /* Besuch: beim Betreten merken, wann man zuletzt da war */
 /* Besuch endet erst auf der Hauptseite oder wenn die App in den Hintergrund geht – Defekt öffnen und zurück zählt nicht als neuer Besuch */
@@ -4373,6 +4373,100 @@ function amBind(p,B,I){const d=document.getElementById("amd");if(!d)return;d.ont
 function amBind2(p,B,I,foc,re){re=re||(f=>{const b=document.getElementById("amb");if(!b)return;b.innerHTML=amBody(p,B,I);amBind2(p,B,I,f)});
  document.querySelectorAll("[data-amf]").forEach(b=>b.onclick=()=>{amF=b.dataset.amf;re(null)});
  const q=document.getElementById("amq");if(q){q.oninput=()=>{amQ=q.value;re(q.selectionStart)};if(foc!==null&&foc!==undefined){q.focus();try{q.setSelectionRange(foc,foc)}catch(e){}}}}
+
+/* ===== 1.136 – Projektleiter Übersicht (Jürgen, 6.11.; Entwurf 2 https://claude.ai/artifact/PcSVpxgpZZaZLDP1xFSGY8;
+   gewählt: roter Block „Zu erledigen“ ganz oben (Fehlmaterial-Fragen, Dispo abgelaufen, Fremdverschulden, Abweichungen beim Herrichten),
+   Kachel „Lager Übersicht“ heißt für den Titel Projektleiter „Projektleiter Übersicht“ mit roter Zahl, Push später).
+   Nur eigene Aufträge (auIsMine bzw. Admin-Vorschau „Ansicht als“). „Gesehen“ in docs `plseen` (id = uid_schlüssel). ===== */
+(function(){try{const st=document.createElement("style");st.textContent=
+'.plmini{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:2px 0 12px}.plmini b{font-size:18px}.plmini small{display:block;color:var(--mute);font-size:13px}.plclock{font-size:30px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1}'+
+'.pltodo{background:#fdecea;border:2px solid #c0392b;border-radius:14px;padding:12px;margin-bottom:12px}.pltodo h3{margin:0 0 8px;font-size:18px;color:#a3150b;display:flex;justify-content:space-between;align-items:center}.pltodo h3 span{background:#c0392b;color:#fff;border-radius:999px;padding:1px 11px;font-size:15px}'+
+'.plti{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-top:8px;display:flex;flex-direction:column;gap:3px}.plti .why{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#a3150b}.plti b{font-size:16px}.plti small{color:var(--mute);font-size:13px;line-height:1.35}'+
+'.plact{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.plact button{border:1px solid var(--line);border-radius:8px;padding:8px 14px;font:inherit;font-size:14px;font-weight:700;background:var(--card);color:var(--ink);cursor:pointer;min-height:40px}.plact button.p{background:var(--navy);border-color:var(--navy);color:#fff}'+
+'.pldone{background:#e3f3e8;border:2px solid #1e9e55;border-radius:14px;padding:14px;text-align:center;font-weight:800;color:#1f6b41;font-size:17px;margin-bottom:12px}.pldone small{display:block;font-weight:600;font-size:13px;color:var(--mute);margin-top:3px}'+
+'.plbig{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.plbig button{border:0;border-radius:12px;padding:14px 8px;font:inherit;font-weight:800;font-size:16px;color:#fff;background:var(--navy);cursor:pointer;min-height:58px}.plbig button.g{background:#1e9e55}'+
+'.plsec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}.plsec h4{margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);display:flex;justify-content:space-between;align-items:center}.plsec h4 button{background:none;border:0;color:var(--navy);font:inherit;font-weight:800;letter-spacing:0;text-transform:none;font-size:13px;cursor:pointer;padding:4px 0}'+
+'.plli{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:9px 0;font:inherit;color:var(--ink);cursor:pointer}.plli:first-of-type{border-top:0}.plli b{font-size:15px}.plli small{display:block;color:var(--mute);font-size:13px}.plli .r{white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums;align-self:center}.plli .r.red{color:#b8322a}.plli .r.ok{color:#1f6b41}.plli .r.m{color:var(--mute);font-weight:600}'+
+'.plday{display:grid;grid-template-columns:52px 1fr;gap:10px;border-top:1px solid var(--line);padding:8px 0}.plday:first-of-type{border-top:0}.plday .dh{font-weight:800;color:var(--navy);font-size:14px;line-height:1.2}.plday .dh small{display:block;font-weight:600;color:var(--mute);font-size:12px}.plday.today .dh{background:var(--navy);color:#fff;border-radius:8px;padding:4px 6px;align-self:start}.plday.today .dh small{color:#dbe6f7}'+
+'.plev{display:flex;flex-direction:column;gap:4px;min-width:0}.plev button{display:flex;gap:7px;align-items:baseline;background:none;border:0;padding:0;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-align:left}.plpill{font-size:11px;font-weight:800;border-radius:999px;padding:1px 8px;white-space:nowrap}.plpill.h{background:#e8f0fb;color:#114a97}.plpill.z{background:#e3f3e8;color:#1f6b41}.plpill.r{background:#fff1e0;color:#8a4300}.plpill.x{background:#eef1f5;color:#3d4a5c}'+
+'.plask .jvask{margin:0}.plask .jvaskrow{display:flex;gap:8px}.plask #jvaq{flex:1;min-width:0;margin:0}'+
+'.plas{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin-bottom:12px;font-size:14px}.plas select{width:auto;flex:1;min-width:160px;margin:0}'+
+'@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pltodo{background:#3d1512}:root:not([data-theme="light"]) .pltodo h3,:root:not([data-theme="light"]) .plti .why{color:#ffb4a8}:root:not([data-theme="light"]) .pldone{background:#16402a;color:#9fe0b8}:root:not([data-theme="light"]) .plclock,:root:not([data-theme="light"]) .plday .dh,:root:not([data-theme="light"]) .plsec h4 button{color:#8fb0ea}:root:not([data-theme="light"]) .plday.today .dh{color:#fff}:root:not([data-theme="light"]) .plpill.h{background:#16294a;color:#c7dbff}:root:not([data-theme="light"]) .plpill.z{background:#16402a;color:#9fe0b8}:root:not([data-theme="light"]) .plpill.r{background:#3a2610;color:#ffcf99}:root:not([data-theme="light"]) .plpill.x{background:#1d2633;color:#c5cedb}:root:not([data-theme="light"]) .plli .r.red{color:#ff9d92}:root:not([data-theme="light"]) .plli .r.ok{color:#8fd3a8}}'+
+':root[data-theme="dark"] .pltodo{background:#3d1512}:root[data-theme="dark"] .pltodo h3,:root[data-theme="dark"] .plti .why{color:#ffb4a8}:root[data-theme="dark"] .pldone{background:#16402a;color:#9fe0b8}:root[data-theme="dark"] .plclock,:root[data-theme="dark"] .plday .dh,:root[data-theme="dark"] .plsec h4 button{color:#8fb0ea}:root[data-theme="dark"] .plday.today .dh{color:#fff}:root[data-theme="dark"] .plpill.h{background:#16294a;color:#c7dbff}:root[data-theme="dark"] .plpill.z{background:#16402a;color:#9fe0b8}:root[data-theme="dark"] .plpill.r{background:#3a2610;color:#ffcf99}:root[data-theme="dark"] .plpill.x{background:#1d2633;color:#c5cedb}:root[data-theme="dark"] .plli .r.red{color:#ff9d92}:root[data-theme="dark"] .plli .r.ok{color:#8fd3a8}';
+document.head.appendChild(st)}catch(e){}})();
+/* Fragen (Lager Assistent) auch für Projektleiter: Packlisten-Fragen gehen mit dem Recht „Aufträge“ (Jürgen, 6.11.: „wo gerade welches Material ist“) */
+function jvPkOk(){return can("pk_s")||(typeof plIs==="function"&&plIs()&&can("au_s"))}
+let plForce=false,plAs="",plWk=0,plIn2=false,plPrev=0,PLSEEN={},plSeenOn=false;
+function plIs(){if(plForce)return true;try{const t=typeof hoTit==="function"?hoTit(hoMyTitle()):null;return !!(t&&/projektleiter/i.test(t.name||""))}catch(e){return false}}
+try{Object.defineProperty(HO_NAME,"jarvis",{get:()=>wsIs()?"Werkstatt Übersicht":plIs()?"Projektleiter Übersicht":"Lager Übersicht",enumerable:true,configurable:true})}catch(e){}
+function plSeenSub(){if(plSeenOn||typeof db==="undefined"||!db||!me)return;plSeenOn=true;try{db.collection("plseen").onSnapshot(s=>{const M={};s.docs.forEach(d=>{const x=d.data();if(x.by===me)M[x.k]=x});PLSEEN=M;if(view==="jarvis"&&plIs())plView()},()=>{plSeenOn=false})}catch(e){plSeenOn=false}}
+const plSeen=k=>!!PLSEEN[k];
+async function plSetSeen(k){PLSEEN[k]={k,by:me,...tabAs("by"),t:Date.now()};try{await db.doc("plseen/"+String(me).slice(0,12)+"_"+k.replace(/[^0-9A-Za-z_]/g,"").slice(0,80)).set({k,by:me,...tabAs("by"),...tabAs("by"),t:Date.now()})}catch(e){toast("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}
+function plMine(p){if(!p||p._z||p.art==="verl"&&pkRoot(p)!==p)return false;if(!plAs)return auIsMine(p);const u=auToks(plAs),l=auToks(p.pl);return !!(u.length&&l.length&&u.every(w=>l.includes(w)))}
+const plH=s=>{let h=0;String(s).split("").forEach(c=>{h=(h*31+c.charCodeAt(0))|0});return (h>>>0).toString(36)};
+const plDig=s=>String(s||"").replace(/\D/g,"");
+/* „Zu erledigen“ */
+function plTodo(M){const T=[],t0=pkDay(Date.now());
+ M.forEach(I=>{const p=I.p;
+  if(I.missShow){const un=I.B.miss.filter(e=>!auAns(p,e.k).length);if(un.length){const n=un.reduce((a,e)=>a+(e.soll-e.back),0),nm=un.slice(0,2).map(e=>pkNum(e.soll-e.back)+" "+auUnit(p,e.k)+" "+e.name).join(", ")+(un.length>2?" …":"");
+   T.push(I.B.hasEnd?{why:"Lager wartet auf Antwort",t:pkNum(n)+" "+(n===1?"Stück fehlt":"Stück fehlen")+" nach der Endretoure",s:esc(p.ev||"")+" · "+esc(nm),p,un,ord:0}:{why:"Dispo abgelaufen",t:"Noch "+pkNum(n)+" Stk draußen",s:esc(p.ev||"")+" · Dispo bis "+pkDM(p.de)+" · "+esc(nm),p,un,ord:1})}}
+  const H=pkH(p);const parts=[[null,H.fin&&H.fin.t?H.fin:auHerrAll(p,null)]].concat((p.zus||[]).map(z=>[String(z.ps),pkZFin(p,z)||auHerrAll(p,String(z.ps))]));
+  parts.forEach(([zps,f])=>{if(!f)return;const L=auDevNet(p,zps);if(!L.length)return;const k="dev_"+p.id+"_"+(zps||"")+"_"+plH(L.join("|"));if(plSeen(k))return;
+   T.push({why:"Abweichung zum Packschein",t:(zps?"Zusatz "+zps+" ":"")+"hergerichtet mit "+(L.length===1?"1 Abweichung":L.length+" Abweichungen"),s:esc(p.ev||"")+(f.t?" · "+fmt(f.t).slice(0,6):"")+"<br>"+L.map(esc).join("<br>"),p,seen:k,ord:3})})});
+ const ords=M.map(I=>plDig(I.p.ord)).filter(Boolean),evs=M.map(I=>dxNorm(I.p.ev));
+ (typeof defs!=="undefined"?defs:[]).forEach(d=>{if(!d.fv||d.del)return;const o=plDig(d.ord),hit=o?ords.includes(o):evs.includes(dxNorm(d.ev));if(!hit)return;const k="fv_"+d.id;if(plSeen(k))return;
+  T.push({why:"Kunde verrechnen?",t:"Defekt mit Fremdverschulden",s:esc((dxQ(d)>1?dxQ(d)+" × ":"")+d.art)+(d.desc?" – "+esc(d.desc):"")+" · "+esc(d.ev||"")+(d.fvw?" · „"+esc(d.fvw)+"“":""),d,seen:k,ord:2})});
+ return T.sort((a,b)=>a.ord-b.ord)}
+function plHot(){try{plSeenSub();const M=packs.filter(plMine).map(auInfo).filter(I=>!I.done||I.g.dev);const n=plTodo(M).length;return n?String(n):""}catch(e){return ""}}
+/* Ereignisse eines Tages */
+function plEvents(M,t){const E=[];M.forEach(I=>{const p=I.p;
+  const day=x=>{if(!x)return 0;const d=pkDay(x),w=new Date(d).getDay();return w===6?pkAddD(d,-1):w===0?pkAddD(d,-2):d};
+  if(!pkNoH(p)&&day(pkHDay(p))===t)E.push({c:"h",l:"Herrichten",p,ok:!!I.g.fin,x:I.g.fin?"":(I.g.d?I.g.d+"/"+I.g.n:"")});
+  (p.zus||[]).forEach(z=>{if(day(pkZDay(p,z))===t){const f=pkZFin(p,z)||auHerrAll(p,String(z.ps));E.push({c:"z",l:"Zusatz",p,ok:!!f,x:""})}});
+  if(p.db&&day(p.db)===t)E.push({c:"x",l:"Raus",p,ok:false,x:""});
+  if(p.de&&day(p.de)===t)E.push({c:"r",l:"Zurück",p,ok:!!I.B.hasEnd,x:I.B.hasEnd&&I.B.fehlt?"Fehlmaterial":""})});return E}
+function plDraussen(M){return M.filter(I=>!I.done&&(I.B.R.length||I.g.fin&&auOutDay(I.p)&&auOutDay(I.p)<=pkDay(Date.now())||I.over)).map(I=>{const out=I.B.L.reduce((a,e)=>a+Math.max(0,e.soll-e.back),0);return{I,out}}).filter(x=>x.out>0||x.I.over).sort((a,b)=>(b.I.over?1:0)-(a.I.over?1:0)||(a.I.p.de||0)-(b.I.p.de||0))}
+function plNews(M){const N=[];M.forEach(I=>{const p=I.p,H=pkH(p);
+  const fin=H.fin&&H.fin.t?H.fin:auHerrAll(p,null);if(fin&&fin.t>plPrev){const L=auDevNet(p,null);N.push({t:fin.t,b:esc(p.ev||"")+" hergerichtet",s:L.length?L.map(esc).join(" · "):"ohne Abweichungen",p,r:fmt(fin.t).slice(0,6)})}
+  (p.zus||[]).forEach(z=>{const f=pkZFin(p,z)||auHerrAll(p,String(z.ps));if(f&&f.t>plPrev)N.push({t:f.t,b:"Zusatz "+esc(z.ps)+" hergerichtet",s:esc(p.ev||""),p,r:fmt(f.t).slice(0,6)})});
+  I.B.R.forEach(r=>{const t=r.closedT||0;if(r.closed&&t>plPrev)N.push({t,b:esc(p.ev||"")+(r.art==="end"?" – Endretoure":" – Teilretoure")+" zurück",s:r.art==="end"?(I.B.fehlt?pkNum(I.B.fehlt)+" Stk fehlen":"vollständig"):"",p,r:r.art==="end"&&!I.B.fehlt?"✓":fmt(t).slice(0,6),ok:r.art==="end"&&!I.B.fehlt})})});
+ return N.sort((a,b)=>b.t-a.t).slice(0,8)}
+function plView(){plSeenSub();if(!plIn2){plIn2=true;try{plPrev=+localStorage.getItem("tpc_pl_seen")||0}catch(e){}if(!plPrev)plPrev=Date.now()-864e5}
+ $("#t").textContent="Projektleiter Übersicht";const all=packs.filter(plMine),M=all.map(auInfo),T=plTodo(M),t0=pkDay(Date.now());
+ const nm=plAs?shortName(plAs):String(meName()).split(" ")[0];
+ let h='<div class="jv" id="plv">';
+ if(plForce){const P=[...new Set(packs.filter(p=>p.pl&&!p._z).map(p=>p.pl))].sort((a,b)=>a.localeCompare(b,"de"));
+  h+='<div class="plas"><span>Vorschau – Ansicht als</span><select id="plas"><option value="">mich selbst</option>'+P.map(x=>'<option'+(x===plAs?' selected':'')+'>'+esc(x)+'</option>').join("")+'</select><button type="button" class="lnk" id="plback">‹ Zurück</button></div>'}
+ const d=new Date();h+='<div class="plmini"><span><b>'+esc((d.getHours()<11?"Guten Morgen":d.getHours()<18?"Servus":"Guten Abend")+", "+nm)+'</b><small>'+d.toLocaleDateString("de-AT",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</small></span><span class="plclock">'+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+'</span></div>';
+ h+=T.length?'<section class="pltodo"><h3>Zu erledigen <span>'+T.length+'</span></h3>'+T.map((x,i)=>'<div class="plti"><span class="why">'+esc(x.why)+'</span><b>'+esc(x.t)+'</b><small>'+x.s+'</small><span class="plact">'+
+   (x.un?'<button type="button" class="p" data-plans="'+i+'">Antworten</button><button type="button" data-plo="'+i+'">Auftrag öffnen</button>':'<button type="button" class="p" data-plseen="'+i+'">Gesehen</button>'+(x.d?'<button type="button" data-pld="'+i+'">Defekt öffnen</button>':'<button type="button" data-plo="'+i+'">Auftrag öffnen</button>'))+'</span></div>').join("")+'</section>'
+  :'<div class="pldone">✓ Nichts zu erledigen<small>Das Lager braucht gerade nichts von dir.</small></div>';
+ h+='<div class="plbig">'+(can("au_s")?'<button type="button" id="plau">Meine Aufträge</button>':'')+'<button type="button" class="g" id="plmsg">Nachricht ans Lager</button></div>';
+ h+='<section class="plsec plask"><h4>Frag mich<span><button type="button" id="plrd">'+(jvReadOn()?'Vorlesen an':'Vorlesen aus')+'</button> · <button type="button" id="plhelp">Was kann ich fragen?</button></span></h4>'+jvAskHtml()+'<p class="mute" style="margin:6px 0 0;font-size:13px">z. B. „Auf welcher Baustelle sind 50m 32A?“ · „Wie viele Defender Midi sind draußen?“ · „Was kommt heute zurück?“</p></section>';
+ const today=plEvents(M,t0);
+ h+='<section class="plsec"><h4>Heute</h4>'+(today.length?today.map(e=>'<button type="button" class="plli" data-plp="'+esc(e.p.id)+'"><span><b>'+esc(e.p.ev||"")+'</b><small>'+(e.ok?"erledigt":e.x||"Auftrag "+esc(e.p.ord||"–"))+'</small></span><span class="r'+(e.ok?' ok':'')+'">'+e.l+(e.ok?' ✓':'')+'</span></button>').join(""):'<p class="mute" style="margin:0">Heute passiert bei deinen Aufträgen nichts.</p>')+'</section>';
+ const m0=pkAddD(pkMon(t0),7*plWk),days=[0,1,2,3,4].map(i=>pkAddD(m0,i)),WD=["Mo","Di","Mi","Do","Fr"];
+ h+='<section class="plsec"><h4>'+(plWk?'Nächste Woche':'Diese Woche')+'<button type="button" id="plwk">'+(plWk?'‹ Diese Woche':'Nächste Woche ›')+'</button></h4>'+days.map((t,i)=>{const E=plEvents(M,t);
+  return '<div class="plday'+(t===t0?' today':'')+'"><span class="dh">'+WD[i]+'<small>'+pkDM(t)+'</small></span><span class="plev">'+(E.length?E.map(e=>'<button type="button" data-plp="'+esc(e.p.id)+'"><span class="plpill '+e.c+'">'+e.l+'</span><span>'+esc(e.p.ev||"")+(e.ok?' ✓':'')+(e.x?' <small class="mute">· '+esc(e.x)+'</small>':'')+'</span></button>').join(""):'<span class="mute">–</span>')+'</span></div>'}).join("")+'</section>';
+ const DR=plDraussen(M);
+ h+='<section class="plsec"><h4>Draußen <span>'+(DR.length===1?'1 Auftrag':DR.length+' Aufträge')+'</span></h4>'+(DR.length?DR.map(({I,out})=>'<button type="button" class="plli" data-plp="'+esc(I.p.id)+'"><span><b>'+esc(I.p.ev||"")+'</b><small>'+(I.B.hasEnd?'Endretoure zurück · Fehlmaterial':I.over?'Dispo abgelaufen '+pkDM(I.p.de):'bis '+pkDM(I.p.de))+(!I.B.hasEnd&&I.B.R.some(r=>r.closed&&r.art==="teil")?' · Teilretoure zurück':'')+'</small></span><span class="r'+(I.over||I.B.hasEnd?' red':'')+'">'+pkNum(out)+' Stk</span></button>').join(""):'<p class="mute" style="margin:0">Gerade ist nichts draußen.</p>')+'</section>';
+ const N=plNews(M);
+ h+='<section class="plsec"><h4>Neu seit deinem letzten Besuch</h4>'+(N.length?N.map(n=>'<button type="button" class="plli" data-plp="'+esc(n.p.id)+'"><span><b>'+n.b+'</b>'+(n.s?'<small>'+n.s+'</small>':'')+'</span><span class="r'+(n.ok?' ok':' m')+'">'+n.r+'</span></button>').join(""):'<p class="mute" style="margin:0">Nichts Neues.</p>')+'</section>';
+ if(!all.length)h+='<p class="mute">Keine Packliste mit „'+esc(plAs||auMyName())+'“ als Projektleiter gefunden. Der Name in der Packliste muss zu deinem Namen in der App passen.</p>';
+ h+='</div>';$("#app").innerHTML=h;
+ const q=s=>document.querySelectorAll(s);
+ q("[data-plp]").forEach(b=>b.onclick=()=>{curAu=b.dataset.plp;go("auopen")});
+ q("[data-plo]").forEach(b=>b.onclick=()=>{curAu=T[+b.dataset.plo].p.id;go("auopen")});
+ q("[data-pld]").forEach(b=>b.onclick=()=>{curDef=T[+b.dataset.pld].d.id;go("defopen")});
+ q("[data-plseen]").forEach(b=>b.onclick=async()=>{b.disabled=true;await plSetSeen(T[+b.dataset.plseen].seen);plView()});
+ q("[data-plans]").forEach(b=>b.onclick=()=>{const x=T[+b.dataset.plans];if(!can("au_b")&&!plAs)return errBox("Antworten darfst du nicht (Recht „Aufträge – Antworten“).");if(x.un.length===1)auAnsDlg(x.p,x.un[0]);else{curAu=x.p.id;go("auopen")}});
+ const au=$("#plau");if(au)au.onclick=()=>go("au");$("#plmsg").onclick=()=>{const own=M.filter(I=>!I.done);if(own.length===1)return auMsgDlg(own[0].p);curAu=null;go("au");toast("Auftrag wählen, dann „Nachricht ans Lager“",1)};
+ try{jvAskBind();const ph=$("#plhelp");if(ph)ph.onclick=jvHelpOpen;const rd=$("#plrd");if(rd)rd.onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");rd.textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()};const q0=$("#jvaq");if(q0)q0.placeholder="Frag nach Material, Aufträgen …"}catch(e){}
+ $("#plwk").onclick=()=>{plWk=plWk?0:1;plView()};
+ const as=$("#plas");if(as)as.onchange=()=>{plAs=as.value;plView()};const bk=$("#plback");if(bk)bk.onclick=()=>{plForce=false;plAs="";draw()}}
+/* Besuch endet auf der Hauptseite oder im Hintergrund */
+setInterval(()=>{if(typeof view==="undefined")return;if(plIn2&&(view==="start"||document.visibilityState==="hidden")){if(!plForce)try{localStorage.setItem("tpc_pl_seen",String(Date.now()))}catch(e){}plIn2=false}if(plForce&&view==="start"){plForce=false;plAs=""}},800);
+document.addEventListener("click",e=>{const t=e.target&&e.target.closest&&e.target.closest("#pladm");if(t){plForce=true;plAs="";draw()}});
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -4402,7 +4496,7 @@ function draw(){if(!db)return;document.body.classList.toggle("jvon",view==="jarv
  tabHead();
  if(view.startsWith("ret")&&!canLager()){view="start";hist=[]}
  if(view.startsWith("ret")){const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&$("#app").contains(ae))return;return retDraw()}
- if(view==="jarvis"&&can("jv_s"))return wsIs()?wsView():jarvisView();
+ if(view==="jarvis"&&can("jv_s"))return wsIs()?wsView():plIs()?plView():jarvisView();
  if(view==="jarvis"){view="start";hist=[]}
  if(view==="au"&&can("au_s"))return auView();
  if(view==="auopen"&&can("au_s"))return auOpenView();
@@ -4573,7 +4667,7 @@ function back(){try{document.activeElement.blur()}catch(e){}stop();let v;do{v=hi
 function startView(){$("#t").textContent="Hauptseite";
  const od=vdefs().filter(d=>!d.done),ou=od.filter(d=>d.urg).length,ol=lists.filter(l=>!l.chk).length,ui=infos.filter(i=>!i.read).length;
  const T=(g,ic,t,sub,hot)=>'<button class="hb" data-g="'+g+'"><span class="hi">'+ic+'</span><span class="ht"><b>'+t+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</span>'+(hot?'<span class="hc">'+hot+'</span>':'')+'<svg class="hv" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>';
- $("#app").innerHTML='<div class="hgrid">'+(can("jv_s")?(wsIs()?T("jarvis",JV_ICON,'Werkstatt Übersicht','Dringend, neu gemeldet, diese Woche',wsHot()):T("jarvis",JV_ICON,'Lager Übersicht','Briefing, heute, Dispo abgelaufen, Defekte',jvHot())).replace('class="hb"','class="hb hbjv"'):'')+(can("au_s")?T("au",AU_ICON,'Meine Aufträge',auSubT(),auHot()):'')+(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+
+ $("#app").innerHTML='<div class="hgrid">'+(can("jv_s")?(plIs()&&!wsIs()?T("jarvis",JV_ICON,'Projektleiter Übersicht','Zu erledigen, heute, draußen',plHot()):wsIs()?T("jarvis",JV_ICON,'Werkstatt Übersicht','Dringend, neu gemeldet, diese Woche',wsHot()):T("jarvis",JV_ICON,'Lager Übersicht','Briefing, heute, Dispo abgelaufen, Defekte',jvHot())).replace('class="hb"','class="hb hbjv"'):'')+(can("au_s")?T("au",AU_ICON,'Meine Aufträge',auSubT(),auHot()):'')+(can("pk_s")?T("pack",PK_ICON,'Packlisten',pkSub(),pkHot()):'')+
   T("new",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/></svg>','Material vor Ort erfassen',ol+(ol===1?' offene Liste':' offene Listen'),ol)+
   T("defnew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>','Defekte',od.length+(od.length===1?' offener Defekt':' offene Defekte')+(ou?', davon '+ou+' dringend':''),ou?'!':'')+
   T("infonew",'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14h4"/></svg>','Info an das Lager',can("inf_s")?ui+' ungelesen':'Nachricht mit Foto ans Lager',can("inf_s")&&ui?ui:'')+

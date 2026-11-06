@@ -51,7 +51,7 @@ function jvListen(SR){if(jvIOS&&jvMicDead&&!jvRecOn)return jvKbdMic();if(jvRecOn
 /* Antwort anzeigen + sprechen. A = {q, say:[Sätze], rows:[{l,r,pk?,ret?,cls?}], acts:[{l,fn}]} */
 /* ---- Hilfen ---- */
 const jvDayName=t=>{const d=pkDay(Date.now()),x=Math.round((t-d)/864e5);return x===0?"heute":x===1?"morgen":x===-1?"gestern":PK_WD[new Date(t).getDay()]+" "+pkDM(t)};
-function jvPacksVisible(){return can("pk_s")?packs:[]}
+function jvPacksVisible(){return jvPkOk()?packs:[]}
 function jvPkRow(p,extra){const g=pkProg(p);return{l:(p.ev||p.ord||"Packliste")+(p.ord?" · "+p.ord:""),r:extra||(g.fin?"hergerichtet ✓":g.d?g.d+"/"+g.n:"offen"),pk:p.id,cls:g.fin?"ok":g.d?"ok":"warn"}}
 function jvFindPacks(q){const n=jvNorm(q),dig=(n.match(/\d{6,}/)||[""])[0],P=jvPacksVisible();
  if(dig){const L=P.filter(p=>pkDig(p.ord)===dig||pkDig(p.ord).startsWith(dig)||String(p.ps)===dig);if(L.length)return L}
@@ -72,7 +72,7 @@ function jvOrder(q,open){const L=jvFindPacks(q),R=jvFindRets(q);
  if(typeof jvNotes==="function")jvNotes(p).forEach(x=>say.push("Notiz von "+nmA(x,"by")+": "+x.txt));
  const acts=[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}];RR.forEach(r=>acts.push({l:"Retourschein öffnen",fn:()=>{curRet=r.id;go("retopen")}}));
  return{say,acts}}
-function jvHerr(q){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const n=jvNorm(q),t0=pkDay(Date.now());
+function jvHerr(q){if(!jvPkOk())return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const n=jvNorm(q),t0=pkDay(Date.now());
  if(/nicht hergerichtet|liegen|teilweise|vergessen/.test(n)){const L=pkGroups().late.concat(pkZTasks().filter(z=>pkHDay(z)<t0&&!pkProg(z).fin));
   if(!L.length)return{say:[jvF()?"Nichts liegengeblieben. Vorbildlich.":"Es ist nichts liegengeblieben."]};
   return{say:[L.length===1?"Eine Packliste ist nicht fertig hergerichtet:":L.length+" Packlisten sind nicht fertig hergerichtet:"].concat(L.slice(0,4).map(p=>{const g=pkProg(p);return (p.ev||p.ord)+(g.d?", teilweise, "+g.d+" von "+g.n:", nicht angefangen")+"."})),rows:L.map(p=>jvPkRow(p,pkProg(p).d?"teilweise "+pkProg(p).d+"/"+pkProg(p).n:"nicht hergerichtet"))}}
@@ -85,11 +85,11 @@ function jvHerr(q){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Pa
  const say=[(lab==="heute"?"Heute":lab.charAt(0).toUpperCase()+lab.slice(1))+" "+(L.length===1?"ist eine Packliste":"sind "+L.length+" Packlisten")+" dran"+(open.length<L.length?", "+(L.length-open.length)+" davon schon hergerichtet":"")+"."];
  open.slice(0,5).forEach(p=>{const g=pkProg(p);say.push((p.ev||p.ord)+(a!==b?", "+jvDayName(pkHDay(p)):"")+(g.d?", "+g.d+" von "+g.n+" fertig":"")+(pkF(p).length?", "+pkF(p).length+" mit Fremdmiete":"")+".")});
  return{say,rows:L.map(p=>jvPkRow(p,(a!==b?pkWd(pkHDay(p))+" · ":"")+(pkProg(p).fin?"✓":pkProg(p).d+"/"+pkProg(p).n)))}}
-function jvBack(q){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const t=/morgen/.test(jvNorm(q))?pkAddD(pkDay(Date.now()),1):pkDay(Date.now()),lab=t===pkDay(Date.now())?"heute":"morgen";
+function jvBack(q){if(!jvPkOk())return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const t=/morgen/.test(jvNorm(q))?pkAddD(pkDay(Date.now()),1):pkDay(Date.now()),lab=t===pkDay(Date.now())?"heute":"morgen";
  const L=jvPacksVisible().filter(p=>p.de&&pkDay(p.de)===t&&pkState(p).k!=="done");
  if(!L.length)return{say:["Zurück kommt "+lab+" laut Packlisten nichts."]};
  return{say:[(lab==="heute"?"Heute":"Morgen")+" sollte"+(L.length===1?"":"n")+" zurückkommen: "+jvList(L.map(p=>p.ev||p.ord))+"."].concat(jvF()?["Hoffentlich vollständig."]:[]),rows:L.map(p=>jvPkRow(p,"Dispo-Ende "+pkD(p.de).slice(-5)))}}
-function jvOver(){if(!can("pk_s"))return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const L=pkGroups().over;
+function jvOver(){if(!jvPkOk())return{say:["Dafür brauchst du das Recht, Packlisten zu sehen."]};const L=pkGroups().over;
  if(!L.length)return{say:[jvF()?"Keine Dispo abgelaufen. So soll's sein.":"Bei keinem Auftrag ist die Dispo abgelaufen."]};
  return{say:[L.length===1?"Bei einem Auftrag ist die Dispo abgelaufen:":"Bei "+L.length+" Aufträgen ist die Dispo abgelaufen:"].concat(L.slice(0,4).map(p=>(p.ev||p.ord)+", Dispo-Ende "+String(jvDayName(pkDay(p.de))).replace(/\.$/,"")+".")),rows:L.map(p=>jvPkRow(p,"seit "+pkWd(p.de)))}}
 function jvDef(q){const n=jvNorm(q),D=jvData();

@@ -16,7 +16,7 @@
 document.head.appendChild(st)}catch(e){}})();
 let wsForce=false,wsTab=null,wsIn=false,wsPrev=0;
 function wsIs(){if(wsForce)return true;try{const t=typeof hoTit==="function"?hoTit(hoMyTitle()):null;return !!(t&&/werkstatt/i.test(t.name||""))}catch(e){return false}}
-try{Object.defineProperty(HO_NAME,"jarvis",{get:()=>wsIs()?"Werkstatt Übersicht":"Lager Übersicht",enumerable:true})}catch(e){}
+try{Object.defineProperty(HO_NAME,"jarvis",{get:()=>wsIs()?"Werkstatt Übersicht":"Lager Übersicht",enumerable:true,configurable:true})}catch(e){}
 const wsLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
 /* Besuch: beim Betreten merken, wann man zuletzt da war */
 /* Besuch endet erst auf der Hauptseite oder wenn die App in den Hintergrund geht – Defekt öffnen und zurück zählt nicht als neuer Besuch */
