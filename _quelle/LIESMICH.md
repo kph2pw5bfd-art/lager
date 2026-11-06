@@ -438,3 +438,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## Version 1.133 – Druckstation: hängende Aufträge (Jürgen, 6.11.: Auftrag vom Handy blieb auf „druckt …“, nichts in der Windows-Warteschlange)
 - Ursache wahrscheinlich: Chrome lief nicht mit `--kiosk-printing` (Chrome war schon offen) → Druckfenster wartet am Laptop, `w.print()` blockiert.
 - `gbStuck()` (vor jedem gbRun): Aufträge mit st „druckt“, deren Start (`dt`, neu) > 2 Min. her ist, gehen zurück auf „neu“. In der Liste „Nochmal“ auch bei „druckt …“ ab 1 Min.
+
+## Version 1.134 – Druckstation minimiert (Jürgen, 6.11.: minimiert druckt Chrome nicht)
+- etik.js: `gbRun` druckt nicht, solange `document.visibilityState==="hidden"` (Auftrag bleibt „wartet“, kein falsches „gedruckt“). `visibilitychange` → Herzschlag + sofort drucken, wenn wieder sichtbar. Herzschlag enthält `hid`; Tablet/Handy zeigen dann „Druckstation ist minimiert · am Laptop das Fenster wieder öffnen“. Hinweis „Fenster nicht minimieren“ in der Druckstation-Ansicht.
+- Empfehlung für die Verknüpfung: zusätzlich `--disable-backgrounding-occluded-windows` (verdeckt/gesperrt zählt nicht als unsichtbar) und `--start-fullscreen` (Vollbild, F11 zum Verlassen).

@@ -72,14 +72,17 @@ function gbSub(){if(gbOn||typeof db==="undefined"||!db)return;gbOn=true;try{
  db.collection("druckst").onSnapshot(s=>{const d=s.docs.find(x=>x.id==="main");GBS=d?d.data():null;const st=document.getElementById("etst");if(st)st.outerHTML=gbStLine()})}catch(e){console.warn(e)}}
 /* 1.133: hängt ein Auftrag auf „druckt …“ (z. B. Druckfenster offen, weil Chrome nicht mit --kiosk-printing lief, oder Station neu gestartet), nach 2 Min. wieder freigeben */
 function gbStuck(){if(!gbIsStation()||gbBusy)return;GBJ.filter(x=>x.st==="druckt"&&Date.now()-(x.dt||x.t||0)>120000).forEach(x=>{x.st="neu";db.doc("druck/"+x.id).update({st:"neu"}).catch(()=>{})})}
-async function gbRun(){gbStuck();if(gbBusy||!gbIsStation())return;const j=GBJ.filter(x=>x.st==="neu").sort((a,b)=>(a.t||0)-(b.t||0))[0];if(!j)return;gbBusy=true;
+async function gbRun(){if(document.visibilityState==="hidden")return;gbStuck();if(gbBusy||!gbIsStation())return;const j=GBJ.filter(x=>x.st==="neu").sort((a,b)=>(a.t||0)-(b.t||0))[0];if(!j)return;gbBusy=true;
  try{await db.doc("druck/"+j.id).update({st:"druckt",sid:me,dt:Date.now()});await gbPrint(j);await db.doc("druck/"+j.id).update({st:"ok",pt:Date.now()})}
  catch(e){console.error(e);try{await db.doc("druck/"+j.id).update({st:"fehler",err:String(e&&e.message||e).slice(0,120)})}catch(x){}}
  finally{gbBusy=false;setTimeout(gbRun,400)}}
-function gbBeat(){if(!gbIsStation()||typeof db==="undefined"||!db||!me)return;db.doc("druckst/main").set({t:Date.now(),by:me,name:typeof meName==="function"?meName():""}).catch(()=>{})}
+function gbBeat(){if(!gbIsStation()||typeof db==="undefined"||!db||!me)return;db.doc("druckst/main").set({t:Date.now(),by:me,name:typeof meName==="function"?meName():"",hid:document.visibilityState==="hidden"}).catch(()=>{})}
 setInterval(()=>{if(typeof db!=="undefined"&&db&&me){gbSub();gbBeat();if(gbIsStation())gbRun()}},20000);
+/* 1.134: minimiert druckt Chrome nicht – sobald das Fenster wieder sichtbar ist, sofort weiterdrucken (Jürgen, 6.11.) */
+/* minimiert: nicht drucken (Auftrag bleibt „wartet“, nichts geht verloren), Herzschlag meldet „minimiert“; wieder sichtbar → sofort drucken */
+document.addEventListener("visibilitychange",()=>{if(gbIsStation()&&typeof db!=="undefined"&&db&&me){gbBeat();if(document.visibilityState==="visible")gbRun()}});
 setTimeout(()=>{if(typeof db!=="undefined"&&db&&me){gbSub();gbBeat()}},2500);
-function gbStLine(){const ok=gbStationOk();return '<div class="etst '+(ok?'ok':'off')+'" id="etst"><i aria-hidden="true"></i><span>'+(ok?'<b>Druckstation bereit</b>'+(GBS.name?' · '+esc(GBS.name):''):'<b>Druckstation nicht erreichbar</b> · Auftrag wird gedruckt, sobald sie läuft')+'</span></div>'}
+function gbStLine(){const ok=gbStationOk();if(ok&&GBS&&GBS.hid)return '<div class="etst off" id="etst"><i aria-hidden="true"></i><span><b>Druckstation ist minimiert</b> · am Laptop das Fenster wieder öffnen, dann wird gedruckt</span></div>';return '<div class="etst '+(ok?'ok':'off')+'" id="etst"><i aria-hidden="true"></i><span>'+(ok?'<b>Druckstation bereit</b>'+(GBS.name?' · '+esc(GBS.name):''):'<b>Druckstation nicht erreichbar</b> · Auftrag wird gedruckt, sobald sie läuft')+'</span></div>'}
 /* Dialog am Tablet / Handy / PC */
 function gbDlg(p){if(!p)return;gbSub();let art="proj",n=1,inh="";const o=document.createElement("div");o.className="ov";
  const last=GBJ.filter(x=>x.pk===p.id).slice(0,2),pos=pkPosAll(p);
@@ -107,7 +110,7 @@ document.addEventListener("click",ev=>{const b=ev.target.closest&&ev.target.clos
 function gbStView(){$("#t").textContent="Druckstation";gbSub();const on=gbIsStation(),t0=pkDay(Date.now()),L=GBJ.filter(x=>(x.t||0)>=pkAddD(t0,-2)).slice(0,40);
  $("#app").innerHTML='<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;font-size:18px">Druckstation · Etiketten</b><span class="etsb '+(on?'ok':'off')+'">'+(on?'Dieses Gerät druckt':'Aus')+'</span></div>'+
   '<label class="fmchk" style="background:var(--okbg,#e3f3e8);color:inherit"><input type="checkbox" id="eton"'+(on?' checked':'')+'><span><b>Dieses Gerät ist die Druckstation</b><small>Druckaufträge vom Tablet werden hier automatisch gedruckt. Dieses Fenster offen lassen.</small></span></label>'+
-  '<p class="mute" style="font-size:13px;margin:8px 0 0">Ohne Druckfenster nur, wenn Chrome mit „--kiosk-printing“ gestartet wurde und die Godex der Standarddrucker ist (Etikett 100 × 100 mm). Siehe Anleitung.</p>'+
+  '<p class="mute" style="font-size:13px;margin:8px 0 0">Ohne Druckfenster nur, wenn Chrome mit „--kiosk-printing“ gestartet wurde und die Godex der Standarddrucker ist (Etikett 100 × 100 mm). <b>Fenster nicht minimieren</b> – sonst druckt Chrome nicht (Bildschirm darf ausgehen). Siehe Anleitung.</p>'+
   '<label class="mute" for="etrot" style="display:block;margin:12px 0 4px">Etikett drehen beim Drucken (dieses Gerät)</label><select id="etrot">'+[[0,"nicht drehen"],[90,"90° im Uhrzeigersinn"],[180,"180°"],[270,"90° gegen den Uhrzeigersinn"]].map(o=>'<option value="'+o[0]+'"'+(gbRot()===o[0]?' selected':'')+'>'+o[1]+'</option>').join("")+'</select>'+
   '<div class="row" style="margin-top:10px"><button class="btn ghost" id="ettest" type="button">Testetikett drucken</button></div></div>'+
   '<div class="card" style="cursor:default;padding:0;overflow:hidden"><div style="padding:10px 14px;font-weight:700;border-bottom:1px solid var(--line,#edf0f4)">Druckaufträge (letzte 3 Tage)</div>'+

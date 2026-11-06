@@ -5,7 +5,8 @@
    **Schneiden:** im Treiber „Aktion nach dem Druck“ = Schneiden, Ausführung „am Ende des Auftrags“ (schneidet nach dem letzten Etikett eines Druckauftrags).
 3. **Als Standarddrucker setzen** (Windows: „Windows verwaltet Standarddrucker“ ausschalten).
 4. **Chrome-Verknüpfung** auf dem Desktop anlegen, Ziel:
-   `"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing https://<App-Adresse>`
+   `"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing --disable-backgrounding-occluded-windows --start-fullscreen https://kph2pw5bfd-art.github.io/lager/`
+   (Fenster NICHT minimieren – minimiert druckt Chrome nicht; seit 1.134 wartet der Auftrag dann und Tablet zeigt „Druckstation ist minimiert“.)
    (`--kiosk-printing` = druckt ohne Druckfenster auf den Standarddrucker.) Vorher alle Chrome-Fenster schließen.
 5. In der App anmelden → **Einstellungen → Etiketten-Druckstation → Druckstation öffnen** → Häkchen **„Dieses Gerät ist die Druckstation“**.
 6. **Drehung:** in der Druckstation-Ansicht „Etikett drehen beim Drucken“ (Standard 90° im Uhrzeigersinn, seit 1.132).
