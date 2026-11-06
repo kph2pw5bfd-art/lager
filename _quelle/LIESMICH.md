@@ -430,3 +430,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.131 – Abweichungen: Zahl vor dem Artikel (Jürgen, 5.11.)
 - `auDevNet`: „−1 Stk Zähler-VT Wiener Netze 125A“ / „+1 Stk Zähler VT 63A“ statt Name vorne.
+
+## Version 1.132 – Gitterbox-Etikett beim Drucken drehen (Jürgen, 6.11., Einrichtung Druckstation: Etikett muss um 90° im Uhrzeigersinn gedreht werden)
+- etik.js: `gbRot()` = localStorage `tpc_et_rot` (0/90/180/270), **Standard 90** (im Uhrzeigersinn). `gbDoc` legt jede Seite in `.pp` (Seitenkasten 100 × 100 mm, Seitenumbruch) und dreht `.pg` per `transform:rotate()`. Auswahl „Etikett drehen beim Drucken (dieses Gerät)“ in der Ansicht Druckstation. Vorschau im Dialog bleibt ungedreht.
+- Schneiden: Einstellung im Godex-Treiber („Aktion nach dem Druck: Schneiden“, „am Ende des Auftrags“) – jeder Druckauftrag (alle Kopien) ist EIN Windows-Druckauftrag.
