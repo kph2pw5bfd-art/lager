@@ -459,3 +459,5 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.138 – Projektleiter Übersicht: nur „Herrichten“ / „Hergerichtet“ (Jürgen, 6.11.)
 - `plEvents`: pro Auftrag und Tag ein Eintrag „Herrichten“ (noch nicht fertig, blau) bzw. „Hergerichtet“ (fertig, grün, Pille `.plpill.d`) – kein „Raus“ mehr. „Zurück“ bleibt als eigener Eintrag.
+
+## Version 1.139 – Projektleiter Übersicht: „Kommt zurück“ / „Zurückgekommen“ statt „Zurück“ (Jürgen, 6.11.)
