@@ -434,3 +434,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## Version 1.132 – Gitterbox-Etikett beim Drucken drehen (Jürgen, 6.11., Einrichtung Druckstation: Etikett muss um 90° im Uhrzeigersinn gedreht werden)
 - etik.js: `gbRot()` = localStorage `tpc_et_rot` (0/90/180/270), **Standard 90** (im Uhrzeigersinn). `gbDoc` legt jede Seite in `.pp` (Seitenkasten 100 × 100 mm, Seitenumbruch) und dreht `.pg` per `transform:rotate()`. Auswahl „Etikett drehen beim Drucken (dieses Gerät)“ in der Ansicht Druckstation. Vorschau im Dialog bleibt ungedreht.
 - Schneiden: Einstellung im Godex-Treiber („Aktion nach dem Druck: Schneiden“, „am Ende des Auftrags“) – jeder Druckauftrag (alle Kopien) ist EIN Windows-Druckauftrag.
+
+## Version 1.133 – Druckstation: hängende Aufträge (Jürgen, 6.11.: Auftrag vom Handy blieb auf „druckt …“, nichts in der Windows-Warteschlange)
+- Ursache wahrscheinlich: Chrome lief nicht mit `--kiosk-printing` (Chrome war schon offen) → Druckfenster wartet am Laptop, `w.print()` blockiert.
+- `gbStuck()` (vor jedem gbRun): Aufträge mit st „druckt“, deren Start (`dt`, neu) > 2 Min. her ist, gehen zurück auf „neu“. In der Liste „Nochmal“ auch bei „druckt …“ ab 1 Min.
