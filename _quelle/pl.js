@@ -61,18 +61,33 @@ function plNews(M){const N=[];M.forEach(I=>{const p=I.p,H=pkH(p);
   (p.zus||[]).forEach(z=>{const f=pkZFin(p,z)||auHerrAll(p,String(z.ps));if(f&&f.t>plPrev)N.push({t:f.t,b:"Zusatz "+esc(z.ps)+" hergerichtet",s:esc(p.ev||""),p,r:fmt(f.t).slice(0,6)})});
   I.B.R.forEach(r=>{const t=r.closedT||0;if(r.closed&&t>plPrev)N.push({t,b:esc(p.ev||"")+(r.art==="end"?" – Endretoure":" – Teilretoure")+" zurück",s:r.art==="end"?(I.B.fehlt?pkNum(I.B.fehlt)+" Stk fehlen":"vollständig"):"",p,r:r.art==="end"&&!I.B.fehlt?"✓":fmt(t).slice(0,6),ok:r.art==="end"&&!I.B.fehlt})})});
  return N.sort((a,b)=>b.t-a.t).slice(0,8)}
+/* Briefing für Projektleiter: Zu erledigen + Heute */
+function plBriefLines(){const M=packs.filter(plMine).map(auInfo),T=plTodo(M),t0=pkDay(Date.now()),E=plEvents(M,t0),nm=plAs?shortName(plAs).split(" ")[0]:String(meName()).split(" ")[0],hh=new Date().getHours(),L=[(hh<11?"Guten Morgen":hh<18?"Servus":"Guten Abend")+", "+nm+"."];
+ if(!T.length)L.push("Du hast nichts zu erledigen. Das Lager braucht gerade nichts von dir.");
+ else{L.push(T.length===1?"Du hast einen Punkt zu erledigen.":"Du hast "+T.length+" Punkte zu erledigen.");T.slice(0,5).forEach(x=>{const ev=(x.p&&x.p.ev)||(x.d&&x.d.ev)||"",t=String(x.t).replace(/Stk/g,"Stück");L.push(x.ord===0?"Das Lager wartet auf deine Antwort bei "+ev+": "+t+".":x.ord===1?"Bei "+ev+" ist die Dispo abgelaufen: "+t+".":x.ord===2?"Defekt mit Fremdverschulden bei "+ev+". Bitte prüfen, ob du es dem Kunden verrechnest.":"Bei "+ev+" wurde mit Abweichung zum Packschein hergerichtet.")})}
+ const H=E.filter(e=>e.c!=="r"),R=E.filter(e=>e.c==="r");
+ const Hd=H.filter(e=>e.ok),Ho=H.filter(e=>!e.ok);if(Ho.length)L.push("Heute wird hergerichtet: "+Ho.map(e=>e.p.ev||"").join(", ")+".");if(Hd.length)L.push("Schon hergerichtet: "+Hd.map(e=>e.p.ev||"").join(", ")+".");
+ if(R.length)L.push(R.map(e=>(e.p.ev||"")+(e.ok?" ist zurückgekommen":" kommt heute zurück")).join(", ")+".");
+ if(!H.length&&!R.length)L.push("Heute passiert bei deinen Aufträgen nichts.");
+ const DR=plDraussen(M);if(DR.length)L.push(DR.length===1?"Ein Auftrag ist draußen.":DR.length+" Aufträge sind draußen.");
+ return L.map(s=>typeof jvSay==="function"?jvSay(s):s)}
+function plSpeak(){if(jvSpeaking)return jvStop();jvMode="brief";jvSpeakLines(plBriefLines())}
 function plView(){plSeenSub();if(!plIn2){plIn2=true;try{plPrev=+localStorage.getItem("tpc_pl_seen")||0}catch(e){}if(!plPrev)plPrev=Date.now()-864e5}
  $("#t").textContent="Projektleiter Übersicht";const all=packs.filter(plMine),M=all.map(auInfo),T=plTodo(M),t0=pkDay(Date.now());
  const nm=plAs?shortName(plAs):String(meName()).split(" ")[0];
  let h='<div class="jv" id="plv">';
  if(plForce){const P=[...new Set(packs.filter(p=>p.pl&&!p._z).map(p=>p.pl))].sort((a,b)=>a.localeCompare(b,"de"));
   h+='<div class="plas"><span>Vorschau – Ansicht als</span><select id="plas"><option value="">mich selbst</option>'+P.map(x=>'<option'+(x===plAs?' selected':'')+'>'+esc(x)+'</option>').join("")+'</select><button type="button" class="lnk" id="plback">‹ Zurück</button></div>'}
- const d=new Date();h+='<div class="plmini"><span><b>'+esc((d.getHours()<11?"Guten Morgen":d.getHours()<18?"Servus":"Guten Abend")+", "+nm)+'</b><small>'+d.toLocaleDateString("de-AT",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</small></span><span class="plclock">'+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+'</span></div>';
+ const gr=(()=>{const hh=new Date().getHours();return (hh<11?"Guten Morgen":hh<18?"Guten Tag":"Guten Abend")+", "+nm})();
+ /* 1.140: Kopf wie im Lager Assistenten – immer ganz oben (Jürgen) */
+ h+='<section class="jvhead"><div class="jvhrow"><span class="jvmini" aria-hidden="true"><svg viewBox="0 0 52 52" width="44" height="44"><g class="r1"><circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 4"/></g><g class="r2"><circle cx="26" cy="26" r="18" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="10 4" opacity=".55"/></g><circle cx="26" cy="26" r="11" fill="none" stroke="currentColor" stroke-width="2"/><circle class="core" cx="26" cy="26" r="5" fill="currentColor"/></svg></span>'+
+  '<div class="jvtime"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div></div><button class="jvbrief" id="jvsp" type="button">Briefing</button></div>'+
+  '<div class="jvgreet" id="jvg">'+esc(gr)+'</div>'+jvAskHtml()+
+  '<div class="jvopts"><button class="jvlink" id="jvvc" type="button">Stimme</button><span aria-hidden="true">·</span><button class="jvlink" id="jvrd" type="button">'+(jvReadOn()?"Vorlesen an":"Vorlesen aus")+'</button><span aria-hidden="true">·</span><button class="jvlink" id="jvhl" type="button">Was kann ich fragen?</button></div></section>';
  h+=T.length?'<section class="pltodo"><h3>Zu erledigen <span>'+T.length+'</span></h3>'+T.map((x,i)=>'<div class="plti"><span class="why">'+esc(x.why)+'</span><b>'+esc(x.t)+'</b><small>'+x.s+'</small><span class="plact">'+
    (x.un?'<button type="button" class="p" data-plans="'+i+'">Antworten</button><button type="button" data-plo="'+i+'">Auftrag öffnen</button>':'<button type="button" class="p" data-plseen="'+i+'">Gesehen</button>'+(x.d?'<button type="button" data-pld="'+i+'">Defekt öffnen</button>':'<button type="button" data-plo="'+i+'">Auftrag öffnen</button>'))+'</span></div>').join("")+'</section>'
   :'<div class="pldone">✓ Nichts zu erledigen<small>Das Lager braucht gerade nichts von dir.</small></div>';
  h+='<div class="plbig">'+(can("au_s")?'<button type="button" id="plau">Meine Aufträge</button>':'')+'<button type="button" class="g" id="plmsg">Nachricht ans Lager</button></div>';
- h+='<section class="plsec plask"><h4>Frag mich<span><button type="button" id="plrd">'+(jvReadOn()?'Vorlesen an':'Vorlesen aus')+'</button> · <button type="button" id="plhelp">Was kann ich fragen?</button></span></h4>'+jvAskHtml()+'<p class="mute" style="margin:6px 0 0;font-size:13px">z. B. „Auf welcher Baustelle sind 50m 32A?“ · „Wie viele Defender Midi sind draußen?“ · „Was kommt heute zurück?“</p></section>';
  const today=plEvents(M,t0);
  h+='<section class="plsec"><h4>Heute</h4>'+(today.length?today.map(e=>'<button type="button" class="plli" data-plp="'+esc(e.p.id)+'"><span><b>'+esc(e.p.ev||"")+'</b><small>'+(e.c==="r"&&e.ok?"zurück":e.x||"Auftrag "+esc(e.p.ord||"–"))+'</small></span><span class="r'+(e.ok?' ok':'')+'">'+e.l+'</span></button>').join(""):'<p class="mute" style="margin:0">Heute passiert bei deinen Aufträgen nichts.</p>')+'</section>';
  const m0=pkAddD(pkMon(t0),7*plWk),days=[0,1,2,3,4].map(i=>pkAddD(m0,i)),WD=["Mo","Di","Mi","Do","Fr"];
@@ -91,7 +106,8 @@ function plView(){plSeenSub();if(!plIn2){plIn2=true;try{plPrev=+localStorage.get
  q("[data-plseen]").forEach(b=>b.onclick=async()=>{b.disabled=true;await plSetSeen(T[+b.dataset.plseen].seen);plView()});
  q("[data-plans]").forEach(b=>b.onclick=()=>{const x=T[+b.dataset.plans];if(!can("au_b")&&!plAs)return errBox("Antworten darfst du nicht (Recht „Aufträge – Antworten“).");if(x.un.length===1)auAnsDlg(x.p,x.un[0]);else{curAu=x.p.id;go("auopen")}});
  const au=$("#plau");if(au)au.onclick=()=>go("au");$("#plmsg").onclick=()=>{const own=M.filter(I=>!I.done);if(own.length===1)return auMsgDlg(own[0].p);curAu=null;go("au");toast("Auftrag wählen, dann „Nachricht ans Lager“",1)};
- try{jvAskBind();const ph=$("#plhelp");if(ph)ph.onclick=jvHelpOpen;const rd=$("#plrd");if(rd)rd.onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");rd.textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()};const q0=$("#jvaq");if(q0)q0.placeholder="Frag nach Material, Aufträgen …"}catch(e){}
+ try{jvClock();jvAskBind();$("#jvsp").onclick=plSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvhl").onclick=jvHelpOpen;const q0=$("#jvaq");
+  $("#jvrd").onclick=()=>{const on=!jvReadOn();jvLS("tpc_jv_askread",on?"1":"0");$("#jvrd").textContent=on?"Vorlesen an":"Vorlesen aus";if(!on)jvStop()}}catch(e){}
  $("#plwk").onclick=()=>{plWk=plWk?0:1;plView()};
  const as=$("#plas");if(as)as.onchange=()=>{plAs=as.value;plView()};const bk=$("#plback");if(bk)bk.onclick=()=>{plForce=false;plAs="";draw()}}
 /* Besuch endet auf der Hauptseite oder im Hintergrund */

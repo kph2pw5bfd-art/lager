@@ -461,3 +461,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - `plEvents`: pro Auftrag und Tag ein Eintrag „Herrichten“ (noch nicht fertig, blau) bzw. „Hergerichtet“ (fertig, grün, Pille `.plpill.d`) – kein „Raus“ mehr. „Zurück“ bleibt als eigener Eintrag.
 
 ## Version 1.139 – Projektleiter Übersicht: „Kommt zurück“ / „Zurückgekommen“ statt „Zurück“ (Jürgen, 6.11.)
+
+## Version 1.140 – Projektleiter Übersicht: Kopf wie im Lager Assistenten (Jürgen, 6.11.: „das gleiche wie am Bild, immer ganz oben“)
+- Ganz oben `jvhead` (Symbol, Uhr/Datum über jvClock, Knopf „Briefing“, Begrüßung, Frag-Feld mit Mikrofon, Stimme · Vorlesen · Was kann ich fragen?) statt eigener Kopfzeile und eigener „Frag mich“-Karte.
+- Briefing für Projektleiter `plBriefLines()`/`plSpeak()`: Begrüßung, Zu erledigen (bis 5, als Sätze), heute herzurichten/hergerichtet, kommt zurück, Anzahl draußen.

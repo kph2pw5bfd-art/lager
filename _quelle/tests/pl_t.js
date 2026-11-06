@@ -47,6 +47,8 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  ok("Antwort nennt Baustellen (ohne Packlisten-Recht)",/Spittelberg|Gösser|Am Hof/.test(ans)&&!/Recht/.test(ans));
  console.log("     eov:",await p.evaluate(()=>[...document.querySelectorAll(".eov")].map(e=>e.innerHTML.slice(0,400)).join("|")));const r0=await p.$("#jvans [data-ja]");if(r0){await r0.click();await p.waitForTimeout(300);ok("Zeile öffnet den Auftrag (Meine Aufträge)",await p.evaluate(()=>view==="auopen"))}
  await p.evaluate(()=>{can=window.__c0;view="jarvis";draw()});await p.waitForTimeout(300);
+ ok("Kopf wie Lager Assistent ganz oben (Uhr, Briefing, Frag-Feld, Stimme)",await p.evaluate(()=>{const v=document.getElementById("plv"),h=v.querySelector(".jvhead");return !!h&&!!h.querySelector("#jvclock")&&!!h.querySelector("#jvsp")&&!!h.querySelector("#jvaq")&&!!h.querySelector("#jvvc")&&h.compareDocumentPosition(v.querySelector(".pltodo,.pldone"))&Node.DOCUMENT_POSITION_FOLLOWING}));
+ const bl=await p.evaluate(()=>plBriefLines());console.log("     Briefing:",bl.join(" / "));ok("Briefing für PL",/zu erledigen/.test(bl.join(" "))&&/Heute wird hergerichtet: Feldbauernhof/.test(bl.join(" ")));
  /* Woche */
  await p.click("#plwk");await p.waitForTimeout(200);ok("Nächste Woche",/Nächste Woche/.test(await p.textContent(".plsec:nth-of-type(2) h4, .plsec h4")+await p.textContent("#app")));
  /* Echter PL-Titel */
