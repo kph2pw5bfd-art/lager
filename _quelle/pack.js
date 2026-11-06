@@ -381,7 +381,10 @@ const pkDM=t=>{const d=new Date(t);return d.getDate()+"."+(d.getMonth()+1)+"."};
 /* Fach-Tag: Herricht-Tag, Wochenende auf Freitag davor */
 function pkSlot(p){const h=pkNoH(p)?(p.db?pkDay(p.db):0):pkHDay(p);if(!h)return{t:0,we:""};const w=new Date(h).getDay();return w===6?{t:pkAddD(h,-1),we:"Sa"}:w===0?{t:pkAddD(h,-2),we:"So"}:{t:h,we:""}}
 function pkOvData(){const t0=pkDay(Date.now()),m0=pkMon(t0),m1=pkAddD(m0,7),m2=pkAddD(m0,14);
- const L=packs.filter(p=>p.db||pkHd(p)).filter(p=>pkState(p).k!=="done").concat(pkZTasks()).map(p=>({p,s:pkSlot(p),g:pkProg(p)}));
+ let L=packs.filter(p=>p.db||pkHd(p)).filter(p=>pkState(p).k!=="done").concat(pkZTasks()).map(p=>({p,s:pkSlot(p),g:pkProg(p)}));
+ /* 1.135: Zusatz am selben Tag wie die Packliste → eine Karte (Jürgen, 6.11.: „Warum habe ich 2 Packscheine vom selben Auftrag?“) */
+ L=L.filter(o=>{if(!o.p._z)return true;const m=L.find(x=>!x.p._z&&x.p.id===o.p.id&&pkHDay(x.p)===pkHDay(o.p)&&!pkNoH(x.p));if(!m||!!m.g.fin!==!!o.g.fin)return true;
+  m.zm=(m.zm||[]).concat(o.p._z);m.g={...m.g,d:m.g.d+o.g.d,n:m.g.n+o.g.n,fin:!!(m.g.fin&&o.g.fin)};return false});
  const late=L.filter(o=>!pkNoH(o.p)&&pkHDay(o.p)<t0&&!o.g.fin).sort((a,b)=>pkHDay(a.p)-pkHDay(b.p));
  const day=(m,i)=>{const t=pkAddD(m,i);return{t,items:L.filter(o=>o.s.t===t).sort((a,b)=>(a.g.fin?1:0)-(b.g.fin?1:0)||(a.p.db||0)-(b.p.db||0))}};
  const w0=[0,1,2,3,4].map(i=>day(m0,i)),w1=[0,1,2,3,4].map(i=>day(m1,i));
@@ -393,6 +396,7 @@ const pkOpenN=a=>a.filter(o=>!o.g.fin&&!pkNoH(o.p)).length;
 function pkBadges(o,withShift){const p=o.p,f=pkF(p).length,b=[];
  if(f&&!o.g.fin)b.push('<span class="pkb fr">'+f+' Fremd</span>');
  if(p._z)b.push('<span class="pkb zu">Zusatz</span>');
+ if(o.zm)o.zm.forEach(z=>b.push('<span class="pkb zu">+ Zusatz '+esc(z)+'</span>'));
  if(o.s.we)b.push('<span class="pkb we">'+(o.s.we==="Sa"?"Samstag":"Sonntag")+'</span>');
  if(withShift&&pkShifted(p))b.push('<span class="pkb sh">↻ '+(pkHDay(p)<pkDay(p.db)?'vorgezogen':'verschoben')+' (Dispo '+pkWd(p.db)+')</span>');
  return b.length?'<div class="pkbs">'+b.join("")+'</div>':''}

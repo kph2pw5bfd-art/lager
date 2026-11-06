@@ -442,3 +442,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## Version 1.134 – Druckstation minimiert (Jürgen, 6.11.: minimiert druckt Chrome nicht)
 - etik.js: `gbRun` druckt nicht, solange `document.visibilityState==="hidden"` (Auftrag bleibt „wartet“, kein falsches „gedruckt“). `visibilitychange` → Herzschlag + sofort drucken, wenn wieder sichtbar. Herzschlag enthält `hid`; Tablet/Handy zeigen dann „Druckstation ist minimiert · am Laptop das Fenster wieder öffnen“. Hinweis „Fenster nicht minimieren“ in der Druckstation-Ansicht.
 - Empfehlung für die Verknüpfung: zusätzlich `--disable-backgrounding-occluded-windows` (verdeckt/gesperrt zählt nicht als unsichtbar) und `--start-fullscreen` (Vollbild, F11 zum Verlassen).
+
+## Version 1.135 – Wand: Zusatz am selben Herricht-Tag als eine Karte (Jürgen, 6.11.: „Warum habe ich jetzt 2 Packscheine vom selben Auftrag?“)
+- pack.js `pkOvData`: Zusatz-Pseudo-Eintrag wird mit der Packliste zusammengelegt, wenn gleicher Auftrag, gleicher Herricht-Tag (pkHDay, nicht nur gleiches Fach) und beide gleich fertig/offen. Fortschritt addiert (0/6), Schild „+ Zusatz <Nr>“ (`o.zm`). Anderer Tag → wie bisher eigene Karte. Nur die Wand; Briefing/Assistent/Wochenbericht unverändert.
+- Test `tests/zmerge_t.js`.
