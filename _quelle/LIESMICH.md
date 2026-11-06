@@ -456,3 +456,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.137 – Projektleiter Übersicht: eine Zeile pro Auftrag und Tag (Jürgen, 6.11.: „ein wenig zu viel Info“)
 - `plEvents`: Ereignisse pro Auftrag zusammengefasst – Herrichten + Raus am selben Tag → nur „Raus“ (✓ = hergerichtet, sonst bei Heute „noch nicht hergerichtet“ bzw. „x/y hergerichtet“), Zusatz am selben Tag steckt im Herrichten/Raus. In der Woche Zusatztext nur bei „Zurück · Fehlmaterial“.
+
+## Version 1.138 – Projektleiter Übersicht: nur „Herrichten“ / „Hergerichtet“ (Jürgen, 6.11.)
+- `plEvents`: pro Auftrag und Tag ein Eintrag „Herrichten“ (noch nicht fertig, blau) bzw. „Hergerichtet“ (fertig, grün, Pille `.plpill.d`) – kein „Raus“ mehr. „Zurück“ bleibt als eigener Eintrag.

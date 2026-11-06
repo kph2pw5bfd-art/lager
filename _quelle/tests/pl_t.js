@@ -31,8 +31,8 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  ok("Abweichung kurz",/−1 Stk Verteiler 125A Maxi 2/.test(td[3])&&/\+1 Stk Verteiler 63A Indu/.test(td[3]));
  await p.screenshot({path:S+"pl_1.png",fullPage:true});
  const secs=await p.evaluate(()=>[...document.querySelectorAll(".plsec:not(.plask)")].map(e=>e.innerText.replace(/\s+/g," ")));console.log("     dbg",JSON.stringify(await p.evaluate(()=>[plPrev,pkH(packs.find(x=>x.id==="A")).fin])));console.log(secs.map(x=>"     "+x).join("\n"));
- ok("Heute: Feldbauernhof eine Zeile „Raus · noch nicht hergerichtet“",/Feldbauernhof noch nicht hergerichtet Raus/.test(secs[0])&&!/Herrichten/.test(secs[0]));
- ok("Woche: eine Zeile pro Auftrag",(secs[1].match(/Spittelberg/g)||[]).length===1);
+ ok("Heute: Feldbauernhof eine Zeile „Raus · noch nicht hergerichtet“",/Feldbauernhof Auftrag 260095001 Herrichten/.test(secs[0])&&!/Raus/.test(secs[0]));
+ ok("Woche: eine Zeile pro Auftrag, „Hergerichtet“ ohne Raus",(secs[1].match(/Spittelberg/g)||[]).length===1&&/Hergerichtet Weihnachtsmarkt Spittelberg 2026/.test(secs[1])&&!/Raus/.test(secs[1]));
  ok("Draußen: Gösser abgelaufen zuerst",/DRAUSSEN.*Firmenfeier Gösser Dispo abgelaufen/i.test(secs[2])&&/Am Hof Endretoure zurück · Fehlmaterial/.test(secs[2]));
  ok("Neu: Endretoure Am Hof + Spittelberg hergerichtet",/Am Hof – Endretoure zurück/.test(secs[3])&&/Spittelberg 2026 hergerichtet/.test(secs[3]));
  /* Gesehen */
