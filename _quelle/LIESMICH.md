@@ -465,3 +465,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## Version 1.140 – Projektleiter Übersicht: Kopf wie im Lager Assistenten (Jürgen, 6.11.: „das gleiche wie am Bild, immer ganz oben“)
 - Ganz oben `jvhead` (Symbol, Uhr/Datum über jvClock, Knopf „Briefing“, Begrüßung, Frag-Feld mit Mikrofon, Stimme · Vorlesen · Was kann ich fragen?) statt eigener Kopfzeile und eigener „Frag mich“-Karte.
 - Briefing für Projektleiter `plBriefLines()`/`plSpeak()`: Begrüßung, Zu erledigen (bis 5, als Sätze), heute herzurichten/hergerichtet, kommt zurück, Anzahl draußen.
+
+## Version 1.141 – Gitterbox-Etikett: Wörter nicht mehr trennen (Jürgen, 9.11.: „Weihnachtsde / ko 2026-2027“)
+- etik.js: `.pj`/`.inh` mit `overflow-wrap:normal;word-break:normal;hyphens:manual` (vorher break-word) – ein zu langes Wort ragt rechts hinaus, das fit-Skript verkleinert die Schrift, bis es passt (prüft scrollWidth). Nur wenn ein Wort selbst bei kleinster Schrift nicht passt, wird ausnahmsweise getrennt (`overflowWrap="anywhere"`).
