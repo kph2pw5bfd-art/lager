@@ -202,9 +202,9 @@ function pkRowHtml(p,r,sub){const {x,i,h,st}=r,fm=pkFmTxt(x,h),ov=pkOver(x,h,st)
   (h&&h.by&&st.s!=="open"?'<small class="pkby">'+esc(nm(h.by))+', '+fmt(h.t).slice(-5)+'</small>':'')+'</span></div>'}
 function pkRowsHtml(p,rows){const D=rows.filter(r=>r.dev);let out=D.length?'<div class="pkg pkgdev">Abweichungen ('+D.length+')</div>'+D.map(r=>pkRowHtml(p,r,pkGrp(r.x)+(r.z?' · Zusatz '+r.z:''))).join(""):'';
  let lg=null,lz;rows.forEach((r,ri)=>{const z=r.z,newZ=z&&(ri===0||rows[ri-1].z!==z),last=z&&(ri===rows.length-1||rows[ri+1].z!==z);
-  if(newZ){const zd=(p.zus||[]).find(q=>String(q.ps)===z);out+='<div class="pkzh"><span>Zusatz-Packschein '+esc(z)+(zd&&zd.t?' · hochgeladen '+fmt(zd.t).slice(0,6):'')+'</span>'+(can("pk_l")?'<button class="lnk" type="button" data-pkzx="'+esc(z)+'">Entfernen</button>':'')+'</div>'+pkZHead(p,zd);lg=null}
+  if(newZ){const zd=(p.zus||[]).find(q=>String(q.ps)===z);out+='<div class="pkzbox"><div class="pkzh"><span>Zusatz-Packschein '+esc(z)+(zd&&zd.t?' · hochgeladen '+fmt(zd.t).slice(0,6):'')+'</span>'+(can("pk_l")?'<button class="lnk" type="button" data-pkzx="'+esc(z)+'">Entfernen</button>':'')+'</div>'+pkZHead(p,zd);lg=null}
   if(!r.dev){const gl=pkGrp(r.x);if(gl!==lg||z!==lz)out+='<div class="pkg">'+esc(gl)+'</div>';lg=gl;lz=z;out+=pkRowHtml(p,r,"")}
-  if(last){if(rows.filter(q=>q.z===z).every(q=>q.dev))out+='<div class="mute" style="padding:8px 0;font-size:13px">Alle Positionen stehen oben bei „Abweichungen“.</div>';out+=pkZFoot(p,z);lg=null}});
+  if(last){if(rows.filter(q=>q.z===z).every(q=>q.dev))out+='<div class="mute" style="padding:8px 0;font-size:13px">Alle Positionen stehen oben bei „Abweichungen“.</div>';out+=pkZFoot(p,z)+'</div>';lg=null}});
  return out}
 function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack";return packView()}if(pkNoH(p))return pkNoHView(p);
  const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&document.querySelector(".ov"))return;

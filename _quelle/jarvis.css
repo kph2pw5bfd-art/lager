@@ -365,4 +365,5 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 .pkdrop.on{border-color:#114a97;background:#dfeafb;border-style:solid}
 @media (hover:none),(pointer:coarse){.pkdrop{display:none}}
 body.pkdragging .pkdrop{display:flex}
-
+/* 1.145: Zusatz-Packschein orange eingerahmt, Abstand zum Hauptpackschein */
+.pkzbox{margin:16px 0 12px;padding:0 12px;border:2px solid #e67e22;border-radius:10px;overflow:hidden}.pkzbox .pkzh{margin-top:0}.pkzbox .pkzfoot{margin-bottom:10px}
