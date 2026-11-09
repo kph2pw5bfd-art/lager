@@ -367,3 +367,8 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 body.pkdragging .pkdrop{display:flex}
 /* 1.145: Zusatz-Packschein orange eingerahmt, Abstand zum Hauptpackschein */
 .pkzbox{margin:16px 0 12px;padding:0 12px;border:2px solid #e67e22;border-radius:10px;overflow:hidden}.pkzbox .pkzh{margin-top:0}.pkzbox .pkzfoot{margin-bottom:10px}.pkmfoot{margin:12px 0 10px}
+/* 1.147: Hauptpackschein blau eingerahmt, Rahmen bis an den Bildschirmrand; Inhalt bleibt auf breiten Bildschirmen in der normalen Spalte */
+.pkmbox{--g:max(12px,calc(50vw - 310px));box-sizing:border-box;width:100vw;margin:12px 0 0 calc(50% - 50vw);padding:4px var(--g);border:2px solid var(--navy);border-radius:0;background:var(--card)}
+.pkmbox .pkg{border-radius:0!important;margin-left:calc(-1*var(--g));margin-right:calc(-1*var(--g));padding-left:var(--g);padding-right:var(--g)}
+.pkzwrap .pkzbox{background:var(--card)}
+body:has(.pkmbox){overflow-x:clip}
