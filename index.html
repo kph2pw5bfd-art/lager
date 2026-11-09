@@ -499,7 +499,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.149";
+<script>const APPV="1.150";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1368,9 +1368,9 @@ function pkHint(p){const s=pkState(p),h=pkHd(p),out=[];
  if(!p._z){const zr=pkZrOpen(p);if(zr.length)out.push('<div class="pkhint warn">↩ Zurücklegen: '+zr.map(([,r])=>pkNum(r.n)+' '+esc(r.u||"Stk")+' '+esc(r.name)).join(', ')+'</div>')}
  const t0=pkDay(Date.now());if(!p._z)(p.zus||[]).forEach(z=>{const f=pkZFin(p,z),d=pkZDay(p,z);out.push(f?'<div class="pkhint">＋ Zusatz '+esc(z.ps)+' hergerichtet</div>':d<t0?'<div class="pkhint warn">⚠ Zusatz '+esc(z.ps)+' noch nicht hergerichtet – war für '+pkWd(d)+' geplant</div>':'<div class="pkhint">＋ Zusatz '+esc(z.ps)+' – herrichten '+(d===t0?'heute':pkWd(d))+'</div>')});
  return out.join("")}
-function pkRow(p){const s=pkState(p),f=pkF(p).length;
- return '<div class="card pkr" data-pk="'+esc(p.id)+'"><div class="row" style="align-items:center"><b style="flex:1;min-width:0">'+esc(p.ev||"Ohne Veranstaltung")+pkWorkTag(p.id)+'</b>'+(s.c?'<span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>':'')+'</div>'+
-  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div><div class="mute">'+(()=>{const g=pkProg(p);return g.fin?'Hergerichtet ✓ · ':g.d?g.d+' von '+g.n+' hergerichtet · ':''})()+pkPosN(pkPosAll(p).length)+((p.zus||[]).length?' · '+(p.zus.length===1?'1 Zusatz':p.zus.length+' Zusätze'):'')+(f?' · <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div>'+pkHint(p)+'</div>'}
+/* 1.150: kurze Karte in „Alle Packlisten“ (Jürgen, 9.11.) – Veranstaltung, Auftrag · PL, Dispo, rechts nur der Stand. Alles andere in der Packliste. */
+function pkRowStand(p){const s=pkState(p),g=pkProg(p);if(s.k==="done")return s.l==="Retoure abgeschlossen"?"":'<span class="tag pkok" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>';if(pkNoH(p))return '<span class="tag pk'+(s.c||"")+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>';return g.fin?'<span class="tag pkok" style="flex:0;white-space:nowrap">Hergerichtet</span>':g.d?'<b style="flex:0;white-space:nowrap;font-size:14px">'+g.d+'/'+g.n+'</b>':''}
+function pkRow(p){return '<div class="card pkr" data-pk="'+esc(p.id)+'"><div class="row" style="align-items:center"><b style="flex:1;min-width:0">'+esc(p.ev||"Ohne Veranstaltung")+pkWorkTag(p.id)+'</b>'+pkRowStand(p)+'</div><div class="mute">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">'+(p.db?pkDM(p.db):"–")+' – '+(p.de?pkDM(p.de):"–")+'</div></div>'}
 function pkUpHtml(){return can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden><div class="pkdrop" id="pkdrop" role="button" tabindex="0"><b>PDF hierher ziehen</b><small>direkt aus der Mail – auch mehrere auf einmal</small></div>':''}
 function pkUpBind(){if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)};const z=$("#pkdrop");if(z){z.onclick=()=>$("#pkfile").click();z.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("#pkfile").click()}}}}}
 /* ab 1.110: PDF aus der Mail ins Feld ziehen. Solange der Hochlade-Knopf sichtbar ist, nimmt die ganze Seite die Datei an
@@ -1394,12 +1394,12 @@ function pkListHtml(){const G0=pkGroups(),T=jvNorm(pkq).split(" ").filter(Boolea
  const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
  const cur=sec("Dispo abgelaufen",G.over)+sec("Nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
  if(T.length){const n=Object.keys(G).reduce((a,k)=>a+G[k].length,0);return n?'<p class="mute" style="margin:8px 0">'+n+' Treffer in allen Packlisten</p>'+cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute" style="margin-top:8px">Keine Packliste gefunden.</div>'}
- return (pkf==="aktuell"?(cur||'<div class="card mute">Keine aktuellen Packlisten.</div>'):pkf==="done"?(sec("Retoure abgeschlossen",G.done)||'<div class="card mute">Noch keine erledigten Packlisten.</div>'):(packs.length?cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute">Noch keine Packlisten hochgeladen.</div>'))}
+ return pkf==="done"?(sec("Retoure abgeschlossen",G.done)||'<div class="card mute">Noch keine erledigten Packlisten.</div>'):(cur||'<div class="card mute">Keine offenen Packlisten.</div>')}
 function pkListBind(){document.querySelectorAll("#pklist [data-pk]").forEach(e=>e.onclick=()=>{curPack=e.dataset.pk;go("packopen")})}
 function pkListDraw(){const b=$("#pklist");if(b){b.innerHTML=pkListHtml();pkListBind()}}
 function packView(){$("#t").textContent="Alle Packlisten";if(document.activeElement&&document.activeElement.id==="pkq"&&$("#pklist"))return pkListDraw();
- $("#app").innerHTML=(can("pk_b")?pkUpHtml()+'<p class="mute" style="font-size:13px;margin:6px 0 12px">Die PDF wird nur im Gerät gelesen. Gespeichert werden Auftrag, Veranstaltung, Projektleiter, Zeiten und Material – keine Kundendaten.</p>':'')+
-  chips([["aktuell","Aktuell"],["done","Erledigt"],["alle","Alle"]],pkf,"data-pkf")+
+ $("#app").innerHTML=pkUpHtml()+(can("pk_b")?'<div style="height:12px"></div>':'')+
+  chips([["aktuell","Offen"],["done","Erledigt"]],pkf,"data-pkf")+
   '<input id="pkq" type="search" autocomplete="off" placeholder="Suchen: Veranstaltung, Auftrag, Projektleiter …" value="'+esc(pkq)+'" style="width:100%;margin:8px 0 4px"><div id="pklist">'+pkListHtml()+'</div>';
  document.querySelectorAll("[data-pkf]").forEach(b=>b.onclick=()=>{pkf=b.dataset.pkf;packView()});
  pkListBind();const qi=$("#pkq");if(qi)qi.oninput=()=>{pkq=qi.value;pkListDraw()};

@@ -483,3 +483,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Suche in „Alle Packlisten“ (ab 1.149)
 - Feld `#pkq` über `#pklist` (`pkListHtml`, `pkHay` in pack.js): Veranstaltung, Auftrag, Packschein inkl. Zusatz, Projektleiter; Wörter beliebig, sucht immer in allen Packlisten unabhängig vom Filter. Bei Live-Update mit Cursor im Feld wird nur die Liste neu gezeichnet. Test `tests/pkq_t.js`.
+
+## Alle Packlisten kurz (ab 1.150)
+- Filter nur noch Offen (intern `aktuell`) / Erledigt, „Alle“ entfällt. Karte `pkRow`: Veranstaltung, Auftrag · PL, Dispo kurz, rechts nur Stand (`pkRowStand`: Hergerichtet, x/y, Art bei Von Baustelle/Verlängerung, „Mit Projektleiter geklärt“). Hinweise (`pkHint`) stehen nur noch in der Packliste. Datenschutz-Hinweistext entfernt.
