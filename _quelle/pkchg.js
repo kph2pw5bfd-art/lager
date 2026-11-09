@@ -32,6 +32,7 @@ function pkChgDlg(P,M,same){return new Promise(res=>{const m=pkMatch(P,M),o=docu
   o.innerHTML='<div class="card pkcd"><b style="font-size:18px">'+(same?'Packschein schon da':'Packschein zu Auftrag '+esc(P.ord||"")+' erkannt')+'</b>'+
    '<div class="mute" style="margin:2px 0 8px">'+esc(P.ev||"")+' · Packschein '+esc(P.ps||"–")+' · '+pkPosN(P.pos.length)+(f?', davon <span class="pkfr">'+f+' mit Fremdmiete</span>':'')+'</div>'+
    (why?'<p class="pkcwhy">'+why+'</p>':'')+
+   (mode==="rep"&&typeof M.plo==="string"?'<p class="mute" style="margin:0 0 8px">Projektleiter bleibt <b>'+esc(shortName(M.pl)||"–")+'</b> (von Hand geändert, im Packschein: '+esc(shortName(P.pl)||"–")+').</p>':'')+
    (same?'':opt("rep","Ersetzt Packschein "+esc(M.ps)+" (geändert)","Packliste bleibt, was hergerichtet ist, wird übernommen.",sel==="rep")+
     (sel==="rep"&&zrows.length?'<div class="pkczl">'+zrows.map(z=>'<label class="abgchkl"><input type="checkbox" data-ci="'+esc(z.ps)+'"'+(inc.has(z.ps)?' checked':'')+'><span>Zusatz '+esc(z.ps)+' ist im neuen Packschein enthalten<small class="mute">'+z.hit+' von '+z.n+' Artikeln gefunden'+(z.inc?' – Mengen passen':'')+'</small></span></label>').join("")+'</div>':'')+
     (M.zus||[]).map(z=>opt("repz:"+esc(z.ps),"Ersetzt Zusatz "+esc(z.ps)+" (geändert)","Nur dieser Zusatz wird ersetzt, sein Herricht-Tag bleibt.",sel==="repz:"+z.ps)).join("")+
@@ -65,7 +66,7 @@ async function pkReplace(M,P,inc){const H=pkH(M),IT=pkItems(M),incS=new Set((inc
  if(C.back.length)patch.zr=pkZrAdd(H,C.back,P.ps);
  const wasFin=!!(H.fin&&H.fin.t),same=String(P.ps)===String(M.ps)&&!incS.size;
  if(wasFin&&(C.diff.length||incS.size&&[...incS].some(ps=>!pkZFin(M,pkZOf(M,ps)||{ps}))))patch.fin=null;
- try{const up={ord:P.ord,ps:P.ps,ev:P.ev,pl:P.pl,db:P.db,de:P.de,pk:P.pk||0,an:P.an||0,eb:P.eb||0,ee:P.ee||0,sa:P.sa||"",pos:P.pos,zus:rest,mod:{by:me,t:Date.now()}};
+ try{const up={ord:P.ord,ps:P.ps,ev:P.ev,pl:typeof M.plo==="string"?M.pl:P.pl,...(typeof M.plo==="string"?{plo:P.pl||""}:{}),db:P.db,de:P.de,pk:P.pk||0,an:P.an||0,eb:P.eb||0,ee:P.ee||0,sa:P.sa||"",pos:P.pos,zus:rest,mod:{by:me,t:Date.now()}};
   if(!same||C.diff.length)up.chg=(M.chg||[]).concat([chg]);
   await db.doc("pack/"+M.id).update(up);await pkHSet(M,patch);
   toast(same&&!C.diff.length?"Packliste aktualisiert – keine Änderung bei Artikeln":"Packschein ersetzt"+(C.diff.length?" – "+C.diff.length+(C.diff.length===1?" Änderung":" Änderungen"):"")+(patch.fin===null?", Packliste wieder offen":""),1)}

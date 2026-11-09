@@ -473,3 +473,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - shim.js: Realtime-Liste `LIVE` um pack, packh, pked, druck, druckst, plaw, plseen, fmx, abzu, abpr, abno, wbnote, jverin, hord erweitert (vorher kamen Änderungen daran nur beim Wechsel in den Vordergrund an – der Druckstation-Laptop wechselt nie)
 - Kanal bricht ab (CHANNEL_ERROR/TIMED_OUT/CLOSED) → nach 5 s automatisch neu verbinden
 - Sicherheitsnetz: alle 5 Min. `reload()`, solange die App sichtbar ist
+
+## Projektleiter ändern (ab 1.143)
+- In der Packliste beim Namen „Ändern“ (Herricht-Ansicht) bzw. „Projektleiter ändern“ (Von Baustelle/Verlängerung), Recht pk_b, nicht bei Zusatz-Ansicht. `pkPlDlg` in pack.js: Vorschläge = Benutzer mit Titel „Projektleiter“ (nur für wen `rolle` lesbar ist) + alle Namen aus Packlisten, freies Tippen möglich.
+- `pack.pl` = aktueller Name, `pack.plo` = Name laut Packschein (string nur solange von Hand geändert, sonst null/fehlt). `pkReplace`: bei plo bleibt pl, plo wird aktualisiert; Hinweis im Dialog. Keine Nachricht, kein Verlauf (Jürgen, 9.11.). Test `tests/plch_t.js`.
