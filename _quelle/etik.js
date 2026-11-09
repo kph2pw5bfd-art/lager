@@ -39,14 +39,16 @@ function qrMatrix(txt){const bytes=[...new TextEncoder().encode(String(txt))];le
  let best=null,bp=1e9;for(let m=0;m<8;m++){const M=build(m),q=pen(M);if(q<bp){bp=q;best=M}}return best}
 function qrSvg(txt){const M=qrMatrix(txt),n=M.length,q=2;let d="";M.forEach((r,y)=>r.forEach((x,c)=>{if(x)d+="M"+(c+q)+" "+(y+q)+"h1v1h-1z"}));
  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+(n+2*q)+' '+(n+2*q)+'" shape-rendering="crispEdges" style="width:100%;height:100%;display:block"><rect width="100%" height="100%" fill="#fff"/><path d="'+d+'" fill="#000"/></svg>'}
-const gbQr=ord=>"TPC:"+String(ord||"").trim();
-function gbParse(txt){const s=String(txt||"").trim();let m=s.match(/^TPC:(.+)$/i);if(m)return{ord:m[1].trim()};if(/tpc-rental|thepowercompany|https?:\/\//i.test(s))return{old:true};m=s.match(/^\d{6,8}(-\d{1,3})?$/);return m?{ord:s}:{bad:true}}
+/* 1.144: QR = „TPC:<Auftragsnummer> | <Veranstaltung>“ (Veranstaltung auf 60 Byte gekürzt, damit der Code am 21,5-mm-Feld lesbar bleibt). Alte Etiketten nur mit Nummer gehen weiter. */
+function gbQrEv(ev){let s=String(ev||"").trim().replace(/\s+/g," "),e=new TextEncoder();while(e.encode(s).length>60)s=[...s].slice(0,-1).join("");return s.trim()}
+const gbQr=(ord,ev)=>{const o=String(ord||"").trim(),v=gbQrEv(ev);return "TPC:"+o+(v?" | "+v:"")};
+function gbParse(txt){const s=String(txt||"").trim();let m=s.match(/^TPC:(.+)$/i);if(m){const i=m[1].indexOf("|");return i<0?{ord:m[1].trim(),ev:""}:{ord:m[1].slice(0,i).trim(),ev:m[1].slice(i+1).trim()}}if(/tpc-rental|thepowercompany|https?:\/\//i.test(s))return{old:true};m=s.match(/^\d{6,8}(-\d{1,3})?$/);return m?{ord:s}:{bad:true}}
 /* ---------- Etikett als Druckseite (100 × 100 mm) ---------- */
 const gbEsc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
-function gbHead(ord){return '<div class="hd"><img class="lg" src="'+GB_LOGO+'" alt=""><div class="ad"><span>THE POWER COMPANY Energy Systems GmbH<br>Laaber Straße 67 - 2384 Breitenfurt bei Wien<br>Telefon +43 (0)2239/34 777-0<br>office@thepowercompany.at</span><b>www.tpc-rental.at</b></div><div class="qr">'+qrSvg(gbQr(ord))+'</div></div>'}
+function gbHead(ord,ev){return '<div class="hd"><img class="lg" src="'+GB_LOGO+'" alt=""><div class="ad"><span>THE POWER COMPANY Energy Systems GmbH<br>Laaber Straße 67 - 2384 Breitenfurt bei Wien<br>Telefon +43 (0)2239/34 777-0<br>office@thepowercompany.at</span><b>www.tpc-rental.at</b></div><div class="qr">'+qrSvg(gbQr(ord,ev))+'</div></div>'}
 function gbLabel(j){const ord=gbEsc(j.ord||"–"),ev=gbEsc(j.ev||"");
- if(j.art==="inh")return '<div class="pg">'+gbHead(j.ord)+'<div class="rw"><div class="lc2"><div class="h2c"><span class="lb">Veranstaltung:</span><b class="v2 fit1">'+ev+'</b></div><div class="h2c"><span class="lb">Auftrags-Nr.:</span><b class="v2 fit1">'+ord+'</b></div></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd"><span class="lb">Inhalt:</span><div class="inh fit">'+gbEsc(j.inh||"")+'</div></div></div>';
- return '<div class="pg">'+gbHead(j.ord)+'<div class="rw"><div class="lc"><span class="lb">Auftrags-Nr.:</span><b class="nr fit1">'+ord+'</b></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd"><span class="lb b">Projekt:</span><div class="pj fit">'+ev+'</div></div></div>'}
+ if(j.art==="inh")return '<div class="pg">'+gbHead(j.ord,j.ev)+'<div class="rw"><div class="lc2"><div class="h2c"><span class="lb">Veranstaltung:</span><b class="v2 fit1">'+ev+'</b></div><div class="h2c"><span class="lb">Auftrags-Nr.:</span><b class="v2 fit1">'+ord+'</b></div></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd"><span class="lb">Inhalt:</span><div class="inh fit">'+gbEsc(j.inh||"")+'</div></div></div>';
+ return '<div class="pg">'+gbHead(j.ord,j.ev)+'<div class="rw"><div class="lc"><span class="lb">Auftrags-Nr.:</span><b class="nr fit1">'+ord+'</b></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd"><span class="lb b">Projekt:</span><div class="pj fit">'+ev+'</div></div></div>'}
 /* 1.132: Drehung beim Drucken pro Gerät (localStorage tpc_et_rot: 0/90/180/270, Standard 90 = im Uhrzeigersinn) – Jürgen, 6.11.: an der Godex muss das Etikett um 90° gedreht werden */
 const gbRot=()=>{try{const v=localStorage.getItem("tpc_et_rot");return v===null?90:(+v||0)}catch(e){return 90}};
 function gbDoc(j){const n=Math.max(1,Math.min(60,+j.n||1)),rot=j.rot!==undefined?j.rot:gbRot(),pages=Array.from({length:n},()=>'<div class="pp">'+gbLabel(j)+'</div>').join("");
@@ -123,6 +125,6 @@ function gbStView(){$("#t").textContent="Druckstation";gbSub();const on=gbIsStat
 function gbPrefBlock(){return can("pk_s")?'<h3 style="margin:18px 0 4px">Etiketten-Druckstation</h3><p class="mute" style="margin:0 0 8px">'+(gbIsStation()?'Dieses Gerät ist die Druckstation.':'Nur am Laptop/PC mit der Godex einschalten.')+'</p><button class="btn ghost" id="etstopen" type="button">Druckstation öffnen</button>':""}
 function gbPrefBind(){const b=$("#etstopen");if(b)b.onclick=()=>go("druckst")}
 /* Rücklauf: QR vom Etikett scannen */
-function gbScanHit(raw){const r=gbParse(raw);if(r.ord){if(typeof beep==="function")beep(true);go("ret");setTimeout(()=>rOpenByNr(r.ord),50);return}
+function gbScanHit(raw){const r=gbParse(raw);if(r.ord){if(typeof beep==="function")beep(true);go("ret");setTimeout(()=>rOpenByNr(r.ord,r.ev),50);return}
  if(typeof beep==="function")beep(false);errBox(r.old?"Altes Etikett – der QR-Code zeigt nur auf die Homepage. Bitte „Etikett fotografieren“ verwenden.":"Kein Gitterbox-Etikett erkannt.")}
 function gbScanBind(){const b=$("#rqr");if(b)b.onclick=()=>rScanCam(gbScanHit)}

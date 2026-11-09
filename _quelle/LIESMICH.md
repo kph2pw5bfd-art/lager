@@ -477,3 +477,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## Projektleiter ändern (ab 1.143)
 - In der Packliste beim Namen „Ändern“ (Herricht-Ansicht) bzw. „Projektleiter ändern“ (Von Baustelle/Verlängerung), Recht pk_b, nicht bei Zusatz-Ansicht. `pkPlDlg` in pack.js: Vorschläge = Benutzer mit Titel „Projektleiter“ (nur für wen `rolle` lesbar ist) + alle Namen aus Packlisten, freies Tippen möglich.
 - `pack.pl` = aktueller Name, `pack.plo` = Name laut Packschein (string nur solange von Hand geändert, sonst null/fehlt). `pkReplace`: bei plo bleibt pl, plo wird aktualisiert; Hinweis im Dialog. Keine Nachricht, kein Verlauf (Jürgen, 9.11.). Test `tests/plch_t.js`.
+
+## QR mit Veranstaltung (ab 1.144)
+- Gitterbox-Etikett: QR = `TPC:<Auftragsnummer> | <Veranstaltung>` (`gbQr`, Veranstaltung auf 60 Byte gekürzt, UTF-8). `gbParse` liefert {ord, ev}, alte Etiketten nur mit Nummer gehen weiter. Beim Scannen hat die Packliste Vorrang (voller Name), der QR-Text ist Rückfall: Defekt melden (`dxQrHit`) und neuer Retourschein (`rOpenByNr(on,qev)`). Test `tests/etqr_t.js` (liest den QR bei 203 dpi mit OpenCV).

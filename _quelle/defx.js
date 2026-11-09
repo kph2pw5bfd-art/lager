@@ -101,7 +101,7 @@ function dxForm(p,d){const g=id=>document.getElementById(p+id);const fa=g("art")
 function dxQrHit(p,raw){const r=typeof gbParse==="function"?gbParse(raw):{bad:true};
  if(!r.ord){beep(false);return errBox(r.old?"Altes Etikett – der QR-Code zeigt nur auf die Homepage. Bitte „Etikett fotografieren“ verwenden.":"Kein Gitterbox-Etikett erkannt. Bitte „Etikett fotografieren“ verwenden.")}
  const fe=document.getElementById(p+"ev"),fo=document.getElementById(p+"ord");if(!fe)return;beep(true);
- const P=dxPackFor("",r.ord),R=(typeof rets!=="undefined"?rets:[]).find(x=>rNorm(x.ord)===rNorm(r.ord)),ev=(P&&P.ev)||(R&&R.ev)||"";
+ const P=dxPackFor("",r.ord),R=(typeof rets!=="undefined"?rets:[]).find(x=>rNorm(x.ord)===rNorm(r.ord)),ev=(P&&P.ev)||(R&&R.ev)||r.ev||"";
  if(fo)fo.value=r.ord;if(ev){fe.value=ev;fe.classList.remove("bad");toast("Auftrag "+r.ord+" · "+ev,1)}else{errBox("Auftrag "+r.ord+" erkannt, aber keine Packliste dazu gefunden. Bitte die Veranstaltung eintragen.");setTimeout(()=>fe.focus(),300)}
  fe.dispatchEvent(new Event("change"))}
 /* nach dem Absenden: Bestätigung + „Nächster Defekt“ (verstecktes #dnart hält draw() vom Neuzeichnen ab) */

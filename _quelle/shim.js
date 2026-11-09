@@ -1,4 +1,4 @@
-const APPV="1.143";
+const APPV="1.144";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -165,10 +165,10 @@ function ask2(t,yl,nl,fy,fn){const o=document.createElement("div");o.className="
 function rScanBind(){const b=$("#rscan"),f=$("#rscanf");if(!b)return;
  const run=async file=>{b.disabled=true;toast("Etikett wird gelesen …",1);try{const r=await readLabel(file,{onlyNr:true});if(!r.on)return errBox("Keine Auftragsnummer erkannt. Bitte nochmal gerade von vorne fotografieren.");rOpenByNr(r.on)}catch(e){console.error(e);errBox("Das Etikett konnte nicht gelesen werden. Bitte nochmal versuchen.")}finally{if($("#rscan"))$("#rscan").disabled=false}};
  b.onclick=async()=>{const shot=await labelCam();if(shot===undefined)return f.click();if(shot)run(shot)};f.onchange=()=>{const x=f.files[0];f.value="";if(x)run(x)}}
-function rOpenByNr(on){rf="alle";const n=rNorm(on),hit=rets.filter(r=>rNorm(r.ord)===n);
+function rOpenByNr(on,qev){rf="alle";const n=rNorm(on),hit=rets.filter(r=>rNorm(r.ord)===n);
  if(hit.length===1){curRet=hit[0].id;go("retopen");toast("Retourschein "+on+" geöffnet",1);return}
  const base=on.split("-")[0];rqv=hit.length?on:base;const q=$("#rsq");if(q)q.value=rqv;if($("#rlist"))rListBody();
- if(!hit.length&&!rets.some(r=>rNorm(r.ord).startsWith(rNorm(base))))ask2("Kein Retourschein mit Auftragsnummer "+on+" gefunden.","Neuen Retourschein anlegen","Abbrechen",()=>{rqv="";rNew();rs.ord=on;retEdit()},()=>{rqv="";if($("#rsq"))$("#rsq").value="";if($("#rlist"))rListBody()})}
+ if(!hit.length&&!rets.some(r=>rNorm(r.ord).startsWith(rNorm(base))))ask2("Kein Retourschein mit Auftragsnummer "+on+" gefunden.","Neuen Retourschein anlegen","Abbrechen",()=>{rqv="";rNew();rs.ord=on;const pk=typeof dxPackFor==="function"?dxPackFor("",on):null,ev=(pk&&pk.ev)||qev||"";if(ev&&!rs.ev)rs.ev=ev;retEdit()},()=>{rqv="";if($("#rsq"))$("#rsq").value="";if($("#rlist"))rListBody()})}
 
 /* Gleiche Artikelnamen eindeutig machen: Untergruppe dazuschreiben */
 function rDedupe(list){const key=a=>String(a.name).trim().toLowerCase(),cnt={};list.forEach(a=>{cnt[key(a)]=(cnt[key(a)]||0)+1});

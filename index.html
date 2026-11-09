@@ -494,7 +494,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.143";
+<script>const APPV="1.144";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -661,10 +661,10 @@ function ask2(t,yl,nl,fy,fn){const o=document.createElement("div");o.className="
 function rScanBind(){const b=$("#rscan"),f=$("#rscanf");if(!b)return;
  const run=async file=>{b.disabled=true;toast("Etikett wird gelesen …",1);try{const r=await readLabel(file,{onlyNr:true});if(!r.on)return errBox("Keine Auftragsnummer erkannt. Bitte nochmal gerade von vorne fotografieren.");rOpenByNr(r.on)}catch(e){console.error(e);errBox("Das Etikett konnte nicht gelesen werden. Bitte nochmal versuchen.")}finally{if($("#rscan"))$("#rscan").disabled=false}};
  b.onclick=async()=>{const shot=await labelCam();if(shot===undefined)return f.click();if(shot)run(shot)};f.onchange=()=>{const x=f.files[0];f.value="";if(x)run(x)}}
-function rOpenByNr(on){rf="alle";const n=rNorm(on),hit=rets.filter(r=>rNorm(r.ord)===n);
+function rOpenByNr(on,qev){rf="alle";const n=rNorm(on),hit=rets.filter(r=>rNorm(r.ord)===n);
  if(hit.length===1){curRet=hit[0].id;go("retopen");toast("Retourschein "+on+" geöffnet",1);return}
  const base=on.split("-")[0];rqv=hit.length?on:base;const q=$("#rsq");if(q)q.value=rqv;if($("#rlist"))rListBody();
- if(!hit.length&&!rets.some(r=>rNorm(r.ord).startsWith(rNorm(base))))ask2("Kein Retourschein mit Auftragsnummer "+on+" gefunden.","Neuen Retourschein anlegen","Abbrechen",()=>{rqv="";rNew();rs.ord=on;retEdit()},()=>{rqv="";if($("#rsq"))$("#rsq").value="";if($("#rlist"))rListBody()})}
+ if(!hit.length&&!rets.some(r=>rNorm(r.ord).startsWith(rNorm(base))))ask2("Kein Retourschein mit Auftragsnummer "+on+" gefunden.","Neuen Retourschein anlegen","Abbrechen",()=>{rqv="";rNew();rs.ord=on;const pk=typeof dxPackFor==="function"?dxPackFor("",on):null,ev=(pk&&pk.ev)||qev||"";if(ev&&!rs.ev)rs.ev=ev;retEdit()},()=>{rqv="";if($("#rsq"))$("#rsq").value="";if($("#rlist"))rListBody()})}
 
 /* Gleiche Artikelnamen eindeutig machen: Untergruppe dazuschreiben */
 function rDedupe(list){const key=a=>String(a.name).trim().toLowerCase(),cnt={};list.forEach(a=>{cnt[key(a)]=(cnt[key(a)]||0)+1});
@@ -2928,14 +2928,16 @@ function qrMatrix(txt){const bytes=[...new TextEncoder().encode(String(txt))];le
  let best=null,bp=1e9;for(let m=0;m<8;m++){const M=build(m),q=pen(M);if(q<bp){bp=q;best=M}}return best}
 function qrSvg(txt){const M=qrMatrix(txt),n=M.length,q=2;let d="";M.forEach((r,y)=>r.forEach((x,c)=>{if(x)d+="M"+(c+q)+" "+(y+q)+"h1v1h-1z"}));
  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+(n+2*q)+' '+(n+2*q)+'" shape-rendering="crispEdges" style="width:100%;height:100%;display:block"><rect width="100%" height="100%" fill="#fff"/><path d="'+d+'" fill="#000"/></svg>'}
-const gbQr=ord=>"TPC:"+String(ord||"").trim();
-function gbParse(txt){const s=String(txt||"").trim();let m=s.match(/^TPC:(.+)$/i);if(m)return{ord:m[1].trim()};if(/tpc-rental|thepowercompany|https?:\/\//i.test(s))return{old:true};m=s.match(/^\d{6,8}(-\d{1,3})?$/);return m?{ord:s}:{bad:true}}
+/* 1.144: QR = „TPC:<Auftragsnummer> | <Veranstaltung>“ (Veranstaltung auf 60 Byte gekürzt, damit der Code am 21,5-mm-Feld lesbar bleibt). Alte Etiketten nur mit Nummer gehen weiter. */
+function gbQrEv(ev){let s=String(ev||"").trim().replace(/\s+/g," "),e=new TextEncoder();while(e.encode(s).length>60)s=[...s].slice(0,-1).join("");return s.trim()}
+const gbQr=(ord,ev)=>{const o=String(ord||"").trim(),v=gbQrEv(ev);return "TPC:"+o+(v?" | "+v:"")};
+function gbParse(txt){const s=String(txt||"").trim();let m=s.match(/^TPC:(.+)$/i);if(m){const i=m[1].indexOf("|");return i<0?{ord:m[1].trim(),ev:""}:{ord:m[1].slice(0,i).trim(),ev:m[1].slice(i+1).trim()}}if(/tpc-rental|thepowercompany|https?:\/\//i.test(s))return{old:true};m=s.match(/^\d{6,8}(-\d{1,3})?$/);return m?{ord:s}:{bad:true}}
 /* ---------- Etikett als Druckseite (100 × 100 mm) ---------- */
 const gbEsc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
-function gbHead(ord){return '<div class="hd"><img class="lg" src="'+GB_LOGO+'" alt=""><div class="ad"><span>THE POWER COMPANY Energy Systems GmbH<br>Laaber Straße 67 - 2384 Breitenfurt bei Wien<br>Telefon +43 (0)2239/34 777-0<br>office@thepowercompany.at</span><b>www.tpc-rental.at</b></div><div class="qr">'+qrSvg(gbQr(ord))+'</div></div>'}
+function gbHead(ord,ev){return '<div class="hd"><img class="lg" src="'+GB_LOGO+'" alt=""><div class="ad"><span>THE POWER COMPANY Energy Systems GmbH<br>Laaber Straße 67 - 2384 Breitenfurt bei Wien<br>Telefon +43 (0)2239/34 777-0<br>office@thepowercompany.at</span><b>www.tpc-rental.at</b></div><div class="qr">'+qrSvg(gbQr(ord,ev))+'</div></div>'}
 function gbLabel(j){const ord=gbEsc(j.ord||"–"),ev=gbEsc(j.ev||"");
- if(j.art==="inh")return '<div class="pg">'+gbHead(j.ord)+'<div class="rw"><div class="lc2"><div class="h2c"><span class="lb">Veranstaltung:</span><b class="v2 fit1">'+ev+'</b></div><div class="h2c"><span class="lb">Auftrags-Nr.:</span><b class="v2 fit1">'+ord+'</b></div></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd"><span class="lb">Inhalt:</span><div class="inh fit">'+gbEsc(j.inh||"")+'</div></div></div>';
- return '<div class="pg">'+gbHead(j.ord)+'<div class="rw"><div class="lc"><span class="lb">Auftrags-Nr.:</span><b class="nr fit1">'+ord+'</b></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd"><span class="lb b">Projekt:</span><div class="pj fit">'+ev+'</div></div></div>'}
+ if(j.art==="inh")return '<div class="pg">'+gbHead(j.ord,j.ev)+'<div class="rw"><div class="lc2"><div class="h2c"><span class="lb">Veranstaltung:</span><b class="v2 fit1">'+ev+'</b></div><div class="h2c"><span class="lb">Auftrags-Nr.:</span><b class="v2 fit1">'+ord+'</b></div></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd"><span class="lb">Inhalt:</span><div class="inh fit">'+gbEsc(j.inh||"")+'</div></div></div>';
+ return '<div class="pg">'+gbHead(j.ord,j.ev)+'<div class="rw"><div class="lc"><span class="lb">Auftrags-Nr.:</span><b class="nr fit1">'+ord+'</b></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd"><span class="lb b">Projekt:</span><div class="pj fit">'+ev+'</div></div></div>'}
 /* 1.132: Drehung beim Drucken pro Gerät (localStorage tpc_et_rot: 0/90/180/270, Standard 90 = im Uhrzeigersinn) – Jürgen, 6.11.: an der Godex muss das Etikett um 90° gedreht werden */
 const gbRot=()=>{try{const v=localStorage.getItem("tpc_et_rot");return v===null?90:(+v||0)}catch(e){return 90}};
 function gbDoc(j){const n=Math.max(1,Math.min(60,+j.n||1)),rot=j.rot!==undefined?j.rot:gbRot(),pages=Array.from({length:n},()=>'<div class="pp">'+gbLabel(j)+'</div>').join("");
@@ -3012,7 +3014,7 @@ function gbStView(){$("#t").textContent="Druckstation";gbSub();const on=gbIsStat
 function gbPrefBlock(){return can("pk_s")?'<h3 style="margin:18px 0 4px">Etiketten-Druckstation</h3><p class="mute" style="margin:0 0 8px">'+(gbIsStation()?'Dieses Gerät ist die Druckstation.':'Nur am Laptop/PC mit der Godex einschalten.')+'</p><button class="btn ghost" id="etstopen" type="button">Druckstation öffnen</button>':""}
 function gbPrefBind(){const b=$("#etstopen");if(b)b.onclick=()=>go("druckst")}
 /* Rücklauf: QR vom Etikett scannen */
-function gbScanHit(raw){const r=gbParse(raw);if(r.ord){if(typeof beep==="function")beep(true);go("ret");setTimeout(()=>rOpenByNr(r.ord),50);return}
+function gbScanHit(raw){const r=gbParse(raw);if(r.ord){if(typeof beep==="function")beep(true);go("ret");setTimeout(()=>rOpenByNr(r.ord,r.ev),50);return}
  if(typeof beep==="function")beep(false);errBox(r.old?"Altes Etikett – der QR-Code zeigt nur auf die Homepage. Bitte „Etikett fotografieren“ verwenden.":"Kein Gitterbox-Etikett erkannt.")}
 function gbScanBind(){const b=$("#rqr");if(b)b.onclick=()=>rScanCam(gbScanHit)}
 
@@ -4109,7 +4111,7 @@ function dxForm(p,d){const g=id=>document.getElementById(p+id);const fa=g("art")
 function dxQrHit(p,raw){const r=typeof gbParse==="function"?gbParse(raw):{bad:true};
  if(!r.ord){beep(false);return errBox(r.old?"Altes Etikett – der QR-Code zeigt nur auf die Homepage. Bitte „Etikett fotografieren“ verwenden.":"Kein Gitterbox-Etikett erkannt. Bitte „Etikett fotografieren“ verwenden.")}
  const fe=document.getElementById(p+"ev"),fo=document.getElementById(p+"ord");if(!fe)return;beep(true);
- const P=dxPackFor("",r.ord),R=(typeof rets!=="undefined"?rets:[]).find(x=>rNorm(x.ord)===rNorm(r.ord)),ev=(P&&P.ev)||(R&&R.ev)||"";
+ const P=dxPackFor("",r.ord),R=(typeof rets!=="undefined"?rets:[]).find(x=>rNorm(x.ord)===rNorm(r.ord)),ev=(P&&P.ev)||(R&&R.ev)||r.ev||"";
  if(fo)fo.value=r.ord;if(ev){fe.value=ev;fe.classList.remove("bad");toast("Auftrag "+r.ord+" · "+ev,1)}else{errBox("Auftrag "+r.ord+" erkannt, aber keine Packliste dazu gefunden. Bitte die Veranstaltung eintragen.");setTimeout(()=>fe.focus(),300)}
  fe.dispatchEvent(new Event("change"))}
 /* nach dem Absenden: Bestätigung + „Nächster Defekt“ (verstecktes #dnart hält draw() vom Neuzeichnen ab) */
