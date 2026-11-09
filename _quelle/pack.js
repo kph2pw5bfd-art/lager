@@ -69,14 +69,22 @@ window.addEventListener("drop",e=>{if(!pkDropOn())return;e.preventDefault();pkDr
  if(!pdf.length&&!other.length)return errBox("Es ist keine Datei angekommen. Das klassische Outlook-Programm gibt Anhänge beim Ziehen nicht an den Browser weiter – dann den Anhang zuerst auf den Desktop ziehen und von dort hierher, oder Outlook im Browser bzw. das neue Outlook verwenden.");
  if(other.length)errBox((other.length===1?"„"+other[0].name+"“ ist keine PDF":other.length+" Dateien sind keine PDF")+" und wurde"+(other.length===1?"":"n")+" nicht übernommen.");
  if(pdf.length)pkUpload(pdf)});
-function packView(){$("#t").textContent="Alle Packlisten";const G=pkGroups();
+/* 1.149: Suche in „Alle Packlisten“ – Veranstaltung, Auftrag, Packschein (auch Zusatz), Projektleiter; sucht immer in allen, egal welcher Filter gewählt ist */
+let pkq="";
+function pkHay(p){return jvNorm([p.ev,p.ord,String(p.ord||"").replace(/\D/g,""),p.ps,(p.zus||[]).map(z=>z.ps).join(" "),p.pl,p.plo||""].join(" "))}
+function pkListHtml(){const G0=pkGroups(),T=jvNorm(pkq).split(" ").filter(Boolean),hit=p=>T.every(w=>pkHay(p).includes(w)),G={};Object.keys(G0).forEach(k=>G[k]=T.length?G0[k].filter(hit):G0[k]);
  const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
  const cur=sec("Dispo abgelaufen",G.over)+sec("Nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
+ if(T.length){const n=Object.keys(G).reduce((a,k)=>a+G[k].length,0);return n?'<p class="mute" style="margin:8px 0">'+n+' Treffer in allen Packlisten</p>'+cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute" style="margin-top:8px">Keine Packliste gefunden.</div>'}
+ return (pkf==="aktuell"?(cur||'<div class="card mute">Keine aktuellen Packlisten.</div>'):pkf==="done"?(sec("Retoure abgeschlossen",G.done)||'<div class="card mute">Noch keine erledigten Packlisten.</div>'):(packs.length?cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute">Noch keine Packlisten hochgeladen.</div>'))}
+function pkListBind(){document.querySelectorAll("#pklist [data-pk]").forEach(e=>e.onclick=()=>{curPack=e.dataset.pk;go("packopen")})}
+function pkListDraw(){const b=$("#pklist");if(b){b.innerHTML=pkListHtml();pkListBind()}}
+function packView(){$("#t").textContent="Alle Packlisten";if(document.activeElement&&document.activeElement.id==="pkq"&&$("#pklist"))return pkListDraw();
  $("#app").innerHTML=(can("pk_b")?pkUpHtml()+'<p class="mute" style="font-size:13px;margin:6px 0 12px">Die PDF wird nur im Gerät gelesen. Gespeichert werden Auftrag, Veranstaltung, Projektleiter, Zeiten und Material – keine Kundendaten.</p>':'')+
   chips([["aktuell","Aktuell"],["done","Erledigt"],["alle","Alle"]],pkf,"data-pkf")+
-  (pkf==="aktuell"?(cur||'<div class="card mute">Keine aktuellen Packlisten.</div>'):pkf==="done"?(sec("Retoure abgeschlossen",G.done)||'<div class="card mute">Noch keine erledigten Packlisten.</div>'):(packs.length?cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute">Noch keine Packlisten hochgeladen.</div>'));
+  '<input id="pkq" type="search" autocomplete="off" placeholder="Suchen: Veranstaltung, Auftrag, Projektleiter …" value="'+esc(pkq)+'" style="width:100%;margin:8px 0 4px"><div id="pklist">'+pkListHtml()+'</div>';
  document.querySelectorAll("[data-pkf]").forEach(b=>b.onclick=()=>{pkf=b.dataset.pkf;packView()});
- document.querySelectorAll("[data-pk]").forEach(e=>e.onclick=()=>{curPack=e.dataset.pk;go("packopen")});
+ pkListBind();const qi=$("#pkq");if(qi)qi.oninput=()=>{pkq=qi.value;pkListDraw()};
  pkUpBind()}
 async function pkUpload(files){for(const f of files){let P;const b=$("#pkup");if(b){b.disabled=true;b.textContent="Wird gelesen …"}
   try{P=await pkRead(f)}catch(e){console.warn("Packliste",e);if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}

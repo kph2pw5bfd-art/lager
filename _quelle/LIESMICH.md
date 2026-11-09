@@ -480,3 +480,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## QR mit Veranstaltung (ab 1.144)
 - Gitterbox-Etikett: QR = `TPC:<Auftragsnummer> | <Veranstaltung>` (`gbQr`, Veranstaltung auf 60 Byte gekürzt, UTF-8). `gbParse` liefert {ord, ev}, alte Etiketten nur mit Nummer gehen weiter. Beim Scannen hat die Packliste Vorrang (voller Name), der QR-Text ist Rückfall: Defekt melden (`dxQrHit`) und neuer Retourschein (`rOpenByNr(on,qev)`). Test `tests/etqr_t.js` (liest den QR bei 203 dpi mit OpenCV).
+
+## Suche in „Alle Packlisten“ (ab 1.149)
+- Feld `#pkq` über `#pklist` (`pkListHtml`, `pkHay` in pack.js): Veranstaltung, Auftrag, Packschein inkl. Zusatz, Projektleiter; Wörter beliebig, sucht immer in allen Packlisten unabhängig vom Filter. Bei Live-Update mit Cursor im Feld wird nur die Liste neu gezeichnet. Test `tests/pkq_t.js`.
