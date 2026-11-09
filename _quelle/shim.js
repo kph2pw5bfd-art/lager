@@ -1,4 +1,4 @@
-const APPV="1.141";
+const APPV="1.142";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -7,7 +7,8 @@ const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const SB=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const HERE=location.origin+location.pathname;
 let ME=null,PROF=null,PROFS=[];
-const LIVE=["lists","artikel","defekte","infos","werkstatt","users","lager","retour","rkat","titel","rolle"];
+/* 1.142: auch Packlisten, Herricht-Stand, Druckaufträge usw. live (Jürgen, 9.11.: Druckstation zeigte Herricht-Fortschritt erst nach Aktualisieren) */
+const LIVE=["lists","artikel","defekte","infos","werkstatt","users","lager","retour","rkat","titel","rolle","pack","packh","pked","druck","druckst","plaw","plseen","fmx","abzu","abpr","abno","wbnote","jverin","hord"];
 /* ab 1.108: abgelaufene Anmeldung (z. B. iPhone lange im Hintergrund) → Anmeldung erneuern und einmal nochmal versuchen */
 async function sbTry(f){let r=await f();if(r&&r.error&&/jwt|token|expired|401|PGRST30/i.test(String(r.error.message||r.error.code||""))){try{await SB.auth.refreshSession()}catch(e){}r=await f()}return r}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&typeof SB!=="undefined"&&SB.auth){try{SB.auth.getSession().then(r=>{const x=r&&r.data&&r.data.session;if(x&&x.expires_at&&x.expires_at*1000-Date.now()<120000)SB.auth.refreshSession().catch(()=>{})}).catch(()=>{})}catch(e){}}});
@@ -25,7 +26,11 @@ const DBX=(()=>{const subs={};let ch=null;
    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"docs",filter:f},p=>p.new&&put(p.new.col,p.new.id,p.new.data))
    .on("postgres_changes",{event:"DELETE",schema:"public",table:"docs"},p=>p.old&&del(p.old.col,p.old.id))
    .on("postgres_changes",{event:"*",schema:"public",table:"profiles"},()=>loadProfs())
-   .subscribe(st=>{if(st==="SUBSCRIBED")reload()})}
+   .subscribe(st=>{if(st==="SUBSCRIBED")reload();
+    /* Verbindung weg (WLAN, Laptop lange offen) → neu verbinden statt still stehen zu bleiben */
+    else if((st==="CHANNEL_ERROR"||st==="TIMED_OUT"||st==="CLOSED")&&ch===me0){ch=null;try{SB.removeChannel(me0)}catch(e){}setTimeout(()=>{if(ME)listen()},5000)}});const me0=ch}
+ /* Sicherheitsnetz: alle 5 Min. neu laden, solange die App sichtbar ist (Druckstation-Laptop bleibt immer offen) */
+ setInterval(()=>{if(ME&&document.visibilityState==="visible")reload()},300000);
  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&ME){reload();loadProfs()}});
  window.addEventListener("online",()=>{if(ME){reload();loadProfs()}});
  const api={reloadAll:()=>reload(),local:(c,id,data)=>put(c,id,data),

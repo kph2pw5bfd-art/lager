@@ -468,3 +468,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Version 1.141 – Gitterbox-Etikett: Wörter nicht mehr trennen (Jürgen, 9.11.: „Weihnachtsde / ko 2026-2027“)
 - etik.js: `.pj`/`.inh` mit `overflow-wrap:normal;word-break:normal;hyphens:manual` (vorher break-word) – ein zu langes Wort ragt rechts hinaus, das fit-Skript verkleinert die Schrift, bis es passt (prüft scrollWidth). Nur wenn ein Wort selbst bei kleinster Schrift nicht passt, wird ausnahmsweise getrennt (`overflowWrap="anywhere"`).
+
+## Version 1.142 – Druckstation & alle Geräte: Herricht-Fortschritt live (Jürgen, 9.11.: „muss immer aktualisieren“)
+- shim.js: Realtime-Liste `LIVE` um pack, packh, pked, druck, druckst, plaw, plseen, fmx, abzu, abpr, abno, wbnote, jverin, hord erweitert (vorher kamen Änderungen daran nur beim Wechsel in den Vordergrund an – der Druckstation-Laptop wechselt nie)
+- Kanal bricht ab (CHANNEL_ERROR/TIMED_OUT/CLOSED) → nach 5 s automatisch neu verbinden
+- Sicherheitsnetz: alle 5 Min. `reload()`, solange die App sichtbar ist
