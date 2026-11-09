@@ -470,11 +470,10 @@ button.abgdn{width:100%;text-align:left;font:inherit;color:var(--ink);cursor:poi
 body.pkdragging .pkdrop{display:flex}
 /* 1.145: Zusatz-Packschein orange eingerahmt, Abstand zum Hauptpackschein */
 .pkzbox{margin:16px 0 12px;padding:0 12px;border:2px solid #e67e22;border-radius:10px;overflow:hidden}.pkzbox .pkzh{margin-top:0}.pkzbox .pkzfoot{margin-bottom:10px}.pkmfoot{margin:12px 0 10px}
-/* 1.147: Hauptpackschein blau eingerahmt, Rahmen bis an den Bildschirmrand; Inhalt bleibt auf breiten Bildschirmen in der normalen Spalte */
-.pkmbox{--g:max(12px,calc(50vw - 310px));box-sizing:border-box;width:100vw;margin:12px 0 0 calc(50% - 50vw);padding:4px var(--g);border:2px solid var(--navy);border-radius:0;background:var(--card)}
-.pkmbox .pkg{border-radius:0!important;margin-left:calc(-1*var(--g));margin-right:calc(-1*var(--g));padding-left:var(--g);padding-right:var(--g)}
+/* 1.148: Hauptpackschein blau eingerahmt, je 6 px breiter als der orange Zusatz-Rahmen (Inhalt bündig mit dem Zusatz) */
+.pkmbox{--g:18px;box-sizing:border-box;width:calc(100% + 12px);margin:12px 0 0 -6px;padding:4px var(--g);border:2px solid var(--navy);border-radius:12px;overflow:hidden;background:var(--card)}
+.pkmbox .pkg{margin-left:calc(-1*var(--g));margin-right:calc(-1*var(--g));padding-left:var(--g);padding-right:var(--g)}
 .pkzwrap .pkzbox{background:var(--card)}
-body:has(.pkmbox){overflow-x:clip}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -500,7 +499,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.147";
+<script>const APPV="1.148";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
