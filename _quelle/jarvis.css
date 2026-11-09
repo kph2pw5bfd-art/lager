@@ -371,3 +371,6 @@ body.pkdragging .pkdrop{display:flex}
 .pkmbox{--g:18px;box-sizing:border-box;width:calc(100% + 12px);margin:12px 0 0 -6px;padding:4px var(--g);border:2px solid var(--navy);border-radius:12px;overflow:hidden;background:var(--card)}
 .pkmbox .pkg{margin-left:calc(-1*var(--g));margin-right:calc(-1*var(--g));padding-left:var(--g);padding-right:var(--g)}
 .pkzwrap .pkzbox{background:var(--card)}
+/* 1.151: Alle Packlisten – jede Gruppe blau eingerahmt, Abstand zur nächsten */
+.pkgrp{margin:0 0 14px;padding:10px 12px 12px;border:2px solid var(--navy);border-radius:12px}.pkgrp .pkh{margin:0 0 8px}.pkgrp .pkr:last-child{margin-bottom:0}
+#pklist{margin-top:10px}

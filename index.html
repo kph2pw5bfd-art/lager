@@ -474,6 +474,9 @@ body.pkdragging .pkdrop{display:flex}
 .pkmbox{--g:18px;box-sizing:border-box;width:calc(100% + 12px);margin:12px 0 0 -6px;padding:4px var(--g);border:2px solid var(--navy);border-radius:12px;overflow:hidden;background:var(--card)}
 .pkmbox .pkg{margin-left:calc(-1*var(--g));margin-right:calc(-1*var(--g));padding-left:var(--g);padding-right:var(--g)}
 .pkzwrap .pkzbox{background:var(--card)}
+/* 1.151: Alle Packlisten – jede Gruppe blau eingerahmt, Abstand zur nächsten */
+.pkgrp{margin:0 0 14px;padding:10px 12px 12px;border:2px solid var(--navy);border-radius:12px}.pkgrp .pkh{margin:0 0 8px}.pkgrp .pkr:last-child{margin-bottom:0}
+#pklist{margin-top:10px}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -499,7 +502,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.150";
+<script>const APPV="1.151";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1391,7 +1394,7 @@ window.addEventListener("drop",e=>{if(!pkDropOn())return;e.preventDefault();pkDr
 let pkq="";
 function pkHay(p){return jvNorm([p.ev,p.ord,String(p.ord||"").replace(/\D/g,""),p.ps,(p.zus||[]).map(z=>z.ps).join(" "),p.pl,p.plo||""].join(" "))}
 function pkListHtml(){const G0=pkGroups(),T=jvNorm(pkq).split(" ").filter(Boolean),hit=p=>T.every(w=>pkHay(p).includes(w)),G={};Object.keys(G0).forEach(k=>G[k]=T.length?G0[k].filter(hit):G0[k]);
- const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
+ const sec=(t,a)=>a.length?'<section class="pkgrp"><h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join("")+'</section>':"";
  const cur=sec("Dispo abgelaufen",G.over)+sec("Nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
  if(T.length){const n=Object.keys(G).reduce((a,k)=>a+G[k].length,0);return n?'<p class="mute" style="margin:8px 0">'+n+' Treffer in allen Packlisten</p>'+cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute" style="margin-top:8px">Keine Packliste gefunden.</div>'}
  return pkf==="done"?(sec("Retoure abgeschlossen",G.done)||'<div class="card mute">Noch keine erledigten Packlisten.</div>'):(cur||'<div class="card mute">Keine offenen Packlisten.</div>')}

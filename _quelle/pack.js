@@ -73,7 +73,7 @@ window.addEventListener("drop",e=>{if(!pkDropOn())return;e.preventDefault();pkDr
 let pkq="";
 function pkHay(p){return jvNorm([p.ev,p.ord,String(p.ord||"").replace(/\D/g,""),p.ps,(p.zus||[]).map(z=>z.ps).join(" "),p.pl,p.plo||""].join(" "))}
 function pkListHtml(){const G0=pkGroups(),T=jvNorm(pkq).split(" ").filter(Boolean),hit=p=>T.every(w=>pkHay(p).includes(w)),G={};Object.keys(G0).forEach(k=>G[k]=T.length?G0[k].filter(hit):G0[k]);
- const sec=(t,a)=>a.length?'<h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join(""):"";
+ const sec=(t,a)=>a.length?'<section class="pkgrp"><h3 class="pkh">'+t+' <span class="mute">'+a.length+'</span></h3>'+a.map(pkRow).join("")+'</section>':"";
  const cur=sec("Dispo abgelaufen",G.over)+sec("Nicht hergerichtet",G.late)+sec("Heute herrichten",G.herr)+sec("Heute zurück",G.back)+sec("Unterwegs",G.out)+sec("Kommt noch",G.next);
  if(T.length){const n=Object.keys(G).reduce((a,k)=>a+G[k].length,0);return n?'<p class="mute" style="margin:8px 0">'+n+' Treffer in allen Packlisten</p>'+cur+sec("Retoure abgeschlossen",G.done):'<div class="card mute" style="margin-top:8px">Keine Packliste gefunden.</div>'}
  return pkf==="done"?(sec("Retoure abgeschlossen",G.done)||'<div class="card mute">Noch keine erledigten Packlisten.</div>'):(cur||'<div class="card mute">Keine offenen Packlisten.</div>')}
