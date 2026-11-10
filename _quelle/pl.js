@@ -33,7 +33,7 @@ const plDig=s=>String(s||"").replace(/\D/g,"");
 function plTodo(M){const T=[],t0=pkDay(Date.now());
  M.forEach(I=>{const p=I.p;
   if(I.missShow){const un=I.B.miss.filter(e=>!auAns(p,e.k).length);if(un.length){const n=un.reduce((a,e)=>a+(e.soll-e.back),0),nm=un.slice(0,2).map(e=>pkNum(e.soll-e.back)+" "+auUnit(p,e.k)+" "+e.name).join(", ")+(un.length>2?" …":"");
-   T.push(I.B.hasEnd?{why:"Lager wartet auf Antwort",t:pkNum(n)+" "+(n===1?"Stück fehlt":"Stück fehlen")+" nach der Endretoure",s:esc(p.ev||"")+" · "+esc(nm),p,un,ord:0}:{why:"Dispo abgelaufen",t:"Noch "+pkNum(n)+" Stk draußen",s:esc(p.ev||"")+" · Dispo bis "+pkDM(p.de)+" · "+esc(nm),p,un,ord:1})}}
+   T.push(I.B.hasEnd?{why:"Lager wartet auf Antwort",t:pkNum(n)+" "+(n===1?"Stück fehlt":"Stück fehlen")+" nach der Endretoure",s:esc(p.ev||"")+" · "+esc(nm),p,un,ord:0}:{why:"Dispo abgelaufen",t:"Noch "+pkNum(n)+" Stk auf Baustelle",s:esc(p.ev||"")+" · Dispo bis "+pkDM(p.de)+" · "+esc(nm),p,un,ord:1})}}
   const H=pkH(p);const parts=[[null,H.fin&&H.fin.t?H.fin:auHerrAll(p,null)]].concat((p.zus||[]).map(z=>[String(z.ps),pkZFin(p,z)||auHerrAll(p,String(z.ps))]));
   parts.forEach(([zps,f])=>{if(!f)return;const L=auDevNet(p,zps);if(!L.length)return;const k="dev_"+p.id+"_"+(zps||"")+"_"+plH(L.join("|"));if(plSeen(k))return;
    T.push({why:"Abweichung zum Packschein",t:(zps?"Zusatz "+zps+" ":"")+"hergerichtet mit "+(L.length===1?"1 Abweichung":L.length+" Abweichungen"),s:esc(p.ev||"")+(f.t?" · "+fmt(f.t).slice(0,6):"")+"<br>"+L.map(esc).join("<br>"),p,seen:k,ord:3})})});
@@ -69,7 +69,7 @@ function plBriefLines(){const M=packs.filter(plMine).map(auInfo),T=plTodo(M),t0=
  const Hd=H.filter(e=>e.ok),Ho=H.filter(e=>!e.ok);if(Ho.length)L.push("Heute wird hergerichtet: "+Ho.map(e=>e.p.ev||"").join(", ")+".");if(Hd.length)L.push("Schon hergerichtet: "+Hd.map(e=>e.p.ev||"").join(", ")+".");
  if(R.length)L.push(R.map(e=>(e.p.ev||"")+(e.ok?" ist zurückgekommen":" kommt heute zurück")).join(", ")+".");
  if(!H.length&&!R.length)L.push("Heute passiert bei deinen Aufträgen nichts.");
- const DR=plDraussen(M);if(DR.length)L.push(DR.length===1?"Ein Auftrag ist draußen.":DR.length+" Aufträge sind draußen.");
+ const DR=plDraussen(M);if(DR.length)L.push(DR.length===1?"Ein Auftrag ist auf Baustelle.":DR.length+" Aufträge sind auf Baustelle.");
  return L.map(s=>typeof jvSay==="function"?jvSay(s):s)}
 function plSpeak(){if(jvSpeaking)return jvStop();jvMode="brief";jvSpeakLines(plBriefLines())}
 function plView(){plSeenSub();if(!plIn2){plIn2=true;try{plPrev=+localStorage.getItem("tpc_pl_seen")||0}catch(e){}if(!plPrev)plPrev=Date.now()-864e5}
@@ -94,7 +94,7 @@ function plView(){plSeenSub();if(!plIn2){plIn2=true;try{plPrev=+localStorage.get
  h+='<section class="plsec"><h4>'+(plWk?'Nächste Woche':'Diese Woche')+'<button type="button" id="plwk">'+(plWk?'‹ Diese Woche':'Nächste Woche ›')+'</button></h4>'+days.map((t,i)=>{const E=plEvents(M,t);
   return '<div class="plday'+(t===t0?' today':'')+'"><span class="dh">'+WD[i]+'<small>'+pkDM(t)+'</small></span><span class="plev">'+(E.length?E.map(e=>'<button type="button" data-plp="'+esc(e.p.id)+'"><span class="plpill '+e.c+'">'+e.l+'</span><span>'+esc(e.p.ev||"")+(e.x&&e.c==="r"?' <small class="mute">· '+esc(e.x)+'</small>':'')+'</span></button>').join(""):'<span class="mute">–</span>')+'</span></div>'}).join("")+'</section>';
  const DR=plDraussen(M);
- h+='<section class="plsec"><h4>Draußen <span>'+(DR.length===1?'1 Auftrag':DR.length+' Aufträge')+'</span></h4>'+(DR.length?DR.map(({I,out})=>'<button type="button" class="plli" data-plp="'+esc(I.p.id)+'"><span><b>'+esc(I.p.ev||"")+'</b><small>'+(I.B.hasEnd?'Endretoure zurück · Fehlmaterial':I.over?'Dispo abgelaufen '+pkDM(I.p.de):'bis '+pkDM(I.p.de))+(!I.B.hasEnd&&I.B.R.some(r=>r.closed&&r.art==="teil")?' · Teilretoure zurück':'')+'</small></span><span class="r'+(I.over||I.B.hasEnd?' red':'')+'">'+pkNum(out)+' Stk</span></button>').join(""):'<p class="mute" style="margin:0">Gerade ist nichts draußen.</p>')+'</section>';
+ h+='<section class="plsec"><h4>Auf Baustelle <span>'+(DR.length===1?'1 Auftrag':DR.length+' Aufträge')+'</span></h4>'+(DR.length?DR.map(({I,out})=>'<button type="button" class="plli" data-plp="'+esc(I.p.id)+'"><span><b>'+esc(I.p.ev||"")+'</b><small>'+(I.B.hasEnd?'Endretoure zurück · Fehlmaterial':I.over?'Dispo abgelaufen '+pkDM(I.p.de):'bis '+pkDM(I.p.de))+(!I.B.hasEnd&&I.B.R.some(r=>r.closed&&r.art==="teil")?' · Teilretoure zurück':'')+'</small></span><span class="r'+(I.over||I.B.hasEnd?' red':'')+'">'+pkNum(out)+' Stk</span></button>').join(""):'<p class="mute" style="margin:0">Gerade ist nichts auf Baustelle.</p>')+'</section>';
  const N=plNews(M);
  h+='<section class="plsec"><h4>Neu seit deinem letzten Besuch</h4>'+(N.length?N.map(n=>'<button type="button" class="plli" data-plp="'+esc(n.p.id)+'"><span><b>'+n.b+'</b>'+(n.s?'<small>'+n.s+'</small>':'')+'</span><span class="r'+(n.ok?' ok':' m')+'">'+n.r+'</span></button>').join(""):'<p class="mute" style="margin:0">Nichts Neues.</p>')+'</section>';
  if(!all.length)h+='<p class="mute">Keine Packliste mit „'+esc(plAs||auMyName())+'“ als Projektleiter gefunden. Der Name in der Packliste muss zu deinem Namen in der App passen.</p>';

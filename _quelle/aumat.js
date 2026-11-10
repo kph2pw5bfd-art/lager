@@ -32,14 +32,14 @@ function amRows(p,B){const H=pkH(p),M={},num=v=>pkNum(v);
   e.sl=Math.max(0,e.ps-e.fr-(only55?0:e.l55));e.diff=e.back<e.raus?e.back-e.raus:Math.max(0,e.back-e.raus-e.fr-e.l55);e.isDev=e.dev.length>0||e.ers.length>0||e.x>0;e.ans=(typeof auAns==="function"?auAns(p,e.k)[0]:null)||null;e.only55=only55;return e})
   .filter(e=>e.ps||e.raus||e.back||e.x||e.l55).sort((a,b)=>(a.only55-b.only55)||(a.grp==="Nicht in der Artikelliste")-(b.grp==="Nicht in der Artikelliste")||ix(a)-ix(b)||a.first-b.first)}
 function amFilters(R,ph2,endish){const F=[["alle","Alle",R.length],["dev","Abweichungen",R.filter(e=>e.isDev).length],["fr","Fremdmiete",R.filter(e=>e.fr>0).length],["l55","Lager 55",R.filter(e=>e.l55>0).length]];
- if(ph2){F.push(endish?["miss","Fehlmaterial",R.filter(e=>e.diff<0).length]:["out","Noch draußen",R.filter(e=>e.diff<0).length]);F.push(["back","Schon zurück",R.filter(e=>e.back>0).length])}
+ if(ph2){F.push(endish?["miss","Fehlmaterial",R.filter(e=>e.diff<0).length]:["out","Noch auf Baustelle",R.filter(e=>e.diff<0).length]);F.push(["back","Schon zurück",R.filter(e=>e.back>0).length])}
  return F.filter(f=>f[0]==="alle"||f[2]>0)}
 function amPass(e){if(amF==="dev"&&!e.isDev)return false;if(amF==="fr"&&!(e.fr>0))return false;if(amF==="l55"&&!(e.l55>0))return false;if((amF==="out"||amF==="miss")&&!(e.diff<0))return false;if(amF==="back"&&!(e.back>0))return false;
  const q=amQ.trim();if(!q)return true;const T=dxNorm(q).split(" ").filter(Boolean),h=" "+dxNorm(e.name+" "+e.code+" "+e.grp)+" ";return T.every(t=>h.includes(t))}
 function amBody(p,B,I){const R=amRows(p,B),ph2=!!(B.R&&B.R.length),endish=!!(B.hasEnd||(I&&I.over)),F=amFilters(R,ph2,endish);if(!F.some(f=>f[0]===amF))amF="alle";
  const L=R.filter(amPass),n=v=>pkNum(v),dash='<span class="q m">–</span>';
  const sum=k=>R.reduce((a,e)=>a+(+e[k]||0),0),raus=sum("raus"),back=R.reduce((a,e)=>a+Math.min(e.back,e.raus),0),devN=R.filter(e=>e.isDev).length,miss=R.reduce((a,e)=>a+(e.diff<0?-e.diff:0),0),more=R.reduce((a,e)=>a+(e.diff>0?e.diff:0),0);
- const kpi=ph2?'<div class="amk"><div><b>'+n(raus)+'</b>raus</div><div><b>'+n(back)+'</b>rein</div><div class="'+(miss?'red':'')+'"><b>'+n(miss)+'</b>'+(endish?'Fehlmaterial':'noch draußen')+'</div><div class="'+(more?'or':'')+'"><b>'+n(more)+'</b>zu viel</div></div>'
+ const kpi=ph2?'<div class="amk"><div><b>'+n(raus)+'</b>raus</div><div><b>'+n(back)+'</b>rein</div><div class="'+(miss?'red':'')+'"><b>'+n(miss)+'</b>'+(endish?'Fehlmaterial':'noch auf Baustelle')+'</div><div class="'+(more?'or':'')+'"><b>'+n(more)+'</b>zu viel</div></div>'
   :'<div class="amk"><div><b>'+n(R.filter(e=>!e.only55).reduce((a,e)=>a+e.sl,0))+'</b>Soll</div><div><b>'+n(raus)+'</b>raus</div><div class="'+(devN?'or':'')+'"><b>'+devN+'</b>Abweich.</div><div><b>'+n(sum("fr"))+'</b>Fremdmiete</div></div>';
  const head='<div class="amh"><span>Artikel</span>'+(ph2?'<span>Raus</span><span>Rein</span><span>Diff</span>':'<span>Soll</span><span>Raus</span><span>Rein</span>')+'</div>';
  let g0=null,rows="";L.forEach(e=>{if(e.grp!==g0){g0=e.grp;rows+='<div class="amg'+(e.only55?' l55':'')+'">'+esc(g0)+'</div>'}
