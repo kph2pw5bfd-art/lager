@@ -24,5 +24,5 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5+8
  await open();await p.click("#pkplr");await p.waitForTimeout(400);d=await PK();ok("Zurück auf Packschein",d.pl==="Berta Neu"&&d.plo===null);
  await p.evaluate(()=>pkReplace(packs.find(x=>x.id==="A"),{ord:"2601300",ps:"14700",ev:"Gala Wien",pl:"Carl Dritt",db:packs[0].db,de:packs[0].de,pos:[{p:"1",n:12,u:"Stk",t:"Kabel 32A 50m",a:"1098",f:0}]},[]));await p.waitForTimeout(400);
  d=await PK();ok("Ohne Handänderung: Packschein gewinnt",d.pl==="Carl Dritt");
- await p.evaluate(()=>{window.can0=can;can=k=>k!=="pk_b"&&can0(k);view="pack";draw();curPack="A";view="packopen";draw()});await p.waitForTimeout(300);ok("Ohne Recht kein Link",!(await p.$("[data-plch]")));
+ await p.evaluate(()=>{window.can0=can;can=k=>k!=="pk_b"&&can0(k);view="pack";draw();curPack="A";view="packopen";draw()});await p.waitForTimeout(300);await p.click("#pkhg");ok("Ohne Recht kein Menüpunkt",!(await p.$("#pkplch")));await p.click(".pkmx");
  ok("Keine JS-Fehler "+errs.join("|"),!errs.length);await b.close();console.log(fail?"FEHLER: "+fail:"ALLES OK");process.exit(fail?1:0)})();

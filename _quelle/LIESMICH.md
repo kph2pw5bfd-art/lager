@@ -512,3 +512,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - `packOpenView` neu (pack.js, Abschnitt 1.159): Kopf (`.pkhead`, „Alle Angaben“ `pkFS.aa`, Zahnrad `#pkhg` → `pkHeadMenu`), Knöpfe `#pketik` / `#pkret` (`pkRetBtn`) / `#pkprint`, `pkHiBox`, pro Packschein ein Feld `pkField` (`.pkf.main` / `.pkf.zus`, Kacheln `.pkft-ok/part/bad/neu`, Zahnrad `[data-pkfg]` → `pkFieldMenu`), `abgPkCard`, `pkChgCard`. Felder immer zugeklappt (`pkFS.open`, gilt solange dieselbe Packliste offen ist), Filter pro Feld `pkFS.filt`.
 - Menü `pkMenu(title,items)`; Einträge tragen die alten IDs/Attribute (`#pkfin`, `#pkreo`, `#pkxadd`, `#pkmv`, `#pkinfo`, `#pkdel`, `#pkplch`, `#pkmhi`, `data-pkzf/zr/zmv/zi/zx/xadd`).
 - Tests: `window.PK_FOPEN=true` nach `goto` klappt alle Felder auf (in den Tests eingebaut); Zahnrad vor Menü-Klicks öffnen. Test `tests/pv_t.js`.
+
+## 1.160
+- Von Baustelle / Verlängerung (`pkNoHView`) im neuen Aufbau: `pkHeadHtml`, `pkActsHtml`, `pkHeadBind` gemeinsam mit `packOpenView`; Feld `.pkfnoh` mit Hinweis statt Kacheln, aufklappbar (Artikel nur zur Info). Kopf-Menü bei nicht herrichten: PL ändern, Kunde (aus), Art ändern, Doch selbst herrichten, Info zum Herrichten, Löschen.
+- Alle Rahmen eine Stufe dicker (Kurzform `border:` in CSS und Inline-Stilen: 1→2, 1,5→2,5, 2→3 px; Wochenbericht-Tabelle und Druck ausgenommen).

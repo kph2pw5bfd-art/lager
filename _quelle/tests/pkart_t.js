@@ -65,11 +65,11 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5+8
  const ab2=await p.evaluate(()=>{const B=abgBal(packs.find(q=>q.id==="A"));return{z:B.zur,f:B.fehlt,r:B.raus,R:B.R.length,pk:(abgPackOf("2601555")||{}).id,st:pkState(packs.find(q=>q.id==="A")).k,stv:pkState(packs.find(q=>q.id==="14800")).k}});
  console.log("   Abgleich Original:",JSON.stringify(ab2));ok("Retourschein 2601555 zählt beim Original (raus 20 inkl. Zusatz)",ab2.R===1&&ab2.r===20&&ab2.z===12&&ab2.pk==="A");ok("Endretoure → Original + Verlängerung erledigt",ab2.st==="done"&&ab2.stv==="done");
  /* 6) Art ändern: Ball Linz doch normal */
- await p.evaluate(()=>{curPack="14820";go("packopen")});await p.waitForTimeout(300);await p.click("#app [data-artch]");await p.waitForSelector("#pkart2 .pkaopt");
+ await p.evaluate(()=>{curPack="14820";go("packopen")});await p.waitForTimeout(300);await p.click("#pkhg");await p.click("#pkmart");await p.waitForSelector("#pkart2 .pkaopt");
  await p.check('#pkart2 input[name="pkart"][value="norm"]');await p.click("#pkao");await p.waitForTimeout(900);ok("Art ändern → normal: wieder herrichten",(await PK("14820")).art===""&&(await st("14820")).k==="next");
  /* 7) Meine Aufträge */
  const au=await p.evaluate(()=>{curAu="A";view="auopen";draw();return document.querySelector("#app").textContent});ok("Meine Aufträge: „Verlängert bis …“",/Verlängert bis/.test(au));
  const au2=await p.evaluate(()=>{curAu="14800";view="auopen";draw();return document.querySelector("#app").textContent});ok("Meine Aufträge: Verlängerung – kein Herrichten",/Verlängerung – kein Herrichten/.test(au2));
  /* 8) ohne Hochladen-Recht kein „Art ändern“ */
- await p.evaluate(()=>{window.__c=can;can=k=>k==="pk_b"?false:window.__c(k);curPack="14800";view="packopen";draw()});await p.waitForTimeout(200);ok("Ohne Hochladen-Recht: kein „Art ändern“",!(await p.$("[data-artch]")));
+ await p.evaluate(()=>{window.__c=can;can=k=>k==="pk_b"?false:window.__c(k);curPack="14800";view="packopen";draw()});await p.waitForTimeout(200);await p.click("#pkhg");ok("Ohne Hochladen-Recht: kein „Art ändern“",!(await p.$("#pkmart")));await p.click(".pkmx");
  console.log("Fehler:",errs);ok("keine Seitenfehler",!errs.length);console.log(fail?"FEHLGESCHLAGEN: "+fail:"ALLES OK");await b.close()})();

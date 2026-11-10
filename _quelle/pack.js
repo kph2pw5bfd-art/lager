@@ -258,7 +258,11 @@ function pkField(p,key,rows0){const z=key==="main"?null:pkZOf(p,key.slice(1)),ps
    '<button type="button" class="pkfclose" data-pkfk="'+esc(key)+'">Zuklappen ▴</button></div>'}
  else h+='<button type="button" class="pkfmore" data-pkfk="'+esc(key)+'">Antippen zum Aufklappen ▾</button>';
  return h+'</section>'}
-function pkHeadMenu(p){const H=pkH(p),fin=!!(H.fin&&H.fin.t),kl=H.klar&&H.klar.t;
+function pkHeadMenu(p){const H=pkH(p),fin=!!(H.fin&&H.fin.t),kl=H.klar&&H.klar.t,noh=pkNoH(p);
+ if(noh)return pkMenu("Packliste",[can("pk_b")&&{l:"Projektleiter ändern",id:"pkplch",fn:()=>pkPlDlg(p)},can("pk_b")&&{l:"Kunde ändern",s:" kommt mit dem Umzug auf den Firmenserver",dis:true},
+  can("pk_b")&&{l:"Art ändern",id:"pkmart",s:" Normal / Von Baustelle / Verlängerung",fn:()=>pkArtDlg(p)},can("pk_b")&&p.art==="bst"&&{l:"Doch selbst herrichten",id:"pkselbst",fn:()=>ask("Doch selbst herrichten? Die Packliste kommt dann wie gewohnt auf die Wand.",()=>pkArtSave(p,{art:"",von:""}))},
+  can("pk_b")&&{l:"Info zum Herrichten",id:"pkmhi",fn:()=>pkHiDlg(p,null)},
+  can("pk_l")&&{l:"Packliste löschen",red:true,id:"pkdel",fn:()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}]);
  pkMenu("Packliste",[!fin&&{l:"Herrichten verschieben",id:"pkmv",fn:()=>pkMove(p)},can("pk_b")&&{l:"Projektleiter ändern",id:"pkplch",fn:()=>pkPlDlg(p)},can("pk_b")&&{l:"Kunde ändern",s:" kommt mit dem Umzug auf den Firmenserver",dis:true},
   can("pk_b")&&{l:"Info zum Herrichten",id:"pkmhi",s:pkHiList(p).length?" ändern / weitere":"",fn:()=>pkHiDlg(p,null)},can("pk_b")&&{l:"Art ändern",id:"pkmart",s:" Von Baustelle / Verlängerung",fn:()=>pkArtDlg(p)},
   {l:"Info an Projektleiter",id:"pkinfo",fn:()=>pkMail(p)},
@@ -274,31 +278,37 @@ function pkFieldMenu(p,key){if(key==="main"){const fin=!!(pkH(p).fin&&pkH(p).fin
 function pkRetBtn(p){const R=pkRets(p);if(!R.length)return can("ret_b")?pkNewRet(p):errBox("Noch kein Retourschein – du hast kein Recht, einen anzulegen.");
  if(R.length===1&&!can("ret_b")){curRet=R[0].id;return go("retopen")}
  pkMenu("Retourscheine",R.map(r=>({l:"Öffnen – "+(r.closed?(r.art==="teil"?"Teilretoure":r.art==="end"?"Endretoure":"abgeschlossen"):"offen"),s:" "+fmt(r.t||0).slice(0,6),fn:()=>{curRet=r.id;go("retopen")}})).concat(can("ret_b")?[{l:"+ Neuen Retourschein anlegen",id:"pknewr",fn:()=>pkNewRet(p)}]:[]))}
+/* 1.160: Kopf und Knöpfe auch für Von Baustelle / Verlängerung */
+function pkHeadHtml(p){const kv=(k,v)=>v?'<span>'+k+'</span><b>'+v+'</b>':'',hd=pkHd(p);
+ const head='<div class="card pkhead"><div class="pkhrow"><div class="pkhl"><h2 class="pkev">'+esc(p.ev||"Ohne Veranstaltung")+'</h2>'+
+  '<div class="pkhm">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="pkhm">Dispo '+(p.db?pkDM(p.db):"–")+' – '+(p.de?pkDM(p.de):"–")+'</div>'+
+  '<button type="button" class="pkaa" id="pkaa" aria-expanded="'+pkFS.aa+'">Alle Angaben '+(pkFS.aa?'▴':'▾')+'</button></div><button type="button" class="pkgear big" id="pkhg" aria-label="Einstellungen Packliste">'+PKGEAR+'</button></div>'+
+  (pkFS.aa?'<div class="pkkv">'+kv("Packschein",esc(p.ps||"–"))+kv("Dispo",pkD(p.db)+' – '+pkD(p.de))+kv("Herrichten",esc(pkWd(pkHDay(p)))+(pkShifted(p)?' <span class="mute">(verschoben von '+esc(pkWd(p.db))+(hd.why?' – '+esc(hd.why):'')+')</span>':''))+(p.pk?kv("Packen",pkD(p.pk)):'')+(p.an?kv("Anlieferung",pkD(p.an)):'')+(p.eb?kv("Veranstaltung",pkD(p.eb)+' – '+pkD(p.ee)):'')+(p.sa?kv("Selbstabholer",esc(p.sa)):'')+kv("Art",p.art==="verl"?"Verlängerung":p.art==="bst"?"Von Baustelle":"Normal herrichten")+kv("Hochgeladen",esc(nm(p.by))+', '+fmt(p.t))+'</div>':'')+
+  pkOffHint()+pkWhoHint(p.id)+pkHint(p,true)+'</div>';
+ return head}
+function pkActsHtml(p,R){const acts='<div class="pkacts"><button type="button" id="pketik" class="pkact"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v7h-6"/></svg>Etikett drucken</button>'+
+  (can("ret_s")||can("ret_b")?'<button type="button" id="pkret" class="pkact"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Retourschein'+(R.length?' <small>('+R.length+')</small>':'')+'</button>':'')+
+  '<button type="button" id="pkprint" class="pkact"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Drucken / Teilen</button></div>';
+ return acts}
 function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack";return packView()}if(pkNoH(p))return pkNoHView(p);
  const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&document.querySelector(".ov"))return;
  pkFReset(p);$("#t").textContent="Packliste";const pr=pkProg(p),H=pr.H,K=pkKeys(p),R=pkRets(p);
  if(pkScanHl&&pkScanHl.id!==p.id)pkScanHl=null;
  const IT=pkItems(p),rows0=pkSortIdx(p).map(i=>{const x=IT[i].x,h=H[K[i]],st=pkPS(x,h),l55=pkL55(x,h);return{x,i,h,st,z:IT[i].z,l55,dev:!l55&&pkDevRow(x,h,st)}});
  if(pkScanHl){const it=IT[pkScanHl.i];if(it)pkFS.open[it.z?"z"+it.z:"main"]=true}
- const kv=(k,v)=>v?'<span>'+k+'</span><b>'+v+'</b>':'',hd=pkHd(p);
- const head='<div class="card pkhead"><div class="pkhrow"><div class="pkhl"><h2 class="pkev">'+esc(p.ev||"Ohne Veranstaltung")+'</h2>'+
-  '<div class="pkhm">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="pkhm">Dispo '+(p.db?pkDM(p.db):"–")+' – '+(p.de?pkDM(p.de):"–")+'</div>'+
-  '<button type="button" class="pkaa" id="pkaa" aria-expanded="'+pkFS.aa+'">Alle Angaben '+(pkFS.aa?'▴':'▾')+'</button></div><button type="button" class="pkgear big" id="pkhg" aria-label="Einstellungen Packliste">'+PKGEAR+'</button></div>'+
-  (pkFS.aa?'<div class="pkkv">'+kv("Packschein",esc(p.ps||"–"))+kv("Dispo",pkD(p.db)+' – '+pkD(p.de))+kv("Herrichten",esc(pkWd(pkHDay(p)))+(pkShifted(p)?' <span class="mute">(verschoben von '+esc(pkWd(p.db))+(hd.why?' – '+esc(hd.why):'')+')</span>':''))+(p.pk?kv("Packen",pkD(p.pk)):'')+(p.an?kv("Anlieferung",pkD(p.an)):'')+(p.eb?kv("Veranstaltung",pkD(p.eb)+' – '+pkD(p.ee)):'')+(p.sa?kv("Selbstabholer",esc(p.sa)):'')+kv("Art",p.art==="verl"?"Verlängerung":p.art==="bau"?"Von Baustelle":"Normal herrichten")+kv("Hochgeladen",esc(nm(p.by))+', '+fmt(p.t))+'</div>':'')+
-  pkOffHint()+pkWhoHint(p.id)+pkHint(p,true)+'</div>';
- const acts='<div class="pkacts"><button type="button" id="pketik" class="pkact"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v7h-6"/></svg>Etikett drucken</button>'+
-  (can("ret_s")||can("ret_b")?'<button type="button" id="pkret" class="pkact"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Retourschein'+(R.length?' <small>('+R.length+')</small>':'')+'</button>':'')+
-  '<button type="button" id="pkprint" class="pkact"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>Drucken / Teilen</button></div>';
+ const head=pkHeadHtml(p),acts=pkActsHtml(p,R);
  $("#app").innerHTML=head+acts+pkHiBox(p)+pkField(p,"main",rows0)+(p.zus||[]).map(z=>pkField(p,"z"+z.ps,rows0)).join("")+(typeof abgPkCard==="function"?abgPkCard(p):'')+(typeof pkChgCard==="function"?pkChgCard(p):'');
- $("#pkaa").onclick=()=>{pkFS.aa=!pkFS.aa;packOpenView()};$("#pkhg").onclick=()=>pkHeadMenu(p);
+ pkHeadBind(p);
  document.querySelectorAll("[data-pkfk]").forEach(b=>b.onclick=()=>{const k=b.dataset.pkfk;pkFS.open[k]=!(pkFS.open[k]||window.PK_FOPEN);if(window.PK_FOPEN&&!pkFS.open[k])window.PK_FOPEN=false;packOpenView()});
  document.querySelectorAll("[data-pkfg]").forEach(b=>b.onclick=()=>pkFieldMenu(p,b.dataset.pkfg));
  document.querySelectorAll("[data-pkff]").forEach(b=>b.onclick=()=>{pkFS.filt[b.dataset.pkff]=b.dataset.v;packOpenView()});
  document.querySelectorAll("[data-pkfscan]").forEach(b=>b.onclick=()=>pkScanStart(p));
- if($("#pkret"))$("#pkret").onclick=()=>pkRetBtn(p);if(typeof abgPkBind==="function")abgPkBind();
+ if(typeof abgPkBind==="function")abgPkBind();
  document.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>pkTap(p,+b.dataset.pc));
  document.querySelectorAll("[data-pe]").forEach(b=>b.onclick=()=>{if(pkRowFin(p,+b.dataset.pe))return toast((pkItems(p)[+b.dataset.pe]||{}).z?"Der Zusatz ist abgeschlossen – zum Ändern über das Zahnrad „Packschein öffnen“.":"Der Packschein ist abgeschlossen – zum Ändern über das Zahnrad „Packschein öffnen“.",1);pkEdit(p,+b.dataset.pe)});
  if(typeof pkChgBind==="function")pkChgBind(p);if(typeof pkXBind==="function")pkXBind(p);
+}
+function pkHeadBind(p){$("#pkaa").onclick=()=>{pkFS.aa=!pkFS.aa;packOpenView()};$("#pkhg").onclick=()=>pkHeadMenu(p);if($("#pkret"))$("#pkret").onclick=()=>pkRetBtn(p);
  if($("#pkprint")){if(typeof wbLoadPdf==="function")wbLoadPdf().catch(()=>{});$("#pkprint").onclick=()=>pkDrDlg(p)}}
 /* Zusatz: Herricht-Tag fragen (beim Hochladen) bzw. ändern. Gibt "JJJJ-MM-TT" (bzw. {d,why} beim Verschieben) zurück oder null */
 function pkZAskDay(P,main,cur,why0){return new Promise(res=>{const o=document.createElement("div");o.className="ov";const t0=Date.now(),mv=!!cur;
@@ -599,7 +609,7 @@ function pkNoHTxt(p){if(p.art==="bst"){const s=p.von&&packs.find(x=>x.id===p.von
 function pkNoHCard(p,wide,lab){const l=p.art==="bst"?"Von Baustelle":"Verlängerung";
  if(wide)return '<button class="pkline noh '+p.art+'" type="button" data-pk="'+esc(p.id)+'"><span class="pkl1">'+esc(lab||"")+'</span><span class="pkl2"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><small>'+pkNoHTxt(p)+'</small></span><span class="pkl3"><span class="tag pk'+p.art+'">'+l+'</span></span></button>';
  return '<button class="pkcard noh '+p.art+'" type="button" data-pk="'+esc(p.id)+'"><span class="pkct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+p.art+'">'+l+'</span></span><span class="pkcs">'+pkNoHTxt(p)+'</span></button>'}
-function pkNoHView(p){$("#t").textContent="Packliste";const s=pkState(p),bst=p.art==="bst",src=bst&&p.von&&packs.find(x=>x.id===p.von),r=bst?null:pkRoot(p),ed=can("pk_b");
+function pkNoHView(p){$("#t").textContent="Packliste";pkFReset(p);const s=pkState(p),bst=p.art==="bst",src=bst&&p.von&&packs.find(x=>x.id===p.von),r=bst?null:pkRoot(p),ed=can("pk_b");
  let cmp="";if(!bst&&r&&r!==p){const A=pkArtAgg(pkItems(r).filter(o=>!(o.z&&String(o.z)===String(p.ps||p.id))).map(o=>o.x)),B=pkArtAgg(p.pos),ks=[...new Set(Object.keys(A).concat(Object.keys(B)))];let same=0;const more=[],less=[];
   ks.forEach(k=>{const a=A[k]?A[k].n:0,b=B[k]?B[k].n:0,x=(B[k]||A[k]).x;if(a===b)same++;else(b>a?more:less).push({x,d:Math.abs(b-a)})});
   const z=(r.zus||[]).find(q=>String(q.verl||"")===String(p.id)||String(q.ps)===String(p.ps));
@@ -608,16 +618,13 @@ function pkNoHView(p){$("#t").textContent="Packliste";const s=pkState(p),bst=p.a
    (more.length?'<p class="mute" style="margin:8px 0 0">'+(z?'Das Mehr wird als <b>Zusatz '+esc(z.ps)+'</b> beim Original hergerichtet.':'Das Mehr ist noch nicht als Zusatz angelegt.')+' <a href="#" data-pkgo="'+esc(r.id)+'">Original öffnen ›</a></p>':'')+(less.length?'<p class="mute" style="margin:6px 0 0">Weniger: kommt vermutlich schon früher zurück – Teilretoure beim Original. Beim Herrichten nichts zu tun.</p>':'')+'</div>'}
  const box=bst?'<div class="pkartbox bst"><b>Nicht herrichten</b><span>'+(src?'Das Material kommt direkt von <a href="#" data-pkgo="'+esc(src.id)+'"><b>'+esc(src.ev||"")+'</b> (Auftrag '+esc(src.ord||"–")+')</a>.':'Das Material kommt direkt von einer anderen Baustelle.')+'</span><small>Eingestellt'+pkArtWho(p)+'</small></div>'
   :'<div class="pkartbox verl"><b>↻ Verlängerung'+(r&&r!==p?' von '+esc(r.ev||""):'')+'</b><span>'+(r&&r!==p?'Auftrag '+esc(r.ord||"–")+' – das Material ist schon draußen. Nicht herrichten.':'Der verlängerte Auftrag ist nicht (mehr) in der App.')+'</span>'+(r&&r!==p?'<a href="#" data-pkgo="'+esc(r.id)+'">Original-Auftrag öffnen ›</a>':'')+'<small>Eingestellt'+pkArtWho(p)+'</small></div>';
- const pos=pkPosAll(p);
- $("#app").innerHTML=pkHiBox(p)+'<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;min-width:0;font-size:18px">'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+(s.c||"")+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span></div>'+
-  '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.ps?' · Packschein '+esc(p.ps):'')+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+box+
-  (ed?'<div class="row" style="gap:14px;margin-top:6px"><button class="lnk" type="button" data-artch="'+esc(p.id)+'">Art ändern</button><button class="lnk" type="button" data-plch="'+esc(p.id)+'">Projektleiter ändern</button>'+(bst?'<button class="lnk" type="button" id="pkselbst">Doch selbst herrichten</button>':'')+'</div>':'')+pkHint(p)+pkHiAddLink(p)+'</div>'+cmp+
-  '<div class="card pknoh" style="cursor:default;padding:0;overflow:hidden"><div class="pknohh '+p.art+'">Material laut Packschein (nur zur Info)</div>'+pos.map(x=>'<div class="pknohr"><b>'+pkNum(+x.n||0)+' '+esc(x.u||"Stk")+'</b><span>'+esc(pkName(x))+(x.f>0?' <span class="pkfr">davon '+pkNum(x.f)+' Fremdmiete</span>':'')+'</span></div>').join("")+'</div>'+
-  (bst?abgPkCard(p):(r&&r!==p?abgPkCard(r):''))+
-  (can("pk_l")?'<button class="btn ghost" id="pkdel" type="button" style="color:var(--bad)">Packliste löschen</button>':'');
- if(typeof abgPkBind==="function")abgPkBind();
- const sb=$("#pkselbst");if(sb)sb.onclick=()=>ask("Doch selbst herrichten? Die Packliste kommt dann wie gewohnt auf die Wand.",()=>pkArtSave(p,{art:"",von:""}));
- if($("#pkdel"))$("#pkdel").onclick=()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}
+ const pos=pkPosAll(p),R=pkRets(p),open=!!(pkFS.open.main||window.PK_FOPEN);
+ /* 1.160: gleiche Optik wie normale Packlisten – Feld mit Hinweis „nicht herrichten“ statt Kacheln, aufklappbar zur Artikelliste */
+ const fld='<section class="pkf main pkfnoh'+(open?' open':'')+'" data-pkf="main"><div class="pkfh"><button type="button" class="pkft0" data-pkfk="main" aria-expanded="'+open+'"><b>Packschein '+esc(p.ps||"–")+'</b><span class="pkfsub">Nicht herrichten · '+pos.length+(pos.length===1?' Position':' Positionen')+'</span></button></div>'+
+  '<div class="pkfnbox">'+box+'</div>'+(open?'<div class="pkfbody"><div class="pknohh '+p.art+'">Material laut Packschein (nur zur Info)</div>'+pos.map(x=>'<div class="pknohr"><b>'+pkNum(+x.n||0)+' '+esc(x.u||"Stk")+'</b><span>'+esc(pkName(x))+(x.f>0?' <span class="pkfr">davon '+pkNum(x.f)+' Fremdmiete</span>':'')+'</span></div>').join("")+'<button type="button" class="pkfclose" data-pkfk="main">Zuklappen ▴</button></div>':'<button type="button" class="pkfmore" data-pkfk="main">Antippen zum Aufklappen ▾</button>')+'</section>';
+ $("#app").innerHTML=pkHeadHtml(p)+pkActsHtml(p,R)+pkHiBox(p)+fld+cmp+(bst?abgPkCard(p):(r&&r!==p?abgPkCard(r):''));
+ pkHeadBind(p);if(typeof abgPkBind==="function")abgPkBind();
+ document.querySelectorAll("[data-pkfk]").forEach(b=>b.onclick=()=>{pkFS.open.main=!(pkFS.open.main||window.PK_FOPEN);if(window.PK_FOPEN&&!pkFS.open.main)window.PK_FOPEN=false;pkNoHView(p)})}
 async function pkArtSave(p,v){try{await db.doc("pack/"+p.id).update({art:v.art||"",von:v.von||"",artBy:me,artT:Date.now()});toast(v.art==="bst"?"Gespeichert – nicht herrichten (von Baustelle)":v.art==="verl"?"Gespeichert – Verlängerung":"Gespeichert – wird normal hergerichtet",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen"+(typeof sbErr==="function"?sbErr(e):"")+". Hast du das Recht „Packlisten hochladen“?")}}
 function pkArtDlg(p){if(!can("pk_b"))return;const o=document.createElement("div");o.className="ov";
  o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0;max-height:90vh;overflow:auto"><b>Art der Packliste</b><p class="mute" style="margin:4px 0 8px">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</p><div id="pkart2"></div><div class="row" style="margin-top:10px"><button class="btn ghost" id="pkac" type="button">Abbrechen</button><button class="btn" id="pkao" type="button">Speichern</button></div></div>';
