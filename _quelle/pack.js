@@ -146,7 +146,7 @@ let pkScanHl=null;
 function pkL55(x,h){if(h&&typeof h.l55==="boolean")return h.l55;const k=pkKat(x);return !!(k&&k.l55)}
 function pkProg(P){if(P&&P._z)return pkZProg(P._p,P._z);return pkProgOf(P,null,!!(pkH(P).fin&&pkH(P).fin.t))}
 function pkProgOf(P,zps,fin){const H=pkH(P);let d=0,dev=0,n=0,l55=0;pkItems(P).forEach(o=>{if((o.z||null)!==zps)return;const x=o.x,h=H[o.k];if(pkL55(x,h)){l55++;return}n++;const st=pkPS(x,h);if(st.s!=="open")d++;if(pkDevRow(x,h,st)||(h&&h.fm==="lager"&&x.f>0))dev++});
- if(zps===null&&typeof pkX==="function")dev+=pkX(P).length;
+ if(typeof pkXz==="function")dev+=pkXz(P,zps).length;
  return{d,n,dev,l55,fin,H}}
 /* ===== Zusatz-Packscheine mit eigenem Herricht-Tag (ab 1.88) =====
    epirent gibt jedem Zusatz den Dispo-Beginn des ersten Packscheins – darum eigener Tag: packh.zd_<ps> = {d:"JJJJ-MM-TT", why, by, t} (beim Hochladen gefragt, „Verschieben“).
@@ -220,7 +220,7 @@ function pkRowsHtml(p,rows,mid){const D=rows.filter(r=>r.dev);let out=D.length?'
  let lg=null,lz;rows.forEach((r,ri)=>{const z=r.z,newZ=z&&(ri===0||rows[ri-1].z!==z),last=z&&(ri===rows.length-1||rows[ri+1].z!==z);
   if(newZ){if(mid){out+=mid;mid=""}const zd=(p.zus||[]).find(q=>String(q.ps)===z);out+='<div class="pkzbox"><div class="pkzh"><span>Zusatz-Packschein '+esc(z)+(zd&&zd.t?' · hochgeladen '+fmt(zd.t).slice(0,6):'')+'</span>'+(can("pk_l")?'<button class="lnk" type="button" data-pkzx="'+esc(z)+'">Entfernen</button>':'')+'</div>'+pkZHead(p,zd);lg=null}
   if(!r.dev){const gl=pkGrp(r.x);if(gl!==lg||z!==lz)out+='<div class="pkg">'+esc(gl)+'</div>';lg=gl;lz=z;out+=pkRowHtml(p,r,"")}
-  if(last){if(rows.filter(q=>q.z===z).every(q=>q.dev))out+='<div class="mute" style="padding:8px 0;font-size:13px">Alle Positionen stehen oben bei „Abweichungen“.</div>';out+=pkZFoot(p,z)+'</div>';lg=null}});
+  if(last){if(rows.filter(q=>q.z===z).every(q=>q.dev))out+='<div class="mute" style="padding:8px 0;font-size:13px">Alle Positionen stehen oben bei „Abweichungen“.</div>';out+=(typeof pkXHtml==="function"?pkXHtml(p,!!pkZFin(p,pkZOf(p,z)||{ps:z}),z):'')+pkZFoot(p,z)+'</div>';lg=null}});
  return out+(mid||"")}
 function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack";return packView()}if(pkNoH(p))return pkNoHView(p);
  const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&document.querySelector(".ov"))return;
@@ -229,7 +229,7 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
  if(pkScanHl&&pkScanHl.id!==p.id)pkScanHl=null;const lockAll=pkItems(p).every((o,i)=>pkRowFin(p,i));
  const IT=pkItems(p),rows0=pkSortIdx(p).map(i=>{const x=IT[i].x,h=H[K[i]],st=pkPS(x,h),l55=pkL55(x,h);return{x,i,h,st,z:IT[i].z,l55,dev:!l55&&pkDevRow(x,h,st)}}),rows=rows0.filter(r=>!r.l55&&(pkHf==="alle"||r.st.s!=="ok")),r55=pkHf==="alle"?rows0.filter(r=>r.l55):[];
   /* 1.146: Abschließen direkt unter dem Hauptpackschein, vor den Zusätzen, im Stil von „Zusatz abschließen“ */
- const pkMainMid=(r55.length?'<div class="pkg pkg55">Lager 55</div>'+r55.map(({x,i})=>'<div class="pkp pk-l55"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+'<em class="pk55">holt Fahrer/Monteur'+(x.f>0?' · davon '+esc(pkNum(x.f))+' Fremdmiete':'')+'</em></span></div>').join(""):'')+(typeof pkXHtml==="function"?pkXHtml(p,fin):'')+'<div class="pkzfoot pkmfoot">'+(fin?'<button class="btn ghost s" id="pkinfo" type="button">Info an Projektleiter</button><button class="btn ghost s" id="pkreo" type="button">Wieder öffnen</button>':'<button class="btn s" id="pkfin" type="button">'+((p.zus||[]).length?'Hauptpackschein abschließen':'Herrichten abschließen')+'</button>')+'</div>';
+ const pkMainMid=(r55.length?'<div class="pkg pkg55">Lager 55</div>'+r55.map(({x,i})=>'<div class="pkp pk-l55"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+'<em class="pk55">holt Fahrer/Monteur'+(x.f>0?' · davon '+esc(pkNum(x.f))+' Fremdmiete':'')+'</em></span></div>').join(""):'')+(typeof pkXHtml==="function"?pkXHtml(p,fin,null):'')+'<div class="pkzfoot pkmfoot">'+(fin?'<button class="btn ghost s" id="pkinfo" type="button">Info an Projektleiter</button><button class="btn ghost s" id="pkreo" type="button">Wieder öffnen</button>':'<button class="btn s" id="pkfin" type="button">'+((p.zus||[]).length?'Hauptpackschein abschließen':'Herrichten abschließen')+'</button>')+'</div>';
  $("#app").innerHTML=pkHiBox(p)+'<div class="card" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;min-width:0;font-size:18px">'+esc(p.ev||"Ohne Veranstaltung")+'</b><span class="tag pk'+s.c+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span></div>'+
   '<div class="mute">Auftrag '+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+pkPlLink(p)+'</div><div class="mute">Dispo '+pkD(p.db)+' – '+pkD(p.de)+'</div>'+
   pkOffHint()+pkWhoHint(p.id)+'<div class="pkhday"><span>Herrichten: <b>'+pkWd(pkHDay(p))+'</b>'+(pkShifted(p)?' <span class="mute">(verschoben)</span>':'')+'</span>'+(fin?'':'<button class="btn ghost s" id="pkmv" type="button">Verschieben</button>')+'</div>'+pkHint(p)+pkHiAddLink(p)+pkArtLink(p)+'<button class="btn ghost s etbtn" id="pketik" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="1.5"/><path d="M7 14h10v7H7z"/></svg>Gitterbox-Etikett drucken</button>'+
@@ -246,7 +246,7 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
  document.querySelectorAll("[data-pkr]").forEach(b=>b.onclick=()=>{curRet=b.dataset.pkr;go("retopen")});if(typeof abgPkBind==="function")abgPkBind();
  document.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>pkTap(p,+b.dataset.pc));
  document.querySelectorAll("[data-pe]").forEach(b=>b.onclick=()=>{if(pkRowFin(p,+b.dataset.pe))return toast((pkItems(p)[+b.dataset.pe]||{}).z?"Der Zusatz ist abgeschlossen – zum Ändern erst „Zusatz wieder öffnen“.":"Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkEdit(p,+b.dataset.pe)});
- document.querySelectorAll("[data-pkzmv]").forEach(b=>b.onclick=()=>pkZMove(p,b.dataset.pkzmv));if(typeof pkChgBind==="function")pkChgBind(p);if(typeof pkXBind==="function")pkXBind(p,fin);
+ document.querySelectorAll("[data-pkzmv]").forEach(b=>b.onclick=()=>pkZMove(p,b.dataset.pkzmv));if(typeof pkChgBind==="function")pkChgBind(p);if(typeof pkXBind==="function")pkXBind(p);
  document.querySelectorAll("[data-pkzf]").forEach(b=>b.onclick=()=>pkZFinish(p,b.dataset.pkzf));
  document.querySelectorAll("[data-pkzr]").forEach(b=>b.onclick=()=>pkZReopen(p,b.dataset.pkzr));
  document.querySelectorAll("[data-pkzi]").forEach(b=>b.onclick=()=>pkMail(p,b.dataset.pkzi));
@@ -375,7 +375,7 @@ function pkMailText(P,zps){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[],inc=o=>
   if(st.alt.length)st.alt.forEach(a=>L.push((st.s==="part"||st.s==="open"||pkOver(x,h,st)?"  ":"- "+nm2+":\n  ")+"Alternative: "+pkNum(a.n)+"× "+a.t+(a.a?" ("+a.a+")":"")));
   if(h&&h.fm==="lager"&&x.f>0)L.push("- "+nm2+": aus dem Lager statt Fremdmiete ("+pkNum(x.f)+u+")");
   if(pkNbN(x,h))L.push("- "+nm2+": "+pkNbPl(x,h))});
- if(!zps&&typeof pkX==="function")pkX(P).forEach(e=>L.push("- Zusätzlich mitgegeben (nicht im Packschein): "+pkXTx(e)+(e.why?" – "+e.why:"")));
+ if(typeof pkXz==="function")pkXz(P,zps).forEach(e=>L.push("- Zusätzlich mitgegeben (nicht im "+(zps?"Zusatz":"Packschein")+"): "+pkXTx(e)+(e.why?" – "+e.why:"")));
  const vn=String(P.pl||"").split(" ")[0],me1=String(meName()||""),F=zps?pkZFin(P,pkZOf(P,zps)||{})||{}:H.fin||{};
  return{subj:(zps?"Zusatz-Packschein "+zps:"Packliste "+(P.ord||""))+" – "+(P.ev||"")+": Abweichungen beim Herrichten",
   body:"Hallo"+(vn?" "+vn:"")+",\n\nbeim Herrichten von "+(zps?"Zusatz-Packschein "+zps+" zu ":"")+(P.ev||"")+" (Auftrag "+(P.ord||"–")+", Packschein "+(zps||P.ps||"–")+") gab es folgende Abweichungen:\n\n"+(L.length?L.join("\n"):"- keine")+"\n\nHergerichtet von "+(F.by?nm(F.by):me1)+(F.t?", "+fmt(F.t):"")+".\n\nLG\n"+me1}}

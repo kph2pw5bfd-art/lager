@@ -491,3 +491,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - packh `h_<Pos>.nb = {n, w (wer, frei), why, by, t, pl}` – `pkNbN` zieht die Menge in `pkNeed` ab (Lager-Anteil), alles „nicht gebraucht“ → Stand ok. Abweichung (`pkDevRow`), Zeile grau (`pk-nb`) wenn sonst nichts abweicht. Bearbeiten-Fenster: Abschnitt „Wird nicht gebraucht“ (Anzahl/Alle, Wer optional mit Vorschlägen, Grund optional). Info-Mail, PDF (`r.nb`), Abgleich/Assistent/aumat (own − nb), Meine Aufträge (`auDevNet`/`auDevLines`).
 - Projektleiter: Meine Aufträge (eigener Auftrag, Recht au_b) → „Material wird nicht gebraucht“ (`auNbDlg`), nur Positionen ohne Herricht-Stand, nicht abgeschlossen; `pl:true`, w = eigener Kurzname. Schreibt packh (Standardregel, kein SQL).
 - Geänderter Packschein (`pkCarry`): nb wird nur übernommen, wenn die Menge des Artikels gleich bleibt. Test `tests/nb_t.js`.
+
+## Material hinzufügen beim Zusatz (ab 1.153)
+- `packh.x_<id>.z` = Zusatz-Packscheinnummer (fehlt = Haupt-Packschein). `pkXz(P,zps)` filtert, `pkXHtml(P,fin,zps)` im Zusatz-Rahmen vor „Zusatz abschließen“, Knöpfe `[data-pkxadd]` (Haupt behält `#pkxadd`). Sperre pro Teil (`pkXFin`). Abweichung/Info-Mail/Meine Aufträge pro Zusatz, Abgleich zählt alles. Test `tests/zx_t.js`.

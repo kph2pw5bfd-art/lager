@@ -4,21 +4,24 @@
    Zählt im Abgleich als „raus“, steht im PDF (Abweichungen + Liste), in der Info an den PL und in der Mail an den Monteur.
    Kommt später ein Zusatz oder geänderter Packschein mit demselben Artikel, wird es dagegen verrechnet (pkXApply). */
 const pkX=P=>{const H=pkH(P);return Object.keys(H).filter(k=>/^x_/.test(k)&&H[k]&&(+H[k].n||0)>0).map(k=>({id:k,...H[k]})).sort((a,b)=>(a.ts||0)-(b.ts||0))};
+/* 1.153: auch beim Zusatz-Packschein – Feld z = Zusatz-Packscheinnummer (fehlt = Haupt-Packschein) */
+const pkXz=(P,zps)=>pkX(P).filter(e=>String(e.z||"")===String(zps||""));
+const pkXFin=(P,e)=>e&&e.z?!!pkZFin(P,pkZOf(P,e.z)||{ps:e.z}):!!(pkH(P).fin&&pkH(P).fin.t);
 const pkXName=e=>{const k=e.a?pkKat({a:e.a}):null;return (k&&k.name)||e.nm||""};
 const pkXKey=e=>pkAK({a:e.a,t:e.nm});
 const pkXTx=e=>pkNum(e.n)+" "+(e.u||"Stk")+" "+pkXName(e);
 /* Liste in der Herricht-Ansicht */
-function pkXHtml(P,fin){const X=pkX(P);if(!X.length&&fin)return"";
- return (X.length?'<div class="pkg pkgx">Zusätzlich (nicht im Packschein)</div>'+X.map(e=>'<div class="pkp pk-x"><button class="pkc pkcx" type="button" data-pkxe="'+esc(e.id)+'" aria-label="Ändern"'+(fin?' disabled':'')+'>+</button>'+
+function pkXHtml(P,fin,zps){const X=pkXz(P,zps);if(!X.length&&fin)return"";
+ return (X.length?'<div class="pkg pkgx">Zusätzlich (nicht im '+(zps?'Zusatz':'Packschein')+')</div>'+X.map(e=>'<div class="pkp pk-x"><button class="pkc pkcx" type="button" data-pkxe="'+esc(e.id)+'" aria-label="Ändern"'+(fin?' disabled':'')+'>+</button>'+
    '<span class="pkn" data-pkxe="'+esc(e.id)+'">'+esc(pkNum(e.n))+' '+esc(e.u||"Stk")+'</span><span class="pkt" data-pkxe="'+esc(e.id)+'">'+esc(pkXName(e))+(e.a?' <small>'+esc(e.a)+'</small>':'')+
    '<small class="pkby">'+(e.why?esc(e.why)+' · ':'')+esc(nmA(e,"by"))+', '+fmt(e.ts).slice(-5)+'</small></span></div>').join(""):'')+
-  (fin?'':'<button class="pkxadd" id="pkxadd" type="button">+ Material hinzufügen</button>')}
-function pkXBind(P,fin){const a=$("#pkxadd");if(a)a.onclick=()=>pkXDlg(P,null);
- document.querySelectorAll("[data-pkxe]").forEach(b=>b.onclick=()=>{if(fin)return toast("Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkXDlg(P,b.dataset.pkxe)})}
+  (fin?'':'<button class="pkxadd" type="button"'+(zps?'':' id="pkxadd"')+' data-pkxadd="'+esc(zps||"")+'">+ Material hinzufügen</button>')}
+function pkXBind(P){document.querySelectorAll("[data-pkxadd]").forEach(a=>a.onclick=()=>pkXDlg(P,null,null,a.dataset.pkxadd||null));
+ document.querySelectorAll("[data-pkxe]").forEach(b=>b.onclick=()=>{if(pkXFin(P,pkH(P)[b.dataset.pkxe]))return toast("Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkXDlg(P,b.dataset.pkxe)})}
 /* Hinzufügen / ändern */
-function pkXDlg(P,id,pre){const e=id?(pkH(P)[id]||null):null,o=document.createElement("div");o.className="ov";let pick=e&&e.a?{t:pkXName(e),a:e.a}:pre&&pre.t?{t:pre.t,a:pre.a||""}:null;
- o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0;max-height:92vh;overflow:auto"><b style="font-size:17px">'+(e?'Zusätzliches Material ändern':'Material hinzufügen')+'</b>'+
-  '<p class="mute" style="margin:4px 0 10px">Steht nicht im Packschein – wird trotzdem mitgegeben.</p>'+
+function pkXDlg(P,id,pre,zps){const e=id?(pkH(P)[id]||null):null,o=document.createElement("div");o.className="ov";let pick=e&&e.a?{t:pkXName(e),a:e.a}:pre&&pre.t?{t:pre.t,a:pre.a||""}:null;
+ o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0;max-height:92vh;overflow:auto"><b style="font-size:17px">'+(e?'Zusätzliches Material ändern':'Material hinzufügen')+'</b>'+((e?e.z:zps)?' <span class="pkb zu">Zusatz '+esc(e?e.z:zps)+'</span>':'')+
+  '<p class="mute" style="margin:4px 0 10px">Steht nicht im '+((e?e.z:zps)?'Zusatz':'Packschein')+' – wird trotzdem mitgegeben.</p>'+
   '<label class="mute" for="pxt">Artikel</label><div style="position:relative"><input id="pxt" placeholder="Artikel suchen oder frei eintippen" autocomplete="off" style="margin:0"><div id="pxres" class="peres"></div></div>'+
   '<div class="row" style="gap:8px;align-items:flex-end;margin-top:10px"><div style="flex:1"><label class="mute" for="pxn">Menge</label><div class="row" style="align-items:center;gap:6px"><button class="btn ghost" id="pxm" type="button" style="flex:0 0 46px">−</button><input id="pxn" type="number" inputmode="decimal" min="0" style="text-align:center;font-size:20px;margin:0"><button class="btn ghost" id="pxp" type="button" style="flex:0 0 46px">+</button></div></div>'+
   '<div style="flex:0 0 86px"><label class="mute" for="pxu">Einheit</label><input id="pxu" maxlength="8" style="margin:0"></div></div>'+
@@ -36,7 +39,7 @@ function pkXDlg(P,id,pre){const e=id?(pkH(P)[id]||null):null,o=document.createEl
  g("pxx").onclick=()=>o.remove();
  if(g("pxd"))g("pxd").onclick=()=>{o.remove();ask("Zusätzliches Material „"+pkXTx(e)+"“ löschen?",()=>pkHSet(P,{[id]:null}).then(()=>toast("Gelöscht",1)))};
  g("pxs").onclick=()=>{const t=g("pxt").value.trim(),n=nv(),u=g("pxu").value.trim()||"Stk";if(!t){g("pxt").classList.add("bad");return}if(!n){g("pxn").classList.add("bad");return}
-  const d={n,u,nm:pick&&pick.t===t?pick.t:t,a:pick&&pick.t===t?pick.a:"",why:g("pxw").value.trim(),by:me,...tabAs("by"),ts:e?e.ts:Date.now()};if(e)d.mod={by:me,t:Date.now()};
+  const d={n,u,nm:pick&&pick.t===t?pick.t:t,a:pick&&pick.t===t?pick.a:"",why:g("pxw").value.trim(),by:me,...tabAs("by"),ts:e?e.ts:Date.now()};const zz=e?e.z:zps;if(zz)d.z=String(zz);if(e)d.mod={by:me,t:Date.now()};
   o.remove();pkHSet(P,{[id||("x_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5))]:d}).then(()=>toast(e?"Geändert":"Hinzugefügt: "+pkXTx(d),1))}}
 /* Später: Zusatz / geänderter Packschein mit demselben Artikel → zusätzliches Material dagegen verrechnen.
    H = Stand inkl. bereits geplanter Änderungen, items = neue Positionen [{x,k}]. Gibt Patch (Positionen + gekürzte/gelöschte x_) zurück. */

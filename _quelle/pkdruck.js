@@ -30,7 +30,7 @@ function pkDrRows(P){const H=pkH(P),IT=pkItems(P),rows=[];
   if(r.nf)h.push(["davon "+pkDrQ(r.nf,u)+" Fremdmiete (noch nicht geklärt)","m"]);
   Object.keys(r.zn).forEach(z=>h.push(["inkl. "+pkDrQ(r.zn[z],u)+" aus Zusatz "+z,"m"]));
   if(r.z)h.push(["aus Zusatz "+r.z,"m"]);r.hints=h});
- if(typeof pkX==="function")pkX(P).forEach(e=>rows.push({k:pkXKey(e),pos:"+",name:pkXName(e),a:e.a||"",u:e.u||"Stk",z:null,l55:false,items:[],extra:e,soll:0,mit:+e.n||0,fz:0,fl:0,nf:0,miss:0,open:0,zn:{},alt:[],ck:"+",hints:[["zusätzlich (nicht im Packschein)"+(e.why?" – "+e.why:""),"g"]]}));
+ if(typeof pkX==="function")pkX(P).forEach(e=>rows.push({k:pkXKey(e),pos:"+",name:pkXName(e),a:e.a||"",u:e.u||"Stk",z:null,l55:false,items:[],extra:e,soll:0,mit:+e.n||0,fz:0,fl:0,nf:0,miss:0,open:0,zn:{},alt:[],ck:"+",hints:[["zusätzlich (nicht im "+(e.z?"Zusatz "+e.z:"Packschein")+")"+(e.why?" – "+e.why:""),"g"]]}));
  return rows}
 const pkDrAltName=a=>{const k=a.a?pkKat({a:a.a}):null;return (k&&k.name)||a.t||""};
 /* Stand (Kopf) und Abweichungen (Kasten) */
