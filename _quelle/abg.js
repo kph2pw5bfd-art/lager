@@ -17,7 +17,7 @@ const abgN=n=>String(n);
 function abgBal(p,ov){if(p&&p.art==="verl"&&pkRoot(p)!==p)return{p,L:[],R:[],miss:[],more:[],has:false,closed:false,hasEnd:false,endR:null,raus:0,zur:0,fehlt:0,zuviel:0,l55:0};const H=pkH(p),M={};
  const get=(k,c,nm)=>M[k]=M[k]||{k,code:c||"",name:nm,raus:0,nach:0,fr:0,l55:0,soll:0,back0:0,zin:0,zout:0,back:0,via55:0};
  const add=(c,nm,zus,q,f)=>{const e=get(abgKey(c,nm),c,nm);e.soll+=q;e.fr+=f;if(zus)e.nach+=q+f;else e.raus+=q+f};
- pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
+ pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f-pkNbN(x,h));
   if(pkL55(x,h)){get(abgKey(artCode(x.a),pkName(x)),artCode(x.a),pkName(x)).l55+=own;return}
   add(artCode(x.a),pkName(x),!!o.z,(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st),f);
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,!!o.z,+a.n||0,0)})});
@@ -146,7 +146,7 @@ function pkAbgView(){const p=packs.find(x=>x.id===curPack);if(!p||!abgOk()){view
  if($("#abgkl"))$("#abgkl").onclick=()=>ask("Auftrag "+(p.ord||"")+" als mit dem Projektleiter geklärt markieren? Dann zählt er nicht mehr bei „Fehlmaterial“ und nicht mehr bei „Dispo abgelaufen“.",()=>pkHSet(p,{klar:{by:me,t:Date.now()}}).then(()=>toast("Als geklärt markiert",1)));
  if($("#abgkl0"))$("#abgkl0").onclick=()=>ask("„Geklärt“ zurücknehmen?",()=>pkHSet(p,{klar:null}).then(()=>toast("Zurückgenommen",1)));
  $("#abgpk").onclick=()=>go("packopen")}
-function abgZusOut(p,ps){const H=pkH(p);let n=0;pkItems(p).forEach(o=>{if(!o.z||(ps!==undefined&&o.z!==String(ps)))return;const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f);
+function abgZusOut(p,ps){const H=pkH(p);let n=0;pkItems(p).forEach(o=>{if(!o.z||(ps!==undefined&&o.z!==String(ps)))return;const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f-pkNbN(x,h));
  n+=(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st);if(st.s!=="open")(st.alt||[]).forEach(a=>n+=+a.n||0)});return n}
 /* ---------- Ansicht: Zu viel zurück ---------- */
 function abgZvView(){if(!abgOk()){view="start";return startView()}$("#t").textContent="Zu viel zurück";const L=abgAllMore();

@@ -74,14 +74,16 @@ function auDevNet(p,zps){const H=pkH(p),M=[],add=(nm,u,d,t)=>{let e=M.find(x=>x.
  pkItems(p).forEach(o=>{if((o.z||null)!==(zps||null))return;const x=o.x,h=H[o.k];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x),u=x.u||"Stk";
   if(st.s==="part")add(n,u,-(st.need-st.q));const ov=pkOver(x,h,st);if(ov)add(n,u,ov);
   (st.s!=="open"?st.alt:[]).forEach(a=>{const k=pkKat({a:a.a});add(k?k.name:a.t,u,+a.n||0)});
-  if(h&&h.fm==="lager"&&x.f>0&&st.s!=="open")add(n,u,0,pkNum(x.f)+" "+u+" aus dem Lager statt Fremdmiete")});
+  if(h&&h.fm==="lager"&&x.f>0&&st.s!=="open")add(n,u,0,pkNum(x.f)+" "+u+" aus dem Lager statt Fremdmiete");
+  const nbn=pkNbN(x,h);if(nbn)add(n,u,-nbn,"nicht gebraucht"+(h.nb.w?", laut "+h.nb.w:""))});
  if(!zps&&typeof pkX==="function")pkX(p).forEach(e=>add(pkXName(e),e.u||"Stk",+e.n||0,"zusätzlich mitgegeben"+(e.why?" – "+e.why:"")));
  return M.filter(e=>e.d||e.t.length).map(e=>(e.d?(e.d>0?"+":"−")+pkNum(Math.abs(e.d))+" "+e.u+" ":"")+e.nm+(e.t.length?" ("+e.t.join(", ")+")":""))}/* 1.131: Zahl vor dem Namen (Jürgen) */
 function auDevLines(p,zps){const H=pkH(p),K=pkKeys(p),IT=pkItems(p),L=[];pkPosAll(p).forEach((x,i)=>{if((IT[i].z||null)!==(zps||null))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x);
  const u=" "+(x.u||"Stk");if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
  const ov=pkOver(x,h,st);if(ov)L.push(n+": "+pkNum(h.q)+" von "+pkNum(st.need)+u+" – "+pkNum(ov)+u+" mehr als im Packschein");
  (st.s!=="open"?st.alt:[]).forEach(a=>L.push(n+": stattdessen "+pkNum(a.n)+" "+(x.u||"Stk")+" "+a.t));
- if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete")});
+ if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete");
+ if(pkNbN(x,h))L.push(n+": "+pkNbPl(x,h))});
  if(!zps&&typeof pkX==="function")pkX(p).forEach(e=>L.push("zusätzlich mitgegeben: "+pkXTx(e)+(e.why?" – "+e.why:"")));return L}
 function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){view="au";return auView()}
  $("#t").textContent=p.ev||"Auftrag";const I=auInfo(p),B=I.B,H=pkH(p),mine=auIsMine(p),act=mine&&can("au_b"),g=I.g,fr=pkF(p).length;
@@ -107,10 +109,32 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const H2=pkH(p),K=pkKeys(p);
  const mat=auMat(p,B,I);/* 1.128: aumat.js */
  $("#app").innerHTML='<section class="card aucd"><div class="aukv"><span>Auftrag</span><b>'+esc(p.ord||"–")+'</b><span>Projektleiter</span><b>'+esc(shortName(p.pl)||"–")+(mine?' <small class="mute">(du)</small>':'')+'</b><span>Dispo</span><b>'+pkD(p.db)+' – '+pkD(p.de)+'</b>'+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+'</div></section>'+
-  tl+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+mat+
+  tl+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+auNbBtn(p,act)+mat+
   (!mine?'<p class="mute" style="font-size:12px;margin:8px 2px">Antworten kann nur der Projektleiter dieses Auftrags.</p>':'');
  document.querySelectorAll("[data-aua]").forEach(b=>b.onclick=()=>auAnsDlg(p,B.miss[+b.dataset.aua]));
- if($("#aumsg"))$("#aumsg").onclick=()=>auMsgDlg(p)}
+ if($("#aumsg"))$("#aumsg").onclick=()=>auMsgDlg(p);if($("#aunb"))$("#aunb").onclick=()=>auNbDlg(p)}
+/* 1.152: Projektleiter trägt selbst ein, was er doch nicht braucht – nur Positionen, die noch nicht hergerichtet werden (Jürgen, 10.11.) */
+function auNbList(p){const H=pkH(p);return pkItems(p).map((o,i)=>({o,i,x:o.x,h:H[o.k]})).filter(r=>!pkL55(r.x,r.h)&&!(r.o.z?pkZFin(p,pkZOf(p,r.o.z)||{}):(pkH(p).fin&&pkH(p).fin.t)))}
+const auNbFree=h=>!h||(!h.ok&&typeof h.q!=="number"&&!(h.alt||[]).length);
+function auNbBtn(p,act){if(!act||pkNoH(p))return "";const L=auNbList(p),set=pkItems(p).map(o=>({x:o.x,h:pkH(p)[o.k]})).filter(r=>pkNbN(r.x,r.h));
+ if(!L.some(r=>auNbFree(r.h)||pkNbN(r.x,r.h))&&!set.length)return "";
+ return (set.length?'<section class="card aucd"><b class="ausec">Wird nicht gebraucht</b>'+set.map(r=>'<div style="margin-top:4px">'+esc(pkName(r.x))+': '+esc(pkNbPl(r.x,r.h))+'</div>').join("")+'</section>':'')+
+  (L.length?'<button class="btn ghost" id="aunb" type="button">Material wird nicht gebraucht</button>':'')}
+function auNbDlg(p){const L=auNbList(p),me1=shortName(meName()),v={};L.forEach(r=>v[r.i]=pkNbN(r.x,r.h));const o=document.createElement("div");o.className="ov";
+ const row=r=>{const fr=auNbFree(r.h)||pkNbN(r.x,r.h),mx=Math.max(0,(+r.x.n||0)-(r.h&&r.h.fm==="miete"?(+r.x.f||0):0)),u=esc(r.x.u||"Stk");
+  return '<div class="aunbr" style="padding:8px 0;border-top:1px solid var(--line,#e3e7ee)"><b>'+esc(pkName(r.x))+'</b>'+(r.o.z?' <small class="mute">Zusatz '+esc(r.o.z)+'</small>':'')+'<div class="mute" style="font-size:13px">Laut Packschein '+pkNum(r.x.n)+' '+u+'</div>'+
+   (fr?'<div class="row" style="gap:6px;align-items:center;margin-top:4px"><span style="flex:1">Nicht gebraucht</span><button class="btn ghost s" type="button" data-nbm="'+r.i+'" style="flex:0 0 40px">−</button><b data-nbv="'+r.i+'" style="flex:0 0 auto;min-width:56px;text-align:center">'+pkNum(v[r.i])+' '+u+'</b><button class="btn ghost s" type="button" data-nbp="'+r.i+'" data-mx="'+mx+'" style="flex:0 0 40px">+</button><button class="btn ghost s" type="button" data-nba="'+r.i+'" data-mx="'+mx+'" style="flex:0 0 auto">Alle</button></div>':'<div class="mute" style="font-size:13px;margin-top:4px">Wird schon hergerichtet – bitte direkt mit dem Lager reden.</div>')+'</div>'};
+ o.innerHTML='<div class="card audlg" style="max-height:90vh;overflow:auto"><b style="font-size:17px">Material wird nicht gebraucht</b><div class="mute">'+esc(p.ev||"")+' · Auftrag '+esc(p.ord||"–")+'</div><p class="mute" style="font-size:13px;margin:6px 0">Das Lager sieht es sofort in der Packliste und richtet es nicht her.</p>'+L.map(row).join("")+
+  '<input id="aunbg" autocomplete="off" placeholder="Grund (optional)" style="margin-top:8px"><div class="row" style="margin-top:10px"><button class="btn ghost" id="aunbx" type="button">Abbrechen</button><button class="btn" id="aunbo" type="button">Speichern</button></div></div>';
+ document.body.appendChild(o);const sh=i=>{const r=L.find(q=>q.i===i);o.querySelector('[data-nbv="'+i+'"]').textContent=pkNum(v[i])+" "+(r.x.u||"Stk")};
+ o.querySelectorAll("[data-nbm]").forEach(b=>b.onclick=()=>{const i=+b.dataset.nbm;v[i]=Math.max(0,v[i]-1);sh(i)});
+ o.querySelectorAll("[data-nbp]").forEach(b=>b.onclick=()=>{const i=+b.dataset.nbp;v[i]=Math.min(+b.dataset.mx,v[i]+1);sh(i)});
+ o.querySelectorAll("[data-nba]").forEach(b=>b.onclick=()=>{const i=+b.dataset.nba;v[i]=+b.dataset.mx;sh(i)});
+ o.querySelector("#aunbx").onclick=()=>o.remove();
+ o.querySelector("#aunbo").onclick=()=>{const why=o.querySelector("#aunbg").value.trim(),patch={};
+  L.forEach(r=>{if(!(auNbFree(r.h)||pkNbN(r.x,r.h)))return;const old=pkNbN(r.x,r.h),n=v[r.i];if(n===old&&!(n&&why))return;const h={...(r.h||{})};
+   if(n>0)h.nb={n,w:me1,why:why||(r.h&&r.h.nb&&r.h.nb.why)||"",by:me,t:Date.now(),pl:true};else delete h.nb;patch[r.o.k]=Object.keys(h).filter(k=>k!=="by"&&k!=="t").length?h:null});
+  o.remove();if(!Object.keys(patch).length)return;pkHSet(p,patch).then(()=>{toast("Gespeichert – das Lager sieht es in der Packliste",1);draw()})}}
 /* ---------- Antworten ---------- */
 async function auSave(o,msg){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
  return rSave(()=>db.doc("plaw/"+id).set({...o,by:me,...tabAs("by"),t:Date.now()}),msg)}

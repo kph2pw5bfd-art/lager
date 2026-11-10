@@ -486,3 +486,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Alle Packlisten kurz (ab 1.150)
 - Filter nur noch Offen (intern `aktuell`) / Erledigt, „Alle“ entfällt. Karte `pkRow`: Veranstaltung, Auftrag · PL, Dispo kurz, rechts nur Stand (`pkRowStand`: Hergerichtet, x/y, Art bei Von Baustelle/Verlängerung, „Mit Projektleiter geklärt“). Hinweise (`pkHint`) stehen nur noch in der Packliste. Datenschutz-Hinweistext entfernt.
+
+## Wird nicht gebraucht (ab 1.152)
+- packh `h_<Pos>.nb = {n, w (wer, frei), why, by, t, pl}` – `pkNbN` zieht die Menge in `pkNeed` ab (Lager-Anteil), alles „nicht gebraucht“ → Stand ok. Abweichung (`pkDevRow`), Zeile grau (`pk-nb`) wenn sonst nichts abweicht. Bearbeiten-Fenster: Abschnitt „Wird nicht gebraucht“ (Anzahl/Alle, Wer optional mit Vorschlägen, Grund optional). Info-Mail, PDF (`r.nb`), Abgleich/Assistent/aumat (own − nb), Meine Aufträge (`auDevNet`/`auDevLines`).
+- Projektleiter: Meine Aufträge (eigener Auftrag, Recht au_b) → „Material wird nicht gebraucht“ (`auNbDlg`), nur Positionen ohne Herricht-Stand, nicht abgeschlossen; `pl:true`, w = eigener Kurzname. Schreibt packh (Standardregel, kein SQL).
+- Geänderter Packschein (`pkCarry`): nb wird nur übernommen, wenn die Menge des Artikels gleich bleibt. Test `tests/nb_t.js`.

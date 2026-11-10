@@ -128,14 +128,20 @@ function pkItems(P){const seen={},out=[];const add=(x,i,pre,zps)=>{let k="h_"+pr
 const pkKeys=P=>pkItems(P).map(o=>o.k);
 const pkPosAll=P=>pkItems(P).map(o=>o.x);
 const pkH=P=>packh[P.id]||{};
-const pkNeed=(x,h)=>Math.max(0,(+x.n||0)-(h&&h.fm==="miete"?(+x.f||0):0));
+/* 1.152: „Wird nicht gebraucht“ (Monteur/PL sagt beim Herrichten ab): packh h_<Pos>.nb={n,w,why,by,t,pl} – zieht von der Lager-Menge ab, ist eine Abweichung (grau). pl=true: vom Projektleiter in „Meine Aufträge“ eingetragen */
+const pkNbN=(x,h)=>h&&h.nb&&+h.nb.n>0?Math.min(+h.nb.n,Math.max(0,(+x.n||0)-(h.fm==="miete"?(+x.f||0):0))):0;
+const pkNbWho=h=>h&&h.nb&&h.nb.w?"laut "+h.nb.w+(h.nb.pl?" (selbst eingetragen)":""):"";
+const pkNbTx=(x,h)=>{const n=pkNbN(x,h);if(!n)return "";const w=pkNbWho(h);return "−"+pkNum(n)+" "+(x.u||"Stk")+" nicht gebraucht"+(w?" · "+w:"")+(h.nb.why?" – "+h.nb.why:"")};
+const pkNbPl=(x,h)=>{const n=pkNbN(x,h);if(!n)return "";const w=pkNbWho(h);return pkNum(n)+" "+(x.u||"Stk")+" nicht gebraucht"+(w||h.nb.why?" ("+[w,h.nb.why].filter(Boolean).join(" – ")+")":"")};
+const pkNeed=(x,h)=>Math.max(0,(+x.n||0)-(h&&h.fm==="miete"?(+x.f||0):0)-pkNbN(x,h));
 function pkPS(x,h){const need=pkNeed(x,h);if(!h)return{s:"open",need,alt:[]};const alt=h.alt||[];
+ if(need<=0&&pkNbN(x,h)>0&&!alt.length&&!(typeof h.q==="number"&&h.q>0))return{s:"ok",q:0,need,alt};
  if(h.ok)return{s:"ok",q:need,need,alt};const q=typeof h.q==="number"?h.q:null;
  if(q!==null||alt.length)return{s:q!==null&&q>=need?"ok":"part",q:q===null?0:q,need,alt};return{s:"open",need,alt}}
 /* Lager 55 (ab 1.78): holt Fahrer/Monteur selbst – Artikel in der Artikelliste markiert (rkat.l55), pro Position umstellbar (packh h_<Pos>.l55 = true/false) */
 /* Abweichung beim Herrichten (ab 1.99): zu wenig, zu viel oder Alternative → oranges „!“, Zeile ganz oben */
 const pkOver=(x,h,st)=>st.s==="ok"&&h&&typeof h.q==="number"&&h.q>st.need?h.q-st.need:0;
-const pkDevRow=(x,h,st)=>st.s==="part"||st.alt.length>0||pkOver(x,h,st)>0||!!(h&&h.fm==="lager"&&x.f>0&&st.s!=="open");
+const pkDevRow=(x,h,st)=>pkNbN(x,h)>0||st.s==="part"||st.alt.length>0||pkOver(x,h,st)>0||!!(h&&h.fm==="lager"&&x.f>0&&st.s!=="open");
 let pkScanHl=null;
 function pkL55(x,h){if(h&&typeof h.l55==="boolean")return h.l55;const k=pkKat(x);return !!(k&&k.l55)}
 function pkProg(P){if(P&&P._z)return pkZProg(P._p,P._z);return pkProgOf(P,null,!!(pkH(P).fin&&pkH(P).fin.t))}
@@ -200,13 +206,15 @@ function pkZHead(P,z){if(!z)return"";const g=pkZProg(P,z.ps),fin=pkZFin(P,z),day
 function pkZFoot(P,ps){const z=pkZOf(P,ps);if(!z)return"";const fin=pkZFin(P,z);
  return '<div class="pkzfoot">'+(fin?(z.v?'<button class="btn ghost s" type="button" data-pkzi="'+esc(ps)+'">Info an Projektleiter</button><button class="btn ghost s" type="button" data-pkzr="'+esc(ps)+'">Zusatz wieder öffnen</button>':''):'<button class="btn s" type="button" data-pkzf="'+esc(ps)+'">Zusatz abschließen</button>')+'</div>'}
 /* Zeilen der Herricht-Ansicht: zuerst „Abweichungen“ (zu wenig / zu viel / Alternative), danach Gruppen und Zusätze wie bisher */
-function pkRowHtml(p,r,sub){const {x,i,h,st}=r,fm=pkFmTxt(x,h),ov=pkOver(x,h,st),dv=r.dev,hl=pkScanHl&&pkScanHl.id===p.id&&pkScanHl.i===i;
- return '<div class="pkp pk-'+(dv?'part':st.s)+(hl?' pkhl':'')+'" data-pkrow="'+i+'"><button class="pkc" type="button" data-pc="'+i+'" aria-label="Abhaken"'+(pkRowFin(p,i)?' disabled':'')+'>'+(dv?'!':st.s==="ok"?'✓':'')+'</button>'+
+function pkRowHtml(p,r,sub){const {x,i,h,st}=r,fm=pkFmTxt(x,h),ov=pkOver(x,h,st),hl=pkScanHl&&pkScanHl.id===p.id&&pkScanHl.i===i;
+ const dv=r.dev&&(st.s==="part"||st.alt.length>0||ov>0||!!(h&&h.fm==="lager"&&x.f>0&&st.s!=="open")),nbo=r.dev&&!dv;/* 1.152: nur „nicht gebraucht“ → grau statt orange */
+ return '<div class="pkp pk-'+(dv?'part':st.s)+(nbo?' pk-nb':'')+(hl?' pkhl':'')+'" data-pkrow="'+i+'"><button class="pkc" type="button" data-pc="'+i+'" aria-label="Abhaken"'+(pkRowFin(p,i)?' disabled':'')+'>'+(dv?'!':st.s==="ok"?'✓':'')+'</button>'+
   '<span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+(sub?'<small class="pksub">'+esc(sub)+'</small>':'')+
   (fm?'<em class="'+(h&&h.fm?'pkfm':'pkfr')+'">'+esc(fm)+'</em>':'')+
   (st.s==="part"?'<em class="pkpart">'+pkNum(st.q)+' von '+pkNum(st.need)+' '+esc(x.u||"Stk")+' da – fehlen '+pkNum(st.need-st.q)+' '+esc(x.u||"Stk")+'</em>':'')+
   (ov?'<em class="pkpart">'+pkNum(h.q)+' von '+pkNum(st.need)+' '+esc(x.u||"Stk")+' – '+pkNum(ov)+' '+esc(x.u||"Stk")+' mehr als im Packschein</em>':'')+
   st.alt.map(a=>'<em class="pkalt">+ '+esc(pkNum(a.n))+'× '+esc(a.t)+(a.a?' ('+esc(a.a)+')':'')+'</em>').join("")+
+  (pkNbN(x,h)?'<em class="pknb">'+esc(pkNbTx(x,h))+'</em>':'')+
   (h&&h.by&&st.s!=="open"?'<small class="pkby">'+esc(nm(h.by))+', '+fmt(h.t).slice(-5)+'</small>':'')+'</span></div>'}
 function pkRowsHtml(p,rows,mid){const D=rows.filter(r=>r.dev);let out=D.length?'<div class="pkg pkgdev">Abweichungen ('+D.length+')</div>'+D.map(r=>pkRowHtml(p,r,pkGrp(r.x)+(r.z?' · Zusatz '+r.z:''))).join(""):'';
  let lg=null,lz;rows.forEach((r,ri)=>{const z=r.z,newZ=z&&(ri===0||rows[ri-1].z!==z),last=z&&(ri===rows.length-1||rows[ri+1].z!==z);
@@ -284,7 +292,7 @@ function pkMove(P){const h=pkHd(P),o=document.createElement("div");o.className="
 /* Kreis antippen: offen -> komplett; komplett (ohne Alternative) -> wieder offen; sonst Bearbeiten. Fremdmiete ungeklärt -> zuerst fragen */
 function pkTap(P,i){const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k],st=pkPS(x,h);if(pkRowFin(P,i))return;
  if(pkL55(x,h))return pkEdit(P,i);
- const put=fm=>pkHSet(P,{[k]:{ok:true,q:null,alt:(h&&h.alt)||[],fm:fm||(h&&h.fm)||"",by:me,t:Date.now()}});
+ const put=fm=>pkHSet(P,{[k]:{ok:true,q:null,alt:(h&&h.alt)||[],fm:fm||(h&&h.fm)||"",...(h&&h.nb?{nb:h.nb}:{}),by:me,t:Date.now()}});
  if(x.f>0&&!(h&&h.fm))return pkFmAsk(x,fm=>put(fm));
  if(st.s==="open")return put();
  if(st.s==="ok"&&h&&h.ok&&!pkDevRow(x,h,st))return pkHSet(P,{[k]:h.fm?{fm:h.fm,by:me,t:Date.now()}:null});
@@ -301,7 +309,8 @@ function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH
   document.body.appendChild(o);o.querySelector("#p55x").onclick=()=>o.remove();
   o.querySelector("#p55s").onclick=()=>{o.remove();if(pkRowFin(P,i))return toast("Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkHSet(P,{[k]:{...(h||{}),l55:false,by:me,t:Date.now()}})};return}
  const o=document.createElement("div");o.className="ov";
- const need=()=>pkNeed(x,{fm});
+ const nbv=()=>{const e=o.querySelector("#penb");const v=e?parseFloat(String(e.value).replace(",",".")):NaN;return isNaN(v)?0:Math.max(0,Math.min(v,nbMax()))},nbMax=()=>Math.max(0,(+x.n||0)-(fm==="miete"?(+x.f||0):0));
+ const need=()=>pkNeed(x,{fm,nb:{n:nbv()}});
  o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0;max-height:92vh;overflow:auto"><b style="font-size:17px">'+esc(pkName(x))+'</b>'+(x.a?' <span class="mute">'+esc(x.a)+'</span>':'')+(pkName(x)!==x.t?'<div class="mute" style="font-size:13px">Im Packschein: '+esc(x.t)+'</div>':'')+
   '<p class="mute" style="margin:4px 0 10px">Laut Packliste: '+pkNum(x.n)+(x.u?' '+esc(x.u):'')+(x.f>0?', davon <span class="pkfr">'+pkNum(x.f)+' Fremdmiete</span>':'')+'</p>'+
   (pkKat(x)?'':'<div class="pknokat"><span>Nicht in der Artikelliste</span>'+(can("v_app")?'<button class="btn s" id="pekat" type="button">Zur Artikelliste hinzufügen</button>':'<button class="btn ghost s" id="pekat" type="button">Fehlt in der Artikelliste – melden</button>')+'</div>')+
@@ -311,10 +320,14 @@ function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH
   '<h4 style="margin:14px 0 4px">Alternative</h4><div id="pel"></div>'+
   '<div class="row" style="gap:8px;align-items:flex-start"><input id="pean" type="number" inputmode="numeric" min="1" placeholder="Anz." style="flex:0 0 72px;margin:0"><div style="flex:1;min-width:0;position:relative"><input id="peat" placeholder="Artikel suchen oder eintippen" autocomplete="off" style="margin:0"><div id="peres" class="peres"></div></div></div>'+
   '<button class="btn ghost" id="peadd" type="button" style="margin-top:6px">+ Alternative hinzufügen</button>'+
+  '<h4 style="margin:14px 0 4px">Wird nicht gebraucht</h4><div class="row" style="gap:8px;align-items:center"><input id="penb" type="number" inputmode="numeric" min="0" placeholder="Anz." style="flex:0 0 72px;margin:0"><span class="mute" style="flex:0 0 auto">'+esc(x.u||"Stk")+'</span><button class="btn ghost s" id="penba" type="button" style="flex:0 0 auto;margin-left:auto">Alle</button></div>'+
+  '<input id="penbw" list="penbl" autocomplete="off" placeholder="Wer hat es gesagt? (optional)" style="margin-top:6px"><datalist id="penbl">'+[...new Set([shortName(P.pl)].concat(typeof pkPlCands==="function"?pkPlCands().map(shortName):[]).filter(Boolean))].map(n=>'<option value="'+esc(n)+'">').join("")+'</datalist>'+
+  '<input id="penbg" autocomplete="off" placeholder="Grund (optional)" style="margin-top:6px">'+
   '<div class="row" style="margin-top:14px"><button class="btn ghost" id="pex" type="button">Abbrechen</button><button class="btn" id="pes" type="button">Speichern</button></div>'+
   '<button class="btn ghost" id="pe55" type="button" style="margin-top:10px">Holt Fahrer/Monteur – Lager 55</button>'+
   '<button class="lnk" id="per" type="button" style="margin-top:6px;color:var(--bad)">Position zurücksetzen</button></div>';
  document.body.appendChild(o);const g=id=>o.querySelector("#"+id),qi=g("peq");
+ if(h.nb){g("penb").value=String(+h.nb.n||"");g("penbw").value=h.nb.w||"";g("penbg").value=h.nb.why||""}
  qi.value=h.ok?String(need()):(typeof h.q==="number"?String(h.q):"");
  const lab=()=>{g("pen").textContent="(von "+pkNum(need())+")";if(g("pefl")){g("pefl").classList.toggle("on",fm==="lager");g("pefm").classList.toggle("on",fm==="miete")}};
  const drawAlt=()=>{g("pel").innerHTML=alt.map((a,j)=>'<div class="pealt"><span>'+esc(pkNum(a.n))+'× '+esc(a.t)+(a.a?' <small>'+esc(a.a)+'</small>':'')+'</span><button class="lnk" type="button" data-ax="'+j+'" style="color:var(--bad)">Entfernen</button></div>').join("");
@@ -323,6 +336,8 @@ function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH
  if(opt.msg)o.querySelector(".card").insertAdjacentHTML("afterbegin",'<div class="pkscm'+(opt.warn?' w':'')+'">'+esc(opt.msg)+'</div>');
  if(opt.alt){pick={t:opt.alt.t,a:opt.alt.a||""};g("peat").value=opt.alt.t;g("pean").value="";setTimeout(()=>{g("pean").focus();g("pean").scrollIntoView({block:"center"})},80)}
  if(g("pefl")){g("pefl").onclick=()=>{fm="lager";lab()};g("pefm").onclick=()=>{fm="miete";lab()}}
+ let nbLast=need();const nbCh=()=>{const nn=need();if(qi.value.trim()!==""&&parseFloat(qi.value)===nbLast)qi.value=nn?String(nn):"";nbLast=nn;lab()};
+ g("penb").oninput=nbCh;g("penba").onclick=()=>{g("penb").value=String(nbMax());nbCh()};
  const qv=()=>{const v=qi.value.trim();return v===""?null:Math.max(0,parseFloat(v.replace(",","."))||0)};
  g("pem").onclick=()=>{qi.value=String(Math.max(0,(qv()===null?need():qv())-1))};g("pep").onclick=()=>{qi.value=String((qv()===null?0:qv())+1)};g("pea").onclick=()=>{qi.value=String(need())};
  const K=(typeof rkat!=="undefined"&&Array.isArray(rkat))?rkat:[];
@@ -337,8 +352,9 @@ function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH
  g("per").onclick=()=>{o.remove();pkHSet(P,{[k]:null})};
  g("pe55").onclick=()=>{o.remove();pkHSet(P,{[k]:{l55:true,by:me,t:Date.now()}})};
  g("pes").onclick=()=>{const pend=g("pean").value&&g("peat").value.trim();if(pend)g("peadd").click();const q=qv();if(x.f>0&&!fm&&(q!==null||alt.length))return toast("Bitte zuerst klären: aus dem Lager oder zugemietet.");
-  o.remove();if(q===null&&!alt.length)return pkHSet(P,{[k]:fm?{fm,by:me,t:Date.now()}:null});
-  pkHSet(P,{[k]:{ok:q!==null&&q>=need()&&!alt.length,q,alt,fm,by:me,t:Date.now()}})}}
+  const nn=nbv(),nw=g("penbw").value.trim(),ng=g("penbg").value.trim(),nb=nn>0?{n:nn,w:nw,why:ng,by:h.nb&&+h.nb.n===nn&&(h.nb.w||"")===nw&&(h.nb.why||"")===ng?h.nb.by:me,t:h.nb&&+h.nb.n===nn&&(h.nb.w||"")===nw&&(h.nb.why||"")===ng?h.nb.t:Date.now(),...(h.nb&&h.nb.pl&&+h.nb.n===nn&&(h.nb.w||"")===nw?{pl:true}:{})}:null;
+  o.remove();if(q===null&&!alt.length)return pkHSet(P,{[k]:fm||nb?{fm,...(nb?{nb}:{}),by:me,t:Date.now()}:null});
+  pkHSet(P,{[k]:{ok:q!==null&&q>=need()&&!alt.length,q,alt,fm,...(nb?{nb}:{}),by:me,t:Date.now()}})}}
 /* Artikel aus dem Packschein in die Artikelliste übernehmen (ab 1.79, nur mit App-Verwaltung) bzw. als fehlend melden */
 function pkKatAdd(P,x,dlg){const nr=String(x.a||"").trim(),nm=String(x.t||"").trim();
  if(!can("v_app"))return pkKatMeld(P,x).then(()=>toast("Gemeldet – steht jetzt unter „Fehlende Artikel“ in der App-Verwaltung.",1));
@@ -357,7 +373,8 @@ function pkMailText(P,zps){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[],inc=o=>
   else if(st.s==="part")L.push("- "+nm2+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
   else if(pkOver(x,h,st))L.push("- "+nm2+": "+pkNum(h.q)+" von "+pkNum(st.need)+u+" – "+pkNum(pkOver(x,h,st))+u+" mehr als im Packschein");
   if(st.alt.length)st.alt.forEach(a=>L.push((st.s==="part"||st.s==="open"||pkOver(x,h,st)?"  ":"- "+nm2+":\n  ")+"Alternative: "+pkNum(a.n)+"× "+a.t+(a.a?" ("+a.a+")":"")));
-  if(h&&h.fm==="lager"&&x.f>0)L.push("- "+nm2+": aus dem Lager statt Fremdmiete ("+pkNum(x.f)+u+")")});
+  if(h&&h.fm==="lager"&&x.f>0)L.push("- "+nm2+": aus dem Lager statt Fremdmiete ("+pkNum(x.f)+u+")");
+  if(pkNbN(x,h))L.push("- "+nm2+": "+pkNbPl(x,h))});
  if(!zps&&typeof pkX==="function")pkX(P).forEach(e=>L.push("- Zusätzlich mitgegeben (nicht im Packschein): "+pkXTx(e)+(e.why?" – "+e.why:"")));
  const vn=String(P.pl||"").split(" ")[0],me1=String(meName()||""),F=zps?pkZFin(P,pkZOf(P,zps)||{})||{}:H.fin||{};
  return{subj:(zps?"Zusatz-Packschein "+zps:"Packliste "+(P.ord||""))+" – "+(P.ev||"")+": Abweichungen beim Herrichten",

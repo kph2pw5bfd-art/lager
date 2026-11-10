@@ -61,7 +61,7 @@ function jvWithArt(q,fn,none){const R=jvArtFind(q);if(!R)return none?none():{say
 /* ---------- Mengen pro Packliste ----------
    draußen = hergerichtet (bzw. bei laufender/abgelaufener Dispo laut Packschein), ohne Fremdmiete, + Alternativen, − schon im Retourschein */
 function jvArtCnt(p,m){if(p.art==="verl"&&pkRoot(p)!==p)m=()=>false;const H=pkH(p),k=pkState(p).k,run=k==="over"||k==="out"||k==="back";let out=0,plan=0,back=0,l55=0;
- pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),own=Math.max(0,(+x.n||0)-(h&&h.fm==="lager"?0:(+x.f||0)));
+ pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),own=Math.max(0,(+x.n||0)-(h&&h.fm==="lager"?0:(+x.f||0))-pkNbN(x,h));
   if(m(artCode(x.a),x.t+" "+pkName(x))){if(pkL55(x,h)){if(run){out+=own;l55+=own}else plan+=own}else if(st.s==="open"){if(run)out+=own;else plan+=own}else out+=(h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st)}
   if(st.s!=="open")(st.alt||[]).forEach(a=>{if(m(artCode(a.a),a.t))out+=+a.n||0})});
  if(typeof pkX==="function")pkX(p).forEach(e=>{if(m(artCode(e.a),(e.nm||"")+" "+pkXName(e)))out+=+e.n||0});

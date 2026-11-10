@@ -374,3 +374,6 @@ body.pkdragging .pkdrop{display:flex}
 /* 1.151: Alle Packlisten – jede Gruppe blau eingerahmt, Abstand zur nächsten */
 .pkgrp{margin:0 0 14px;padding:10px 12px 12px;border:2px solid var(--navy);border-radius:12px}.pkgrp .pkh{margin:0 0 8px}.pkgrp .pkr:last-child{margin-bottom:0}
 #pklist{margin-top:10px}
+
+/* 1.152: „Wird nicht gebraucht“ grau */
+.pkp em.pknb{color:#5f6b7a;font-weight:600}.pk-nb .pkc{border-color:#9aa5b1}

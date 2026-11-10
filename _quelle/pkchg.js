@@ -46,11 +46,13 @@ function pkChgDlg(P,M,same){return new Promise(res=>{const m=pkMatch(P,M),o=docu
   o.querySelector("#pkco").onclick=()=>{o.remove();res(mode==="rep"?{mode,inc:[...inc]}:mode==="repz"?{mode,zps}:{mode})}};
  document.body.appendChild(o);draw()})}
 /* Herricht-Stand übernehmen: alte Positionen (mit Schlüssel) -> neue Positionen (mit Schlüssel). Gibt {patch, back:[…], diff} */
-function pkCarry(H,oldI,newI){const done={},alt={},fm={},l55={},who={};
+function pkCarry(H,oldI,newI){const done={},alt={},fm={},l55={},who={},nbm={},on={},nn={};
+ oldI.forEach(o=>{const k=pkAK(o.x);on[k]=(on[k]||0)+(+o.x.n||0);const h=H[o.k];if(h&&h.nb&&+h.nb.n>0)nbm[k]=nbm[k]?{...nbm[k],n:nbm[k].n+(+h.nb.n)}:{...h.nb,n:+h.nb.n}});newI.forEach(o=>{const k=pkAK(o.x);nn[k]=(nn[k]||0)+(+o.x.n||0)});
+ Object.keys(nbm).forEach(k=>{if(on[k]!==nn[k])delete nbm[k]});/* 1.152: Menge geändert → PL hat es wohl im Packschein korrigiert */
  oldI.forEach(o=>{const x=o.x,h=H[o.k];if(!h)return;const k=pkAK(x),st=pkPS(x,h);done[k]=(done[k]||0)+(st.s==="ok"?st.need+pkOver(x,h,st):st.s==="part"?(+st.q||0):0);
   if(st.alt.length)alt[k]=(alt[k]||[]).concat(st.alt);if(h.fm)fm[k]=h.fm;if(typeof h.l55==="boolean")l55[k]=h.l55;if(h.by)who[k]={by:h.by,t:h.t}});
  const patch={};oldI.forEach(o=>{patch[o.k]=null});
- newI.forEach(o=>{const x=o.x,k=pkAK(x),h={};if(fm[k]&&x.f>0)h.fm=fm[k];if(k in l55)h.l55=l55[k];const need=pkNeed(x,h),av=done[k]||0;
+ newI.forEach(o=>{const x=o.x,k=pkAK(x),h={};if(fm[k]&&x.f>0)h.fm=fm[k];if(k in l55)h.l55=l55[k];if(nbm[k]){const v=Math.min(nbm[k].n,+x.n||0);if(v>0){h.nb={...nbm[k],n:v};nbm[k].n-=v}}const need=pkNeed(x,h),av=done[k]||0;
   if(alt[k]){h.alt=alt[k];delete alt[k]}
   if(av>0||h.alt){const q=Math.min(av,need);done[k]=av-q;if(q>=need&&need>0)h.ok=true;else{h.ok=false;h.q=q}Object.assign(h,who[k]||{by:me,t:Date.now()})}
   patch[o.k]=Object.keys(h).length?h:null});

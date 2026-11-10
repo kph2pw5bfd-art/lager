@@ -62,7 +62,7 @@ function amBody(p,B,I){const R=amRows(p,B),ph2=!!(B.R&&B.R.length),endish=!!(B.h
 function amZus(p){if(amF!=="alle"||!(p.zus||[]).length)return "";const H=pkH(p),n=v=>pkNum(v),q=amQ.trim(),T=q?dxNorm(q).split(" ").filter(Boolean):[];
  return (p.zus||[]).map(z=>{const ps=String(z.ps||""),zf=pkZFin(p,z),za=zf?null:auHerrAll(p,ps),g=pkZProg(p,ps);
   const st=zf?"hergerichtet "+fmt(zf.t).slice(0,6)+" von "+nmA(zf,"by"):za?"hergerichtet"+(za.t?" "+fmt(za.t).slice(0,6):"")+(za.who?" von "+za.who:""):g.d?"wird hergerichtet: "+g.d+" von "+g.n+" Positionen":"herrichten "+pkWd(pkZDay(p,z));
-  let rows="";pkItems(p).forEach(o=>{if(o.z!==ps)return;const x=o.x,h=H[o.k],l55=pkL55(x,h),pst=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),nm=pkName(x),u=" "+(x.u||"Stk");
+  let rows="";pkItems(p).forEach(o=>{if(o.z!==ps)return;const x=o.x,h=H[o.k],l55=pkL55(x,h),pst=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f-pkNbN(x,h)),nm=pkName(x),u=" "+(x.u||"Stk");
    if(T.length&&!T.every(t=>(" "+dxNorm(nm+" "+(x.a||""))+" ").includes(t)))return;
    const raus=l55?null:pst.s==="open"?null:h&&h.ok?own:Math.min(own,+pst.q||0)+pkOver(x,h,pst),dev=!l55&&pkDevRow(x,h,pst),notes=[];
    (pst.s!=="open"?pst.alt||[]:[]).forEach(al=>notes.push('<small class="or">stattdessen '+n(+al.n||0)+u+' '+esc(al.t)+'</small>'));
