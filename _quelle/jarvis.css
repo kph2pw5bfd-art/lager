@@ -377,3 +377,6 @@ body.pkdragging .pkdrop{display:flex}
 
 /* 1.152: „Wird nicht gebraucht“ grau */
 .pkp em.pknb{color:#5f6b7a;font-weight:600}.pk-nb .pkc{border-color:#9aa5b1}
+
+/* 1.154: Retourschein – Artikel aus der Packliste */
+.rpkh{margin:14px 0 8px;font-size:16px}.rpkt{border:2px solid var(--navy)}.rpkt.dn{border-color:#2e7d4f;background:#eef8f1}

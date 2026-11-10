@@ -1,0 +1,25 @@
+/* Test 1.154: Retourschein aus der Packliste anlegen + Bereich „Aus der Packliste“ (SP = Ordner mit fakesb.js) */
+const {chromium}=require("playwright");const fs=require("fs");const S=(process.env.SP||"/tmp")+"/";const J=o=>JSON.stringify(o);
+const t0=new Date();t0.setHours(0,0,0,0);const D=n=>t0.getTime()+n*864e5+8*36e5;
+const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>({col:"rkat",id:"k"+i,data:x}));
+(async()=>{const b=await chromium.launch();let fail=0;const ok=(t,c)=>{if(!c)fail++;console.log((c?"OK   ":"FEHLT")+" "+t)};const errs=[];
+ const K=kat.map(k=>k.data).filter(k=>k.nr),a1=K[0],a2=K[1],a3=K[2];
+ const pos=[{p:"1",n:6,u:"Stk",t:a1.name,a:a1.nr,f:0},{p:"2",n:4,u:"Stk",t:a2.name,a:a2.nr,f:4}];
+ const seed=kat.concat([{col:"pack",id:"A",data:{ord:"2601300-01",ps:"14700",ev:"Gala Wien",pl:"Max Muster",db:D(-1),de:D(5),pos,zus:[{ps:"14701",v:2,t:D(0),by:"u1",pos:[{p:"1",n:2,u:"Stk",t:a3.name,a:a3.nr,f:0}]}],by:"u1",t:D(-1)}}]);
+ const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
+ const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(200,400);await p.waitForTimeout(400);
+ await p.evaluate(()=>{curPack="A";view="packopen";draw()});await p.waitForTimeout(300);ok("Knopf auch vor dem Herrichten",!!(await p.$("#pknewr")));
+ await p.click("#pknewr");await p.waitForTimeout(500);const r1=await p.evaluate(()=>({v:view,ev:rs.ev,o:rs.ord,l:rs.lvl}));ok("Neuer Schein vorbelegt "+J(r1),r1.v==="retedit"&&r1.ev==="Gala Wien"&&r1.o==="2601300-01"&&r1.l==="groups");
+ const T=await p.$$eval("#rpksec .rpkt",l=>l.map(x=>x.textContent));console.log("   ",T);ok("Bereich: 3 Artikel (Packschein, Zusatz; Fremdmiete-Artikel nicht)",T.length===2||T.length===3);
+ ok("Fremdmiete-Artikel fehlt, Zusatz da",!T.some(t=>t.includes("Nr. "+a2.nr))&&T.some(t=>t.includes("Nr. "+a3.nr)));ok("von 6 zurück",T.some(t=>/0 von 6 zurück/.test(t)));
+ await p.click('#rpksec [data-ra="'+a1.nr+'"]');await p.waitForTimeout(300);
+ const pad=await p.$(".ov");ok("Zahlenfeld öffnet",!!pad);
+ await p.evaluate(a=>{rAdd(a.nr,{nr:a.nr,name:a.name,g:a.g,u:a.u||""},6);retEdit()},a1);await p.waitForTimeout(400);await p.evaluate(()=>document.querySelectorAll(".ov").forEach(o=>o.remove()));
+ const t2=await p.$eval('#rpksec [data-ra="'+a1.nr+'"]',e=>e.className+"|"+e.textContent);ok("6 von 6, grün "+t2,/dn/.test(t2)&&/6 von 6/.test(t2));await p.screenshot({path:S+"rnew.png"});
+ await p.evaluate(()=>{rPersist(true)});await p.waitForTimeout(500);
+ await p.evaluate(()=>{curPack="A";view="packopen";draw()});await p.waitForTimeout(300);await p.click("#pknewr");await p.waitForTimeout(300);ok("Offener Schein: Rückfrage",/schon einen offenen Retourschein/.test(await p.textContent(".ov")));
+ await p.click("[data-pnro]");await p.waitForTimeout(300);ok("Öffnet den offenen",await p.evaluate(()=>view==="retopen"));
+ await p.evaluate(()=>{const r=rets[0];rs={...rEd(r),lvl:"groups",g:null,u:null};view="retedit";draw();rs.q="kab";retEdit()});await p.waitForTimeout(300);ok("Bei Suche kein Bereich",!(await p.$("#rpksec")));
+ ok("Keine JS-Fehler "+errs.join("|"),!errs.length);await b.close();console.log(fail?"FEHLER: "+fail:"ALLES OK")})();

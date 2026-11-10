@@ -87,10 +87,17 @@ function abgPkCard(p){if(!abgOk())return"";if(p&&p.art==="verl")p=pkRoot(p);cons
  return '<button class="card abgpk" type="button" data-abgo="'+esc(p.id)+'"><span class="abgpkt"><b>Abgleich mit Retouren</b><small>'+B.zur+' von '+B.raus+' zurück'+(B.hasEnd?' · Endretoure':'')+'</small></span><span class="abgpkb">'+abgBadge(B)+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
 function abgPkBind(){document.querySelectorAll("[data-abgo]").forEach(b=>b.onclick=()=>{curPack=b.dataset.abgo;go("pkabg")})}
 /* Zeile im Retourschein (beim Zählen und in der Ansicht) */
+/* 1.154: beim Zählen (Ebene Gruppen) oben die Artikel aus der Packliste – Packschein, Zusätze, Alternativen, zusätzlich Mitgegebenes; ohne Lager 55 und Fremdmiete (zählen nicht als raus) */
+function rPkSec(p,B){const old=document.getElementById("rpksec");if(old)old.remove();if(view!=="retedit"||!rs||rs.lvl!=="groups"||(rs.q&&rs.q.trim()))return;
+ const K=rKat(),A=[],E=[];B.L.filter(e=>e.soll>0).forEach(e=>{const a=e.code&&K.find(k=>artCode(k.nr)===e.code);if(a&&!A.includes(a)){A.push(a);E.push(e)}});if(!A.length)return;
+ const g=document.querySelector("#app .rgrid");if(!g)return;
+ g.insertAdjacentHTML("beforebegin",'<div id="rpksec"><h3 class="rpkh">Aus der Packliste <span class="mute">'+A.length+'</span></h3><div class="rgrid">'+A.map((a,i)=>{const e=E[i],c=rs.items[a.nr]?rs.items[a.nr].q:0,dn=Math.min(e.back,e.soll)>=e.soll;
+  return '<button class="rtile rpkt'+(dn?' dn':'')+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(a.name)+'</b><span class="mute">'+(dn?'✓ ':'')+abgN(Math.min(e.back,e.soll))+' von '+abgN(e.soll)+' zurück · Nr. '+esc(a.nr)+'</span></button>'}).join("")+'</div><h3 class="rpkh">Alle Artikel</h3></div>');
+ rTileBind(A)}
 function rAbgInject(){try{if(!abgOk())return;const ex=document.getElementById("rabg");if(ex)ex.remove();let p=null,B=null;
  if(view==="retedit"&&rs){p=abgPackOf(rs.ord);if(p)B=abgBal(p,{id:rs.id,items:rs.items})}
  else if(view==="retopen"){const r=rets.find(x=>x.id===curRet);if(r){p=abgPackOf(r.ord);if(p)B=abgBal(p)}}
- if(!p||!B)return;const off=Math.max(0,B.raus-B.zur),pct=B.raus?Math.min(100,Math.round(B.zur*100/B.raus)):0;
+ if(!p||!B){const o=document.getElementById("rpksec");if(o)o.remove();return}try{rPkSec(p,B)}catch(e){console.warn("Packliste im Retourschein",e)}const off=Math.max(0,B.raus-B.zur),pct=B.raus?Math.min(100,Math.round(B.zur*100/B.raus)):0;
  const h='<button class="rabg" id="rabg" type="button"><span class="rabgt"><span><b>Mit Packliste:</b> '+B.zur+' von '+B.raus+' zurück</span><b class="rabgr">'+(off?off+' offen':'alles da ✓')+(B.zuviel?' · '+B.zuviel+' zu viel':'')+' ›</b></span><span class="rabgbar"><i style="width:'+pct+'%"></i></span></button>';
  const app=$("#app"),first=app&&app.querySelector(".card");if(!app)return;if(first)first.insertAdjacentHTML("afterend",h);else app.insertAdjacentHTML("afterbegin",h);
  $("#rabg").onclick=()=>{if(view==="retedit"&&typeof rPersist==="function")rPersist(true);curPack=p.id;go("pkabg")}}catch(e){console.warn("Abgleich-Zeile",e)}}

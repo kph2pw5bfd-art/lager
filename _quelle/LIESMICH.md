@@ -494,3 +494,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Material hinzufügen beim Zusatz (ab 1.153)
 - `packh.x_<id>.z` = Zusatz-Packscheinnummer (fehlt = Haupt-Packschein). `pkXz(P,zps)` filtert, `pkXHtml(P,fin,zps)` im Zusatz-Rahmen vor „Zusatz abschließen“, Knöpfe `[data-pkxadd]` (Haupt behält `#pkxadd`). Sperre pro Teil (`pkXFin`). Abweichung/Info-Mail/Meine Aufträge pro Zusatz, Abgleich zählt alles. Test `tests/zx_t.js`.
+
+## Retourschein aus der Packliste (ab 1.154)
+- Packliste: Knopf `#pknewr` „+ Retourschein anlegen“ (Recht ret_b, auch vor dem Herrichten). `pkNewRet`: neuer Schein mit Veranstaltung + Auftragsnummer, Ebene Gruppen; offener Schein vorhanden → Auswahl öffnen / trotzdem neu.
+- Retourschein (Ebene Gruppen, ohne Suche): `rPkSec` in abg.js (aus `rAbgInject`) setzt „Aus der Packliste“ über die Gruppen – Artikel mit raus > 0 aus `abgBal` (ohne Lager 55/Fremdmiete), nur mit Treffer in der Artikelliste, „x von y zurück“ über alle Scheine, grün wenn vollständig. Test `tests/rnew_t.js`.
