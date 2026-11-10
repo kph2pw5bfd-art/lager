@@ -380,3 +380,7 @@ body.pkdragging .pkdrop{display:flex}
 
 /* 1.154: Retourschein – Artikel aus der Packliste */
 .rpkh{margin:16px 0 8px;font-size:16px}.rpkt{border:2px solid var(--navy)}.rpkt.dn{border-color:#2e7d4f;background:#eef8f1}
+
+/* 1.156: Grund einer Abweichung gut sichtbar */
+.pkgrund{display:block;margin:4px 0 2px;padding:3px 8px;border-left:3px solid #e67e22;background:#fff3e2;border-radius:4px;color:#7a4300;font-weight:700;font-size:14px;font-style:normal}
+.pk-ok .pkt:has(.pkgrund){opacity:1}

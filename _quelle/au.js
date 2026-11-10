@@ -75,8 +75,8 @@ function auDevNet(p,zps){const H=pkH(p),M=[],add=(nm,u,d,t)=>{let e=M.find(x=>x.
   if(st.s==="part")add(n,u,-(st.need-st.q));const ov=pkOver(x,h,st);if(ov)add(n,u,ov);
   (st.s!=="open"?st.alt:[]).forEach(a=>{const k=pkKat({a:a.a});add(k?k.name:a.t,u,+a.n||0)});
   if(h&&h.fm==="lager"&&x.f>0&&st.s!=="open")add(n,u,0,pkNum(x.f)+" "+u+" aus dem Lager statt Fremdmiete");
-  const nbn=pkNbN(x,h);if(nbn)add(n,u,-nbn,"nicht gebraucht"+(h.nb.w?", laut "+h.nb.w:""))});
- if(typeof pkXz==="function")pkXz(p,zps).forEach(e=>add(pkXName(e),e.u||"Stk",+e.n||0,"zusätzlich mitgegeben"+(e.why?" – "+e.why:"")));
+  const nbn=pkNbN(x,h);if(nbn)add(n,u,-nbn,"nicht gebraucht"+(h.nb.w?", laut "+h.nb.w:"")+(h.nb.why?" – Grund: "+h.nb.why:""))});
+ if(typeof pkXz==="function")pkXz(p,zps).forEach(e=>add(pkXName(e),e.u||"Stk",+e.n||0,"zusätzlich mitgegeben"+(e.why?" – Grund: "+e.why:"")));
  return M.filter(e=>e.d||e.t.length).map(e=>(e.d?(e.d>0?"+":"−")+pkNum(Math.abs(e.d))+" "+e.u+" ":"")+e.nm+(e.t.length?" ("+e.t.join(", ")+")":""))}/* 1.131: Zahl vor dem Namen (Jürgen) */
 function auDevLines(p,zps){const H=pkH(p),K=pkKeys(p),IT=pkItems(p),L=[];pkPosAll(p).forEach((x,i)=>{if((IT[i].z||null)!==(zps||null))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),n=pkName(x);
  const u=" "+(x.u||"Stk");if(st.s==="part")L.push(n+": "+pkNum(st.q)+" von "+pkNum(st.need)+u+" – fehlen "+pkNum(st.need-st.q)+u);
@@ -84,7 +84,7 @@ function auDevLines(p,zps){const H=pkH(p),K=pkKeys(p),IT=pkItems(p),L=[];pkPosAl
  (st.s!=="open"?st.alt:[]).forEach(a=>L.push(n+": stattdessen "+pkNum(a.n)+" "+(x.u||"Stk")+" "+a.t));
  if(h&&h.fm==="lager"&&x.f>0)L.push(n+": "+pkNum(x.f)+" "+(x.u||"Stk")+" aus dem Lager statt Fremdmiete");
  if(pkNbN(x,h))L.push(n+": "+pkNbPl(x,h))});
- if(typeof pkXz==="function")pkXz(p,zps).forEach(e=>L.push("zusätzlich mitgegeben: "+pkXTx(e)+(e.why?" – "+e.why:"")));return L}
+ if(typeof pkXz==="function")pkXz(p,zps).forEach(e=>L.push("zusätzlich mitgegeben: "+pkXTx(e)+(e.why?" – Grund: "+e.why:"")));return L}
 function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){view="au";return auView()}
  $("#t").textContent=p.ev||"Auftrag";const I=auInfo(p),B=I.B,H=pkH(p),mine=auIsMine(p),act=mine&&can("au_b"),g=I.g,fr=pkF(p).length;
  const te=(c,t,s)=>'<div class="aute"><span class="audot '+c+'">'+(c==="d"?"✓":c==="r"||c==="w"?"!":"")+'</span><span><b>'+t+'</b>'+(s?'<small>'+s+'</small>':'')+'</span></div>';

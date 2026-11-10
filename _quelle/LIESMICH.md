@@ -498,3 +498,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## Retourschein aus der Packliste (ab 1.154)
 - Packliste: Knopf `#pknewr` „+ Retourschein anlegen“ (Recht ret_b, auch vor dem Herrichten). `pkNewRet`: neuer Schein mit Veranstaltung + Auftragsnummer, Ebene Gruppen; offener Schein vorhanden → Auswahl öffnen / trotzdem neu.
 - Retourschein (Ebene Gruppen, ohne Suche): `rPkSec` in abg.js (aus `rAbgInject`) setzt „Aus der Packliste“ unter die Gruppen (seit 1.155) – Artikel mit raus > 0 aus `abgBal` (ohne Lager 55/Fremdmiete), nur mit Treffer in der Artikelliste, „x von y zurück“ über alle Scheine, grün wenn vollständig. Test `tests/rnew_t.js`.
+
+## Grund gut sichtbar (ab 1.156)
+- `pkGrund(w)` (pack.js) → oranger Kasten „Grund: …“ (`.pkgrund`) bei „nicht gebraucht“ und „Zusätzlich mitgegeben“. Info-Mail, Meine Aufträge: „– Grund: …“. PDF: eigene fette orange Zeile (Hinweis-Art "r") + Kasten „Abweichungen“ mit „– Grund: …“. Andere Abweichungen haben kein Grund-Feld (Jürgen: nur sichtbar machen).

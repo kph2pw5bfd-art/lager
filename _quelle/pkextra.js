@@ -14,7 +14,7 @@ const pkXTx=e=>pkNum(e.n)+" "+(e.u||"Stk")+" "+pkXName(e);
 function pkXHtml(P,fin,zps){const X=pkXz(P,zps);if(!X.length&&fin)return"";
  return (X.length?'<div class="pkg pkgx">Zusätzlich (nicht im '+(zps?'Zusatz':'Packschein')+')</div>'+X.map(e=>'<div class="pkp pk-x"><button class="pkc pkcx" type="button" data-pkxe="'+esc(e.id)+'" aria-label="Ändern"'+(fin?' disabled':'')+'>+</button>'+
    '<span class="pkn" data-pkxe="'+esc(e.id)+'">'+esc(pkNum(e.n))+' '+esc(e.u||"Stk")+'</span><span class="pkt" data-pkxe="'+esc(e.id)+'">'+esc(pkXName(e))+(e.a?' <small>'+esc(e.a)+'</small>':'')+
-   '<small class="pkby">'+(e.why?esc(e.why)+' · ':'')+esc(nmA(e,"by"))+', '+fmt(e.ts).slice(-5)+'</small></span></div>').join(""):'')+
+   (typeof pkGrund==="function"?pkGrund(e.why):'')+'<small class="pkby">'+esc(nmA(e,"by"))+', '+fmt(e.ts).slice(-5)+'</small></span></div>').join(""):'')+
   (fin?'':'<button class="pkxadd" type="button"'+(zps?'':' id="pkxadd"')+' data-pkxadd="'+esc(zps||"")+'">+ Material hinzufügen</button>')}
 function pkXBind(P){document.querySelectorAll("[data-pkxadd]").forEach(a=>a.onclick=()=>pkXDlg(P,null,null,a.dataset.pkxadd||null));
  document.querySelectorAll("[data-pkxe]").forEach(b=>b.onclick=()=>{if(pkXFin(P,pkH(P)[b.dataset.pkxe]))return toast("Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);pkXDlg(P,b.dataset.pkxe)})}

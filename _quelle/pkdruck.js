@@ -12,9 +12,9 @@ function pkDrRows(P){const H=pkH(P),IT=pkItems(P),rows=[];
   let r=o.z&&!l55?rows.find(q=>!q.z&&!q.l55&&q.k===k):null;
   if(!r){r={k,pos:(o.z?"Z ":"")+(x.p||String(i+1)),name:pkName(x),a:x.a||"",u:x.u||"Stk",z:o.z||null,l55,items:[]};rows.push(r)}
   r.items.push(part)});
- rows.forEach(r=>{Object.assign(r,{soll:0,mit:0,fz:0,fl:0,nf:0,miss:0,open:0,over:0,zn:{},alt:[],nb:0,nbw:[]});
+ rows.forEach(r=>{Object.assign(r,{soll:0,mit:0,fz:0,fl:0,nf:0,miss:0,open:0,over:0,zn:{},alt:[],nb:0,nbw:[],nbg:[]});
   r.items.forEach(p=>{const n=+p.x.n||0;r.soll+=n;if(p.z&&!r.z)r.zn[p.z]=(r.zn[p.z]||0)+n;if(p.l55)return;
-   const nbn=pkNbN(p.x,p.h);if(nbn){r.nb+=nbn;const w=pkNbWho(p.h);if(w&&!r.nbw.includes(w))r.nbw.push(w)}
+   const nbn=pkNbN(p.x,p.h);if(nbn){r.nb+=nbn;const w=pkNbWho(p.h);if(w&&!r.nbw.includes(w))r.nbw.push(w);const g=p.h.nb.why;if(g&&!r.nbg.includes(g))r.nbg.push(g)}
    if(p.f>0){if(p.fm==="lager")r.fl+=p.f;else if(p.fm==="miete")r.fz+=p.f;else r.nf+=p.f}
    if(p.st.s==="open"){if(p.fin)r.miss+=p.st.need;else r.open+=p.st.need}
    else{const ov=pkOver(p.x,p.h,p.st),q=p.st.s==="ok"?p.st.need+ov:Math.min(p.st.need,+p.st.q||0);r.mit+=q;r.over+=ov;if(p.st.s==="part")r.miss+=p.st.need-q;p.st.alt.forEach(a=>r.alt.push(a))}});
@@ -23,14 +23,14 @@ function pkDrRows(P){const H=pkH(P),IT=pkItems(P),rows=[];
   if(r.l55)h.push(["Lager 55 – holt Fahrer/Monteur selbst","m"]);
   if(r.miss)h.push([r.mit?"fehlt "+pkDrQ(r.miss,u):"nicht mitgegeben","o"]);
   if(r.over)h.push([pkDrQ(r.over,u)+" mehr als im Packschein","o"]);
-  if(r.nb)h.push([pkDrQ(r.nb,u)+" nicht gebraucht"+(r.nbw.length?" ("+r.nbw.join(", ")+")":""),"o"]);
+  if(r.nb)h.push([pkDrQ(r.nb,u)+" nicht gebraucht"+(r.nbw.length?" ("+r.nbw.join(", ")+")":""),"o"]);if(r.nbg.length)h.push(["Grund: "+r.nbg.join("; "),"r"]);
   if(r.open)h.push([(r.mit?pkDrQ(r.open,u)+" ":"")+"noch nicht hergerichtet","m"]);
   if(r.fl)h.push([pkDrQ(r.fl,u)+" aus dem Lager statt Fremdmiete","o"]);
   if(r.fz)h.push(["davon "+pkDrQ(r.fz,u)+" Fremdmiete – kommt nicht vom Lager","m"]);
   if(r.nf)h.push(["davon "+pkDrQ(r.nf,u)+" Fremdmiete (noch nicht geklärt)","m"]);
   Object.keys(r.zn).forEach(z=>h.push(["inkl. "+pkDrQ(r.zn[z],u)+" aus Zusatz "+z,"m"]));
   if(r.z)h.push(["aus Zusatz "+r.z,"m"]);r.hints=h});
- if(typeof pkX==="function")pkX(P).forEach(e=>rows.push({k:pkXKey(e),pos:"+",name:pkXName(e),a:e.a||"",u:e.u||"Stk",z:null,l55:false,items:[],extra:e,soll:0,mit:+e.n||0,fz:0,fl:0,nf:0,miss:0,open:0,zn:{},alt:[],ck:"+",hints:[["zusätzlich (nicht im "+(e.z?"Zusatz "+e.z:"Packschein")+")"+(e.why?" – "+e.why:""),"g"]]}));
+ if(typeof pkX==="function")pkX(P).forEach(e=>rows.push({k:pkXKey(e),pos:"+",name:pkXName(e),a:e.a||"",u:e.u||"Stk",z:null,l55:false,items:[],extra:e,soll:0,mit:+e.n||0,fz:0,fl:0,nf:0,miss:0,open:0,zn:{},alt:[],ck:"+",hints:[["zusätzlich (nicht im "+(e.z?"Zusatz "+e.z:"Packschein")+")","g"]].concat(e.why?[["Grund: "+e.why,"r"]]:[])}));
  return rows}
 const pkDrAltName=a=>{const k=a.a?pkKat({a:a.a}):null;return (k&&k.name)||a.t||""};
 /* Stand (Kopf) und Abweichungen (Kasten) */
@@ -41,11 +41,11 @@ function pkDrHead(P){const H=pkH(P),g=pkProg(P),L=[];
 function pkDrDev(rows){const D=[],O=[];rows.forEach(r=>{const u=pkDrU(r);
   if(r.miss)D.push(r.name+": fehlt "+pkDrQ(r.miss,u)+(r.mit?" ("+pkDrQ(r.mit,u)+" mitgegeben)":" (nicht mitgegeben)"));
   if(r.over)D.push(r.name+": "+pkDrQ(r.over,u)+" mehr als im Packschein ("+pkDrQ(r.mit,u)+" mitgegeben)");
-  if(r.nb)D.push(r.name+": "+pkDrQ(r.nb,u)+" nicht gebraucht"+(r.nbw&&r.nbw.length?" ("+r.nbw.join(", ")+")":""));
+  if(r.nb)D.push(r.name+": "+pkDrQ(r.nb,u)+" nicht gebraucht"+(r.nbw&&r.nbw.length?" ("+r.nbw.join(", ")+")":"")+(r.nbg&&r.nbg.length?" – Grund: "+r.nbg.join("; "):""));
   r.alt.forEach(a=>D.push("Ersatz für "+r.name+": "+pkDrQ(+a.n||0,u)+" "+pkDrAltName(a)));
   if(r.fl)D.push(r.name+": "+pkDrQ(r.fl,u)+" aus dem Lager statt Fremdmiete");
   if(r.open)O.push(r.name+" ("+pkDrQ(r.open,u)+")");
-  if(r.extra)D.push("Zusätzlich mitgegeben: "+pkDrQ(r.mit,u)+" "+r.name+(r.extra.why?" ("+r.extra.why+")":""))});return{D,O}}
+  if(r.extra)D.push("Zusätzlich mitgegeben: "+pkDrQ(r.mit,u)+" "+r.name+(r.extra.why?" – Grund: "+r.extra.why:""))});return{D,O}}
 /* ---------- PDF ---------- */
 async function pkDrPdf(P){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb}=PDFLib,doc=await PDFDocument.create(),F=await doc.embedFont(StandardFonts.Helvetica),B=await doc.embedFont(StandardFonts.HelveticaBold);
  const W=595.28,HP=841.89,ML=34,MR=34,MT=34,MB=44,CW=W-ML-MR;
@@ -79,13 +79,13 @@ async function pkDrPdf(P){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb
  box("Abweichungen zum Packschein ("+dev.D.length+")",dev.D.length?dev.D:["Keine – alles wie im Packschein."],ORL,ORBG);
  box("Noch nicht hergerichtet ("+dev.O.length+")",dev.O,NAVY,TINT);
  y-=2;need(60,false);thead();
- const line=(cells,o)=>{const nameL=wrap(cells.name,o.l55?F:B,8.5,C[4].w-8),hl=[].concat(...(cells.hints||[]).map(h=>wrap(h[0],F,7.5,C[4].w-8).map(t=>[t,h[1]]))),h=Math.max(1,nameL.length)*10.5+hl.length*9.5+6;
+ const line=(cells,o)=>{const nameL=wrap(cells.name,o.l55?F:B,8.5,C[4].w-8),hl=[].concat(...(cells.hints||[]).map(h=>wrap(h[0],h[1]==="r"?B:F,7.5,C[4].w-8).map(t=>[t,h[1]]))),h=Math.max(1,nameL.length)*10.5+hl.length*9.5+6;
   need(h,true);if(o.bg)pg.drawRectangle({x:ML,y:y-h,width:CW,height:h,color:o.bg});
   const ck=cells.ck;if(ck)txt(ck==="ok"?"ok":ck,C[0].x+3,y-10.5,{size:ck==="55"?7:8,bold:true,color:ck==="ok"?OK:ck==="+"?BLUE:ck==="55"?GREY:OR});
   txt(cells.pos,C[1].x+4,y-10.5,{size:8,color:GREY});
   [[2,cells.soll],[3,cells.mit]].forEach(([i,s])=>txt(s,C[i].x+C[i].w-6-tw(s,F,8.5),y-10.5,{size:8.5}));
   nameL.forEach((l,i)=>txt(l,C[4].x+4,y-10.5-i*10.5,{size:8.5,bold:!o.l55,color:o.l55?GREY:INK}));
-  hl.forEach((l,i)=>txt(l[0],C[4].x+4,y-10.5-nameL.length*10.5-i*9.5+1,{size:7.5,color:l[1]==="o"?OR:l[1]==="b"?BLUE:l[1]==="g"?XG:GREY}));
+  hl.forEach((l,i)=>txt(l[0],C[4].x+4,y-10.5-nameL.length*10.5-i*9.5+1,{size:7.5,bold:l[1]==="r",color:l[1]==="o"||l[1]==="r"?OR:l[1]==="b"?BLUE:l[1]==="g"?XG:GREY}));
   txt(cells.a||"",C[5].x+4,y-10.5,{size:8,color:GREY});y-=h;pg.drawLine({start:{x:ML,y},end:{x:ML+CW,y},thickness:.5,color:HAIR})};
  rows.forEach(r=>{const u=pkDrU(r);
   if(r.extra)return line({ck:"+",pos:"",soll:"–",mit:pkDrQ(r.mit,u),name:r.name,a:r.a,hints:r.hints},{bg:XBG});

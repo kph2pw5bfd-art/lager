@@ -131,8 +131,10 @@ const pkH=P=>packh[P.id]||{};
 /* 1.152: „Wird nicht gebraucht“ (Monteur/PL sagt beim Herrichten ab): packh h_<Pos>.nb={n,w,why,by,t,pl} – zieht von der Lager-Menge ab, ist eine Abweichung (grau). pl=true: vom Projektleiter in „Meine Aufträge“ eingetragen */
 const pkNbN=(x,h)=>h&&h.nb&&+h.nb.n>0?Math.min(+h.nb.n,Math.max(0,(+x.n||0)-(h.fm==="miete"?(+x.f||0):0))):0;
 const pkNbWho=h=>h&&h.nb&&h.nb.w?"laut "+h.nb.w+(h.nb.pl?" (selbst eingetragen)":""):"";
-const pkNbTx=(x,h)=>{const n=pkNbN(x,h);if(!n)return "";const w=pkNbWho(h);return "−"+pkNum(n)+" "+(x.u||"Stk")+" nicht gebraucht"+(w?" · "+w:"")+(h.nb.why?" – "+h.nb.why:"")};
-const pkNbPl=(x,h)=>{const n=pkNbN(x,h);if(!n)return "";const w=pkNbWho(h);return pkNum(n)+" "+(x.u||"Stk")+" nicht gebraucht"+(w||h.nb.why?" ("+[w,h.nb.why].filter(Boolean).join(" – ")+")":"")};
+const pkNbTx=(x,h)=>{const n=pkNbN(x,h);if(!n)return "";const w=pkNbWho(h);return "−"+pkNum(n)+" "+(x.u||"Stk")+" nicht gebraucht"+(w?" · "+w:"")};
+const pkNbPl=(x,h)=>{const n=pkNbN(x,h);if(!n)return "";const w=pkNbWho(h);return pkNum(n)+" "+(x.u||"Stk")+" nicht gebraucht"+(w?" ("+w+")":"")+(h.nb.why?" – Grund: "+h.nb.why:"")};
+/* 1.156: Grund gut sichtbar (Jürgen, 10.11.) */
+const pkGrund=w=>w?'<span class="pkgrund">Grund: '+esc(w)+'</span>':"";
 const pkNeed=(x,h)=>Math.max(0,(+x.n||0)-(h&&h.fm==="miete"?(+x.f||0):0)-pkNbN(x,h));
 function pkPS(x,h){const need=pkNeed(x,h);if(!h)return{s:"open",need,alt:[]};const alt=h.alt||[];
  if(need<=0&&pkNbN(x,h)>0&&!alt.length&&!(typeof h.q==="number"&&h.q>0))return{s:"ok",q:0,need,alt};
@@ -214,7 +216,7 @@ function pkRowHtml(p,r,sub){const {x,i,h,st}=r,fm=pkFmTxt(x,h),ov=pkOver(x,h,st)
   (st.s==="part"?'<em class="pkpart">'+pkNum(st.q)+' von '+pkNum(st.need)+' '+esc(x.u||"Stk")+' da – fehlen '+pkNum(st.need-st.q)+' '+esc(x.u||"Stk")+'</em>':'')+
   (ov?'<em class="pkpart">'+pkNum(h.q)+' von '+pkNum(st.need)+' '+esc(x.u||"Stk")+' – '+pkNum(ov)+' '+esc(x.u||"Stk")+' mehr als im Packschein</em>':'')+
   st.alt.map(a=>'<em class="pkalt">+ '+esc(pkNum(a.n))+'× '+esc(a.t)+(a.a?' ('+esc(a.a)+')':'')+'</em>').join("")+
-  (pkNbN(x,h)?'<em class="pknb">'+esc(pkNbTx(x,h))+'</em>':'')+
+  (pkNbN(x,h)?'<em class="pknb">'+esc(pkNbTx(x,h))+'</em>'+pkGrund(h.nb.why):'')+
   (h&&h.by&&st.s!=="open"?'<small class="pkby">'+esc(nm(h.by))+', '+fmt(h.t).slice(-5)+'</small>':'')+'</span></div>'}
 function pkRowsHtml(p,rows,mid){const D=rows.filter(r=>r.dev);let out=D.length?'<div class="pkg pkgdev">Abweichungen ('+D.length+')</div>'+D.map(r=>pkRowHtml(p,r,pkGrp(r.x)+(r.z?' · Zusatz '+r.z:''))).join(""):'';
  let lg=null,lz;rows.forEach((r,ri)=>{const z=r.z,newZ=z&&(ri===0||rows[ri-1].z!==z),last=z&&(ri===rows.length-1||rows[ri+1].z!==z);
@@ -375,7 +377,7 @@ function pkMailText(P,zps){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[],inc=o=>
   if(st.alt.length)st.alt.forEach(a=>L.push((st.s==="part"||st.s==="open"||pkOver(x,h,st)?"  ":"- "+nm2+":\n  ")+"Alternative: "+pkNum(a.n)+"× "+a.t+(a.a?" ("+a.a+")":"")));
   if(h&&h.fm==="lager"&&x.f>0)L.push("- "+nm2+": aus dem Lager statt Fremdmiete ("+pkNum(x.f)+u+")");
   if(pkNbN(x,h))L.push("- "+nm2+": "+pkNbPl(x,h))});
- if(typeof pkXz==="function")pkXz(P,zps).forEach(e=>L.push("- Zusätzlich mitgegeben (nicht im "+(zps?"Zusatz":"Packschein")+"): "+pkXTx(e)+(e.why?" – "+e.why:"")));
+ if(typeof pkXz==="function")pkXz(P,zps).forEach(e=>L.push("- Zusätzlich mitgegeben (nicht im "+(zps?"Zusatz":"Packschein")+"): "+pkXTx(e)+(e.why?" – Grund: "+e.why:"")));
  const vn=String(P.pl||"").split(" ")[0],me1=String(meName()||""),F=zps?pkZFin(P,pkZOf(P,zps)||{})||{}:H.fin||{};
  return{subj:(zps?"Zusatz-Packschein "+zps:"Packliste "+(P.ord||""))+" – "+(P.ev||"")+": Abweichungen beim Herrichten",
   body:"Hallo"+(vn?" "+vn:"")+",\n\nbeim Herrichten von "+(zps?"Zusatz-Packschein "+zps+" zu ":"")+(P.ev||"")+" (Auftrag "+(P.ord||"–")+", Packschein "+(zps||P.ps||"–")+") gab es folgende Abweichungen:\n\n"+(L.length?L.join("\n"):"- keine")+"\n\nHergerichtet von "+(F.by?nm(F.by):me1)+(F.t?", "+fmt(F.t):"")+".\n\nLG\n"+me1}}
