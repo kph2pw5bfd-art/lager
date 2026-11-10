@@ -47,7 +47,7 @@ function wbDefNeed(a,b){const G={};defs.filter(d=>!d.done).forEach(d=>{const cod
 /* ---------- Bericht (Bildschirm und Druck) ---------- */
 function wbList(title,rows,red,empty){return '<div class="wbl"><div class="wblh'+(red?' red':'')+'"><b>'+esc(title)+'</b><b>'+rows.length+'</b></div>'+(rows.length?rows.map(r=>'<div class="wbr"><b>'+esc(r.n)+'</b><span>'+esc(r.d)+'</span>'+(r.r?'<em class="'+(r.cls||"")+'">'+esc(r.r)+'</em>':'')+'</div>').join(""):'<div class="wbe">'+esc(empty)+'</div>')+'</div>'}
 function wbPaper(D,print){const kwL=pkKW(D.L0),kwN=pkKW(D.M),y=new Date(D.M).getFullYear();
- const day=(d,k)=>{const L=d[k];return L.length?L.map(o=>esc(o.p.ev||o.p.ord||"–")+(o.we?' <small>('+o.we+')</small>':'')).join(", "):'<span class="wbm">–</span>'};
+ const day=(d,k)=>{const L=wbDayList(d[k]);return L.length?L.map(e=>'<div class="wbli">'+esc(e.n)+(e.zt?' <small class="wbz">'+esc(e.zt)+'</small>':'')+(e.we?' <small>('+e.we+')</small>':'')+(e.fin&&k==="h"?' <b class="wbok">✓</b>':'')+'</div>').join(""):'<span class="wbm">–</span>'};
  const nh=D.days.reduce((a,d)=>a+d.h.length,0),nz=D.days.reduce((a,d)=>a+d.z.length,0);
  return '<div class="wbpaper'+(print?' wbprint':'')+'"><div class="wbhd"><div><span>The Power Company · Lager</span><h1>Wochenbericht</h1></div><em>Besprechung '+wbWd(D.M)+y+'</em></div>'+
   '<section class="wbsec"><div class="wbbar"><b>1 · Letzte Woche</b><span>KW '+kwL+' · '+pkDM(D.L0)+'–'+pkDM(pkAddD(D.M,-1))+new Date(pkAddD(D.M,-1)).getFullYear()+'</span></div><div class="wbin">'+
@@ -140,7 +140,7 @@ async function wbPdf(D){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb}=
  secEnd();
  /* 2 · Diese Woche */
  secStart("2 · Diese Woche","KW "+pkKW(D.M)+" · "+pkDM(D.M)+"–"+pkDM(pkAddD(D.M,4))+y0);
- const dayT=(d,k)=>d[k].length?d[k].map(o=>(o.p.ev||o.p.ord||"–")+(o.we?" ("+o.we+")":"")).join(", "):"–";
+ const dayT=(d,k)=>{const L=wbDayList(d[k]);return L.length?L.map(e=>"• "+e.n+(e.zt?" "+e.zt:"")+(e.we?" ("+e.we+")":"")+(e.fin&&k==="h"?" ✓":"")).join("\n"):"–"};
  const c1=60,c3=Math.round((IW-c1)*0.38),c2=IW-c1-c3,CWS=[c1,c2,c3];
  const row=(cells,o)=>{const L=cells.map((s,i)=>wrap(s,o.bold||i===0?B:F,8.5,CWS[i]-8)),h=Math.max(...L.map(l=>l.length))*10.5+7;need(h);
   if(o.fill)pg.drawRectangle({x:IX,y:y-h,width:IW,height:h,color:o.fill});let x=IX;L.forEach((l,i)=>{pg.drawRectangle({x,y:y-h,width:CWS[i],height:h,borderColor:LINE,borderWidth:.6});l.forEach((t,j)=>txt(t,x+4,y-11-j*10.5,{size:8.5,bold:o.bold||i===0}));x+=CWS[i]});y-=h};
@@ -168,3 +168,7 @@ async function wbPdfOut(D,mode){const b=$("#wbpr"),old=b?b.textContent:"";if(b){
   const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=fn;a.rel="noopener";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);toast("PDF gespeichert: "+fn,1)}
  catch(e){if(e&&(e.name==="AbortError"||e.code==="declined"))return;console.error(e);errBox("Das PDF konnte nicht erstellt werden. Bitte Internetverbindung prüfen und nochmal versuchen.")}
  finally{if(b){b.disabled=false;b.textContent=old}}}
+/* 1.158: „Diese Woche“ – eine Zeile pro Auftrag, Zusätze desselben Auftrags am selben Tag zusammen („+ Zusatz“ / „+ 2 Zusätze“, nur Zusatz → „(Zusatz)“), ✓ wenn alles hergerichtet (Jürgen, 10.11.) */
+function wbDayList(L){const M=new Map();(L||[]).forEach(o=>{const P=o.p&&o.p._p?o.p._p:o.p,k=P.id||P.ord||Math.random();let e=M.get(k);if(!e){e={P,main:false,zn:0,we:"",fin:true};M.set(k,e)}
+  if(o.p&&o.p._z)e.zn++;else e.main=true;if(o.we&&!e.we)e.we=o.we;try{if(!pkProg(o.p).fin)e.fin=false}catch(x){e.fin=false}});
+ return [...M.values()].map(e=>({n:e.P.ev||e.P.ord||"–",zt:e.zn?(e.main?"+ "+(e.zn===1?"Zusatz":e.zn+" Zusätze"):"("+(e.zn===1?"Zusatz":e.zn+" Zusätze")+")"):"",we:e.we,fin:e.fin}))}

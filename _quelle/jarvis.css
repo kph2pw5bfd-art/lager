@@ -384,3 +384,6 @@ body.pkdragging .pkdrop{display:flex}
 /* 1.156: Grund einer Abweichung gut sichtbar */
 .pkgrund{display:block;margin:4px 0 2px;padding:3px 8px;border-left:3px solid #e67e22;background:#fff3e2;border-radius:4px;color:#7a4300;font-weight:700;font-size:14px;font-style:normal}
 .pk-ok .pkt:has(.pkgrund){opacity:1}
+
+/* 1.158: Wochenbericht – eine Zeile pro Auftrag */
+.wbli{padding:2px 0}.wbli+.wbli{border-top:1px dashed #d5dbe5}.wbz{color:#b35c00!important;font-weight:700}.wbok{color:#1f6b41}

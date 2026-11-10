@@ -504,3 +504,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Abgleich-Excel wie Retourschein (ab 1.157)
 - `abgXlMake` Blatt „Übersicht“: Logo, Titel, Kopf (Veranstaltung, Auftrag, PL, Dispo, Stand, Retourscheine, Erstellt), Spalten Artikelnr. · Artikel · Ausgang (= soll, ohne Fremdmiete/Lager 55) · Retour · Differenz (Retour − Ausgang, +0;-0;0, rot/orange wie Retourschein-Excel) · Bemerkung; Gesamt-Zeile. Blätter Verlauf und Zu viel – Zuordnungen unverändert.
+
+## Wochenbericht „Diese Woche“ pro Auftrag (ab 1.158)
+- `wbDayList` (wb.js): eine Zeile pro Auftrag (`.wbli`), Zusätze desselben Auftrags am selben Tag zusammengefasst („+ Zusatz“ / „+ n Zusätze“, nur Zusatz → „(Zusatz)“), ✓ wenn alles hergerichtet. PDF: „• …“ pro Zeile.
