@@ -516,3 +516,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## 1.160
 - Von Baustelle / Verlängerung (`pkNoHView`) im neuen Aufbau: `pkHeadHtml`, `pkActsHtml`, `pkHeadBind` gemeinsam mit `packOpenView`; Feld `.pkfnoh` mit Hinweis statt Kacheln, aufklappbar (Artikel nur zur Info). Kopf-Menü bei nicht herrichten: PL ändern, Kunde (aus), Art ändern, Doch selbst herrichten, Info zum Herrichten, Löschen.
 - Alle Rahmen eine Stufe dicker (Kurzform `border:` in CSS und Inline-Stilen: 1→2, 1,5→2,5, 2→3 px; Wochenbericht-Tabelle und Druck ausgenommen).
+
+## Meine Aufträge (1.161)
+- Kachel: Veranstaltung groß, darunter Auftrag · PL (immer), Dispo; Schild „Teilweise zurück · zurück/raus“ statt „Retoure läuft“/„Teilretoure“; erledigt: „Geprüft ✓“ bzw. „Zurück – vollständig“ / „Geklärt“. Leiste 10 px; Herrichten blau, wenn Haupt + alle Zusätze abgeschlossen (auch mit Abweichungen); letzter Schritt „Geprüft“ (docs `abpr`, `I.chk`). Filter „Erledigt“ unverändert (Endretoure ohne Fehlmaterial / geklärt).
+- Detail: „Noch draußen“ entfällt; Material (`auMat`) immer offen (section statt details), ohne „inkl. … aus Zusatz“ und ohne eigene Zusatz-Blöcke (`amZus` nicht mehr aufgerufen). Zeitleiste letzter Schritt „Geprüft“.

@@ -51,7 +51,7 @@ async function run(b,role,rolle,extra,fn){const docs=base.concat(rolle?[{col:"ro
   ok("Abweichung beim Herrichten genannt (kurz, 1.129)",/Abweichungen:.*−1 Stk 32A Kabel 25m.*\+1 Stk 32A Kabel 50m/.test(await T(".audev")),await T(".audev"));
   console.log("Fehlt noch:",await T(".aucd.red"));await p.screenshot({path:S+"au_detail.png",fullPage:true});
   ok("Fehlt noch mit Einheit",/2 Stk 32A Kabel 25m/.test(await T(".aucd.red")),await T(".aucd.red"));
-  await p.click(".aumat summary");await p.waitForTimeout(150);ok("Material als Tabelle (1.128)",/RAUS REIN DIFF/i.test(await T(".aumat"))&&/davon 2 Stk Fremdmiete/.test(await T(".aumat")),await T(".aumat"));
+  ok("Material als Tabelle (1.128)",/RAUS REIN DIFF/i.test(await T(".aumat"))&&/davon 2 Stk Fremdmiete/.test(await T(".aumat")),await T(".aumat"));
   await p.click('[data-aua="0"]');await p.waitForTimeout(200);await p.click('[data-ao="anders"]');await p.waitForTimeout(250);
   await p.fill("#abgq","mörbisch");await p.waitForTimeout(150);await p.click('[data-pp="B"]');await p.waitForTimeout(150);
   ok("Auftrag gewählt",/Winterwunder/.test(await T("#auto")),await T("#auto"));await p.fill("#autx","Hat Anna mitgenommen");await p.screenshot({path:S+"au_antwort.png"});

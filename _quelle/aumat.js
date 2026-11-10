@@ -44,7 +44,7 @@ function amBody(p,B,I){const R=amRows(p,B),ph2=!!(B.R&&B.R.length),endish=!!(B.h
  const head='<div class="amh"><span>Artikel</span>'+(ph2?'<span>Raus</span><span>Rein</span><span>Diff</span>':'<span>Soll</span><span>Raus</span><span>Rein</span>')+'</div>';
  let g0=null,rows="";L.forEach(e=>{if(e.grp!==g0){g0=e.grp;rows+='<div class="amg'+(e.only55?' l55':'')+'">'+esc(g0)+'</div>'}
   const notes=[];const u=" "+(e.u||"Stk");
-  const zk=Object.keys(e.zus);if(zk.length)notes.push('<small>inkl. '+zk.map(z=>n(e.zus[z])+u+' aus Zusatz '+esc(z)).join(", ")+'</small>');
+
   e.dev.forEach(d=>notes.push('<small class="or">'+esc(d)+'</small>'));if(e.isDev&&e.devBy&&(amF==="dev"))notes.push('<small>'+esc(e.devBy)+'</small>');
   if(e.ers.length)notes.push('<small class="or">Ersatz für '+e.ers.map(esc).join(", ")+'</small>');
   if(e.x)notes.push('<small class="or">'+n(e.x)+u+' zusätzlich mitgegeben (nicht im Packschein)</small>');
@@ -57,7 +57,7 @@ function amBody(p,B,I){const R=amRows(p,B),ph2=!!(B.R&&B.R.length),endish=!!(B.h
   rows+='<div class="amr'+(e.isDev?' dev':'')+(e.only55?' l55':'')+'"><span class="n">'+esc(e.name)+notes.join("")+'</span>'+(ph2?(e.only55?dash:'<span class="q m">'+n(e.raus)+'</span>')+cB+cD:c1+cR+cB)+'</div>'});
  return kpi+'<div class="amch">'+F.map(f=>'<button type="button" data-amf="'+f[0]+'" class="'+(amF===f[0]?'on':'')+'">'+esc(f[1])+(f[0]==="alle"?'':' '+f[2])+'</button>').join("")+'</div>'+
   '<input class="amq" id="amq" type="search" placeholder="Artikel suchen …" value="'+esc(amQ)+'" autocomplete="off">'+
-  '<div class="amt">'+head+(rows||'<div class="ame">Nichts gefunden.</div>')+'</div>'+amZus(p)}
+  '<div class="amt">'+head+(rows||'<div class="ame">Nichts gefunden.</div>')+'</div>'}
 /* 1.130: Zusätze unten zusätzlich einzeln anführen (oben bleibt alles zusammengerechnet) – Jürgen, 5.11. */
 function amZus(p){if(amF!=="alle"||!(p.zus||[]).length)return "";const H=pkH(p),n=v=>pkNum(v),q=amQ.trim(),T=q?dxNorm(q).split(" ").filter(Boolean):[];
  return (p.zus||[]).map(z=>{const ps=String(z.ps||""),zf=pkZFin(p,z),za=zf?null:auHerrAll(p,ps),g=pkZProg(p,ps);
@@ -72,8 +72,8 @@ function amZus(p){if(amF!=="alle"||!(p.zus||[]).length)return "";const H=pkH(p),
   return '<div class="amt amz"><div class="amg">Zusatz '+esc(ps)+'<small>'+esc(st)+'</small></div><div class="amh"><span>Artikel</span><span>Soll</span><span>Raus</span><span></span></div>'+rows+'</div>'}).join("")}
 function auMat(p,B,I){if(amPk!==p.id){amPk=p.id;amF="alle";amQ=""}const ph2=!!(B.R&&B.R.length),cnt=pkPosAll(p).length;
  setTimeout(()=>amBind(p,B,I),0);
- return '<details class="card aucd aumat" id="amd"'+(amOpen[p.id]?' open':'')+'><summary><b>Material</b><small>'+pkPosN(cnt)+((p.zus||[]).length?' · '+(p.zus.length===1?'1 Zusatz':p.zus.length+' Zusätze'):'')+(ph2?' · Retouren da':'')+'</small></summary><div id="amb">'+amBody(p,B,I)+'</div></details>'}
-function amBind(p,B,I){const d=document.getElementById("amd");if(!d)return;d.ontoggle=()=>{amOpen[p.id]=d.open};
+ return '<section class="card aucd aumat" id="amd"><div class="amhd"><b>Material</b><small>'+pkPosN(cnt)+(ph2?' · Retouren da':'')+'</small></div><div id="amb">'+amBody(p,B,I)+'</div></section>'}/* 1.161: immer offen, ohne Zusatz-Unterscheidung (Jürgen) */
+function amBind(p,B,I){const d=document.getElementById("amd");if(!d)return;
  const re=(foc)=>{const b=document.getElementById("amb");if(!b)return;b.innerHTML=amBody(p,B,I);amBind2(p,B,I,foc)};amBind2(p,B,I,null,re)}
 function amBind2(p,B,I,foc,re){re=re||(f=>{const b=document.getElementById("amb");if(!b)return;b.innerHTML=amBody(p,B,I);amBind2(p,B,I,f)});
  document.querySelectorAll("[data-amf]").forEach(b=>b.onclick=()=>{amF=b.dataset.amf;re(null)});

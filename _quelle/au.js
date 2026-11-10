@@ -21,32 +21,34 @@ const auOutDay=p=>Math.max(p.db?pkDay(p.db):0,pkHDay(p)||0);
 function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.klar&&H.klar.t),t0=pkDay(Date.now()),over=st.k==="over",late=st.k==="late";
  const missShow=(B.hasEnd||over)&&!kl&&B.fehlt>0;const done=kl||(B.hasEnd&&!B.fehlt);
  const out=B.R.length>0||(g.fin&&auOutDay(p)&&auOutDay(p)<=t0);
- const S=[{c:"d"},{c:g.fin?(g.dev?"w":"d"):g.d?"n":late?"r":""},{c:over?"r":out||B.R.length?"d":""},{c:B.hasEnd?(B.fehlt&&!kl?"r":"d"):B.R.length?"n":""},{c:done?"d":""}];
+ /* 1.161: alles hergerichtet (auch Zusätze) = blau, auch mit Abweichungen; letzter Schritt „Geprüft“ (Sonja, docs abpr) */
+ const zAll=(p.zus||[]).every(z=>pkZFin(p,z)),endT=B.R.filter(r=>r.closed&&r.art==="end").reduce((a,r)=>Math.max(a,r.closedT||0),0),pr=typeof ABP!=="undefined"?ABP[p.id]:null,chk=!!(B.hasEnd&&pr&&(pr.t||0)>=endT);
+ const S=[{c:"d"},{c:g.fin&&zAll?"d":g.d||g.fin?"n":late?"r":""},{c:over?"r":out||B.R.length?"d":""},{c:B.hasEnd?(B.fehlt&&!kl?"r":"d"):B.R.length?"n":""},{c:chk?"d":""}];
  let lab,cls;
- if(done){lab=kl?"Geklärt":"Erledigt ✓";cls="ok"}
+ if(done){lab=kl?"Geklärt":chk?"Geprüft ✓":"Zurück – vollständig";cls="ok"}
  else if(over&&!B.hasEnd){lab="Dispo abgelaufen";cls="red"}
  else if(missShow){lab="Fehlt "+B.fehlt;cls="red"}
  else if(late){lab="Nicht hergerichtet";cls="red"}
- else if(B.R.length){lab=B.R.some(r=>r.closed&&r.art==="teil")?"Teilretoure":"Retoure läuft";cls="b"}
+ else if(B.R.length){lab="Teilweise zurück · "+B.zur+"/"+B.raus;cls="b"}
  else if(g.fin&&out){lab="Draußen";cls="b"}
  else if(g.fin){lab="Hergerichtet";cls="b"}
  else if(g.d){lab=g.d+" / "+g.n;cls="b"}
  else{lab=st.k==="herr"?"Heute herrichten":"Herrichten "+pkDM(pkHDay(p));cls="g"}
  const zlate=(p.zus||[]).some(z=>!pkZFin(p,z)&&pkZDay(p,z)<t0);const hot=!done&&(missShow||over||late||zlate);
- return{p,g,st,B,kl,done,over,late,missShow,S,lab,cls,hot}}
+ return{p,g,st,B,kl,done,over,late,missShow,S,lab,cls,hot,chk}}
 const auAns=(p,k)=>PLAW.filter(a=>a.pk===p.id&&a.k===k&&a.typ!=="msg");
 const auAnsTxt=a=>{const T={anders:"Ist auf einer anderen Baustelle: "+(a.toEv||"")+(a.toOrd?" ("+a.toOrd+")":""),bau:"Ist noch auf der Baustelle"+(a.bis?", kommt bis "+pkWd(pkFromYmd(a.bis)):""),kunde:"Bleibt beim Kunden",verr:"Dem Kunden verrechnet",zur:"Ist schon zurück – bitte nachzählen",weiss:"Weiß ich nicht / kläre ich",msg:"Nachricht"};
  return (T[a.typ]||"")+(a.txt?(a.typ==="msg"?": ":" – ")+"„"+a.txt+"“":"")};
-const auStepL='<div class="aul"><span>Packliste</span><span>Herrichten</span><span>Draußen</span><span>Retouren</span><span>Erledigt</span></div>';
+const auStepL='<div class="aul"><span>Packliste</span><span>Herrichten</span><span>Draußen</span><span>Retouren</span><span>Geprüft</span></div>';
 function auCard(I){const p=I.p,mine=auIsMine(p),pills=[];
  if(I.missShow)pills.push(abgTag(I.B.hasEnd?"Endretoure – "+I.B.fehlt+(I.B.fehlt===1?" Stück fehlt":" Stück fehlen"):I.B.fehlt+" Stück noch draußen","red"));
  if(I.missShow&&mine&&I.B.miss.some(e=>!auAns(p,e.k).length))pills.push(abgTag("Noch nicht beantwortet","or"));
  if(!I.done)(p.zus||[]).forEach(z=>{if(pkZFin(p,z)||auHerrAll(p,String(z.ps)))return;const d=pkZDay(p,z),late=d<pkDay(Date.now());pills.push(abgTag("Nachlieferung "+(late?"noch nicht hergerichtet":"herrichten "+pkDM(d)),late?"red":"blue"))});
  if(I.g.dev&&!I.done)pills.push(abgTag(I.g.dev+(I.g.dev===1?" Abweichung":" Abweichungen")+" zum Packschein","or"));
  if(I.B.zuviel&&!I.done)pills.push(abgTag(I.B.zuviel+" mehr zurück","grey"));
- const sub=I.over?"Dispo-Ende war "+pkDM(p.de):I.done?"Dispo "+pkDM(p.db)+" – "+pkDM(p.de):I.st.k==="herr"?"Herrichten heute":"Dispo "+pkDM(p.db)+" – "+pkDM(p.de);
+ const sub="Dispo "+pkDM(p.db)+" – "+pkDM(p.de)+(I.over?" · Dispo abgelaufen":!I.done&&I.st.k==="herr"?" · Herrichten heute":"");
  return '<button class="aucard'+(mine?' mine':'')+(I.hot?' hot':'')+'" type="button" data-au="'+esc(p.id)+'"><span class="auct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+abgTag(I.lab,I.cls==="b"?"blue":I.cls==="g"?"grey":I.cls)+'</span>'+
-  '<small class="mute">Auftrag '+esc(p.ord||"–")+(!mine&&p.pl?' · '+esc(shortName(p.pl)):'')+' · '+sub+'</small>'+
+  '<small class="aum">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</small><small class="aum">'+sub+'</small>'+
   '<span class="aus">'+I.S.map(s=>'<i class="'+s.c+'"></i>').join("")+'</span>'+auStepL+(pills.length?'<span class="aupills">'+pills.join("")+'</span>':'')+'</button>'}
 function auList(){const t0=pkDay(Date.now()),q=jvNorm(auq);
  const A=packs.map(auInfo).filter(I=>(auf==="alle"||(auf==="done")===I.done)&&(!q||jvNorm((I.p.ev||"")+" "+(I.p.ord||"")+" "+(I.p.pl||"")).includes(q)));
@@ -61,7 +63,7 @@ function auView(){if(!can("au_s")){view="start";return startView()}$("#t").textC
   (L.mine.length?L.mine.map(auCard).join(""):'<div class="card mute" style="font-size:14px">'+(noMine?'Keine Packliste mit '+(nm0?'„'+esc(nm0)+'“':'deinem Namen')+' als Projektleiter.':empty)+'</div>')+
   '<div class="audiv"></div><div class="aug"><b>Alle anderen Aufträge</b><small>'+L.rest.length+'</small></div>'+
   (L.rest.length?L.rest.map(auCard).join(""):'<div class="card mute" style="font-size:14px">'+empty+'</div>')+
-  '<p class="mute" style="font-size:12px;margin:12px 2px 0;line-height:1.4">Eigene Aufträge: Projektleiter in der Packliste = dein Name. Erledigt = Endretoure ohne Fehlmaterial oder mit dem Projektleiter geklärt.</p>';
+  '<p class="mute" style="font-size:12px;margin:12px 2px 0;line-height:1.4">Eigene Aufträge: Projektleiter in der Packliste = dein Name. Erledigt = Endretoure ohne Fehlmaterial oder mit dem Projektleiter geklärt. Geprüft = das Lager hat die Endretoure geprüft.</p>';
  const qi=$("#auq");qi.value=auq;qi.oninput=()=>{auq=qi.value;const pos=qi.selectionStart;auView();const n=$("#auq");n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}};
  document.querySelectorAll("[data-auf]").forEach(b=>b.onclick=()=>{auf=b.dataset.auf;auView()});
  document.querySelectorAll("[data-au]").forEach(b=>b.onclick=()=>{curAu=b.dataset.au;go("auopen")})}
@@ -98,11 +100,11 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const outT=I.over?te("r","Dispo abgelaufen","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Draußen","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Draußen","ab "+pkWd(auOutDay(p)));
  const R=B.R.slice().sort((a,b)=>(abgRetT(a)||0)-(abgRetT(b)||0));
  const retT=R.length?R.map(r=>te(r.closed?(r.art==="teil"?"d":(B.fehlt&&!I.kl?"r":"d")):"n",abgRetLbl(r),fmt(abgRetT(r)).slice(0,6)+" · "+abgRetN(r)+" Stück"+(r.closed&&r.art!=="teil"?" · "+(B.fehlt?B.fehlt+" fehlen noch":"alles da"):""))).join(""):te("","Retouren","noch nichts zurück");
- const doneT=I.kl?te("d","Mit Projektleiter geklärt",fmt(H.klar.t).slice(0,6)+" · "+esc(nmA(H.klar,"by"))):I.done?te("d","Erledigt","alles zurück"):te("","Erledigt","wenn alles zurück oder geklärt ist");
+ const prA=typeof ABP!=="undefined"?ABP[p.id]:null,doneT=(I.kl?te("d","Mit Projektleiter geklärt",fmt(H.klar.t).slice(0,6)+" · "+esc(nmA(H.klar,"by"))):"")+(I.chk&&prA?te("d","Geprüft",fmt(prA.t).slice(0,6)+" · "+esc(nmA(prA,"by"))+(prA.note?" – „"+esc(prA.note)+"“":"")):te("","Geprüft",B.hasEnd?"Endretoure da – wartet auf die Prüfung im Lager":"nach der Endretoure prüft das Lager"));/* 1.161 */
  const tl='<section class="card aucd"><b class="ausec">Wie weit ist das Lager?</b><div class="autl">'+te("d","Packliste da",(p.t?fmt(p.t).slice(0,6)+" · ":"")+pkPosN(pkPosAll(p).length)+(fr?", davon "+fr+" mit Fremdmiete":"")+((p.zus||[]).length?" · "+(p.zus.length===1?"1 Zusatz":p.zus.length+" Zusätze"):""))+chgT+herr+zusT+outT+retT+doneT+'</div></section>';
  const ansH=a=>'<div class="auans"><b>'+(a.by===me?'Deine Antwort':esc(nmA(a,"by")))+'</b> · '+fmt(a.t).slice(0,6)+'<br>'+esc(auAnsTxt(a))+(a.read&&a.read.t?'<small>Gelesen von '+esc(nmA(a.read,"by"))+'</small>':'<small>Noch nicht gelesen</small>')+'</div>';
  const miss=I.missShow?'<section class="card aucd red"><b class="ausec red">Fehlmaterial</b>'+B.miss.map((e,i)=>{const a=auAns(p,e.k)[0];return '<div class="aurow"><b class="auq">'+auQ(e.soll-e.back,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span>'+(act?'<button class="btn ghost s auab" type="button" data-aua="'+i+'">'+(a?'Ändern':'Antworten')+'</button>':'')+'</div>'+(a?ansH(a):'')}).join("")+'</section>':
-  (B.miss.length&&B.R.length&&!I.done?'<section class="card aucd"><b class="ausec">Noch draußen</b><small class="mute">Teilretoure – das kommt laut Packliste noch zurück.</small>'+B.miss.map(e=>'<div class="aurow"><b class="auq m">'+auQ(e.soll-e.back,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'');
+  '';/* 1.161: „Noch draußen“ entfällt – steht im Material (Jürgen) */
  const more=B.more.length&&!I.done?'<section class="card aucd"><b class="ausec">Mehr zurück als geplant</b>'+B.more.map(e=>'<div class="aurow"><b class="auq m">+'+auQ(e.back-e.soll-e.fr-e.l55,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span></div>').join("")+'</section>':'';
  const M=PLAW.filter(a=>a.pk===p.id&&a.typ==="msg");
  const msgs=M.length?'<section class="card aucd"><b class="ausec">Nachrichten ans Lager</b>'+M.map(ansH).join("")+'</section>':'';

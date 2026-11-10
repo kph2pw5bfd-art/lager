@@ -15,11 +15,11 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
   if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});
   return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(400);
- await p.evaluate(()=>{curAu="A";go("auopen")});await p.waitForTimeout(400);await p.click("#amd summary");await p.waitForTimeout(200);
+ await p.evaluate(()=>{curAu="A";go("auopen")});await p.waitForTimeout(400);
  const rows=()=>p.evaluate(()=>[...document.querySelectorAll(".amt:not(.amz) .amr")].map(r=>[...r.children].map(c=>c.textContent.trim()).join(" | ")));
  let R=await rows();console.log(R.map(r=>"     "+r).join("\n"));
  ok("Spalten Soll · Raus · Rein",(await p.textContent(".amh"))==="ArtikelSollRausRein");
- ok("Zusatz zusammengerechnet",R.some(r=>/^125A Kabel 50m.*inkl\. 4 Stk aus Zusatz 20260741 \| 16 \| 16 \| –/.test(r)));
+ ok("Zusatz zusammengerechnet, ohne Zusatz-Hinweis (1.161)",R.some(r=>/^125A Kabel 50m \| 16 \| 16 \| –/.test(r))&&!R.some(r=>/aus Zusatz/.test(r)));
  ok("Teilmenge + Ersatz",R.some(r=>/Verteiler 125A Maxi 2.*8 von 9 Stk.*stattdessen 1 Stk Verteiler 63A Indu \| 9 \| 8/.test(r))&&R.some(r=>/Verteiler 63A Indu.*Ersatz für Verteiler 125A Maxi 2 \| 0 \| 1/.test(r)));
  ok("Fremdmiete",R.some(r=>/125A Kabel 25m.*6 Stk Fremdmiete.*\| 14 \| 14/.test(r)));
  ok("Soll ohne Fremdmiete/Lager 55: 41 Soll, 43 raus",/^41Soll43raus/.test((await p.textContent(".amk")).replace(/\s/g,"")));
@@ -31,11 +31,11 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  const grp=await p.evaluate(()=>[...document.querySelectorAll(".amt:not(.amz) .amg")].map(g=>g.textContent));console.log("     Gruppen:",J(grp));ok("Gruppen, „Nicht in der Artikelliste“ vor Lager 55",grp[grp.length-1].startsWith("Lager 55")&&grp[grp.length-2]==="Nicht in der Artikelliste");
  const ch=await p.evaluate(()=>[...document.querySelectorAll("[data-amf]")].map(b=>b.textContent));ok("Filter vor Retoure "+J(ch),J(ch)===J(["Alle","Abweichungen 3","Fremdmiete 1","Lager 55 1"]));
  const zb=await p.evaluate(()=>{const b=document.querySelector(".amz");return b?b.innerText.replace(/\s+/g," "):""});console.log("     Zusatz-Block:",zb);
- ok("Zusatz unten extra (Kopf mit Stand, 125A Kabel 50m 4 / 4)",/Zusatz 20260741 hergerichtet \d\d\.\d\d\. von Jürgen H\./.test(zb)&&/125A Kabel 50m 4 4/.test(zb));
+ ok("Kein eigener Zusatz-Block mehr (1.161)",!(await p.$(".amz")));
  await p.screenshot({path:S+"amat_1.png",fullPage:true});
  await p.click('[data-amf="dev"]');await p.waitForTimeout(150);ok("Filter Abweichungen: 3 Zeilen",(await p.$$(".amt:not(.amz) .amr")).length===3);
  ok("Zusatz-Block nur bei „Alle“",!(await p.$(".amz")));
- await p.click('[data-amf="alle"]');await p.click("#amq");await p.type("#amq","125 kabel");await p.waitForTimeout(150);ok("Suche „125 kabel“ → 2 (+1 im Zusatz)",(await p.$$(".amt:not(.amz) .amr")).length===2&&(await p.$$(".amz .amr")).length===1&&await p.evaluate(()=>document.activeElement.id==="amq"));
+ await p.click('[data-amf="alle"]');await p.click("#amq");await p.type("#amq","125 kabel");await p.waitForTimeout(150);ok("Suche „125 kabel“ → 2",(await p.$$(".amt .amr")).length===2&&await p.evaluate(()=>document.activeElement.id==="amq"));
  await p.fill("#amq","");await p.evaluate(()=>{const e=document.getElementById("amq");e.dispatchEvent(new Event("input"))});
  /* Retoure dazu: neuer Kontext mit Retourschein von Anfang an */
  const seed2=[...seed,{col:"retour",id:"rA",data:{ev:"Weihnachtsmarkt Spittelberg 2026",ord:"260079601",itemsJson:"{}",pa_u1:J({"1109":{nr:"1109",name:"125A Kabel 50m",g:"Kabel",u:"125A",q:12},"1048":{nr:"1048",name:"Verteiler 125A Maxi 2",g:"Verteiler",u:"125A",q:8},"1081":{nr:"1081",name:"Schuko 20m",g:"Kabel",u:"Schuko",q:2},"1098":{nr:"1098",name:"32A Kabel 50m",g:"Kabel",u:"32A",q:3}}),by:"u1",t:D(0),closed:true,closedT:D(0),art:"teil"}}];
@@ -45,7 +45,7 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
   if(u.includes("supabase-js"))return r.fulfill({body:fk2,contentType:"text/javascript"});
   return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(400);
- await p.evaluate(()=>{curAu="A";go("auopen")});await p.waitForTimeout(400);await p.click("#amd summary");await p.waitForTimeout(200);
+ await p.evaluate(()=>{curAu="A";go("auopen")});await p.waitForTimeout(400);
  R=await rows();console.log(R.map(r=>"     "+r).join("\n"));
  ok("Nach Retoure: Spalten Raus · Rein · Diff",(await p.textContent(".amh"))==="ArtikelRausReinDiff");
  ok("Diff 125A 50m −4, Maxi 0, 32A +1",R.some(r=>/^125A Kabel 50m.*\| 16 \| 12 \| −4/.test(r))&&R.some(r=>/Verteiler 125A Maxi 2.*\| 8 \| 8 \| 0/.test(r))&&R.some(r=>/32A Kabel 50m.*\| 2 \| 3 \| \+1/.test(r)));

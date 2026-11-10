@@ -414,3 +414,6 @@ body.pkdragging .pkdrop{display:flex}
 .pkmi{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #eef2f8;padding:14px 16px;font:600 16px inherit;font-family:inherit;color:#1c2533;cursor:pointer;min-height:48px}
 .pkmi small{font-weight:500;color:#7a8698;font-size:13px}.pkmi.red{color:#c62828}.pkmi:disabled{color:#a0aab8;cursor:default}.pkmx{color:var(--navy);text-align:center;border-bottom:0}
 .pkfnbox{padding:4px 14px 12px}.pkfnbox .pkartbox{margin:0}.pkfnoh .pkfbody{padding-bottom:0}
+
+/* 1.161: Meine Aufträge */
+.aucard .auct b{font-size:18px;font-weight:800;line-height:1.2}.aucard .aum{color:#4a5568;font-size:13.5px}.aus i{height:10px;border-radius:5px}.amhd{display:flex;align-items:baseline;gap:8px}.amhd small{color:var(--mute)}
