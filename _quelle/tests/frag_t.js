@@ -37,7 +37,7 @@ const Q=["Hilfe",
  const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));p.on("console",m=>{if(m.type()==="error")errs.push("console: "+m.text())});
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(400);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(400);
  console.log("Kachel-Zähler Lager Übersicht:",await p.evaluate(()=>jvHot()));
  const J=async()=>{await p.evaluate(()=>{document.querySelectorAll(".ov,.jvhelp").forEach(o=>o.remove());view="jarvis";hist=["start"];draw()});await p.waitForTimeout(150)};
  await J();console.log("Erinnerungs-Feld:",(await p.textContent("#jvl")).slice(0,90).replace(/\s+/g," "));

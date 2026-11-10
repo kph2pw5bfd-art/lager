@@ -8,9 +8,9 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5+8
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
  const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();p.on("pageerror",e=>errs.push(e.message));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(700);await p.mouse.click(200,400);await p.waitForTimeout(400);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(700);await p.mouse.click(200,400);await p.waitForTimeout(400);
  const PK=()=>p.evaluate(()=>window.__T.docs.find(r=>r.col==="pack"&&r.id==="A").data);
- const open=async()=>{await p.evaluate(()=>{curPack="A";view="packopen";draw()});await p.waitForTimeout(300);await p.click("[data-plch]");await p.waitForSelector("#pkpln")};
+ const open=async()=>{await p.evaluate(()=>{curPack="A";view="packopen";draw()});await p.waitForTimeout(300);await p.click("#pkhg");await p.click("#pkplch");await p.waitForSelector("#pkpln")};
  await open();const L=await p.$$eval("#pkpll [data-pln]",l=>l.map(x=>x.textContent));console.log("   Liste:",L);ok("Vorschläge: beide Namen, kurz",L.some(x=>/^Anna K\./.test(x))&&L.some(x=>/^Max M\..*bisher/.test(x)));
  await p.screenshot({path:S+"plch.png"});
  await p.click('#pkpll [data-pln]:has-text("Anna K.")');await p.click("#pkplo");await p.waitForTimeout(400);

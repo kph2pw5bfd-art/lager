@@ -26,7 +26,7 @@ const XL=`window.ExcelJS={Workbook:class{constructor(){this.ws=[]}addWorksheet(n
  const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
  await p.evaluate(()=>{window.claude=window.claude||{};const u=claude.use;claude.use=async n=>n==="downloads"?{save:async o=>{__saved.push({fn:o.filename,txt:await o.data.text()})}}:u(n)});
  const T=async sel=>(await p.$$eval(sel,l=>l.map(x=>x.innerText.replace(/\s+/g," ").trim()))).join(" | ");
  const V=async v=>{await p.evaluate(v=>{document.querySelectorAll(".ov").forEach(o=>o.remove());view=v;hist=["start"];draw()},v);await p.waitForTimeout(250)};

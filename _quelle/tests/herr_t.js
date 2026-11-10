@@ -10,8 +10,8 @@ const seed=[{col:"pack",id:"20260714",data:{ord:"260111401",ps:"20260714",ev:"Wi
  const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(195,420);await p.waitForTimeout(400);
- const prog=()=>p.evaluate(()=>document.querySelector(".pkprog b").textContent+" | "+[...document.querySelectorAll(".pkp")].map(r=>r.className.replace("pkp ","")).join(","));
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(800);await p.mouse.click(195,420);await p.waitForTimeout(400);
+ const prog=()=>p.evaluate(()=>[...document.querySelectorAll(".pkf.main .pkft")].map(e=>e.textContent).join("/")+" | "+[...document.querySelectorAll(".pkp")].map(r=>r.className.replace("pkp ","")).join(","));
  const H=()=>p.evaluate(()=>JSON.stringify((__T.docs.find(d=>d.col==="packh")||{}).data||{}));
  console.log("Version",await p.evaluate(()=>APPV));
  await p.click('[data-g="pack"]');await p.waitForTimeout(200);await p.evaluate(()=>go("packall"));await p.waitForTimeout(200);/* ab 1.77: über „Alle Packlisten“ – am Wochenende liegt heute im zugeklappten Freitag-Fach */await p.click('[data-pk="20260714"]');await p.waitForTimeout(300);
@@ -30,9 +30,9 @@ const seed=[{col:"pack",id:"20260714",data:{ord:"260111401",ps:"20260714",ev:"Wi
  await p.click('[data-pc="0"]');await p.waitForTimeout(250);console.log("Pos 1 wieder offen:",await prog());await p.click('[data-pc="0"]');await p.waitForTimeout(250);
  await p.click('[data-pc="3"]');await p.waitForTimeout(150);await p.click("#fml");await p.waitForTimeout(250);
  console.log("Datensatz behält alle Positionen:",Object.keys(JSON.parse(await H())).filter(k=>k.startsWith("h_")).join(","));
- await p.click('[data-pkhf="offen"]');await p.waitForTimeout(150);console.log("Filter Noch offen:",await p.evaluate(()=>[...document.querySelectorAll(".pkp .pkt")].map(e=>e.textContent.slice(0,25)).join(" | ")));await p.click('[data-pkhf="alle"]');
+ await p.click('[data-pkff="main"][data-v="offen"]');await p.waitForTimeout(150);console.log("Filter Noch offen:",await p.evaluate(()=>[...document.querySelectorAll(".pkp .pkt")].map(e=>e.textContent.slice(0,25)).join(" | ")));await p.click('[data-pkff="main"][data-v="alle"]');
  await p.screenshot({path:S+"herr_view.png",fullPage:true});
- await p.click("#pkfin");await p.waitForTimeout(150);console.log("Abschließen-Frage:",(await p.textContent(".ov p")).trim());await p.click(".ov #y");await p.waitForTimeout(400);
+ await p.click('[data-pkfg="main"]');await p.click("#pkfin");await p.waitForTimeout(150);console.log("Abschließen-Frage:",(await p.textContent(".ov p")).trim());await p.click(".ov #y");await p.waitForTimeout(400);
  console.log("Info-Frage:",(await p.textContent(".ov p")).trim());await p.click(".ov #y");await p.waitForTimeout(300);
  console.log("Mail-Betreff:",(await p.textContent(".ov .mute")).trim());console.log("Mail-Text:\n"+await p.inputValue("#kpmt"));
  await p.screenshot({path:S+"herr_mail.png"});await p.click("#kpmx");await p.waitForTimeout(200);
@@ -40,7 +40,7 @@ const seed=[{col:"pack",id:"20260714",data:{ord:"260111401",ps:"20260714",ev:"Wi
  await p.click('[data-pe="4"]');await p.waitForTimeout(200);console.log("Text antippen →",await p.evaluate(()=>{const e=document.querySelector(".eov");const t=e&&e.textContent.replace(/\s+/g," ");if(e)e.remove();return t||"(kein Hinweis)"}));
  await p.click("#bk");await p.waitForTimeout(200);console.log("Liste:",await p.evaluate(()=>document.querySelector('[data-pk="20260714"]').innerText.replace(/\s+/g," ")));
  await p.evaluate(()=>{view="jarvis";hist=["start"];draw()});await p.waitForTimeout(300);await p.click("#jvsp");await p.waitForTimeout(2500);console.log("Briefing:",(await p.evaluate(()=>__said)).slice(0,2).join(" / "));
- await p.evaluate(()=>{curPack="20260714";view="packopen";hist=["start"];draw()});await p.waitForTimeout(200);await p.click("#pkreo");await p.click(".ov #y");await p.waitForTimeout(300);
+ await p.evaluate(()=>{curPack="20260714";view="packopen";hist=["start"];draw()});await p.waitForTimeout(200);await p.click('[data-pkfg="main"]');await p.click("#pkreo");await p.click(".ov #y");await p.waitForTimeout(300);
  console.log("Wieder geöffnet:",await prog());
  await p.evaluate(()=>{view="jarvis";hist=["start"];draw()});await p.waitForTimeout(300);await p.evaluate(()=>__said.length=0);await p.click("#jvsp");await p.waitForTimeout(2500);console.log("Briefing:",(await p.evaluate(()=>__said)).slice(0,2).join(" / "));
  await p.evaluate(()=>{jvTab="herr";jarvisView()});/* ab 1.76 Reiter */console.log("Jarvis-Zeile:",await p.evaluate(()=>document.querySelector('[data-jp]').innerText.replace(/\s+/g," ")));

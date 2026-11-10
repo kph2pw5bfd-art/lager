@@ -507,3 +507,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Wochenbericht „Diese Woche“ pro Auftrag (ab 1.158)
 - `wbDayList` (wb.js): eine Zeile pro Auftrag (`.wbli`), Zusätze desselben Auftrags am selben Tag zusammengefasst („+ Zusatz“ / „+ n Zusätze“, nur Zusatz → „(Zusatz)“), ✓ wenn alles hergerichtet. PDF: „• …“ pro Zeile.
+
+## Neue Packlisten-Ansicht (ab 1.159)
+- `packOpenView` neu (pack.js, Abschnitt 1.159): Kopf (`.pkhead`, „Alle Angaben“ `pkFS.aa`, Zahnrad `#pkhg` → `pkHeadMenu`), Knöpfe `#pketik` / `#pkret` (`pkRetBtn`) / `#pkprint`, `pkHiBox`, pro Packschein ein Feld `pkField` (`.pkf.main` / `.pkf.zus`, Kacheln `.pkft-ok/part/bad/neu`, Zahnrad `[data-pkfg]` → `pkFieldMenu`), `abgPkCard`, `pkChgCard`. Felder immer zugeklappt (`pkFS.open`, gilt solange dieselbe Packliste offen ist), Filter pro Feld `pkFS.filt`.
+- Menü `pkMenu(title,items)`; Einträge tragen die alten IDs/Attribute (`#pkfin`, `#pkreo`, `#pkxadd`, `#pkmv`, `#pkinfo`, `#pkdel`, `#pkplch`, `#pkmhi`, `data-pkzf/zr/zmv/zi/zx/xadd`).
+- Tests: `window.PK_FOPEN=true` nach `goto` klappt alle Felder auf (in den Tests eingebaut); Zahnrad vor Menü-Klicks öffnen. Test `tests/pv_t.js`.

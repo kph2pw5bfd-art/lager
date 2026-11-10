@@ -20,13 +20,13 @@ const seed=kat.concat([
  /* „App schließen und wieder öffnen“ mit denselben Daten (die Test-Datenbank lebt sonst nur in der Seite) */
  const reopen=async()=>{const d=await p.evaluate(()=>JSON.stringify(window.__T.docs));await p.close();p=await ctx.newPage();p.on("pageerror",e=>errs.push(e.message));
   await p.addInitScript(d=>{const t=setInterval(()=>{if(window.__T){window.__T.docs.length=0;JSON.parse(d).forEach(x=>window.__T.docs.push(x));clearInterval(t)}},1)},d);
-  await p.goto("https://app.test/");await p.waitForTimeout(1500);await p.mouse.click(200,400);await p.waitForTimeout(500)};
+  await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(1500);await p.mouse.click(200,400);await p.waitForTimeout(500)};
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();
   if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});
   if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});
   return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(800);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(800);
  const snap=()=>p.evaluate(()=>JSON.stringify(window.__T.docs.map(r=>[r.col,r.id,r.data])));
  const IGN=/^(ed_|edn_)/;/* users/<id>.t = „zuletzt angemeldet“, gewollt */
  const diff=(a,b)=>{const A=new Map(JSON.parse(a).map(x=>[x[0]+"/"+x[1],x[2]])),B=new Map(JSON.parse(b).map(x=>[x[0]+"/"+x[1],x[2]]));const out=[];

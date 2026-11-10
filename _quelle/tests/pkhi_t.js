@@ -8,7 +8,7 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5;
   if(u.includes("supabase-js"))return r.fulfill({body:fs.readFileSync(S+"fakesb.js"),contentType:"text/javascript"});
   if(u.includes("pdf-lib"))return r.fulfill({body:fs.readFileSync("/opt/npm-tools/node_modules/pdf-lib/dist/pdf-lib.min.js"),contentType:"text/javascript"});
   return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(600);await p.mouse.click(200,400);await p.waitForTimeout(400);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(600);await p.mouse.click(200,400);await p.waitForTimeout(400);
  const H=id=>p.evaluate(id=>{const r=window.__T.docs.find(r=>r.col==="packh"&&r.id===id);return r?r.data:{}},id);
  const his=async id=>Object.entries(await H(id)).filter(([k,v])=>k.startsWith("hi_")&&v).map(([k,v])=>v);
  const up=P=>p.evaluate(P=>{pkRead=async()=>P;pkUpload([{name:"x.pdf"}])},P);
@@ -24,7 +24,7 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5;
  await p.evaluate(()=>{view="packall";draw()});await p.waitForTimeout(300);ok("Alle Packlisten: Schild",!!(await p.$('[data-pk="501"] .pkhit')));
  /* 3) Packliste: Kasten oben, gut lesbar */
  await p.evaluate(()=>{curPack="501";go("packopen")});await p.waitForTimeout(400);
- const box=await p.evaluate(()=>{const b=document.querySelector("#app > .pkhi");if(!b)return null;const t=b.querySelector(".pkhit2"),cs=getComputedStyle(t);return{first:document.querySelector("#app").firstElementChild===b,html:t.innerHTML,size:cs.fontSize,meta:b.querySelector(".pkhim").textContent}});
+ const box=await p.evaluate(()=>{const b=document.querySelector("#app > .pkhi");if(!b)return null;const t=b.querySelector(".pkhit2"),cs=getComputedStyle(t);return{first:!!(document.querySelector("#app .pkacts")&&document.querySelector("#app .pkacts").nextElementSibling===b),html:t.innerHTML,size:cs.fontSize,meta:b.querySelector(".pkhim").textContent}});
  console.log("   Kasten:",JSON.stringify(box));ok("Kasten ganz oben, Zeilenumbruch, große Schrift",box&&box.first&&/<br>/.test(box.html)&&parseFloat(box.size)>=18&&/Jürgen H\./.test(box.meta));
  await p.screenshot({path:S+"pkhi_box.png"});
  /* 4) Ändern */
@@ -48,8 +48,8 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5;
  /* 8) Löschen beide → Kasten weg, Link da */
  await p.evaluate(()=>{curPack="501";go("packopen")});await p.waitForTimeout(300);
  for(let i=0;i<2;i++){await p.click("[data-hied]");await p.click("#pkhix");await p.waitForTimeout(200);await p.locator(".ov").last().locator(".btn:not(.ghost)").last().click();await p.waitForTimeout(600)}
- ok("Gelöscht: kein Kasten, Link „+ Info zum Herrichten eintragen“",!(await p.$(".pkhi"))&&!!(await p.$("#pkhiadd")));
- await p.click("#pkhiadd");await p.fill("#pkhit","Später eingetragen");await p.click("#pkhio");await p.waitForTimeout(600);ok("Später eintragen",(await his("501")).length===1&&!!(await p.$(".pkhi")));
+ ok("Gelöscht: kein Kasten, Link „+ Info zum Herrichten eintragen“",!(await p.$(".pkhi"))&&!!(await p.$("#pkhg")));
+ await p.click("#pkhg");await p.click("#pkmhi");await p.fill("#pkhit","Später eingetragen");await p.click("#pkhio");await p.waitForTimeout(600);ok("Später eintragen",(await his("501")).length===1&&!!(await p.$(".pkhi")));
  /* 9) ohne Recht Hochladen: kein Ändern */
  await p.evaluate(()=>{window.__can=can;can=k=>k==="pk_b"?false:window.__can(k);packOpenView()});await p.waitForTimeout(200);
  ok("Ohne Hochladen-Recht: lesen ja, ändern nein",!!(await p.$(".pkhi"))&&!(await p.$("[data-hied]"))&&!(await p.$("#pkhiadd2")));

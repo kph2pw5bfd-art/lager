@@ -14,7 +14,7 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5+8
   if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});
   if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});
   return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(700);await p.mouse.click(200,400);await p.waitForTimeout(400);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(700);await p.mouse.click(200,400);await p.waitForTimeout(400);
  const PK=id=>p.evaluate(id=>(window.__T.docs.find(r=>r.col==="pack"&&r.id===id)||{}).data,id);
  const st=id=>p.evaluate(id=>{const x=packs.find(q=>q.id===id);return x?pkState(x):null},id);
  const up=P=>p.evaluate(P=>{pkRead=async()=>P;view="pack";draw();pkUpload([{name:"x.pdf"}])},P);

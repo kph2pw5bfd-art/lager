@@ -12,15 +12,15 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});
   if(u.includes("pdf-lib"))return r.fulfill({body:fs.readFileSync("/opt/npm-tools/node_modules/pdf-lib/dist/pdf-lib.min.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
  const E=(f,a)=>p.evaluate(f,a),T=async sel=>(await p.$$eval(sel,l=>l.map(x=>x.innerText.replace(/\s+/g," ").trim()))).join(" | ");
  const V=async()=>{await E(()=>{document.querySelectorAll(".ov").forEach(o=>o.remove());curPack="14501";view="packopen";hist=["start"];draw()});await p.waitForTimeout(300)};
- await V();ok("Knopf „+ Material hinzufügen“",!!(await p.$("#pkxadd")));
+ await V();await p.click('[data-pkfg="main"]');ok("Knopf „+ Material hinzufügen“ im Zahnrad",!!(await p.$("#pkxadd")));await p.click(".pkmx");
  /* aus Artikelliste */
- await p.click("#pkxadd");await p.waitForTimeout(200);await p.fill("#pxt","verteiler 32");await p.waitForTimeout(200);const hit=await T("#pxres button");console.log("Treffer:",hit.slice(0,120));
+ await p.click('[data-pkfg="main"]');await p.click("#pkxadd");await p.waitForTimeout(200);await p.fill("#pxt","verteiler 32");await p.waitForTimeout(200);const hit=await T("#pxres button");console.log("Treffer:",hit.slice(0,120));
  await p.click("#pxres button");await p.fill("#pxn","2");await p.fill("#pxw","Monteur hat angerufen");await p.click("#pxs");await p.waitForTimeout(400);
  /* frei eingetippt */
- await p.click("#pkxadd");await p.waitForTimeout(200);await p.fill("#pxt","Kabeltrommel Spezial");await p.click("#pxs");await p.waitForTimeout(400);
+ await p.click('[data-pkfg="main"]');await p.click("#pkxadd");await p.waitForTimeout(200);await p.fill("#pxt","Kabeltrommel Spezial");await p.click("#pxs");await p.waitForTimeout(400);
  const X=await E(()=>pkX(packs[0]).map(e=>e.n+" "+e.u+" "+pkXName(e)+"|"+e.a+"|"+(e.why||"")).join(" ; "));console.log("Zusätzlich:",X);
  ok("Zwei Einträge gespeichert",/^2 Stk .+\|\d+\|Monteur hat angerufen ; 1 Stk Kabeltrommel Spezial\|\|$/.test(X),X);
  ok("Grüne Gruppe sichtbar",/Zusätzlich \(nicht im Packschein\)/.test(await T(".pkgx")));await p.screenshot({path:S+"extra_view.png",fullPage:true});
@@ -43,7 +43,7 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  ok("Zusatz: 2 von 3 aus Zusätzlichem verrechnet, Zusätzlich aufgebraucht",zs==="1:part2,2:open | x:0",zs);
  ok("Abgleich nicht doppelt",await E(k=>{const e=abgBal(packs[0]).L.find(x=>x.k===k);return e&&e.soll===2},ak),await E(k=>JSON.stringify(abgBal(packs[0]).L.find(x=>x.k===k)),ak));
  /* geänderter Packschein mit zusätzlichem Artikel → verrechnet */
- await V();await p.click("#pkxadd");await p.waitForTimeout(200);await p.fill("#pxt","schuko 20");await p.waitForTimeout(200);await p.click("#pxres button");await p.fill("#pxn","5");await p.click("#pxs");await p.waitForTimeout(400);
+ await V();await p.click('[data-pkfg="main"]');await p.click("#pkxadd");await p.waitForTimeout(200);await p.fill("#pxt","schuko 20");await p.waitForTimeout(200);await p.click("#pxres button");await p.fill("#pxn","5");await p.click("#pxs");await p.waitForTimeout(400);
  await E(()=>{window.pkRead=async()=>({ord:"2601131",ps:"14560",ev:"Firmenfeier Parndorf",pl:"x",db:Date.now(),de:Date.now(),pos:[{p:"1.1",n:10,u:"Stk",t:"Kabel CEE 32A 50m",a:"1098",f:0},{p:"1.2",n:4,u:"Stk",t:"Verteiler 3-fach",a:"1026",f:0},{p:"1.3",n:5,u:"Stk",t:"Schuko 20m",a:"1081",f:0}]});pkUpload([{name:"n.pdf"}])});await p.waitForTimeout(400);
  await p.click('[data-cm="rep"]');await p.waitForTimeout(150);await p.click("#pkco");await p.waitForTimeout(500);
  const rs=await E(()=>{const P=packs[0],H=pkH(P);return pkItems(P).filter(o=>!o.z).map(o=>{const s=pkPS(o.x,H[o.k]);return o.x.p+":"+s.s}).join(",")+" | x:"+pkX(P).length});

@@ -16,7 +16,7 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5;
   if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});
   if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});
   return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(600);await p.mouse.click(200,400);await p.waitForTimeout(400);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(600);await p.mouse.click(200,400);await p.waitForTimeout(400);
  const tags=()=>p.$$eval("[data-pk]",l=>l.map(x=>x.dataset.pk+":"+((x.querySelector(".pkwork")||{}).textContent||"")).filter(x=>!/:$/.test(x)));
  await p.evaluate(()=>{view="pack";draw()});await p.waitForTimeout(300);
  const W=await tags();console.log("   Wand "+w+":",W);ok("Wand "+w+": Gala Wien mit Max M.",W.includes("A:Richtet her · Max M."));ok("Wand "+w+": Nicht hergerichtet mit Tablet-Namen",W.includes("L:Richtet her · Karl K. (Tablet)"));ok("Wand "+w+": alter Herzschlag ohne Schild",!W.some(x=>x.startsWith("B:")));

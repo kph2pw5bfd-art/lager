@@ -12,11 +12,11 @@ let bad=0;const ok=(c,m,x)=>{console.log((c?"OK   ":"FEHLER")+" "+m+(x!==undefin
  const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(195,420);await p.waitForTimeout(400);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(800);await p.mouse.click(195,420);await p.waitForTimeout(400);
  ok(await p.evaluate(()=>APPV)==="1.110","Version 1.110");
  await p.click('[data-g="pack"]');await p.waitForTimeout(200);await p.evaluate(()=>go("packall"));await p.waitForTimeout(200);await p.click('[data-pk="P1"]');await p.waitForTimeout(300);
  const order=()=>p.evaluate(()=>[...document.querySelectorAll(".pkl .pkg, .pkl .pkzh, .pkl .pkp")].map(e=>e.classList.contains("pkp")?(e.querySelector(".pkc").textContent||"o")+e.querySelector(".pkt").childNodes[0].textContent.trim():"["+e.textContent.replace(/Entfernen|Verschieben/g,"").trim().slice(0,28)+"]").join(" → "));
- ok(await p.isVisible("#pkscan"),"Knopf „Artikel scannen“ da");
+ ok(await p.isVisible("[data-pkfscan]"),"Knopf „Artikel scannen“ da");
  ok(!(await p.$(".pkgdev")),"ohne Abweichung keine Gruppe oben");
  /* zu wenig, zu viel, Alternative setzen */
  await p.evaluate(async()=>{const P=packs.find(x=>x.id==="P1"),K=pkKeys(P);await pkHSet(P,{[K[0]]:{ok:true,q:12,alt:[],fm:"",by:me,t:Date.now()},[K[1]]:{ok:false,q:3,alt:[],fm:"",by:me,t:Date.now()},[K[3]]:{ok:false,q:2,alt:[{n:1,t:"Heizlüfter",a:""}],fm:"",by:me,t:Date.now()},[K[4]]:{ok:true,q:null,alt:[],fm:"",by:me,t:Date.now()}})});
@@ -26,7 +26,7 @@ let bad=0;const ok=(c,m,x)=>{console.log((c?"OK   ":"FEHLER")+" "+m+(x!==undefin
  ok(/✓Verteiler 63A Indu/.test(o1),"komplett ohne Abweichung bleibt in seiner Gruppe");
  const em=await p.evaluate(()=>[...document.querySelectorAll(".pkp")][0].innerText.replace(/\s+/g," "));ok(/12 von 10 Stk – 2 Stk mehr als im Packschein/.test(em),"zu viel mit Text",em);
  ok(/Kabel · 32A/.test(await p.evaluate(()=>document.querySelector(".pksub").textContent)),"Gruppe als Unterzeile");
- ok(/3 mit Abweichung/.test(await p.textContent(".pkprog")),"Zähler zählt zu viel mit",await p.textContent(".pkprog .pkdev"));
+ ok(/mit 3 Abweichungen/.test(await p.textContent(".pkf.main .pkftiles")),"Zähler zählt zu viel mit",await p.textContent(".pkf.main .pkftiles"));
  const ovx=await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1"),m=pkMailText(P).body,D=pkDrDev(pkDrRows(P)).D.join(" | "),r=pkDrRows(P).find(r=>r.a==="1098"),B=abgBal(P),e=(B.L||[]).find(e=>e.code==="1098");return{m,D,mit:r&&r.mit,ck:r&&r.ck,raus:e&&e.raus}});
  ok(/32A Kabel 50m|Kabel CEE 32A 50m/.test(ovx.m)&&/12 von 10 Stk – 2 Stk mehr als im Packschein/.test(ovx.m),"Info-Mail nennt zu viel",ovx.m.split("\n").find(l=>/mehr als/.test(l)));
  ok(/2 Stk mehr als im Packschein \(12 Stk mitgegeben\)/.test(ovx.D),"PDF-Abweichungen nennen zu viel",ovx.D);
@@ -34,7 +34,7 @@ let bad=0;const ok=(c,m,x)=>{console.log((c?"OK   ":"FEHLER")+" "+m+(x!==undefin
  ok(ovx.raus===12,"Abgleich zählt 12 raus",ovx.raus);
  await p.click('[data-pc="0"]');await p.waitForTimeout(200);ok(await p.isVisible("#peq"),"Kreis bei zu viel öffnet Bearbeiten statt zurücksetzen");await p.click("#pex");await p.waitForTimeout(100);
  /* Filter Noch offen: nur zu wenig/Alternative-offen bleibt sichtbar */
- await p.click('[data-pkhf="offen"]');await p.waitForTimeout(150);console.log("Noch offen:",await order());await p.click('[data-pkhf="alle"]');await p.waitForTimeout(150);
+ await p.click('[data-pkff="main"][data-v="offen"]');await p.waitForTimeout(150);console.log("Noch offen:",await order());await p.click('[data-pkff="main"][data-v="alle"]');await p.waitForTimeout(150);
  /* Scan: Treffer genau einmal */
  await p.evaluate(()=>pkScanHit(packs.find(x=>x.id==="P1"),"1040–07"));await p.waitForTimeout(400);
  ok(/Schon komplett hergerichtet/.test(await p.textContent(".ov .card")),"Scan auf komplette Position: Hinweis");
@@ -66,6 +66,6 @@ let bad=0;const ok=(c,m,x)=>{console.log((c?"OK   ":"FEHLER")+" "+m+(x!==undefin
  await p.screenshot({path:S+"pkscan_list.png",fullPage:true});
  /* abgeschlossen: Knopf weg */
  await p.evaluate(async()=>{const P=packs.find(x=>x.id==="P1");await pkHSet(P,{fin:{by:me,t:Date.now()},zf_Z9:{by:me,t:Date.now()}})});await p.waitForTimeout(300);
- ok(!(await p.$("#pkscan")),"abgeschlossen: kein Scan-Knopf");
+ ok(!(await p.$("[data-pkfscan]")),"abgeschlossen: kein Scan-Knopf");
  ok(!errs.length,"keine JS-Fehler",errs.join(" | "));
  console.log("FEHLER GESAMT:",bad);await b.close()})();

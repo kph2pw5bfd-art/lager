@@ -387,3 +387,29 @@ body.pkdragging .pkdrop{display:flex}
 
 /* 1.158: Wochenbericht – eine Zeile pro Auftrag */
 .wbli{padding:2px 0}.wbli+.wbli{border-top:1px dashed #d5dbe5}.wbz{color:#b35c00!important;font-weight:700}.wbok{color:#1f6b41}
+
+/* 1.159: neue Packlisten-Ansicht */
+.pkhead{cursor:default}.pkhrow{display:flex;gap:10px;align-items:flex-start}.pkhl{flex:1;min-width:0}.pkev{margin:0 0 4px;font-size:22px;font-weight:800;line-height:1.2}
+.pkhm{color:#4a5568;font-size:14px}.pkaa{background:none;border:0;padding:6px 0 2px;color:var(--navy);font:600 15px inherit;font-family:inherit;cursor:pointer}
+.pkgear{flex:0 0 44px;width:44px;height:44px;border-radius:12px;border:1.5px solid #c9d3e3;background:#f5f7fb;color:var(--navy);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.pkhead .pkkv{margin-top:8px}
+.pkacts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.pkact{min-height:66px;border-radius:12px;border:1.5px solid #c9d3e3;background:#fff;color:var(--navy);font:600 13px inherit;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:6px}
+.pkact small{font-weight:500}
+.pkf{background:#fff;border:2px solid var(--navy);border-radius:14px;margin:0 0 14px;overflow:hidden}.pkf.zus{border-color:#e67e22}
+.pkfh{display:flex;align-items:center;gap:8px;padding:10px 10px 4px 14px}.pkft0{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;font-family:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.pkft0 b{font-size:17px;font-weight:800}.pkfsub{font-size:13px;color:#4a5568}.pkfsub.late{color:#b8322a;font-weight:600}
+.pkzb{background:#e67e22;color:#fff;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800;margin-right:6px;vertical-align:2px}
+.pkf.zus .pkgear{border-color:#f0c79c;background:#fdf1e4;color:#b35c00}
+.pkftiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:100%;padding:6px 14px 10px;background:none;border:0;cursor:pointer;font-family:inherit}
+.pkft{border-radius:9px;padding:7px 4px;font-size:12.5px;font-weight:800;text-align:center;line-height:1.25;display:flex;flex-direction:column;justify-content:center}.pkft small{font-weight:600;font-size:12px;opacity:.95}
+.pkft-ok{background:#1f7a46;color:#fff}.pkft-part{background:#e06d00;color:#fff}.pkft-bad{background:#c62828;color:#fff}.pkft-neu{background:#dfe5ee;color:#2d3748}
+.pkfbar{margin:0;border-radius:0;height:6px}
+.pkfmore,.pkfclose{display:block;width:100%;background:none;border:0;border-top:1px solid #eef2f8;padding:10px;color:var(--navy);font:600 14px inherit;font-family:inherit;cursor:pointer}
+.pkfbody{padding:10px 12px 0;border-top:1px solid #dfe5ee}.pkfchips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}
+.pkfchips button{height:42px;border-radius:10px;border:1.5px solid #c9d3e3;background:#fff;font:700 14px inherit;font-family:inherit;color:#1c2533;cursor:pointer}.pkfchips button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.pkfscan{margin:0 0 8px!important}.pkf .pkl{margin:0 -12px;padding:0 12px}
+.pkmenuov{align-items:flex-end}.pkmenu{width:100%;max-width:480px;margin:0;padding:6px 0;max-height:85vh;overflow:auto}
+.pkmt{display:block;padding:10px 16px;font-size:16px;border-bottom:1px solid #eef2f8}
+.pkmi{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #eef2f8;padding:14px 16px;font:600 16px inherit;font-family:inherit;color:#1c2533;cursor:pointer;min-height:48px}
+.pkmi small{font-weight:500;color:#7a8698;font-size:13px}.pkmi.red{color:#c62828}.pkmi:disabled{color:#a0aab8;cursor:default}.pkmx{color:var(--navy);text-align:center;border-bottom:0}

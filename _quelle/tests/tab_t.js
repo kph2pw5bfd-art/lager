@@ -16,7 +16,7 @@ async function ctxFor(b,role,extra){const ctx=await b.newContext({viewport:{widt
 (async()=>{const b=await chromium.launch();
  /* Tablet */
  const ctx=await ctxFor(b,"user",[{col:"rolle",id:"u1",data:{t:"lagerarbeiter",x:{},tab:true}}]);const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
- await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(512,600);await p.waitForTimeout(600);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(900);await p.mouse.click(512,600);await p.waitForTimeout(600);
  console.log("Auswahl da:",await p.isVisible("#tabov"),"| Kacheln:",await p.evaluate(()=>[...document.querySelectorAll("#tabov .tabt b")].map(e=>e.textContent).join(" | ")));
  await p.screenshot({path:S+"tab_pick.png"});
  await p.click('[data-tbu="u2"]');await p.waitForTimeout(300);console.log("Kopfzeile:",await p.textContent("#who"));

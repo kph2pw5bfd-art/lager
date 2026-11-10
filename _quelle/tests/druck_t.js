@@ -18,7 +18,7 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
   await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});
    if(u.includes("pdf-lib"))return r.fulfill({body:fs.readFileSync("/opt/npm-tools/node_modules/pdf-lib/dist/pdf-lib.min.js"),contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
   await ctx.addInitScript(()=>{window.__sh=null;navigator.canShare=()=>true;navigator.share=async o=>{const f=o.files[0];let s="";const u=new Uint8Array(await f.arrayBuffer());for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode(...u.subarray(i,i+8192));window.__sh={name:f.name,text:o.text||"",b64:btoa(s)}}});
-  await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
+  await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
   const E=f=>p.evaluate(f);
   if(!MOB){
    const R=await E(()=>pkDrRows(packs.find(x=>x.id==="14501")).map(r=>[r.pos,r.name,r.soll,r.mit,r.ck,r.hints.map(h=>h[0]).join(" / "),r.alt.length].join(" | ")));console.log(R.join("\n"));

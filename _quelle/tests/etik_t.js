@@ -11,7 +11,7 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5+8
   if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});
   if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});
   return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(400);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(400);
  const JOBS=()=>p.evaluate(()=>window.__T.docs.filter(r=>r.col==="druck").map(r=>({id:r.id,...r.data})));
  await p.evaluate(()=>{curPack="A";go("packopen")});await p.waitForTimeout(400);ok("Knopf „Gitterbox-Etikett drucken“ in der Packliste",!!(await p.$("#pketik")));
  await p.click("#pketik");await p.waitForSelector(".etdlg");ok("Ohne Druckstation: „nicht erreichbar“",/nicht erreichbar/.test(await p.textContent("#etst")));

@@ -13,12 +13,12 @@ const seed=kat.concat([
  const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
  const T=async sel=>(await p.$$eval(sel,l=>l.map(x=>x.innerText.replace(/\s+/g," ").trim()))).join(" | ");
  const V=async v=>{await p.evaluate(v=>{document.querySelectorAll(".ov").forEach(o=>o.remove());view=v;hist=["start"];draw()},v);await p.waitForTimeout(250)};
  const prog=()=>p.evaluate(()=>{const g=pkProg(packs.find(x=>x.id==="P"));return g.d+" von "+g.n+" (Lager 55: "+g.l55+")"});
  await p.evaluate(()=>{curPack="P"});await V("packopen");
- console.log("Fortschritt:",await prog(),"|",await T(".pkprog"));
+ console.log("Fortschritt:",await prog(),"|",await T(".pkf.main .pkftiles"));
  console.log("Gruppen:",await p.$$eval(".pkg",l=>l.map(x=>x.textContent).join(" → ")));console.log("Lager-55-Zeile:",await T(".pk-l55"));
  await p.screenshot({path:S+"l55_herr.png",fullPage:true});
  /* normale Positionen abhaken → abschließen ohne Rückfrage zu offenen Positionen */
@@ -29,7 +29,7 @@ const seed=kat.concat([
  console.log("Nach „Packe ich doch selbst“:",await prog());
  await p.click('[data-pe="1"] >> nth=0');await p.waitForTimeout(150);console.log("Bearbeiten hat Knopf:",await p.isVisible("#pe55"));await p.click("#pe55");await p.waitForTimeout(300);
  console.log("Nach „Holt Fahrer – Lager 55“:",await prog());
- await p.click("#pkfin");await p.waitForTimeout(400);console.log("Nach Abschließen:",await T(".ov p"),"| Mail-Text:",await p.evaluate(()=>pkMailText(packs.find(x=>x.id==="P")).body.split("\n").filter(l=>l.startsWith("-")).join(" / ")||"(keine Abweichungen)"));
+ await p.click('[data-pkfg="main"]');await p.click("#pkfin");await p.waitForTimeout(400);console.log("Nach Abschließen:",await T(".ov p"),"| Mail-Text:",await p.evaluate(()=>pkMailText(packs.find(x=>x.id==="P")).body.split("\n").filter(l=>l.startsWith("-")).join(" / ")||"(keine Abweichungen)"));
  /* Abgleich: Lager 55 zählt nicht, 1 kam über uns zurück */
  await p.evaluate(()=>{curPack="Q"});await V("pkabg");console.log("Konto Krems:",await T(".abgnums"),"| Kopf:",await T(".abgcard:nth-of-type(1) .abgpkb"));console.log("Artikel:",await T(".abgart"));
  console.log("Zu viel zurück:",await p.evaluate(()=>abgAllMore().length),"| Fehlt noch:",await p.evaluate(()=>abgMissing().map(g=>g.name+" "+g.n).join(", ")||"–"));

@@ -16,7 +16,7 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+JSON.stringify(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(900);await p.mouse.click(195,420);await p.waitForTimeout(500);
  const T=async sel=>(await p.$$eval(sel,l=>l.map(x=>x.innerText.replace(/\s+/g," ").trim()))).join(" | ");
  const V=async v=>{await p.evaluate(v=>{document.querySelectorAll(".ov").forEach(o=>o.remove());view=v;hist=["start"];draw()},v);await p.waitForTimeout(250)};
  const E=f=>p.evaluate(f);
@@ -32,20 +32,20 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  const a1=await E(()=>jvHerr("was ist heute herzurichten").say.join(" "));ok("Assistent: heute herrichten nennt Zusatz",/Zusatz 102/.test(a1),a1);
  const a2=await E(()=>jvHerr("was ist nicht hergerichtet").say.join(" "));ok("Assistent: nicht hergerichtet nennt Zusatz 201",/Zusatz 201/.test(a2),a2);
  /* Herricht-Ansicht */
- await E(()=>{curPack="P1"});await V("packopen");console.log("Zusatz-Köpfe:",await T(".pkzday"));
+ await E(()=>{curPack="P1"});await V("packopen");console.log("Zusatz-Köpfe:",await T(".pkf.zus"));
  const idx=await E(()=>pkItems(packs.find(x=>x.id==="P1")).map((o,i)=>[o.z||"",i]));const iMain=idx.find(x=>x[0]==="")[1],iZ=idx.find(x=>x[0]==="102")[1];
  ok("Haupt-Zeile gesperrt",await p.$eval('[data-pc="'+iMain+'"]',e=>e.disabled));ok("Zusatz-Zeile frei",!(await p.$eval('[data-pc="'+iZ+'"]',e=>e.disabled)));
  await p.click('[data-pc="'+iZ+'"]');await p.waitForTimeout(300);ok("Zusatz-Position abgehakt, Haupt bleibt zu",await E(()=>{const P=packs.find(x=>x.id==="P1");return pkZProg(P,"102").d===1&&pkProg(P).fin}));
  await p.screenshot({path:S+"zus_herr.png",fullPage:true});
  /* Verschieben */
- await p.click('[data-pkzmv="102"]');await p.waitForTimeout(200);await p.click('[data-zq="1"]');await p.fill("#pzw","Material kommt erst");await p.click("#pzo");await p.waitForTimeout(300);
- ok("Zusatz verschoben auf morgen",await E(()=>{const P=packs.find(x=>x.id==="P1");return pkZDay(P,pkZOf(P,"102"))===pkAddD(pkDay(Date.now()),1)}));ok("Grund sichtbar",/Material kommt erst/.test(await T(".pkzday")));
+ await p.click('[data-pkfg="z102"]');await p.click('[data-pkzmv="102"]');await p.waitForTimeout(200);await p.click('[data-zq="1"]');await p.fill("#pzw","Material kommt erst");await p.click("#pzo");await p.waitForTimeout(300);
+ ok("Zusatz verschoben auf morgen",await E(()=>{const P=packs.find(x=>x.id==="P1");return pkZDay(P,pkZOf(P,"102"))===pkAddD(pkDay(Date.now()),1)}));ok("Grund sichtbar",/Material kommt erst/.test(await T(".pkf.zus")));
  /* Abschließen */
- await p.click('[data-pkzf="102"]');await p.waitForTimeout(200);console.log("Rückfrage:",await T(".ov"));await p.click(".ov .btn:not(.ghost)");await p.waitForTimeout(300);
+ await p.click('[data-pkfg="z102"]');await p.click('[data-pkzf="102"]');await p.waitForTimeout(200);console.log("Rückfrage:",await T(".ov"));await p.click(".ov .btn:not(.ghost)");await p.waitForTimeout(300);
  await p.$$eval(".ov",l=>l.forEach(o=>o.remove()));ok("Zusatz abgeschlossen",await E(()=>{const P=packs.find(x=>x.id==="P1");return !!pkZFin(P,pkZOf(P,"102"))}));
  ok("Zusatz-Zeilen jetzt gesperrt",await p.$eval('[data-pc="'+iZ+'"]',e=>e.disabled));
  ok("Mail nur Zusatz",await E(()=>{const m=pkMailText(packs.find(x=>x.id==="P1"),"102");return /Zusatz-Packschein 102/.test(m.subj)&&/Verteiler|1026/.test(m.body)&&!/1097/.test(m.body)}));
- await p.click('[data-pkzr="102"]');await p.waitForTimeout(200);await p.click(".ov .btn:not(.ghost)");await p.waitForTimeout(300);ok("Zusatz wieder geöffnet",await E(()=>{const P=packs.find(x=>x.id==="P1");return !pkZFin(P,pkZOf(P,"102"))}));
+ await p.click('[data-pkfg="z102"]');await p.click('[data-pkzr="102"]');await p.waitForTimeout(200);await p.click(".ov .btn:not(.ghost)");await p.waitForTimeout(300);ok("Zusatz wieder geöffnet",await E(()=>{const P=packs.find(x=>x.id==="P1");return !pkZFin(P,pkZOf(P,"102"))}));
  /* Hochladen eines neuen Zusatzes (PDF-Lesen und Bestätigung nachgestellt) */
  await E(()=>{window.pkRead=async()=>({ord:"2601300",ps:"103",ev:"Weihnachtsmarkt Spittelberg 2026",pl:"Jürgen Hartmann",db:Date.now(),de:Date.now(),pos:[{p:"1",n:6,u:"Stk",t:"Schuko 20m",a:"1081",f:0}]});pkUpload([{name:"x.pdf"}])});
  await p.waitForTimeout(300);ok("Inhalt neu -> Zusatz vorgeschlagen",await p.$eval('[data-cm="zus"]',e=>e.classList.contains("on")));await p.click("#pkco");await p.waitForTimeout(300);const dlg=await T(".ov");ok("Frage nach dem Herricht-Tag",/Wann wird der Zusatz hergerichtet/.test(dlg),dlg.slice(0,120));await p.screenshot({path:S+"zus_frage.png"});
