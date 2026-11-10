@@ -91,8 +91,8 @@ function abgPkBind(){document.querySelectorAll("[data-abgo]").forEach(b=>b.oncli
 function rPkSec(p,B){const old=document.getElementById("rpksec");if(old)old.remove();if(view!=="retedit"||!rs||rs.lvl!=="groups"||(rs.q&&rs.q.trim()))return;
  const K=rKat(),A=[],E=[];B.L.filter(e=>e.soll>0).forEach(e=>{const a=e.code&&K.find(k=>artCode(k.nr)===e.code);if(a&&!A.includes(a)){A.push(a);E.push(e)}});if(!A.length)return;
  const g=document.querySelector("#app .rgrid");if(!g)return;
- g.insertAdjacentHTML("beforebegin",'<div id="rpksec"><h3 class="rpkh">Aus der Packliste <span class="mute">'+A.length+'</span></h3><div class="rgrid">'+A.map((a,i)=>{const e=E[i],c=rs.items[a.nr]?rs.items[a.nr].q:0,dn=Math.min(e.back,e.soll)>=e.soll;
-  return '<button class="rtile rpkt'+(dn?' dn':'')+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(a.name)+'</b><span class="mute">'+(dn?'✓ ':'')+abgN(Math.min(e.back,e.soll))+' von '+abgN(e.soll)+' zurück · Nr. '+esc(a.nr)+'</span></button>'}).join("")+'</div><h3 class="rpkh">Alle Artikel</h3></div>');
+ g.insertAdjacentHTML("afterend",'<div id="rpksec"><h3 class="rpkh">Aus der Packliste <span class="mute">'+A.length+'</span></h3><div class="rgrid">'+A.map((a,i)=>{const e=E[i],c=rs.items[a.nr]?rs.items[a.nr].q:0,dn=Math.min(e.back,e.soll)>=e.soll;
+  return '<button class="rtile rpkt'+(dn?' dn':'')+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(a.name)+'</b><span class="mute">'+(dn?'✓ ':'')+abgN(Math.min(e.back,e.soll))+' von '+abgN(e.soll)+' zurück · Nr. '+esc(a.nr)+'</span></button>'}).join("")+'</div></div>');/* 1.155: unter den Gruppen (Jürgen) */
  rTileBind(A)}
 function rAbgInject(){try{if(!abgOk())return;const ex=document.getElementById("rabg");if(ex)ex.remove();let p=null,B=null;
  if(view==="retedit"&&rs){p=abgPackOf(rs.ord);if(p)B=abgBal(p,{id:rs.id,items:rs.items})}

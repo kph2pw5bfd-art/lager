@@ -482,7 +482,7 @@ body.pkdragging .pkdrop{display:flex}
 .pkp em.pknb{color:#5f6b7a;font-weight:600}.pk-nb .pkc{border-color:#9aa5b1}
 
 /* 1.154: Retourschein – Artikel aus der Packliste */
-.rpkh{margin:14px 0 8px;font-size:16px}.rpkt{border:2px solid var(--navy)}.rpkt.dn{border-color:#2e7d4f;background:#eef8f1}
+.rpkh{margin:16px 0 8px;font-size:16px}.rpkt{border:2px solid var(--navy)}.rpkt.dn{border-color:#2e7d4f;background:#eef8f1}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script><script src="https://cdn.jsdelivr.net/npm/barcode-detector@2.2.11/dist/iife/side-effects.js"></script><script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script></head><body><div id="splash" style="position:fixed;inset:0;z-index:9999;background:#114a97;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer"><style>
 #splash{animation:splbg 3s linear forwards}
 #splash img{position:relative;z-index:2;width:min(78vw,60vh,380px);height:auto;transform-origin:50% 50%;animation:splz 3s cubic-bezier(.55,0,.85,.35) forwards;will-change:transform}
@@ -508,7 +508,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.154";
+<script>const APPV="1.155";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -2690,8 +2690,8 @@ function abgPkBind(){document.querySelectorAll("[data-abgo]").forEach(b=>b.oncli
 function rPkSec(p,B){const old=document.getElementById("rpksec");if(old)old.remove();if(view!=="retedit"||!rs||rs.lvl!=="groups"||(rs.q&&rs.q.trim()))return;
  const K=rKat(),A=[],E=[];B.L.filter(e=>e.soll>0).forEach(e=>{const a=e.code&&K.find(k=>artCode(k.nr)===e.code);if(a&&!A.includes(a)){A.push(a);E.push(e)}});if(!A.length)return;
  const g=document.querySelector("#app .rgrid");if(!g)return;
- g.insertAdjacentHTML("beforebegin",'<div id="rpksec"><h3 class="rpkh">Aus der Packliste <span class="mute">'+A.length+'</span></h3><div class="rgrid">'+A.map((a,i)=>{const e=E[i],c=rs.items[a.nr]?rs.items[a.nr].q:0,dn=Math.min(e.back,e.soll)>=e.soll;
-  return '<button class="rtile rpkt'+(dn?' dn':'')+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(a.name)+'</b><span class="mute">'+(dn?'✓ ':'')+abgN(Math.min(e.back,e.soll))+' von '+abgN(e.soll)+' zurück · Nr. '+esc(a.nr)+'</span></button>'}).join("")+'</div><h3 class="rpkh">Alle Artikel</h3></div>');
+ g.insertAdjacentHTML("afterend",'<div id="rpksec"><h3 class="rpkh">Aus der Packliste <span class="mute">'+A.length+'</span></h3><div class="rgrid">'+A.map((a,i)=>{const e=E[i],c=rs.items[a.nr]?rs.items[a.nr].q:0,dn=Math.min(e.back,e.soll)>=e.soll;
+  return '<button class="rtile rpkt'+(dn?' dn':'')+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(a.name)+'</b><span class="mute">'+(dn?'✓ ':'')+abgN(Math.min(e.back,e.soll))+' von '+abgN(e.soll)+' zurück · Nr. '+esc(a.nr)+'</span></button>'}).join("")+'</div></div>');/* 1.155: unter den Gruppen (Jürgen) */
  rTileBind(A)}
 function rAbgInject(){try{if(!abgOk())return;const ex=document.getElementById("rabg");if(ex)ex.remove();let p=null,B=null;
  if(view==="retedit"&&rs){p=abgPackOf(rs.ord);if(p)B=abgBal(p,{id:rs.id,items:rs.items})}
