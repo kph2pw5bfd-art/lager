@@ -63,7 +63,7 @@ async function run(b,role,rolle,extra,fn){const docs=base.concat(rolle?[{col:"ro
   await p.evaluate(()=>{curAu="E"});await V("auopen");ok("Fremder Auftrag ohne Antworten-Knopf",!(await p.$("#aumsg"))&&!(await p.$("[data-aua]")));console.log("Fremd:",await T(".aute"));
   await p.evaluate(()=>{curAu="C"});await V("auopen");console.log("Firmenfeier:",await T(".aute"));
   await p.evaluate(()=>{curAu="G"});await V("auopen");const tg=await T(".aute");console.log("Verschoben:",tg);
-  ok("Verschoben: Draußen ab Herricht-Tag, nicht Dispo-Beginn",await p.evaluate(()=>{const P=packs.find(x=>x.id==="G");return pkWd(pkHDay(P))})===((tg.match(/Auf Baustelle ab (.+?)( \||$)/)||[])[1]),tg);
+  ok("Verschoben: Draußen ab Herricht-Tag, nicht Dispo-Beginn",await p.evaluate(()=>{const P=packs.find(x=>x.id==="G");return pkWd(pkHDay(P))})===((tg.match(/Unterwegs ab (.+?)( \||$)/)||[])[1]),tg);
   ok("Verschoben: Herrichten zeigt „verschoben auf“",/verschoben auf .*Aufbau später/.test(tg));
   ok("Verschoben: Draußen noch nicht als erledigt",await p.evaluate(()=>auInfo(packs.find(x=>x.id==="G")).S[2].c)==="");
   await V("pack");ok("Packlisten-Ansicht gesperrt",await p.evaluate(()=>view)!=="pack");

@@ -57,7 +57,7 @@ function jvMatcher(A){return(code,text)=>{if(A.code&&code)return code===A.code;i
 function jvWithArt(q,fn,none){const R=jvArtFind(q);if(!R)return none?none():{say:["Welchen Artikel meinst du? Sag die Artikelnummer oder den Namen, z. B. „50m 32A“."]};
  if(R.A)return fn(R.A);
  const L=R.list.slice(0,10);
- return{say:["Da passen "+R.list.length+" Artikel. Welchen meinst du?"],rows:L.map(A=>{const n=jvOutSum(A);return{l:A.label,r:n?jvStk(n)+" auf Baustelle":"",fn:()=>fn(A)}})}}
+ return{say:["Da passen "+R.list.length+" Artikel. Welchen meinst du?"],rows:L.map(A=>{const n=jvOutSum(A);return{l:A.label,r:n?jvStk(n)+" unterwegs":"",fn:()=>fn(A)}})}}
 /* ---------- Mengen pro Packliste ----------
    draußen = hergerichtet (bzw. bei laufender/abgelaufener Dispo laut Packschein), ohne Fremdmiete, + Alternativen, − schon im Retourschein */
 function jvArtCnt(p,m){if(p.art==="verl"&&pkRoot(p)!==p)m=()=>false;const H=pkH(p),k=pkState(p).k,run=k==="over"||k==="out"||k==="back";let out=0,plan=0,back=0,l55=0;
@@ -99,21 +99,21 @@ function jvAvailA(A,D){if(!jvPkOk())return JV_NOPK;const m=jvMatcher(A),t=D.t,L=
  packs.forEach(p=>{const s=pkState(p);if(s.k==="done")return;const a=Math.min(pkHDay(p)||pkDay(p.db||0),pkDay(p.db||0)),e=p.de?pkDay(p.de):a;
   const on=(a<=t&&t<=e)||(s.k==="over"&&t>=jvToday());if(!on)return;const c=jvArtCnt(p,m),q=Math.max(0,c.out+c.plan-c.back);if(q){L.push({p,q,over:s.k==="over"});sum+=q}});
  const dl=D.lab==="heute"?"heute":D.lab==="morgen"?"morgen":jvDL(D.t);
- if(!L.length)return{say:[A.label+": "+dl+" ist laut Packlisten nichts davon auf Baustelle. Wie viele wir insgesamt haben, weiß ich nicht."]};
+ if(!L.length)return{say:[A.label+": "+dl+" ist laut Packlisten nichts davon unterwegs. Wie viele wir insgesamt haben, weiß ich nicht."]};
  return{say:[A.label+": "+dl+" sind laut Packlisten "+jvStk(sum)+" verplant, auf "+L.length+(L.length===1?" Veranstaltung.":" Veranstaltungen."),"Den Gesamtbestand im Lager kenne ich nicht."],
   rows:L.sort((a,b)=>(b.over-a.over)||((a.p.de||0)-(b.p.de||0))).map(o=>({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–"),r:jvStk(o.q)+" · "+(o.over?"Dispo abgelaufen":"bis "+pkWd(o.p.de)),cls:o.over?"warn":"ok",pk:o.p.id})).concat([{sum:true,l:"Summe "+(D.lab==="heute"?"heute":pkDM(D.t)),r:jvStk(sum)}])}}
 /* „Zu welchem Auftrag könnten 4 Stück Kabel A gehören?“ – Vorschlag nach Artikel + Menge */
 function jvBelongA(A,n){if(!jvPkOk())return JV_NOPK;const m=jvMatcher(A),t0=jvToday(),L=[];
  packs.forEach(p=>{const s=pkState(p);if(s.k==="done"||!(s.k==="over"||s.k==="out"||s.k==="back"))return;const c=jvArtCnt(p,m);if(c.rest>0)L.push({p,q:c.rest,over:s.k==="over",fit:n?(c.rest===n?2:c.rest>n?1:0):1})});
- if(!L.length)return{say:["Ich finde keinen laufenden Auftrag, bei dem "+A.label+" noch auf Baustelle ist."]};
+ if(!L.length)return{say:["Ich finde keinen laufenden Auftrag, bei dem "+A.label+" noch unterwegs ist."]};
  L.sort((a,b)=>b.fit-a.fit||(b.over-a.over)||((b.p.de||0)-(a.p.de||0)));
  const b=L[0];
- return{say:[(n?jvStk(n)+" "+A.label:A.label)+": am ehesten "+jvEv(b.p)+" (Auftrag "+(b.p.ord||"–")+")"+(b.fit===2?", dort fehlen genau "+jvStk(b.q)+".":", dort sind noch "+jvStk(b.q)+" auf Baustelle.")].concat(L.length>1?["Weitere Möglichkeiten stehen darunter."]:[]).concat(["Das ist nur ein Vorschlag nach Artikel und Menge."]),
+ return{say:[(n?jvStk(n)+" "+A.label:A.label)+": am ehesten "+jvEv(b.p)+" (Auftrag "+(b.p.ord||"–")+")"+(b.fit===2?", dort fehlen genau "+jvStk(b.q)+".":", dort sind noch "+jvStk(b.q)+" unterwegs.")].concat(L.length>1?["Weitere Möglichkeiten stehen darunter."]:[]).concat(["Das ist nur ein Vorschlag nach Artikel und Menge."]),
   rows:L.slice(0,8).map(o=>({l:jvEv(o.p),sub:"Auftrag "+(o.p.ord||"–")+(o.fit===2?" · Menge passt genau":""),r:jvStk(o.q)+" · "+(o.over?"Dispo abgelaufen":"bis "+pkWd(o.p.de)),cls:o.over?"warn":"ok",pk:o.p.id}))}}
 /* ---------- Abgleich Packliste ↔ Retourschein ---------- */
 function jvBalAns(p,mode){const B=jvBal(p),say=[],rows=[],ev=jvEv(p);
- if(!B.has){say.push(mode==="all"?"Bei "+ev+" ist noch nichts zurück – es gibt keinen Retourschein.":"Zu "+ev+" gibt es noch keinen Retourschein. Laut Packliste ist alles auf Baustelle: "+jvStk(B.L.reduce((a,e)=>a+e.soll,0))+".");
-  B.L.filter(e=>e.soll).forEach(e=>rows.push({l:e.name,r:jvStk(e.soll)+" auf Baustelle",cls:"ok",pk:p.id}));
+ if(!B.has){say.push(mode==="all"?"Bei "+ev+" ist noch nichts zurück – es gibt keinen Retourschein.":"Zu "+ev+" gibt es noch keinen Retourschein. Laut Packliste ist alles unterwegs: "+jvStk(B.L.reduce((a,e)=>a+e.soll,0))+".");
+  B.L.filter(e=>e.soll).forEach(e=>rows.push({l:e.name,r:jvStk(e.soll)+" unterwegs",cls:"ok",pk:p.id}));
   return{say,rows,acts:[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}]}}
  if(!B.miss.length)say.push(mode==="all"?(jvF()?"Ja, bei "+ev+" ist alles zurück. Brav.":"Ja, bei "+ev+" ist alles zurück."):"Bei "+ev+" fehlt nichts – alles zurück.");
  else{const n=B.miss.reduce((a,e)=>a+e.soll-e.back,0);

@@ -49,9 +49,9 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  R=await rows();console.log(R.map(r=>"     "+r).join("\n"));
  ok("Nach Retoure: Spalten Raus · Rein · Diff",(await p.textContent(".amh"))==="ArtikelRausReinDiff");
  ok("Diff 125A 50m −4, Maxi 0, 32A +1",R.some(r=>/^125A Kabel 50m.*\| 16 \| 12 \| −4/.test(r))&&R.some(r=>/Verteiler 125A Maxi 2.*\| 8 \| 8 \| 0/.test(r))&&R.some(r=>/32A Kabel 50m.*\| 2 \| 3 \| \+1/.test(r)));
- const ch2=await p.evaluate(()=>[...document.querySelectorAll("[data-amf]")].map(b=>b.textContent));ok("Filter nach Retoure "+J(ch2),ch2.includes("Schon zurück 4")&&ch2.some(c=>/^Noch auf Baustelle/.test(c)));
+ const ch2=await p.evaluate(()=>[...document.querySelectorAll("[data-amf]")].map(b=>b.textContent));ok("Filter nach Retoure "+J(ch2),ch2.includes("Schon zurück 4")&&ch2.some(c=>/^Noch unterwegs/.test(c)));
  await p.click('[data-amf="back"]');await p.waitForTimeout(150);ok("Schon zurück: 4",(await p.$$(".amt:not(.amz) .amr")).length===4);
- await p.click('[data-amf="out"]');await p.waitForTimeout(150);const out=await rows();ok("Noch auf Baustelle: nur negative Diff",out.length>0&&out.every(r=>/\| −\d/.test(r)));
+ await p.click('[data-amf="out"]');await p.waitForTimeout(150);const out=await rows();ok("Noch unterwegs: nur negative Diff",out.length>0&&out.every(r=>/\| −\d/.test(r)));
  await p.screenshot({path:S+"amat_2.png",fullPage:true});
  ok("kein seitliches Scrollen",await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  await p.emulateMedia({colorScheme:"dark"});await p.click('[data-amf="alle"]');await p.waitForTimeout(150);await p.screenshot({path:S+"amat_dark.png",fullPage:true});

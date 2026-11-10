@@ -30,7 +30,7 @@ function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.
  else if(missShow){lab="Fehlt "+B.fehlt;cls="red"}
  else if(late){lab="Nicht hergerichtet";cls="red"}
  else if(B.R.length){lab="Teilweise zurück · "+B.zur+"/"+B.raus;cls="b"}
- else if(g.fin&&out){lab="Auf Baustelle";cls="b"}
+ else if(g.fin&&out){lab="Unterwegs";cls="b"}
  else if(g.fin){lab="Hergerichtet";cls="b"}
  else if(g.d){lab=g.d+" / "+g.n;cls="b"}
  else{lab=st.k==="herr"?"Heute herrichten":"Herrichten "+pkDM(pkHDay(p));cls="g"}
@@ -39,9 +39,9 @@ function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.
 const auAns=(p,k)=>PLAW.filter(a=>a.pk===p.id&&a.k===k&&a.typ!=="msg");
 const auAnsTxt=a=>{const T={anders:"Ist auf einer anderen Baustelle: "+(a.toEv||"")+(a.toOrd?" ("+a.toOrd+")":""),bau:"Ist noch auf der Baustelle"+(a.bis?", kommt bis "+pkWd(pkFromYmd(a.bis)):""),kunde:"Bleibt beim Kunden",verr:"Dem Kunden verrechnet",zur:"Ist schon zurück – bitte nachzählen",weiss:"Weiß ich nicht / kläre ich",msg:"Nachricht"};
  return (T[a.typ]||"")+(a.txt?(a.typ==="msg"?": ":" – ")+"„"+a.txt+"“":"")};
-const auStepL='<div class="aul"><span>Packliste</span><span>Herrichten</span><span>Baustelle</span><span>Retouren</span><span>Geprüft</span></div>';
+const auStepL='<div class="aul"><span>Packliste</span><span>Herrichten</span><span>Unterwegs</span><span>Retouren</span><span>Geprüft</span></div>';
 function auCard(I){const p=I.p,mine=auIsMine(p),pills=[];
- if(I.missShow)pills.push(abgTag(I.B.hasEnd?"Endretoure – "+I.B.fehlt+(I.B.fehlt===1?" Stück fehlt":" Stück fehlen"):I.B.fehlt+" Stück noch auf Baustelle","red"));
+ if(I.missShow)pills.push(abgTag(I.B.hasEnd?"Endretoure – "+I.B.fehlt+(I.B.fehlt===1?" Stück fehlt":" Stück fehlen"):I.B.fehlt+" Stück noch unterwegs","red"));
  if(I.missShow&&mine&&I.B.miss.some(e=>!auAns(p,e.k).length))pills.push(abgTag("Noch nicht beantwortet","or"));
  if(!I.done)(p.zus||[]).forEach(z=>{if(pkZFin(p,z)||auHerrAll(p,String(z.ps)))return;const d=pkZDay(p,z),late=d<pkDay(Date.now());pills.push(abgTag("Nachlieferung "+(late?"noch nicht hergerichtet":"herrichten "+pkDM(d)),late?"red":"blue"))});
  if(I.g.dev&&!I.done)pills.push(abgTag(I.g.dev+(I.g.dev===1?" Abweichung":" Abweichungen")+" zum Packschein","or"));
@@ -97,7 +97,7 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
   const za=zf?null:auHerrAll(p,String(z.ps));return zf?te(zg.dev?"w":"d",lab,"hergerichtet "+fmt(zf.t).slice(0,6)+" von "+esc(nmA(zf,"by"))+(zdev.length?'<span class="audev"><b>Abweichungen:</b><br>'+zdev.map(esc).join("<br>")+'</span>':"")):za?te(zg.dev?"w":"d",lab,"hergerichtet"+(za.t?" "+fmt(za.t).slice(0,6):"")+(za.who?" von "+esc(za.who):"")+(zdev.length?'<span class="audev"><b>Abweichungen:</b><br>'+zdev.map(esc).join("<br>")+'</span>':"")):zg.d?te("n",lab,"wird hergerichtet: "+zg.d+" von "+zg.n+" Positionen"):zd<t00?te("r",lab,"noch nicht hergerichtet – geplant war "+pkWd(zd)):te("",lab,"herrichten "+(zd===t00?"heute":pkWd(zd))+" · "+pkPosN((z.pos||[]).length))}).join("");
  const verlT=(p._verl||[]).map(id=>packs.find(x=>x.id===id)).filter(Boolean).map(x=>te("n","Verlängert bis "+pkWd(x.de),"Auftrag "+esc(x.ord||"–")+(p._de0?" · ursprünglich bis "+pkWd(p._de0):""))).join("")+packs.filter(x=>x.art==="bst"&&x.von===p.id).map(x=>te("n","Material geht weiter","an "+esc(x.ev||"")+" (Auftrag "+esc(x.ord||"–")+")")).join("");
  const chgT=verlT+(p.chg||[]).slice().sort((a,b)=>a.t-b.t).map(c=>te("w","Packschein geändert",esc(pkChgLbl(c))+" · "+fmt(c.t).slice(0,6)+(c.diff&&c.diff.length?'<span class="audev">'+c.diff.map(d=>esc(d.name)+": "+esc(pkDiffTxt(d))).join("<br>")+'</span>':""))).join("");
- const outT=I.over?te("r","Dispo abgelaufen","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Auf Baustelle","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Auf Baustelle","ab "+pkWd(auOutDay(p)));
+ const outT=I.over?te("r","Dispo abgelaufen","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Unterwegs","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Unterwegs","ab "+pkWd(auOutDay(p)));
  const R=B.R.slice().sort((a,b)=>(abgRetT(a)||0)-(abgRetT(b)||0));
  const retT=R.length?R.map(r=>te(r.closed?(r.art==="teil"?"d":(B.fehlt&&!I.kl?"r":"d")):"n",abgRetLbl(r),fmt(abgRetT(r)).slice(0,6)+" · "+abgRetN(r)+" Stück"+(r.closed&&r.art!=="teil"?" · "+(B.fehlt?B.fehlt+" fehlen noch":"alles da"):""))).join(""):te("","Retouren","noch nichts zurück");
  const prA=typeof ABP!=="undefined"?ABP[p.id]:null,doneT=(I.kl?te("d","Mit Projektleiter geklärt",fmt(H.klar.t).slice(0,6)+" · "+esc(nmA(H.klar,"by"))):"")+(I.chk&&prA?te("d","Geprüft",fmt(prA.t).slice(0,6)+" · "+esc(nmA(prA,"by"))+(prA.note?" – „"+esc(prA.note)+"“":"")):te("","Geprüft",B.hasEnd?"Endretoure da – wartet auf die Prüfung im Lager":"nach der Endretoure prüft das Lager"));/* 1.161 */
