@@ -501,3 +501,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## Grund gut sichtbar (ab 1.156)
 - `pkGrund(w)` (pack.js) → oranger Kasten „Grund: …“ (`.pkgrund`) bei „nicht gebraucht“ und „Zusätzlich mitgegeben“. Info-Mail, Meine Aufträge: „– Grund: …“. PDF: eigene fette orange Zeile (Hinweis-Art "r") + Kasten „Abweichungen“ mit „– Grund: …“. Andere Abweichungen haben kein Grund-Feld (Jürgen: nur sichtbar machen).
+
+## Abgleich-Excel wie Retourschein (ab 1.157)
+- `abgXlMake` Blatt „Übersicht“: Logo, Titel, Kopf (Veranstaltung, Auftrag, PL, Dispo, Stand, Retourscheine, Erstellt), Spalten Artikelnr. · Artikel · Ausgang (= soll, ohne Fremdmiete/Lager 55) · Retour · Differenz (Retour − Ausgang, +0;-0;0, rot/orange wie Retourschein-Excel) · Bemerkung; Gesamt-Zeile. Blätter Verlauf und Zu viel – Zuordnungen unverändert.

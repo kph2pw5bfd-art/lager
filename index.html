@@ -512,7 +512,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.156";
+<script>const APPV="1.157";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -2816,19 +2816,27 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
  const kopf=ws=>{ws.addRow(["Abgleich Packliste ↔ Retouren"]).font={bold:true,size:14,color:{argb:NAVY}};
   ws.addRow(["Veranstaltung: "+(p.ev||"–")+" · Auftrag: "+(p.ord||"–")+" · Projektleiter: "+(shortName(p.pl)||"–")+" · Dispo "+pkD(p.db)+" – "+pkD(p.de)]);
   ws.addRow(["Stand: "+(B.hasEnd?"Endretoure ("+fmt(B.endR.closedT)+")":B.R.length?"Teilretoure / offen":"noch nichts zurück")+" · Retourscheine: "+B.R.length+" · Erstellt von "+meName()+", "+fmt(Date.now())]);ws.addRow([])};
- const ws=wb.addWorksheet("Übersicht",{pageSetup:{orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}});kopf(ws);
- ws.columns=[{width:11},{width:36},{width:9},{width:13},{width:12},{width:9},{width:11},{width:10},{width:46}];
- head(ws,["Art.-Nr.","Artikel","Raus","Nachlieferung","Fremdmiete","Zurück","Differenz","Status","Bemerkung / Zuordnung"]);
- const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr+e.l55?1:2;let sr=0,sn=0,sf=0,sb=0;
- B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).forEach((e,i)=>{const f=e.soll-e.back,z=e.back-e.soll-e.fr-e.l55,st=f>0?"fehlt":z>0?"zu viel":!e.soll&&e.l55&&!e.back?"Lager 55":"passt",bm=[];if(e.l55)bm.push(pkNum(e.l55)+" über Lager 55 zählen nicht");if(e.via55)bm.push(e.via55+" kam über uns statt Lager 55 zurück");
+ /* 1.157: Übersicht im Stil des Retourschein-Excels (Jürgen, 10.11.): Logo, Kopf, Artikelnr. · Artikel · Ausgang · Retour · Differenz (= Retour − Ausgang, + zu viel orange, − fehlt rot) · Bemerkung */
+ const ws=wb.addWorksheet("Übersicht",{pageSetup:{orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}}),thin={style:"thin",color:{argb:"FFD5DBE5"}},bx={top:thin,left:thin,bottom:thin,right:thin};
+ ws.columns=[{width:22},{width:44},{width:11},{width:11},{width:11},{width:42}];[1,2,3].forEach(i=>ws.getRow(i).height=30);
+ try{if(typeof LOGO!=="undefined")ws.addImage(wb.addImage({base64:LOGO,extension:"png"}),{tl:{col:0.1,row:0.15},ext:{width:140,height:87}})}catch(e){}
+ ws.mergeCells("B1:F2");const t1=ws.getCell("B1");t1.value="Abgleich Packliste ↔ Retouren";t1.font={size:20,bold:true,color:{argb:NAVY}};t1.alignment={vertical:"middle"};
+ ws.mergeCells("B3:F3");const t2=ws.getCell("B3");t2.value="TPC Lager App";t2.font={size:11,color:{argb:"FF667385"}};
+ const info=[["Veranstaltung",p.ev||"–"],["Auftragsnummer",p.ord||"–"],["Projektleiter",shortName(p.pl)||"–"],["Dispo",pkD(p.db)+" – "+pkD(p.de)],
+  ["Stand",B.hasEnd?"Endretoure ("+fmt(B.endR.closedT)+")":B.R.length?"Teilretoure / offen":"noch nichts zurück"],["Retourscheine",B.R.map(r=>abgRetLbl(r)+", "+fmt(abgRetT(r))).join(" · ")||"–"],["Erstellt",meName()+", "+fmt(Date.now())]];
+ let rw=5;info.forEach(([k,v])=>{ws.mergeCells("B"+rw+":F"+rw);const a=ws.getCell("A"+rw),b=ws.getCell("B"+rw);a.value=k;b.value=String(v);a.font={bold:true};a.fill=fill("FFEEF2F8");a.border=bx;b.border=bx;b.alignment={wrapText:true,vertical:"top"};rw++});
+ rw++;const hd0=rw,hr=ws.getRow(rw);hr.values=["Artikelnr.","Artikel","Ausgang","Retour","Differenz","Bemerkung"];hr.height=22;hr.eachCell(x=>{x.fill=fill(NAVY);x.font={bold:true,color:{argb:"FFFFFFFF"}};x.alignment={horizontal:"center",vertical:"middle"};x.border=bx});
+ const ord=e=>e.soll>e.back?0:e.back>e.soll+e.fr+e.l55?1:2;let sa=0,sb=0;
+ B.L.slice().sort((a,b)=>ord(a)-ord(b)||String(a.name).localeCompare(String(b.name),"de")).forEach((e,i)=>{const f=e.soll-e.back,z=e.back-e.soll-e.fr-e.l55,bm=[];
+  if(e.nach)bm.push("inkl. "+pkNum(e.nach)+" Nachlieferung");if(e.l55)bm.push(pkNum(e.l55)+" über Lager 55 (zählen nicht)");if(e.via55)bm.push(e.via55+" kam über uns statt Lager 55 zurück");if(e.fr)bm.push(pkNum(e.fr)+" Fremdmiete (zählen nicht)");
   if(f>0){const h=abgMoreElse(p,e)[0];if(h)bm.push("Vorschlag: "+h.q+" zu viel bei "+(h.p.ev||h.p.ord))}if(z>0){const c=abgCands(p,e,z)[0];bm.push(c?"Vorschlag: fehlen bei "+(c.p.ev||c.p.ord):"kein Vorschlag")}
-  if(e.zin)bm.push(e.zin+" von anderem Auftrag zugeordnet");if(e.zout)bm.push(e.zout+" an anderen Auftrag zugeordnet");if(e.fr)bm.push(pkNum(e.fr)+" Fremdmiete zählen nicht");
-  const r=ws.addRow([e.code||"",e.name,e.raus,e.nach||"",e.fr||"",e.back,f>0?-f:z>0?z:0,st,bm.join(" · ")]);sr+=e.raus;sn+=e.nach;sf+=e.fr;sb+=e.back;
-  const col=f>0?"FFB8322A":z>0?"FF9A4D00":"FF1F6B41",bg=f>0?"FFFBEBEB":z>0?"FFFFF1E3":"FFE3F3E9";
-  r.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;c.alignment={vertical:"middle",horizontal:n===2||n===9?"left":"center",wrapText:n===9};if(i%2)c.fill=fill("FFF6F8FB")});
-  r.getCell(7).font={bold:true,color:{argb:col}};r.getCell(7).numFmt='+0;-0;0';r.getCell(8).font={bold:true,color:{argb:col}};r.getCell(8).fill=fill(bg)});
- const t=ws.addRow(["","Gesamt",sr,sn||"",sf||"",sb,(B.fehlt?"−"+B.fehlt:"0")+(B.zuviel?" / +"+B.zuviel:""),"",(B.fehlt?B.fehlt+" fehlen":"nichts fehlt")+(B.zuviel?" · "+B.zuviel+" zu viel":"")]);
- t.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;c.font={bold:true};c.fill=fill("FFEEF3FA");c.alignment={horizontal:n===2||n===9?"left":"center"}});
+  if(e.zin)bm.push(e.zin+" von anderem Auftrag zugeordnet");if(e.zout)bm.push(e.zout+" an anderen Auftrag zugeordnet");
+  rw++;const row=ws.getRow(rw);row.values=[e.code||"",e.name,e.soll,e.back,f>0?-f:z>0?z:0,bm.join(" · ")];sa+=e.soll;sb+=e.back;
+  const zf=i%2?fill("FFF6F8FB"):null;for(let n=1;n<=6;n++){const c=row.getCell(n);c.border=bx;c.alignment={horizontal:n>=3&&n<=5?"center":"left",vertical:"middle",wrapText:n===6};if(zf)c.fill=zf}
+  row.getCell(2).font={bold:true};row.getCell(5).numFmt='+0;-0;0';row.getCell(5).font={bold:true,color:{argb:f>0?"FFC0392B":z>0?"FFE67E22":"FF1F2A33"}}});
+ const last=rw;rw++;const tr=ws.getRow(rw);tr.values=["","Gesamt",sa,sb,(B.fehlt?"−"+B.fehlt:"0")+(B.zuviel?" / +"+B.zuviel:""),(B.fehlt?B.fehlt+" fehlen":"nichts fehlt")+(B.zuviel?" · "+B.zuviel+" zu viel":"")];
+ for(let n=1;n<=6;n++){const c=tr.getCell(n);c.border=bx;c.font={bold:true};c.fill=fill("FFEEF3FA");c.alignment={horizontal:n>=3&&n<=5?"center":"left"}}
+ if(last>hd0)try{const a="E"+(hd0+1);ws.addConditionalFormatting({ref:a+":E"+last,rules:[{type:"expression",priority:1,formulae:["AND(ISNUMBER("+a+"),"+a+"<0)"],style:{font:{bold:true,color:{argb:"FFC0392B"}}}},{type:"expression",priority:2,formulae:["AND(ISNUMBER("+a+"),"+a+">0)"],style:{font:{bold:true,color:{argb:"FFE67E22"}}}}]})}catch(e){console.warn(e)}
  const wv=wb.addWorksheet("Verlauf");wv.columns=[{width:17},{width:22},{width:36},{width:10},{width:18}];kopf(wv);head(wv,["Datum","Art","Artikel","Menge","Wer"]);
  const ev=[];const H=pkH(p);
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),q=(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st);
