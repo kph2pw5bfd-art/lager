@@ -21,8 +21,11 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5+8
  ok("vor dem Abschließen kein Foto-Kasten",!(await p.$(".mfbox")));
  await p.click('[data-pkfg="main"]');await p.click("#pkfin");await p.waitForTimeout(400);
  ok("Frage nach Foto",/Foto vom fertigen Material machen/.test(await p.textContent("body")));
- const [fc]=await Promise.all([p.waitForEvent("filechooser"),p.click("#a2y")]);await fc.setFiles({name:"m.png",mimeType:"image/png",buffer:png});await p.waitForTimeout(600);
- ok("Beschreibung-Fenster",!!(await p.$("#mfc")));await p.fill("#mfc","3 Gitterboxen + 1 Palette");await p.click("#mfok");await p.waitForTimeout(800);
+ const [fc]=await Promise.all([p.waitForEvent("filechooser"),p.click("#a2y")]);ok("1.170: öffnet Kamera (capture, nur ein Foto)",!fc.isMultiple()&&await p.evaluate(()=>{const i=document.querySelector("#mffile");return !!i&&i.getAttribute("capture")==="environment"}));await fc.setFiles({name:"m.png",mimeType:"image/png",buffer:png});await p.waitForTimeout(600);
+ ok("Beschreibung-Fenster",!!(await p.$("#mfc")));
+ const [fc2]=await Promise.all([p.waitForEvent("filechooser"),p.click("#mfmore")]);await fc2.setFiles({name:"m2.png",mimeType:"image/png",buffer:png});await p.waitForTimeout(500);ok("Noch ein Foto: 2 Vorschauen",(await p.$$("#mfcp img")).length===2);
+ const [fc3]=await Promise.all([p.waitForEvent("filechooser"),p.click("#mfgal")]);ok("Galerie: mehrere erlaubt",fc3.isMultiple());await fc3.setFiles([{name:"a.png",mimeType:"image/png",buffer:png},{name:"b.png",mimeType:"image/png",buffer:png}]);await p.waitForTimeout(600);ok("4 Vorschauen",(await p.$$("#mfcp img")).length===4);
+ await p.click('[data-mfrm="3"]');await p.click('[data-mfrm="2"]');await p.click('[data-mfrm="1"]');ok("entfernen → 1",(await p.$$("#mfcp img")).length===1);await p.fill("#mfc","3 Gitterboxen + 1 Palette");await p.click("#mfok");await p.waitForTimeout(800);
  const L=await p.evaluate(()=>(packh.A||{}).mf_h);ok("gespeichert mit Text",Array.isArray(L)&&L.length===1&&L[0].c==="3 Gitterboxen + 1 Palette"&&/^A-m/.test(L[0].id));
  ok("Bild in fotos",await p.evaluate(async id=>{const s=await db.doc("fotos/"+id).get();return s.exists&&/^data:image/.test(s.data().d)},L&&L[0].id));
  await p.evaluate(()=>{pkFS.open={};window.PK_FOPEN=false;draw()});await p.waitForTimeout(400);

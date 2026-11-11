@@ -555,7 +555,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.169";
+<script>const APPV="1.170";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -4629,7 +4629,7 @@ const mfN=p=>mfAll(p).reduce((a,g)=>a+g.l.length,0);
 function mfThumbs(p,ps,L){return '<div class="rph mfr">'+L.map(e=>'<figure class="mft"><img data-mfph="'+esc(e.id)+'" data-mfp="'+esc(p.id)+'" data-mfps="'+esc(ps||"")+'" alt="Foto vom Material">'+(e.c?'<figcaption>'+esc(e.c)+'</figcaption>':'')+'</figure>').join("")+'</div>'}
 /* im Packschein-Feld der Packliste (auch zugeklappt) */
 function mfFieldHtml(p,ps,fin){const L=mfList(p,ps);if(!fin&&!L.length)return "";
- return '<div class="mfbox"><div class="mfh"><b>Fotos vom Material'+(L.length?' ('+L.length+')':'')+'</b>'+(L.length<MF_MAX?'<button class="btn ghost s" type="button" data-mfadd="'+esc(ps||"")+'" data-mfp="'+esc(p.id)+'">📷 '+(L.length?'Weiteres Foto':'Foto vom Material')+'</button>':'')+'</div>'+
+ return '<div class="mfbox"><div class="mfh"><b>Fotos vom Material'+(L.length?' ('+L.length+')':'')+'</b>'+(L.length<MF_MAX?'<span class="mfbt"><button class="btn ghost s" type="button" data-mfadd="'+esc(ps||"")+'" data-mfp="'+esc(p.id)+'">📷 '+(L.length?'Weiteres Foto':'Foto machen')+'</button><button class="btn ghost s" type="button" data-mfgal="'+esc(ps||"")+'" data-mfp="'+esc(p.id)+'" aria-label="Aus der Galerie">🖼</button></span>':'')+'</div>'+
   (L.length?mfThumbs(p,ps,L):'<p class="mute mf0">Noch kein Foto. So sieht man später, wie viel rausgegangen ist.</p>')+'</div>'}
 function mfGrpLbl(p,g){const f=g.l[0];return (g.ps?'Zusatz '+esc(g.ps):'Packschein '+esc(p.ps||"–"))+' · '+fmt(f.t).slice(0,6)+' von '+esc(nmA(f,"by"))}
 /* Meine Aufträge */
@@ -4640,7 +4640,7 @@ function mfRetInject(p){const o=document.getElementById("mfret");if(o)o.remove()
  a.insertAdjacentHTML("afterend",'<div class="card" id="mfret"><b>Fotos beim Herrichten</b><p class="mute" style="margin:2px 0 0;font-size:13px">So viel ist rausgegangen.</p>'+G.map(g=>'<div class="mfg">'+mfGrpLbl(p,g)+'</div>'+mfThumbs(p,g.ps,g.l)).join("")+'</div>');mfBind(false)}
 /* Bilder laden, Antippen = groß; edit = in der Packliste (hinzufügen, Text ändern, löschen) */
 function mfBind(edit){document.querySelectorAll("img[data-mfph]").forEach(async im=>{if(im.dataset.mfb)return;im.dataset.mfb="1";const id=im.dataset.mfph;im.onclick=()=>{const p=packs.find(x=>x.id===im.dataset.mfp);if(p)mfView(p,im.dataset.mfps||null,id,edit)};const u=await rPhoto(id);if(u)im.src=u});
- if(edit)document.querySelectorAll("[data-mfadd]").forEach(b=>b.onclick=e=>{e.stopPropagation();const p=packs.find(x=>x.id===b.dataset.mfp);if(p)mfPick(p,b.dataset.mfadd||null,null)})}
+ if(edit){document.querySelectorAll("[data-mfadd]").forEach(b=>b.onclick=e=>{e.stopPropagation();const p=packs.find(x=>x.id===b.dataset.mfp);if(p)mfPick(p,b.dataset.mfadd||null,null,"cam")});document.querySelectorAll("[data-mfgal]").forEach(b=>b.onclick=e=>{e.stopPropagation();const p=packs.find(x=>x.id===b.dataset.mfp);if(p)mfPick(p,b.dataset.mfgal||null,null,"gal")})}}
 function mfView(p,ps,id,edit){const e=mfList(p,ps).find(x=>x.id===id);if(!e)return;const v=document.createElement("div");v.className="phv mfv";
  v.innerHTML='<img alt="Foto vom Material"><div class="mfvb"><div class="mfvt"></div><small></small><div class="mfvk">'+(edit?'<button class="btn ghost s" type="button" data-mfvc>Text ändern</button><button class="btn ghost s red" type="button" data-mfvx>Löschen</button>':'')+'<button class="btn s" type="button" data-mfvz>Schließen</button></div></div>';
  v.querySelector(".mfvt").textContent=e.c||"";v.querySelector("small").textContent=(ps?"Zusatz "+ps:"Packschein "+(p.ps||""))+" · "+fmt(e.t).slice(0,6)+" von "+nmA(e,"by");
@@ -4652,19 +4652,23 @@ function mfTextDlg(cur,fn){const o=document.createElement("div");o.className="ov
  document.body.appendChild(o);const i=o.querySelector("#mftx");i.value=cur;i.focus();o.querySelector("#mftn").onclick=()=>o.remove();o.querySelector("#mfty").onclick=()=>{o.remove();fn(i.value.trim())}}
 const mfSave=(p,ps,L)=>pkHSet(p,{[mfKey(ps)]:L.length?L:null});
 /* Foto aufnehmen/auswählen → Beschreibung → speichern; after() läuft danach (auch bei Abbrechen) */
-function mfPick(p,ps,after){const left=MF_MAX-mfList(p,ps).length;if(left<=0){toast("Maximal "+MF_MAX+" Fotos pro Packschein.");if(after)after();return}
- const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.multiple=true;inp.hidden=true;inp.id="mffile";document.body.appendChild(inp);let done=false;
- const fin=()=>{if(done)return;done=true;inp.remove();if(after)after()};
- inp.addEventListener("cancel",fin);
- inp.onchange=async()=>{let fs=[...inp.files];if(!fs.length)return fin();if(fs.length>left){toast("Nur noch "+left+" Foto"+(left===1?"":"s")+" möglich – die ersten werden genommen.");fs=fs.slice(0,left)}
-  const D=[];for(const f of fs){try{D.push(await shrink(f))}catch(x){}}if(!D.length){errBox("Foto konnte nicht gelesen werden.");return fin()}mfCapDlg(p,ps,D,fin)};
+/* 1.170: Android öffnet bei „mehrere Dateien“ nur die Galerie – darum: Kamera = ein Foto (capture), weitere mit „Noch ein Foto“; Galerie extra */
+function mfGrab(mode,max,ok,no){const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.hidden=true;inp.id="mffile";if(mode==="cam")inp.setAttribute("capture","environment");else inp.multiple=true;document.body.appendChild(inp);let done=false;
+ inp.addEventListener("cancel",()=>{if(done)return;done=true;inp.remove();if(no)no()});
+ inp.onchange=async()=>{done=true;let fs=[...inp.files].slice(0,max);inp.remove();if(!fs.length)return no&&no();const D=[];for(const f of fs){try{D.push(await shrink(f))}catch(x){}}if(!D.length){errBox("Foto konnte nicht gelesen werden.");return no&&no()}ok(D)};
  inp.click()}
-function mfCapDlg(p,ps,D,fin){const o=document.createElement("div");o.className="ov";
- o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b>Foto vom Material'+(D.length>1?' ('+D.length+')':'')+'</b><p class="mute" style="margin:2px 0 6px">'+(ps?'Zusatz '+esc(ps):'Packschein '+esc(p.ps||""))+'</p><div class="rph">'+D.map(()=>'<img alt="Vorschau">').join("")+'</div>'+
+function mfPick(p,ps,after,mode){const left=MF_MAX-mfList(p,ps).length;let done=false;const fin=()=>{if(done)return;done=true;if(after)after()};if(left<=0){toast("Maximal "+MF_MAX+" Fotos pro Packschein.");return fin()}
+ mfGrab(mode||"cam",left,D=>mfCapDlg(p,ps,D,fin),fin)}
+function mfCapDlg(p,ps,D,fin){const o=document.createElement("div");o.className="ov";const left=()=>MF_MAX-mfList(p,ps).length-D.length;
+ o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b id="mfct"></b><p class="mute" style="margin:2px 0 6px">'+(ps?'Zusatz '+esc(ps):'Packschein '+esc(p.ps||""))+'</p><div class="rph" id="mfcp"></div>'+
+  '<div class="row" style="gap:8px;margin:0 0 10px"><button class="btn ghost s" type="button" id="mfmore" style="width:auto">📷 Noch ein Foto</button><button class="btn ghost s" type="button" id="mfgal" style="width:auto">🖼 Aus der Galerie</button></div>'+
   '<label class="mute" for="mfc">Kurze Beschreibung (freiwillig)</label><input id="mfc" maxlength="80" placeholder="z. B. 3 Gitterboxen + 1 Palette" style="width:100%;margin:4px 0 10px"><div class="row"><button class="btn" id="mfok">Speichern</button><button class="btn ghost" id="mfno">Abbrechen</button></div></div>';
- o.querySelectorAll(".rph img").forEach((im,k)=>im.src=D[k]);document.body.appendChild(o);
+ const draw=()=>{o.querySelector("#mfct").textContent="Foto vom Material"+(D.length>1?" ("+D.length+")":"");const c=o.querySelector("#mfcp");c.innerHTML=D.map((_,k)=>'<div class="thw"><img alt="Vorschau"><button class="thx" type="button" data-mfrm="'+k+'" aria-label="Foto entfernen">✕</button></div>').join("");
+  c.querySelectorAll("img").forEach((im,k)=>im.src=D[k]);c.querySelectorAll("[data-mfrm]").forEach(x=>x.onclick=()=>{D.splice(+x.dataset.mfrm,1);draw()});const n=left()>0;o.querySelector("#mfmore").disabled=!n;o.querySelector("#mfgal").disabled=!n;o.querySelector("#mfok").disabled=!D.length};
+ document.body.appendChild(o);draw();
+ o.querySelector("#mfmore").onclick=()=>mfGrab("cam",left(),A=>{D.push(...A);draw()});o.querySelector("#mfgal").onclick=()=>mfGrab("gal",left(),A=>{D.push(...A.slice(0,left()));draw()});
  o.querySelector("#mfno").onclick=()=>{o.remove();fin()};
- o.querySelector("#mfok").onclick=async()=>{const b=o.querySelector("#mfok");b.disabled=true;b.textContent="Wird gespeichert …";const c=o.querySelector("#mfc").value.trim(),add=[];
+ o.querySelector("#mfok").onclick=async()=>{if(!D.length)return;const b=o.querySelector("#mfok");b.disabled=true;b.textContent="Wird gespeichert …";const c=o.querySelector("#mfc").value.trim(),add=[];
   try{for(const d of D){const id=p.id+"-m"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);await db.doc("fotos/"+id).set({d});RPH[id]=d;add.push({id,c,by:me,...tabAs("by"),t:Date.now()})}
    await mfSave(p,ps,mfList(p,ps).concat(add));o.remove();toast(add.length===1?"Foto gespeichert":add.length+" Fotos gespeichert",1);fin()}
   catch(x){console.error(x);if(add.length){try{await mfSave(p,ps,mfList(p,ps).concat(add))}catch(y){}}o.remove();errBox("Foto konnte nicht gespeichert werden. Bitte Internetverbindung prüfen und nochmal versuchen.");fin()}}}
@@ -4679,11 +4683,11 @@ function mfClean(now){now=now||Date.now();let n=0;packs.forEach(p=>{const H=pkH(
 function mfCleanTick(){try{if(typeof me==="undefined"||!me||!can("pk_s")||!packs.length)return;const d=new Date().toDateString();let last="";try{last=localStorage.getItem("tpc_mfclean")||""}catch(e){}if(last===d)return;mfClean();try{localStorage.setItem("tpc_mfclean",d)}catch(e){}}catch(e){console.warn("Fotos aufräumen",e)}}
 setTimeout(mfCleanTick,30000);setInterval(mfCleanTick,3600e3);
 (function(){try{const st=document.createElement("style");st.textContent=
-'.mfbox{margin:8px 14px 10px;padding-top:8px;border-top:2px solid var(--line)}.mfh{display:flex;align-items:center;justify-content:space-between;gap:8px}.mfh .btn{width:auto}.mf0{margin:4px 0 0;font-size:13px}'+
+'.mfbox{margin:8px 14px 10px;padding-top:8px;border-top:2px solid var(--line)}.mfh{display:flex;align-items:center;justify-content:space-between;gap:8px}.mfh .btn{width:auto}.mfbt{display:flex;gap:6px}.mf0{margin:4px 0 0;font-size:13px}'+
 '.mfr{gap:10px}.mft{margin:0;width:84px}.mft figcaption{font-size:12px;line-height:1.25;margin-top:3px;color:var(--ink);word-break:break-word}.mfg{font-size:13px;font-weight:700;color:var(--mute);margin-top:8px}'+
 '.mfv{flex-direction:column;gap:10px}.mfv img{max-height:calc(100% - 130px)}.mfvb{background:#fff;color:#17212f;border-radius:12px;padding:10px 12px;width:100%;max-width:520px}.mfvt{font-weight:700}.mfvb small{color:#4a5568}.mfvk{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}.mfvk .btn{width:auto}.mfvk .btn.ghost{background:#fff!important;color:#114a97!important;border:2px solid #114a97!important}.mfvk .btn.ghost.red{color:#b8322a!important;border-color:#b8322a!important}'+
 /* Packschein-Feld ist auch im Dunkelmodus hell (wie die Zeilen ab 1.164) */
-'.pkf .mfbox{border-top-color:#d5dbe5;color:#17212f}.pkf .mfh b,.pkf .mft figcaption{color:#17212f!important}.pkf .mf0{color:#4a5568!important}.pkf .mfh .btn.ghost{background:#fff!important;color:#114a97!important;border:2px solid #114a97!important}.pkf .rph img{background:#d5dbe5}';
+'.pkf .mfbox{border-top-color:#d5dbe5;color:#17212f}.pkf .mfh b,.pkf .mft figcaption{color:#17212f!important}.pkf .mf0{color:#4a5568!important}.pkf .mfh .btn.ghost,.pkf .mfbt .btn.ghost{background:#fff!important;color:#114a97!important;border:2px solid #114a97!important}.pkf .rph img{background:#d5dbe5}';
 document.head.appendChild(st)}catch(e){}})();
 
 /* ===== 1.136 – Projektleiter Übersicht (Jürgen, 6.11.; Entwurf 2 https://claude.ai/artifact/PcSVpxgpZZaZLDP1xFSGY8;
