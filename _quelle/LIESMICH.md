@@ -523,3 +523,4 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - 1.162: „Draußen“ → „Auf Baustelle“ (Leiste „Baustelle“, Schild, Zeitleiste, Material „Noch auf Baustelle“, Projektleiter Übersicht, Assistent, Hinweise bei Verlängerung). Die Erkennung im Assistenten versteht „draußen“ weiter.
 - 1.163: „Unterwegs“ statt „Auf Baustelle“ (Jürgen) – alle Stellen aus 1.162.
 - 1.164: Herrichten – Stück und Artikelname dunkel, 16 px, nicht mehr verblasst (auch bei erledigten Zeilen); Feld-Titel dunkel.
+- 1.165: Zubehör-Artikel (z. B. Kette inkl. Zahlenschloss) zählen im Abgleich/„Aus der Packliste“/Assistent als zurück, wenn sie in der Packliste stehen (auch als Alternative); sonst wie bisher ignoriert (`abgInPk`). Vollständige Kachel „Aus der Packliste“ kräftig grün mit weißer Schrift (Dunkelmodus). Test `tests/zub_t.js`.

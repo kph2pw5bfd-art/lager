@@ -14,6 +14,8 @@ const rIsEnd=r=>!!r.closed&&r.art!=="teil";
 const abgPackOf=ord=>{const o=pkDig(ord);if(!o)return null;const p=packs.find(p=>pkDig(p.ord)===o)||null;return p?pkRoot(p):null};
 const abgN=n=>String(n);
 /* Konto eines Auftrags. ov = {id, items} ersetzt beim Zählen den eigenen, noch nicht gespeicherten Retourschein */
+/* 1.165: Zubehör-Artikel zählen beim Rücklauf mit, wenn sie in der Packliste stehen (z. B. Kette als Alternative) – Jürgen, 11.11. */
+const abgInPk=(M,c,nm)=>{const e=M[abgKey(c,nm)];return !!(e&&(e.soll||e.fr||e.l55))};
 function abgBal(p,ov){if(p&&p.art==="verl"&&pkRoot(p)!==p)return{p,L:[],R:[],miss:[],more:[],has:false,closed:false,hasEnd:false,endR:null,raus:0,zur:0,fehlt:0,zuviel:0,l55:0};const H=pkH(p),M={};
  const get=(k,c,nm)=>M[k]=M[k]||{k,code:c||"",name:nm,raus:0,nach:0,fr:0,l55:0,soll:0,back0:0,zin:0,zout:0,back:0,via55:0};
  const add=(c,nm,zus,q,f)=>{const e=get(abgKey(c,nm),c,nm);e.soll+=q;e.fr+=f;if(zus)e.nach+=q+f;else e.raus+=q+f};
@@ -23,8 +25,8 @@ function abgBal(p,ov){if(p&&p.art==="verl"&&pkRoot(p)!==p)return{p,L:[],R:[],mis
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,!!o.z,+a.n||0,0)})});
  const R=pkRets(p);
  if(typeof pkX==="function")pkX(p).forEach(e=>add(artCode(e.a),pkXName(e),false,+e.n||0,0));
- R.forEach(r=>{const it=ov&&ov.id&&r.id===ov.id?ov.items:rIt(r);Object.values(it||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0})});
- if(ov&&!ov.id)Object.values(ov.items||{}).forEach(i=>{if(i.g==="Zubehör")return;const c=artCode(i.nr);get(abgKey(c,i.name),c,i.name).back0+=+i.q||0});
+ R.forEach(r=>{const it=ov&&ov.id&&r.id===ov.id?ov.items:rIt(r);Object.values(it||{}).forEach(i=>{const c=artCode(i.nr);if(i.g==="Zubehör"&&!abgInPk(M,c,i.name))return;get(abgKey(c,i.name),c,i.name).back0+=+i.q||0})});
+ if(ov&&!ov.id)Object.values(ov.items||{}).forEach(i=>{const c=artCode(i.nr);if(i.g==="Zubehör"&&!abgInPk(M,c,i.name))return;get(abgKey(c,i.name),c,i.name).back0+=+i.q||0});
  /* 1.118: Material, das direkt an eine andere Baustelle weitergeht („Von Baustelle“ mit diesem Auftrag als Quelle), zählt hier als zurück */
  packs.forEach(b=>{if(b.art!=="bst"||b.von!==p.id)return;(b.pos||[]).forEach(x=>{const own=Math.max(0,(+x.n||0)-(+x.f||0)),c=artCode(x.a),e=get(abgKey(c,pkName(x)),c,pkName(x));e.back0+=own;e.weit=(e.weit||0)+own})});
  ABZ.forEach(z=>{if(z.from===p.id)get(z.k,z.code,z.name).zout+=+z.q||0;if(z.to===p.id)get(z.k,z.code,z.name).zin+=+z.q||0});
@@ -237,7 +239,7 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f),q=(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st);
   const zd=o.z?(p.zus||[]).find(z=>String(z.ps)===o.z):null;if(q)ev.push([zd?zd.t||p.t:p.db||p.t,zd?"Nachlieferung "+o.z:"Packliste raus",pkName(x),q,h&&h.by?nmA(h,"by"):""]);
   if(st.s!=="open")(st.alt||[]).forEach(a=>ev.push([zd?zd.t||p.t:p.db||p.t,"Alternative",a.t,+a.n||0,h&&h.by?nmA(h,"by"):""]))});
- B.R.forEach(r=>Object.values(rIt(r)).forEach(i=>{if(i.g!=="Zubehör"&&+i.q)ev.push([abgRetT(r),abgRetLbl(r),i.name,-(+i.q),nmA(r,r.closed?"closedBy":"by")])}));
+ B.R.forEach(r=>Object.values(rIt(r)).forEach(i=>{if((i.g!=="Zubehör"||B.L.some(e=>e.code&&e.code===artCode(i.nr)&&e.soll))&&+i.q)ev.push([abgRetT(r),abgRetLbl(r),i.name,-(+i.q),nmA(r,r.closed?"closedBy":"by")])}));
  ABZ.filter(z=>z.from===p.id||z.to===p.id).forEach(z=>{const o=packs.find(x=>x.id===(z.from===p.id?z.to:z.from));ev.push([z.t,z.from===p.id?"Zugeordnet an "+(o?o.ev||o.ord:"?"):"Zugeordnet von "+(o?o.ev||o.ord:"?"),z.name,z.from===p.id?+z.q:-z.q,nmA(z,"by")])});
  ev.sort((a,b)=>(a[0]||0)-(b[0]||0)).forEach((e,i)=>{const r=wv.addRow([fmt(e[0]),e[1],e[2],e[3]>0?"↑ "+e[3]:"↓ "+(-e[3]),e[4]]);r.eachCell({includeEmpty:true},(c,n)=>{c.border=bd;if(i%2)c.fill=fill("FFF6F8FB");if(n===4)c.alignment={horizontal:"center"}})});
  const wz=wb.addWorksheet("Zu viel – Zuordnungen");wz.columns=[{width:30},{width:9},{width:28},{width:40},{width:22}];kopf(wz);head(wz,["Artikel","Menge","Status","Auftrag / Vorschlag","Wer / Wann"]);

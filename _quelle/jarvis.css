@@ -424,3 +424,6 @@ body.pkdragging .pkdrop{display:flex}
 .pk-ok .pkt,.pk-ok .pkn{opacity:1!important}.pk-ok .pkt{color:#2d3748!important}
 .pkp .pkt small{color:#4a5568;font-weight:500}.pkp .pkt .pkby,.pkp .pkt small.pkby{color:#5f6b7a;font-weight:500;font-size:13px}
 .pkft0 b{color:#111a27}
+
+/* 1.165: „Aus der Packliste“ – vollständige Kachel kräftig grün mit weißer Schrift (auch im Dunkelmodus lesbar) */
+.rtile.rpkt.dn{background:#1f7a46!important;border-color:#1f7a46!important;color:#fff!important}.rtile.rpkt.dn b,.rtile.rpkt.dn .mute,.rtile.rpkt.dn span{color:#fff!important;opacity:1!important}

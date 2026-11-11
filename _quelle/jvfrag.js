@@ -65,7 +65,7 @@ function jvArtCnt(p,m){if(p.art==="verl"&&pkRoot(p)!==p)m=()=>false;const H=pkH(
   if(m(artCode(x.a),x.t+" "+pkName(x))){if(pkL55(x,h)){if(run){out+=own;l55+=own}else plan+=own}else if(st.s==="open"){if(run)out+=own;else plan+=own}else out+=(h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st)}
   if(st.s!=="open")(st.alt||[]).forEach(a=>{if(m(artCode(a.a),a.t))out+=+a.n||0})});
  if(typeof pkX==="function")pkX(p).forEach(e=>{if(m(artCode(e.a),(e.nm||"")+" "+pkXName(e)))out+=+e.n||0});
- pkRets(p).forEach(r=>Object.values(rIt(r)).forEach(it=>{if(it.g!=="Zubehör"&&m(artCode(it.nr),it.name))back+=+it.q||0}));
+ pkRets(p).forEach(r=>Object.values(rIt(r)).forEach(it=>{if(m(artCode(it.nr),it.name))back+=+it.q||0}));
  return{out,plan,back,l55,rest:Math.max(0,out-back)}}
 function jvOutSum(A){if(!jvPkOk())return 0;const m=jvMatcher(A);let s=0;packs.forEach(p=>{if(pkState(p).k!=="done")s+=jvArtCnt(p,m).rest});return s}
 /* „Auf welcher Baustelle sind 50m 32A?“ / „Wo ist Artikel 1098?“ / „Wie viele … sind auf Baustellen?“ */
