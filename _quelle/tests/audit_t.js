@@ -27,7 +27,7 @@ const seed=kat.concat([
   if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});
   return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.evaluate(()=>window.PK_FOPEN=true);await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(800);
- const snap=()=>p.evaluate(()=>JSON.stringify(window.__T.docs.map(r=>[r.col,r.id,r.data])));
+ const snap=()=>p.evaluate(()=>JSON.stringify(window.__T.docs.filter(r=>r.col!=="online").map(r=>[r.col,r.id,r.data])));/* online = Herzschlag „Wer ist online“ (1.171), gewollt */
  const IGN=/^(ed_|edn_)/;/* users/<id>.t = „zuletzt angemeldet“, gewollt */
  const diff=(a,b)=>{const A=new Map(JSON.parse(a).map(x=>[x[0]+"/"+x[1],x[2]])),B=new Map(JSON.parse(b).map(x=>[x[0]+"/"+x[1],x[2]]));const out=[];
   for(const [k,v] of B){const o=A.get(k);if(!o){if(Object.keys(v).every(f=>IGN.test(f)))continue;out.push("NEU "+k+" "+JSON.stringify(v).slice(0,160));continue}for(const f of new Set([...Object.keys(o),...Object.keys(v)])){if(IGN.test(f))continue;if(JSON.stringify(o[f])!==JSON.stringify(v[f]))out.push("GEÄNDERT "+k+" ."+f+": "+JSON.stringify(o[f]).slice(0,60)+" → "+JSON.stringify(v[f]).slice(0,60))}}

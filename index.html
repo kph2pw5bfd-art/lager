@@ -555,7 +555,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.170";
+<script>const APPV="1.171";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -645,8 +645,8 @@ async function boot(){SB.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT")locati
  if(!session)return loginView();ME=session.user;afterLogin()}
 
 /* ===== Admin: Kollegen verwalten ===== */
-function userBlock(){const L=PROFS.filter(p=>p.id!==me).sort((a,b)=>(a.active-b.active)||String(a.name).localeCompare(b.name,"de"));
- $("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Benutzer</h3><p class="mute" style="margin:0 0 8px">Neue Konten müssen hier freigegeben werden. Gesperrte Benutzer kommen nicht mehr in die App.</p>'+(L.length?L.map(p=>'<div class="card ubx'+(p.active?'':' wait')+'"><div style="min-width:0"><b>'+esc(p.name||"Ohne Namen")+'</b>'+(p.role==="admin"?' <span class="tag">Admin</span>':'')+'<div class="mute" style="overflow-wrap:anywhere">'+esc(p.email||"")+'</div><div class="mute">'+(p.active?"Freigegeben":"Nicht freigegeben")+'</div></div><div class="ubt">'+(owner||p.role!=="admin"?'<button class="btn s'+(p.active?' ghost':'')+'" data-ua="'+p.id+'">'+(p.active?"Sperren":"Freigeben")+'</button>':'')+(owner&&p.active?'<button class="btn ghost s" data-ur="'+p.id+'">'+(p.role==="admin"?"Admin entfernen":"Zum Admin machen")+'</button>':'')+'</div></div>').join(""):'<div class="card mute">Noch keine weiteren Konten. Lade Benutzer über „Benutzer einladen“ ein.</div>'));
+function userBlock(){const L=PROFS.filter(p=>p.id!==me).sort((a,b)=>(a.active-b.active)||(onlRank(a.id)-onlRank(b.id))||String(a.name).localeCompare(b.name,"de"));
+ $("#app").insertAdjacentHTML("beforeend",'<h3 style="margin:18px 0 4px">Benutzer</h3><p class="mute" style="margin:0 0 8px">Neue Konten müssen hier freigegeben werden. Gesperrte Benutzer kommen nicht mehr in die App.</p>'+(L.length?L.map(p=>'<div class="card ubx'+(p.active?'':' wait')+'"><div style="min-width:0"><b>'+esc(p.name||"Ohne Namen")+'</b>'+(p.role==="admin"?' <span class="tag">Admin</span>':'')+'<div class="mute" style="overflow-wrap:anywhere">'+esc(p.email||"")+'</div><div class="mute">'+(p.active?"Freigegeben":"Nicht freigegeben")+'</div>'+onlLine(p.id)+'</div><div class="ubt">'+(owner||p.role!=="admin"?'<button class="btn s'+(p.active?' ghost':'')+'" data-ua="'+p.id+'">'+(p.active?"Sperren":"Freigeben")+'</button>':'')+(owner&&p.active?'<button class="btn ghost s" data-ur="'+p.id+'">'+(p.role==="admin"?"Admin entfernen":"Zum Admin machen")+'</button>':'')+'</div></div>').join(""):'<div class="card mute">Noch keine weiteren Konten. Lade Benutzer über „Benutzer einladen“ ein.</div>'));
  const set=async(p,a,r)=>{const {error}=await SB.rpc("admin_set_user",{p_id:p.id,p_active:a,p_role:r});if(error)return errBox("Ändern fehlgeschlagen: "+error.message);await loadProfs();toast("Gespeichert",1)};
  document.querySelectorAll("[data-ua]").forEach(b=>b.onclick=()=>{const p=PROFS.find(x=>x.id===b.dataset.ua);if(!p)return;if(p.active)ask((p.name||"Kollege")+" sperren?",()=>set(p,false,"user"));else set(p,true,p.role)});
  document.querySelectorAll("[data-ur]").forEach(b=>b.onclick=()=>{const p=PROFS.find(x=>x.id===b.dataset.ur);if(!p)return;const na=p.role==="admin"?"user":"admin";ask(na==="admin"?(p.name||"Kollege")+" zum Administrator machen? Er kann dann alles verwalten.":"Admin-Rechte von "+(p.name||"Kollege")+" entfernen?",()=>set(p,true,na))})}
@@ -4805,6 +4805,73 @@ function plView(){plSeenSub();if(!plIn2){plIn2=true;try{plPrev=+localStorage.get
 /* Besuch endet auf der Hauptseite oder im Hintergrund */
 setInterval(()=>{if(typeof view==="undefined")return;if(plIn2&&(view==="start"||document.visibilityState==="hidden")){if(!plForce)try{localStorage.setItem("tpc_pl_seen",String(Date.now()))}catch(e){}plIn2=false}if(plForce&&view==="start"){plForce=false;plAs=""}},800);
 document.addEventListener("click",e=>{const t=e.target&&e.target.closest&&e.target.closest("#pladm");if(t){plForce=true;plAs="";draw()}});
+
+/* ===== Wer ist online? (1.171) =====
+   Jedes Gerät schreibt, solange die App offen und sichtbar ist, etwa jede Minute einen Herzschlag in docs `online`
+   (id = <Benutzer-ID>_<Geräte-ID>): {u, dev, b (Bereich = Seitentitel), t, vis, v, tn/tid (Lager-Tablet: gewählter Name / Person), p_<Person-ID>: Zeit}.
+   Bereichswechsel wird sofort gemeldet (höchstens alle 10 s), beim Verlassen/Ausblenden vis:false.
+   Anzeige nur für Admins in der Benutzerverwaltung (Punkt + „Online“ bzw. „Zuletzt online …“, Gerät, Bereich).
+   Lesen darf laut online.sql nur der Admin, schreiben jeder nur seinen eigenen Eintrag. */
+const ONL_BEAT=60000,ONL_FRESH=150000;
+let onlLater=null,onlLoaded=false,onlLoadT=0,onlLast=0,onlLastB="",onlDocs=[],onlTimer=null,onlPoll=null;
+function onlDevId(){try{let d=localStorage.getItem("tpc_devid");if(!d){d=Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);localStorage.setItem("tpc_devid",d)}return d}catch(e){return "x"}}
+function onlDev(ua,tp){ua=ua==null?navigator.userAgent:ua;tp=tp==null?(navigator.maxTouchPoints||0):tp;
+ if(/iPad/.test(ua)||(/Macintosh/.test(ua)&&tp>1))return "iPad";
+ if(/iPhone/.test(ua))return "iPhone";
+ if(/Android/.test(ua))return /Mobile/.test(ua)?"Android-Handy":"Android-Tablet";
+ if(/Windows/.test(ua))return "PC";
+ if(/Macintosh|Mac OS/.test(ua))return "Mac";
+ return "Computer"}
+function onlArea(){const t=document.getElementById("t");return String(t&&t.textContent||"").trim().slice(0,50)}
+function onlBeat(vis,force){try{
+ if(typeof me==="undefined"||!me||typeof db==="undefined"||!db)return;
+ vis=vis==null?document.visibilityState==="visible":vis;const n=Date.now(),b=onlArea();
+ if(!force&&vis&&n-onlLast<(b!==onlLastB?10000:ONL_BEAT-2000)){if(b!==onlLastB&&!onlLater)onlLater=setTimeout(()=>{onlLater=null;onlBeat(true)},10000-(n-onlLast)+50);return}
+ onlLast=n;onlLastB=b;
+ const d={u:me,dev:tabOn()?"Lager-Tablet":onlDev(),b,t:n,vis:!!vis,v:APPV};
+ if(tabOn()){const a=TAB.act;d.tn=a&&a.name?a.name:"";d.tid=a&&a.id?a.id:"";if(a&&a.id&&vis)d["p_"+a.id]=n}
+ const ref=db.doc("online/"+me+"_"+onlDevId());
+ ref.update(d).catch(x=>{if(/nicht gefunden/i.test(String(x&&x.message||x)))return ref.set(d)}).catch(()=>{})}catch(e){}}
+function onlStart(){if(onlTimer)return;
+ onlTimer=setInterval(()=>{if(document.visibilityState==="visible")onlBeat(true)},ONL_BEAT);
+ document.addEventListener("visibilitychange",()=>onlBeat(document.visibilityState==="visible",true));
+ window.addEventListener("pagehide",()=>onlBeat(false,true));
+ const t=document.getElementById("t");if(t&&window.MutationObserver)new MutationObserver(()=>setTimeout(()=>onlBeat(true),300)).observe(t,{childList:true,characterData:true,subtree:true});
+ onlBeat(true,true)}
+/* Start, sobald jemand angemeldet ist und die Datenbank steht */
+(function onlWait(){if(typeof me!=="undefined"&&me&&typeof db!=="undefined"&&db)return onlStart();setTimeout(onlWait,2000)})();
+
+/* ---- Anzeige (Admin) ---- */
+async function onlLoad(){try{const {data,error}=await SB.from("docs").select("id,data").eq("col","online").range(0,999);if(error)throw error;onlDocs=(data||[]).map(r=>({id:r.id,...r.data}))}catch(e){}return onlDocs}
+function onlOn(d,n){return !!(d&&d.vis&&(n||Date.now())-(+d.t||0)<ONL_FRESH)}
+function onlWhen(t,n){n=n||Date.now();const m=Math.round((n-t)/60000);if(m<1)return "gerade eben";if(m<60)return "vor "+m+" Min.";
+ const D=new Date(t),hm=String(D.getHours()).padStart(2,"0")+":"+String(D.getMinutes()).padStart(2,"0"),T0=new Date(n);T0.setHours(0,0,0,0);
+ const dd=Math.floor((T0-new Date(D.getFullYear(),D.getMonth(),D.getDate()))/864e5);
+ if(dd<=0)return "heute "+hm;if(dd===1)return "gestern "+hm;
+ if(dd<7)return ["So","Mo","Di","Mi","Do","Fr","Sa"][D.getDay()]+" "+D.getDate()+"."+(D.getMonth()+1)+". "+hm;
+ return D.getDate()+"."+(D.getMonth()+1)+"."+D.getFullYear()}
+/* Stand einer Person: eigene Geräte + Lager-Tablet (wenn sie dort gewählt war) */
+function onlOf(uid,n){n=n||Date.now();const own=onlDocs.filter(d=>d.u===uid),now=[];let lastT=0,lastD=null;
+ own.forEach(d=>{if(onlOn(d,n))now.push({dev:d.dev,b:d.b,tn:d.dev==="Lager-Tablet"&&d.tn?shortName(d.tn):""});if(+d.t>lastT){lastT=+d.t;lastD={dev:d.dev,b:d.b}}});
+ onlDocs.forEach(d=>{if(d.u===uid)return;const pt=+d["p_"+uid]||0;if(!pt)return;
+  if(onlOn(d,n)&&d.tid===uid)now.push({dev:"am Lager-Tablet",b:d.b});
+  if(pt>lastT){lastT=pt;lastD={dev:"am Lager-Tablet",b:d.tid===uid?d.b:""}}});
+ return{now,lastT,lastD}}
+function onlLine(uid){if(!owner)return "";const o=onlOf(uid);
+ const bits=x=>[x.dev,x.tn?x.tn+" arbeitet":"",x.b].filter(Boolean).map(esc).join(" · ");
+ let h;
+ if(o.now.length)h='<span class="onld on"></span><span><b>Online</b> · '+o.now.map(bits).join("<br>")+'</span>';
+ else if(o.lastT)h='<span class="onld"></span><span>Zuletzt online: '+esc(onlWhen(o.lastT))+(o.lastD&&bits(o.lastD)?' · '+bits(o.lastD):'')+'</span>';
+ else h='<span class="onld"></span><span>Noch nicht online gewesen (seit Version 1.171)</span>';
+ return '<div class="onl" data-onl="'+esc(uid)+'">'+h+'</div>'}
+function onlRank(uid){const o=onlOf(uid);return o.now.length?0:1}
+/* Benutzerverwaltung: beim Öffnen laden, solange offen alle 30 s nachladen und nur die Zeilen tauschen */
+function onlUsers(){if(!owner)return;
+ const fresh=()=>{document.querySelectorAll("[data-onl]").forEach(el=>{const w=document.createElement("div");w.innerHTML=onlLine(el.dataset.onl);if(w.firstChild)el.replaceWith(w.firstChild)})};
+ const get=()=>{onlLoadT=Date.now();return onlLoad().then(()=>{if(!onlLoaded){onlLoaded=true;if(typeof view!=="undefined"&&view==="users")return draw()}fresh()})};
+ if(Date.now()-onlLoadT>10000)get();
+ if(!onlPoll)onlPoll=setInterval(()=>{if(typeof view==="undefined"||view!=="users"||!document.querySelector("[data-onl]")){clearInterval(onlPoll);onlPoll=null;return}if(document.visibilityState==="visible")get()},30000)}
+(function(){try{const st=document.createElement("style");st.textContent='.onl{display:flex;gap:8px;align-items:flex-start;margin-top:4px;font-size:13.5px;line-height:1.35;color:var(--mute)}.onld{width:10px;height:10px;border-radius:50%;background:#9aa4b2;flex:none;margin-top:4px}.onld.on{background:#1e9e55;box-shadow:0 0 0 3px rgba(30,158,85,.25)}.onl b{color:#1e7a46}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .onl b{color:#6fd39a}}:root[data-theme="dark"] .onl b{color:#6fd39a}';document.head.appendChild(st)}catch(e){}})();
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -5078,7 +5145,7 @@ function reqMark(p){let first=null;p.forEach(([id,m])=>{const el=$("#"+id);if(!e
 function artView(){$("#t").textContent="Einstellungen";$("#app").innerHTML='<h3 style="margin:4px 0 4px">Dieses Gerät</h3><p class="mute" style="margin:0 0 8px">Gilt nur für dieses Handy bzw. Tablet.</p>'+prefRow("snd","Töne beim Scannen","Welcher Ton, wählst du darunter aus")+sndBlock()+prefRow("vib","Vibration beim Scannen","Nur auf Android-Geräten")+prefRow("wake","Bildschirm anlassen","Solange die App offen ist")+hoMineBlock()+(typeof pushBlock==="function"?pushBlock():"")+(typeof gbPrefBlock==="function"?gbPrefBlock():"")+'<h3 style="margin:18px 0 4px">App</h3><p class="mute" style="margin:0 0 8px">Installierte Version: '+esc(APPV)+'</p><button class="btn ghost" id="upd">Nach Update suchen</button>';
  if($("#pvb"))$("#pvb").onclick=()=>{owner=false;hist=[];view="start";draw()};prefBind();sndBind();hoMineBind();if(typeof pushBind==="function")pushBind();if(typeof gbPrefBind==="function")gbPrefBind();$("#upd").onclick=async()=>{const t=await fetch(HERE,{cache:"reload"}).then(r=>r.text()).catch(()=>"");const m=t.match(/const APPV="([^"]+)"/);if(m&&m[1]!==APPV){toast("Neue Version "+m[1]+" wird geladen …",1);setTimeout(()=>location.reload(),800)}else toast(m?"Die App ist aktuell.":"Keine Verbindung.",!!m)}}
 function appView(){$("#t").textContent="App-Verwaltung";$("#app").innerHTML='<h3 style="margin:4px 0 4px">Artikelliste</h3><p class="mute" style="margin:0 0 8px">Alle Artikel nach Haupt- und Untergruppen geordnet, wie in der Excel-Liste. Einzelne Artikel ansehen, ändern, hinzufügen oder löschen.</p><button class="btn ghost" id="al">Artikelliste öffnen</button>';$("#al").onclick=()=>go("artlist");retAdmin();fehlBlock();if(typeof bkBlock==="function")bkBlock()}
-function usersView(){$("#t").textContent="Benutzerverwaltung";$("#app").innerHTML='<button class="btn" id="inv" style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/></svg>Benutzer einladen</button>';$("#inv").onclick=invDlg;if(!can("v_user"))$("#inv").remove();else userBlock();if(can("v_rights"))rightsBlock();const h=$("#app h3");if(h)h.style.marginTop="4px"}
+function usersView(){$("#t").textContent="Benutzerverwaltung";$("#app").innerHTML='<button class="btn" id="inv" style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/></svg>Benutzer einladen</button>';$("#inv").onclick=invDlg;if(!can("v_user"))$("#inv").remove();else userBlock();if(can("v_rights"))rightsBlock();const h=$("#app h3");if(h)h.style.marginTop="4px";onlUsers()}
 function artListView(){$("#t").textContent="Artikelliste";
  $("#app").innerHTML=nav()+'<div class="card"><input id="an" placeholder="Artikelnummer" maxlength="10"><input id="am" placeholder="Name"><button class="btn" id="as">Speichern</button><button class="btn ghost" id="imp" style="margin-top:8px">Aus Excel importieren</button><input id="impf" type="file" accept=".xlsx" hidden></div>'+
  Object.keys(art).sort().map(k=>'<div class="card row" style="align-items:center"><div><b>'+esc(art[k].name)+'</b> <span class="mute">'+k+'</span></div><button class="btn ghost s" data-x="'+k+'" style="flex:0">Löschen</button></div>').join("");
