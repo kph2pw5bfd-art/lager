@@ -24,7 +24,8 @@ function pkParse(items){
  /* Positionen: Zeile mit Pos.-Nr. (z. B. 1.18) + Anzahl, darunter Zeile mit "Fremd" + ArtikelNr. – auch über den Seitenumbruch */
  let cur=null,inTab=false;
  for(const r of L){const s0=r.it[0]?r.it[0].s:"";
-  if(r.it.some(t=>/^Pos\.?$/.test(t.s))&&r.it.some(t=>/^Bezeichnung$/.test(t.s))){inTab=true;continue}
+  /* 1.166: „Pos. Anzahl“ kann auch ein einziges Textstück sein */
+  if(r.it.some(t=>/^Pos\.?(\s|$)/.test(t.s))&&r.it.some(t=>/^Bezeichnung$/.test(t.s))){inTab=true;continue}
   if(!inTab)continue;
   if(r.it.some(t=>/^Gesamt$/.test(t.s))){inTab=false;continue}
   if(r.y<70||r.it.some(t=>/^Packliste\/Jobinfo|^Seite \d+ von|Power Company.*GmbH|^Tel\.:|^Fax:|IBAN|Bankverbindung/.test(t.s)))continue;

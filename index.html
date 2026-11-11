@@ -555,7 +555,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.166";
+<script>const APPV="1.167";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1353,7 +1353,8 @@ function pkParse(items){
  /* Positionen: Zeile mit Pos.-Nr. (z. B. 1.18) + Anzahl, darunter Zeile mit "Fremd" + ArtikelNr. – auch über den Seitenumbruch */
  let cur=null,inTab=false;
  for(const r of L){const s0=r.it[0]?r.it[0].s:"";
-  if(r.it.some(t=>/^Pos\.?$/.test(t.s))&&r.it.some(t=>/^Bezeichnung$/.test(t.s))){inTab=true;continue}
+  /* 1.166: „Pos. Anzahl“ kann auch ein einziges Textstück sein */
+  if(r.it.some(t=>/^Pos\.?(\s|$)/.test(t.s))&&r.it.some(t=>/^Bezeichnung$/.test(t.s))){inTab=true;continue}
   if(!inTab)continue;
   if(r.it.some(t=>/^Gesamt$/.test(t.s))){inTab=false;continue}
   if(r.y<70||r.it.some(t=>/^Packliste\/Jobinfo|^Seite \d+ von|Power Company.*GmbH|^Tel\.:|^Fax:|IBAN|Bankverbindung/.test(t.s)))continue;
