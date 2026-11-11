@@ -9,7 +9,14 @@ const PK_ICON='<svg viewBox="0 0 24 24" width="28" height="28" fill="none" strok
 const PDFJS_SRC=["https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/","https://unpkg.com/pdfjs-dist@4.10.38/legacy/build/"];
 let pdfLib=null;
 async function pkLib(){if(pdfLib)return pdfLib;let err=null;for(const b of (window.__PDFJS_SRC||PDFJS_SRC)){try{const m=await import(b+"pdf.min.mjs");m.GlobalWorkerOptions.workerSrc=b+"pdf.worker.min.mjs";pdfLib=m;return m}catch(e){err=e}}throw err||new Error("PDF-Leser nicht gefunden")}
-async function pkRead(file){const lib=await pkLib();const buf=new Uint8Array(await file.arrayBuffer());const doc=await lib.getDocument({data:buf}).promise;const it=[];
+/* 1.166: Datei vor dem Lesen prüfen – leer, abgeschnitten, als Text (Base64) oder mit Vorspann. Klare Meldung statt „Invalid PDF structure“. */
+function pkBytes(buf){const n=buf.length;if(!n){const e=new Error("leer");e.pkFile=1;throw e}
+ const head=new TextDecoder("latin1").decode(buf.subarray(0,Math.min(n,4096)));
+ const b64=head.replace(/^\s+/,"");if(/^JVBER/.test(b64)){try{const t=new TextDecoder("latin1").decode(buf).replace(/[^A-Za-z0-9+/=]/g,""),bin=atob(t),o=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)o[i]=bin.charCodeAt(i);return o}catch(x){}}
+ let i=head.indexOf("%PDF-");if(i<0){const all=new TextDecoder("latin1").decode(buf.subarray(0,Math.min(n,1<<20)));i=all.indexOf("%PDF-")}
+ if(i<0){const e=new Error(/^\s*</.test(head)?"html":"kein");e.pkFile=1;throw e}
+ return i?buf.subarray(i):buf}
+async function pkRead(file){const buf=pkBytes(new Uint8Array(await file.arrayBuffer()));const lib=await pkLib();let doc;try{doc=await lib.getDocument({data:buf}).promise}catch(x){if(/Invalid PDF|PDF header|Missing PDF|startxref|xref/i.test(String(x&&x.message))){const e=new Error("kaputt");e.pkFile=1;throw e}throw x}const it=[];
  for(let p=1;p<=doc.numPages;p++){const tc=await (await doc.getPage(p)).getTextContent();tc.items.forEach(i=>{if(i&&typeof i.str==="string")it.push({p,x:i.transform[4],y:i.transform[5],s:i.str})})}
  try{doc.destroy()}catch(e){}return pkParse(it)}
 function packSub(){db.collection("pack").onSnapshot(s=>{packs=s.docs.map(d=>({id:d.id,...d.data()}));pkArtFix();draw()});db.collection("packh").onSnapshot(s=>{packh={};s.docs.forEach(d=>packh[d.id]=d.data());draw()});db.collection("pked").onSnapshot(s=>{pked={};s.docs.forEach(d=>pked[d.id]=d.data());if(typeof view!=="undefined"&&/^pack/.test(view))draw()});if(typeof jvErinSub==="function")jvErinSub()}
@@ -86,9 +93,14 @@ function packView(){$("#t").textContent="Alle Packlisten";if(document.activeElem
  document.querySelectorAll("[data-pkf]").forEach(b=>b.onclick=()=>{pkf=b.dataset.pkf;packView()});
  pkListBind();const qi=$("#pkq");if(qi)qi.oninput=()=>{pkq=qi.value;pkListDraw()};
  pkUpBind()}
+function pkFileMsg(f,k){const nm="„"+f.name+"“",tip=" Bitte den Anhang in der Mail zuerst speichern (z. B. auf den Desktop) und dann von dort hochladen.";
+ if(k==="leer")return nm+" ist leer angekommen (0 Byte). Das passiert oft beim Ziehen direkt aus Outlook."+tip;
+ if(k==="html")return nm+" ist keine PDF, sondern eine Webseite (vermutlich eine Fehler- oder Anmeldeseite beim Herunterladen)."+tip;
+ if(k==="kaputt")return nm+" ist beschädigt oder unvollständig angekommen ("+Math.round((f.size||0)/1024)+" KB)."+tip+" Wenn sie sich auch am PC nicht öffnen lässt, die Packliste in epirent neu erzeugen.";
+ return nm+" ist keine echte PDF, auch wenn sie so heißt."+tip}
 async function pkUpload(files){for(const f of files){let P;const b=$("#pkup");if(b){b.disabled=true;b.textContent="Wird gelesen …"}
   try{P=await pkRead(f)}catch(e){console.warn("Packliste",e);if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}
-   errBox(/Packliste|Auftragsnummer|Positionen/.test(String(e&&e.message))?"„"+f.name+"“ sieht nicht wie eine epirent-Packliste aus.":"Die PDF konnte nicht gelesen werden ("+String(e&&e.message||e).slice(0,80)+"). Bitte Internetverbindung prüfen und nochmal versuchen.");continue}
+   errBox(e&&e.pkFile?pkFileMsg(f,e.message):/Packliste|Auftragsnummer|Positionen/.test(String(e&&e.message))?"„"+f.name+"“ sieht nicht wie eine epirent-Packliste aus.":"Die PDF konnte nicht gelesen werden ("+String(e&&e.message||e).slice(0,80)+"). Bitte nochmal versuchen – wenn es wieder nicht geht, den Anhang zuerst speichern und von dort hochladen.");continue}
   if(b){b.disabled=false;b.textContent="Packliste hochladen (PDF)"}
   pkUpHi="";pkUpArt=null;const id=P.ps||("A"+pkDig(P.ord)),cur=packs.find(x=>x.id===id||(P.ps&&String(x.ps)===String(P.ps))),main=cur?null:pkMainFor(P,id);
   /* 1.89: gleicher Auftrag schon da -> Vergleich: geändert (ersetzt) / Zusatz / eigene Packliste (pkchg.js) */
