@@ -522,3 +522,4 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Detail: „Noch draußen“ entfällt; Material (`auMat`) immer offen (section statt details), ohne „inkl. … aus Zusatz“ und ohne eigene Zusatz-Blöcke (`amZus` nicht mehr aufgerufen). Zeitleiste letzter Schritt „Geprüft“.
 - 1.162: „Draußen“ → „Auf Baustelle“ (Leiste „Baustelle“, Schild, Zeitleiste, Material „Noch auf Baustelle“, Projektleiter Übersicht, Assistent, Hinweise bei Verlängerung). Die Erkennung im Assistenten versteht „draußen“ weiter.
 - 1.163: „Unterwegs“ statt „Auf Baustelle“ (Jürgen) – alle Stellen aus 1.162.
+- 1.164: Herrichten – Stück und Artikelname dunkel, 16 px, nicht mehr verblasst (auch bei erledigten Zeilen); Feld-Titel dunkel.

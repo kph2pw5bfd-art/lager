@@ -417,3 +417,10 @@ body.pkdragging .pkdrop{display:flex}
 
 /* 1.161: Meine Aufträge */
 .aucard .auct b{font-size:18px;font-weight:800;line-height:1.2}.aucard .aum{color:#4a5568;font-size:13.5px}.aus i{height:10px;border-radius:5px}.amhd{display:flex;align-items:baseline;gap:8px}.amhd small{color:var(--mute)}
+
+/* 1.164: Stück und Artikelname gut lesbar (Jürgen, Foto vom Tablet) – nichts mehr verblassen */
+.pkp .pkn{color:#111a27!important;font-weight:800;font-size:16px;opacity:1!important}
+.pkp .pkt{color:#111a27!important;font-weight:600;font-size:16px;opacity:1!important}
+.pk-ok .pkt,.pk-ok .pkn{opacity:1!important}.pk-ok .pkt{color:#2d3748!important}
+.pkp .pkt small{color:#4a5568;font-weight:500}.pkp .pkt .pkby,.pkp .pkt small.pkby{color:#5f6b7a;font-weight:500;font-size:13px}
+.pkft0 b{color:#111a27}
