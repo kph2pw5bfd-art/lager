@@ -48,7 +48,7 @@ function auCard(I){const p=I.p,mine=auIsMine(p),pills=[];
  if(I.B.zuviel&&!I.done)pills.push(abgTag(I.B.zuviel+" mehr zurück","grey"));
  const sub="Dispo "+pkDM(p.db)+" – "+pkDM(p.de)+(I.over?" · Dispo abgelaufen":!I.done&&I.st.k==="herr"?" · Herrichten heute":"");
  return '<button class="aucard'+(mine?' mine':'')+(I.hot?' hot':'')+'" type="button" data-au="'+esc(p.id)+'"><span class="auct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+abgTag(I.lab,I.cls==="b"?"blue":I.cls==="g"?"grey":I.cls)+'</span>'+
-  '<small class="aum">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</small><small class="aum">'+sub+'</small>'+
+  '<small class="aum">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+(typeof mfN==="function"&&mfN(p)?' · 📷 '+mfN(p):'')+'</small><small class="aum">'+sub+'</small>'+
   '<span class="aus">'+I.S.map(s=>'<i class="'+s.c+'"></i>').join("")+'</span>'+auStepL+(pills.length?'<span class="aupills">'+pills.join("")+'</span>':'')+'</button>'}
 function auList(){const t0=pkDay(Date.now()),q=jvNorm(auq);
  const A=packs.map(auInfo).filter(I=>(auf==="alle"||(auf==="done")===I.done)&&(!q||jvNorm((I.p.ev||"")+" "+(I.p.ord||"")+" "+(I.p.pl||"")).includes(q)));
@@ -111,10 +111,10 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const H2=pkH(p),K=pkKeys(p);
  const mat=auMat(p,B,I);/* 1.128: aumat.js */
  $("#app").innerHTML='<section class="card aucd"><div class="aukv"><span>Auftrag</span><b>'+esc(p.ord||"–")+'</b><span>Projektleiter</span><b>'+esc(shortName(p.pl)||"–")+(mine?' <small class="mute">(du)</small>':'')+'</b><span>Dispo</span><b>'+pkD(p.db)+' – '+pkD(p.de)+'</b>'+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+'</div></section>'+
-  tl+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+auNbBtn(p,act)+mat+
+  tl+(typeof mfAuHtml==="function"?mfAuHtml(p):'')+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+auNbBtn(p,act)+mat+
   (!mine?'<p class="mute" style="font-size:12px;margin:8px 2px">Antworten kann nur der Projektleiter dieses Auftrags.</p>':'');
  document.querySelectorAll("[data-aua]").forEach(b=>b.onclick=()=>auAnsDlg(p,B.miss[+b.dataset.aua]));
- if($("#aumsg"))$("#aumsg").onclick=()=>auMsgDlg(p);if($("#aunb"))$("#aunb").onclick=()=>auNbDlg(p)}
+ if(typeof mfBind==="function")mfBind(false);if($("#aumsg"))$("#aumsg").onclick=()=>auMsgDlg(p);if($("#aunb"))$("#aunb").onclick=()=>auNbDlg(p)}
 /* 1.152: Projektleiter trägt selbst ein, was er doch nicht braucht – nur Positionen, die noch nicht hergerichtet werden (Jürgen, 10.11.) */
 function auNbList(p){const H=pkH(p);return pkItems(p).map((o,i)=>({o,i,x:o.x,h:H[o.k]})).filter(r=>!pkL55(r.x,r.h)&&!(r.o.z?pkZFin(p,pkZOf(p,r.o.z)||{}):(pkH(p).fin&&pkH(p).fin.t)))}
 const auNbFree=h=>!h||(!h.ok&&typeof h.q!=="number"&&!(h.alt||[]).length);

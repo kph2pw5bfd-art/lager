@@ -555,7 +555,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.168";
+<script>const APPV="1.169";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1635,7 +1635,7 @@ function pkField(p,key,rows0){const z=key==="main"?null:pkZOf(p,key.slice(1)),ps
  let h='<section class="pkf '+(z?'zus':'main')+(open?' open':'')+'" data-pkf="'+esc(key)+'"><div class="pkfh"><button type="button" class="pkft0" data-pkfk="'+esc(key)+'" aria-expanded="'+open+'"><b>'+(z?'<span class="pkzb">ZUSATZ</span>':'')+'Packschein '+esc((z?z.ps:p.ps)||"–")+'</b>'+
   '<span class="pkfsub'+(late?' late':'')+'">Herrichten '+esc(pkWd(day))+(!z&&pkShifted(p)?' (verschoben'+(pkHd(p).why?' – '+esc(pkHd(p).why):'')+')':'')+(z&&(pkH(p)["zd_"+pkZK(ps)]||{}).why?' ('+esc(pkH(p)["zd_"+pkZK(ps)].why)+')':'')+(late?' – noch nicht hergerichtet':'')+' · '+nPos+(nPos===1?' Position':' Positionen')+(fin&&fo&&fo.by?' · abgeschlossen von '+esc(nmA(fo,"by"))+', '+fmt(fo.t).slice(0,6):'')+'</span></button>'+
   '<button type="button" class="pkgear" data-pkfg="'+esc(key)+'" aria-label="Einstellungen Packschein '+esc((z?z.ps:p.ps)||"")+'">'+PKGEAR+'</button></div>'+
-  '<button type="button" class="pkftiles" data-pkfk="'+esc(key)+'" aria-label="Aufklappen">'+left+mid+right+'</button><div class="pkbar pkfbar"><i style="width:'+pct+'%"></i></div>';
+  '<button type="button" class="pkftiles" data-pkfk="'+esc(key)+'" aria-label="Aufklappen">'+left+mid+right+'</button><div class="pkbar pkfbar"><i style="width:'+pct+'%"></i></div>'+(typeof mfFieldHtml==="function"?mfFieldHtml(p,ps,fin):'');
  if(open){const rows=mine.filter(r=>!r.l55&&(filt==="alle"||r.st.s!=="ok")),r55=filt==="alle"?mine.filter(r=>r.l55):[],lock=mine.every(r=>pkRowFin(p,r.i)),nOff=mine.filter(r=>!r.l55&&r.st.s!=="ok").length;
   h+='<div class="pkfbody"><div class="pkfchips"><button type="button" class="'+(filt==="alle"?'on':'')+'" data-pkff="'+esc(key)+'" data-v="alle">Alle</button><button type="button" class="'+(filt==="offen"?'on':'')+'" data-pkff="'+esc(key)+'" data-v="offen">Noch offen ('+nOff+')</button></div>'+
    (lock?'':'<button class="mbtn sbtn pkfscan" type="button" data-pkfscan="1"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M16.5 8v8"/></svg>Artikel scannen</button>')+
@@ -1649,19 +1649,19 @@ function pkHeadMenu(p){const H=pkH(p),fin=!!(H.fin&&H.fin.t),kl=H.klar&&H.klar.t
  if(noh)return pkMenu("Packliste",[can("pk_b")&&{l:"Projektleiter ändern",id:"pkplch",fn:()=>pkPlDlg(p)},can("pk_b")&&{l:"Kunde ändern",s:" kommt mit dem Umzug auf den Firmenserver",dis:true},
   can("pk_b")&&{l:"Art ändern",id:"pkmart",s:" Normal / Von Baustelle / Verlängerung",fn:()=>pkArtDlg(p)},can("pk_b")&&p.art==="bst"&&{l:"Doch selbst herrichten",id:"pkselbst",fn:()=>ask("Doch selbst herrichten? Die Packliste kommt dann wie gewohnt auf die Wand.",()=>pkArtSave(p,{art:"",von:""}))},
   can("pk_b")&&{l:"Info zum Herrichten",id:"pkmhi",fn:()=>pkHiDlg(p,null)},
-  can("pk_l")&&{l:"Packliste löschen",red:true,id:"pkdel",fn:()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}]);
+  can("pk_l")&&{l:"Packliste löschen",red:true,id:"pkdel",fn:()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{if(typeof mfDelAll==="function")await mfDelAll(p);await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}]);
  pkMenu("Packliste",[!fin&&{l:"Herrichten verschieben",id:"pkmv",fn:()=>pkMove(p)},can("pk_b")&&{l:"Projektleiter ändern",id:"pkplch",fn:()=>pkPlDlg(p)},can("pk_b")&&{l:"Kunde ändern",s:" kommt mit dem Umzug auf den Firmenserver",dis:true},
   can("pk_b")&&{l:"Info zum Herrichten",id:"pkmhi",s:pkHiList(p).length?" ändern / weitere":"",fn:()=>pkHiDlg(p,null)},can("pk_b")&&{l:"Art ändern",id:"pkmart",s:" Von Baustelle / Verlängerung",fn:()=>pkArtDlg(p)},
   {l:"Info an Projektleiter",id:"pkinfo",fn:()=>pkMail(p)},
   {l:kl?"„Mit Projektleiter geklärt“ zurücknehmen":"Mit Projektleiter geklärt",fn:()=>kl?ask("„Geklärt“ zurücknehmen?",()=>pkHSet(p,{klar:null})):ask("Auftrag "+(p.ord||"")+" als mit dem Projektleiter geklärt markieren? Dann zählt er nicht mehr bei „Fehlmaterial“ und nicht mehr bei „Dispo abgelaufen“.",()=>pkHSet(p,{klar:{by:me,...tabAs("by"),t:Date.now()}}))},
-  can("pk_l")&&{l:"Packliste löschen",red:true,id:"pkdel",fn:()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}])}
+  can("pk_l")&&{l:"Packliste löschen",red:true,id:"pkdel",fn:()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{if(typeof mfDelAll==="function")await mfDelAll(p);await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}])}
 function pkFieldMenu(p,key){if(key==="main"){const fin=!!(pkH(p).fin&&pkH(p).fin.t);
   return pkMenu("Packschein "+esc(p.ps||""),[fin?{l:"Packschein öffnen",id:"pkreo",fn:()=>ask("Herrichten wieder öffnen?",()=>pkHSet(p,{fin:null}))}:{l:"Packschein abschließen",id:"pkfin",fn:()=>pkFinish(p)},
    !fin&&typeof pkXDlg==="function"&&{l:"Material hinzufügen",id:"pkxadd",fn:()=>pkXDlg(p,null,null,null)},{l:"Info an Projektleiter",fn:()=>pkMail(p)}])}
  const ps=key.slice(1),z=pkZOf(p,ps);if(!z)return;const fin=!!pkZFin(p,z);
  pkMenu('<span class="pkzb">ZUSATZ</span>Packschein '+esc(ps),[fin?{l:"Packschein öffnen",a:'data-pkzr="'+esc(ps)+'"',fn:()=>pkZReopen(p,ps)}:{l:"Packschein abschließen",a:'data-pkzf="'+esc(ps)+'"',fn:()=>pkZFinish(p,ps)},
   !fin&&typeof pkXDlg==="function"&&{l:"Material hinzufügen",a:'data-pkxadd="'+esc(ps)+'"',fn:()=>pkXDlg(p,null,null,ps)},!fin&&{l:"Herrichten verschieben",a:'data-pkzmv="'+esc(ps)+'"',fn:()=>pkZMove(p,ps)},z.v&&{l:"Info an Projektleiter",a:'data-pkzi="'+esc(ps)+'"',s:" nur dieser Zusatz",fn:()=>pkMail(p,ps)},
-  can("pk_l")&&{l:"Zusatz entfernen",a:'data-pkzx="'+esc(ps)+'"',red:true,fn:()=>ask("Zusatz-Packschein "+ps+" wirklich entfernen?",async()=>{try{const rest=(p.zus||[]).filter(q=>String(q.ps)!==ps);await db.doc("pack/"+p.id).update({zus:rest});if(!rest.length&&(packh[p.id]||{}).reo)await pkHSet(p,{reo:null});toast("Zusatz entfernt",1)}catch(e){errBox("Entfernen fehlgeschlagen. Hast du das Recht dazu?")}})}])}
+  can("pk_l")&&{l:"Zusatz entfernen",a:'data-pkzx="'+esc(ps)+'"',red:true,fn:()=>ask("Zusatz-Packschein "+ps+" wirklich entfernen?",async()=>{try{if(typeof mfDel==="function")await mfDel(p,ps);const rest=(p.zus||[]).filter(q=>String(q.ps)!==ps);await db.doc("pack/"+p.id).update({zus:rest});if(!rest.length&&(packh[p.id]||{}).reo)await pkHSet(p,{reo:null});toast("Zusatz entfernt",1)}catch(e){errBox("Entfernen fehlgeschlagen. Hast du das Recht dazu?")}})}])}
 function pkRetBtn(p){const R=pkRets(p);if(!R.length)return can("ret_b")?pkNewRet(p):errBox("Noch kein Retourschein – du hast kein Recht, einen anzulegen.");
  if(R.length===1&&!can("ret_b")){curRet=R[0].id;return go("retopen")}
  pkMenu("Retourscheine",R.map(r=>({l:"Öffnen – "+(r.closed?(r.art==="teil"?"Teilretoure":r.art==="end"?"Endretoure":"abgeschlossen"):"offen"),s:" "+fmt(r.t||0).slice(0,6),fn:()=>{curRet=r.id;go("retopen")}})).concat(can("ret_b")?[{l:"+ Neuen Retourschein anlegen",id:"pknewr",fn:()=>pkNewRet(p)}]:[]))}
@@ -1686,6 +1686,7 @@ function packOpenView(){const p=packs.find(x=>x.id===curPack);if(!p){view="pack"
  const head=pkHeadHtml(p),acts=pkActsHtml(p,R);
  $("#app").innerHTML=head+acts+pkHiBox(p)+pkField(p,"main",rows0)+(p.zus||[]).map(z=>pkField(p,"z"+z.ps,rows0)).join("")+(typeof abgPkCard==="function"?abgPkCard(p):'')+(typeof pkChgCard==="function"?pkChgCard(p):'');
  pkHeadBind(p);
+ if(typeof mfBind==="function")mfBind(true);
  document.querySelectorAll("[data-pkfk]").forEach(b=>b.onclick=()=>{const k=b.dataset.pkfk;pkFS.open[k]=!(pkFS.open[k]||window.PK_FOPEN);if(window.PK_FOPEN&&!pkFS.open[k])window.PK_FOPEN=false;packOpenView()});
  document.querySelectorAll("[data-pkfg]").forEach(b=>b.onclick=()=>pkFieldMenu(p,b.dataset.pkfg));
  document.querySelectorAll("[data-pkff]").forEach(b=>b.onclick=()=>{pkFS.filt[b.dataset.pkff]=b.dataset.v;packOpenView()});
@@ -1711,7 +1712,7 @@ function pkZAskDay(P,main,cur,why0){return new Promise(res=>{const o=document.cr
 async function pkZMove(P,ps){const z=pkZOf(P,ps);if(!z)return;const h=pkH(P)["zd_"+pkZK(ps)]||{};const r=await pkZAskDay({ps,ev:P.ev},P,pkYmd(pkZDay(P,z)),h.why);if(!r)return;
  await pkHSet(P,{["zd_"+pkZK(ps)]:{d:r.d,why:r.why||"",by:me,...tabAs("by"),t:Date.now()}});toast("Zusatz verschoben auf "+pkWd(pkFromYmd(r.d)),1)}
 function pkZFinish(P,ps){const g=pkZProg(P,ps),open=g.n-g.d,k="zf_"+pkZK(ps);
- const go2=()=>pkHSet(P,{[k]:{by:me,...tabAs("by"),t:Date.now()}}).then(()=>{toast("Zusatz hergerichtet",1);const pp=pkZProg(P,ps);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(shortName(P.pl)||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P,ps),"Nein")});
+ const go2=()=>pkHSet(P,{[k]:{by:me,...tabAs("by"),t:Date.now()}}).then(()=>{toast("Zusatz hergerichtet",1);const dv=()=>{const pp=pkZProg(P,ps);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(shortName(P.pl)||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P,ps),"Nein")};if(typeof mfAfterFin==="function")mfAfterFin(P,ps,dv);else dv()});
  if(open>0)ask("Noch "+open+(open===1?" Position ist":" Positionen sind")+" vom Zusatz nicht hergerichtet. Trotzdem abschließen?",go2);else go2()}
 const pkZReopen=(P,ps)=>ask("Zusatz "+ps+" wieder öffnen?",()=>pkHSet(P,{["zf_"+pkZK(ps)]:{t:0,by:me,...tabAs("by"),ro:Date.now()}}));
 /* Herrichten auf einen anderen Tag verschieben */
@@ -1805,7 +1806,7 @@ async function pkKatMeld(P,x){const nr=String(x.a||"").trim(),nm=String(x.t||"")
  await ref.set({name:o.name||nm,nr:nr||o.nr||"",times:(o.times||0)+1,qty:(o.qty||0)+(+x.n||0),first:o.first||Date.now(),last:Date.now(),ev:P.ev||"",ord:P.ord||"",by:me,...tabAs("by"),src:"Packliste"})}catch(e){errBox("Melden hat nicht geklappt. Bitte nochmal versuchen.")}}
 /* Abschließen + Info an Projektleiter */
 function pkFinish(P){const pr=pkProg(P),open=pr.n-pr.d;
- const go2=()=>pkHSet(P,{fin:{by:me,...tabAs("by"),t:Date.now()},reo:null}).then(()=>{toast("Herrichten abgeschlossen",1);const pp=pkProg(P);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(shortName(P.pl)||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P),"Nein")});
+ const go2=()=>pkHSet(P,{fin:{by:me,...tabAs("by"),t:Date.now()},reo:null}).then(()=>{toast("Herrichten abgeschlossen",1);const dv=()=>{const pp=pkProg(P);if(pp.dev||pp.n-pp.d>0)ask("Es gibt Abweichungen. Soll "+(shortName(P.pl)||"der Projektleiter")+" eine Info bekommen?",()=>pkMail(P),"Nein")};if(typeof mfAfterFin==="function")mfAfterFin(P,null,dv);else dv()});
  if(open>0)ask("Noch "+open+(open===1?" Position ist":" Positionen sind")+" nicht hergerichtet. Trotzdem abschließen?",go2);else go2()}
 function pkMailText(P,zps){const H=pkH(P),K=pkKeys(P),IT=pkItems(P),L=[],inc=o=>zps?o.z===String(zps):!o.z||!(pkZOf(P,o.z)||{}).v;
  pkPosAll(P).forEach((x,i)=>{if(!inc(IT[i]))return;const h=H[K[i]];if(pkL55(x,h))return;const st=pkPS(x,h),nm2=x.t+(x.a?" ("+x.a+")":"")+(IT[i].z?" [Zusatz "+IT[i].z+"]":""),u=x.u?" "+x.u:"";
@@ -2011,6 +2012,7 @@ function pkNoHView(p){$("#t").textContent="Packliste";pkFReset(p);const s=pkStat
   '<div class="pkfnbox">'+box+'</div>'+(open?'<div class="pkfbody"><div class="pknohh '+p.art+'">Material laut Packschein (nur zur Info)</div>'+pos.map(x=>'<div class="pknohr"><b>'+pkNum(+x.n||0)+' '+esc(x.u||"Stk")+'</b><span>'+esc(pkName(x))+(x.f>0?' <span class="pkfr">davon '+pkNum(x.f)+' Fremdmiete</span>':'')+'</span></div>').join("")+'<button type="button" class="pkfclose" data-pkfk="main">Zuklappen ▴</button></div>':'<button type="button" class="pkfmore" data-pkfk="main">Antippen zum Aufklappen ▾</button>')+'</section>';
  $("#app").innerHTML=pkHeadHtml(p)+pkActsHtml(p,R)+pkHiBox(p)+fld+cmp+(bst?abgPkCard(p):(r&&r!==p?abgPkCard(r):''));
  pkHeadBind(p);if(typeof abgPkBind==="function")abgPkBind();
+ if(typeof mfBind==="function")mfBind(true);
  document.querySelectorAll("[data-pkfk]").forEach(b=>b.onclick=()=>{pkFS.open.main=!(pkFS.open.main||window.PK_FOPEN);if(window.PK_FOPEN&&!pkFS.open.main)window.PK_FOPEN=false;pkNoHView(p)})}
 async function pkArtSave(p,v){try{await db.doc("pack/"+p.id).update({art:v.art||"",von:v.von||"",artBy:me,artT:Date.now()});toast(v.art==="bst"?"Gespeichert – nicht herrichten (von Baustelle)":v.art==="verl"?"Gespeichert – Verlängerung":"Gespeichert – wird normal hergerichtet",1)}catch(e){console.error(e);errBox("Speichern fehlgeschlagen"+(typeof sbErr==="function"?sbErr(e):"")+". Hast du das Recht „Packlisten hochladen“?")}}
 function pkArtDlg(p){if(!can("pk_b"))return;const o=document.createElement("div");o.className="ov";
@@ -2808,10 +2810,10 @@ function rPkSec(p,B){const old=document.getElementById("rpksec");if(old)old.remo
 function rAbgInject(){try{if(!abgOk())return;const ex=document.getElementById("rabg");if(ex)ex.remove();let p=null,B=null;
  if(view==="retedit"&&rs){p=abgPackOf(rs.ord);if(p)B=abgBal(p,{id:rs.id,items:rs.items})}
  else if(view==="retopen"){const r=rets.find(x=>x.id===curRet);if(r){p=abgPackOf(r.ord);if(p)B=abgBal(p)}}
- if(!p||!B){const o=document.getElementById("rpksec");if(o)o.remove();return}try{rPkSec(p,B)}catch(e){console.warn("Packliste im Retourschein",e)}const off=Math.max(0,B.raus-B.zur),pct=B.raus?Math.min(100,Math.round(B.zur*100/B.raus)):0;
+ if(!p||!B){const o=document.getElementById("rpksec");if(o)o.remove();const m=document.getElementById("mfret");if(m)m.remove();return}try{rPkSec(p,B)}catch(e){console.warn("Packliste im Retourschein",e)}const off=Math.max(0,B.raus-B.zur),pct=B.raus?Math.min(100,Math.round(B.zur*100/B.raus)):0;
  const h='<button class="rabg" id="rabg" type="button"><span class="rabgt"><span><b>Mit Packliste:</b> '+B.zur+' von '+B.raus+' zurück</span><b class="rabgr">'+(off?off+' offen':'alles da ✓')+(B.zuviel?' · '+B.zuviel+' zu viel':'')+' ›</b></span><span class="rabgbar"><i style="width:'+pct+'%"></i></span></button>';
  const app=$("#app"),first=app&&app.querySelector(".card");if(!app)return;if(first)first.insertAdjacentHTML("afterend",h);else app.insertAdjacentHTML("afterbegin",h);
- $("#rabg").onclick=()=>{if(view==="retedit"&&typeof rPersist==="function")rPersist(true);curPack=p.id;go("pkabg")}}catch(e){console.warn("Abgleich-Zeile",e)}}
+ $("#rabg").onclick=()=>{if(view==="retedit"&&typeof rPersist==="function")rPersist(true);curPack=p.id;go("pkabg")};if(typeof mfRetInject==="function")mfRetInject(p)}catch(e){console.warn("Abgleich-Zeile",e)}}
 /* ---------- Retourschein abschließen: Teil- oder Endretoure ---------- */
 function rCloseDlg(r,fn){const p=abgOk()?abgPackOf(r.ord):null,o=document.createElement("div");o.className="ov";let art=null;
  let pv="";if(p){const B=abgBal(p),mL=B.miss.slice(0,3),zL=B.more.slice(0,2);
@@ -3416,7 +3418,7 @@ function auCard(I){const p=I.p,mine=auIsMine(p),pills=[];
  if(I.B.zuviel&&!I.done)pills.push(abgTag(I.B.zuviel+" mehr zurück","grey"));
  const sub="Dispo "+pkDM(p.db)+" – "+pkDM(p.de)+(I.over?" · Dispo abgelaufen":!I.done&&I.st.k==="herr"?" · Herrichten heute":"");
  return '<button class="aucard'+(mine?' mine':'')+(I.hot?' hot':'')+'" type="button" data-au="'+esc(p.id)+'"><span class="auct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+abgTag(I.lab,I.cls==="b"?"blue":I.cls==="g"?"grey":I.cls)+'</span>'+
-  '<small class="aum">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</small><small class="aum">'+sub+'</small>'+
+  '<small class="aum">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+(typeof mfN==="function"&&mfN(p)?' · 📷 '+mfN(p):'')+'</small><small class="aum">'+sub+'</small>'+
   '<span class="aus">'+I.S.map(s=>'<i class="'+s.c+'"></i>').join("")+'</span>'+auStepL+(pills.length?'<span class="aupills">'+pills.join("")+'</span>':'')+'</button>'}
 function auList(){const t0=pkDay(Date.now()),q=jvNorm(auq);
  const A=packs.map(auInfo).filter(I=>(auf==="alle"||(auf==="done")===I.done)&&(!q||jvNorm((I.p.ev||"")+" "+(I.p.ord||"")+" "+(I.p.pl||"")).includes(q)));
@@ -3479,10 +3481,10 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const H2=pkH(p),K=pkKeys(p);
  const mat=auMat(p,B,I);/* 1.128: aumat.js */
  $("#app").innerHTML='<section class="card aucd"><div class="aukv"><span>Auftrag</span><b>'+esc(p.ord||"–")+'</b><span>Projektleiter</span><b>'+esc(shortName(p.pl)||"–")+(mine?' <small class="mute">(du)</small>':'')+'</b><span>Dispo</span><b>'+pkD(p.db)+' – '+pkD(p.de)+'</b>'+(p.an?'<span>Anlieferung</span><b>'+pkD(p.an)+'</b>':'')+'</div></section>'+
-  tl+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+auNbBtn(p,act)+mat+
+  tl+(typeof mfAuHtml==="function"?mfAuHtml(p):'')+miss+more+msgs+(act?'<button class="btn" id="aumsg" type="button">Nachricht ans Lager</button>':'')+auNbBtn(p,act)+mat+
   (!mine?'<p class="mute" style="font-size:12px;margin:8px 2px">Antworten kann nur der Projektleiter dieses Auftrags.</p>':'');
  document.querySelectorAll("[data-aua]").forEach(b=>b.onclick=()=>auAnsDlg(p,B.miss[+b.dataset.aua]));
- if($("#aumsg"))$("#aumsg").onclick=()=>auMsgDlg(p);if($("#aunb"))$("#aunb").onclick=()=>auNbDlg(p)}
+ if(typeof mfBind==="function")mfBind(false);if($("#aumsg"))$("#aumsg").onclick=()=>auMsgDlg(p);if($("#aunb"))$("#aunb").onclick=()=>auNbDlg(p)}
 /* 1.152: Projektleiter trägt selbst ein, was er doch nicht braucht – nur Positionen, die noch nicht hergerichtet werden (Jürgen, 10.11.) */
 function auNbList(p){const H=pkH(p);return pkItems(p).map((o,i)=>({o,i,x:o.x,h:H[o.k]})).filter(r=>!pkL55(r.x,r.h)&&!(r.o.z?pkZFin(p,pkZOf(p,r.o.z)||{}):(pkH(p).fin&&pkH(p).fin.t)))}
 const auNbFree=h=>!h||(!h.ok&&typeof h.q!=="number"&&!(h.alt||[]).length);
@@ -4614,6 +4616,75 @@ function amBind(p,B,I){const d=document.getElementById("amd");if(!d)return;
 function amBind2(p,B,I,foc,re){re=re||(f=>{const b=document.getElementById("amb");if(!b)return;b.innerHTML=amBody(p,B,I);amBind2(p,B,I,f)});
  document.querySelectorAll("[data-amf]").forEach(b=>b.onclick=()=>{amF=b.dataset.amf;re(null)});
  const q=document.getElementById("amq");if(q){q.oninput=()=>{amQ=q.value;re(q.selectionStart)};if(foc!==null&&foc!==undefined){q.focus();try{q.setSelectionRange(foc,foc)}catch(e){}}}}
+
+/* 1.169: Fotos vom fertigen Material (Jürgen, 11.11.)
+   Pro Packschein (Haupt: packh.mf_h, Zusatz: packh.mf_z<ps>) bis zu 6 Fotos [{id,c,by,t}], Bild in fotos/<packId>-m… {d}.
+   Beim Abschließen fragt die App nach einem Foto. Sichtbar in der Packliste (auch zugeklappt), in Meine Aufträge und im Retourschein.
+   Automatisch gelöscht 3 Monate nach der Endretoure bzw. „Mit Projektleiter geklärt“. */
+const MF_MAX=6,MF_KEEP=90*864e5;
+const mfKey=ps=>ps?"mf_z"+pkZK(ps):"mf_h";
+function mfList(p,ps){const P=packs.find(x=>x.id===p.id)||p,l=pkH(P)[mfKey(ps)];return Array.isArray(l)?l.filter(e=>e&&e.id):[]}
+function mfAll(p){return [{ps:null,l:mfList(p,null)}].concat((p.zus||[]).map(z=>({ps:String(z.ps),l:mfList(p,String(z.ps))}))).filter(g=>g.l.length)}
+const mfN=p=>mfAll(p).reduce((a,g)=>a+g.l.length,0);
+function mfThumbs(p,ps,L){return '<div class="rph mfr">'+L.map(e=>'<figure class="mft"><img data-mfph="'+esc(e.id)+'" data-mfp="'+esc(p.id)+'" data-mfps="'+esc(ps||"")+'" alt="Foto vom Material">'+(e.c?'<figcaption>'+esc(e.c)+'</figcaption>':'')+'</figure>').join("")+'</div>'}
+/* im Packschein-Feld der Packliste (auch zugeklappt) */
+function mfFieldHtml(p,ps,fin){const L=mfList(p,ps);if(!fin&&!L.length)return "";
+ return '<div class="mfbox"><div class="mfh"><b>Fotos vom Material'+(L.length?' ('+L.length+')':'')+'</b>'+(L.length<MF_MAX?'<button class="btn ghost s" type="button" data-mfadd="'+esc(ps||"")+'" data-mfp="'+esc(p.id)+'">📷 '+(L.length?'Weiteres Foto':'Foto vom Material')+'</button>':'')+'</div>'+
+  (L.length?mfThumbs(p,ps,L):'<p class="mute mf0">Noch kein Foto. So sieht man später, wie viel rausgegangen ist.</p>')+'</div>'}
+function mfGrpLbl(p,g){const f=g.l[0];return (g.ps?'Zusatz '+esc(g.ps):'Packschein '+esc(p.ps||"–"))+' · '+fmt(f.t).slice(0,6)+' von '+esc(nmA(f,"by"))}
+/* Meine Aufträge */
+function mfAuHtml(p){const G=mfAll(p);if(!G.length)return "";
+ return '<section class="card aucd" id="mfau"><b class="ausec">Fotos vom fertigen Material</b>'+G.map(g=>'<div class="mfg">'+mfGrpLbl(p,g)+'</div>'+mfThumbs(p,g.ps,g.l)).join("")+'</section>'}
+/* Retourschein: unter der Zeile „Mit Packliste“ */
+function mfRetInject(p){const o=document.getElementById("mfret");if(o)o.remove();if(!p)return;const G=mfAll(p);if(!G.length)return;const a=document.getElementById("rabg");if(!a)return;
+ a.insertAdjacentHTML("afterend",'<div class="card" id="mfret"><b>Fotos beim Herrichten</b><p class="mute" style="margin:2px 0 0;font-size:13px">So viel ist rausgegangen.</p>'+G.map(g=>'<div class="mfg">'+mfGrpLbl(p,g)+'</div>'+mfThumbs(p,g.ps,g.l)).join("")+'</div>');mfBind(false)}
+/* Bilder laden, Antippen = groß; edit = in der Packliste (hinzufügen, Text ändern, löschen) */
+function mfBind(edit){document.querySelectorAll("img[data-mfph]").forEach(async im=>{if(im.dataset.mfb)return;im.dataset.mfb="1";const id=im.dataset.mfph;im.onclick=()=>{const p=packs.find(x=>x.id===im.dataset.mfp);if(p)mfView(p,im.dataset.mfps||null,id,edit)};const u=await rPhoto(id);if(u)im.src=u});
+ if(edit)document.querySelectorAll("[data-mfadd]").forEach(b=>b.onclick=e=>{e.stopPropagation();const p=packs.find(x=>x.id===b.dataset.mfp);if(p)mfPick(p,b.dataset.mfadd||null,null)})}
+function mfView(p,ps,id,edit){const e=mfList(p,ps).find(x=>x.id===id);if(!e)return;const v=document.createElement("div");v.className="phv mfv";
+ v.innerHTML='<img alt="Foto vom Material"><div class="mfvb"><div class="mfvt"></div><small></small><div class="mfvk">'+(edit?'<button class="btn ghost s" type="button" data-mfvc>Text ändern</button><button class="btn ghost s red" type="button" data-mfvx>Löschen</button>':'')+'<button class="btn s" type="button" data-mfvz>Schließen</button></div></div>';
+ v.querySelector(".mfvt").textContent=e.c||"";v.querySelector("small").textContent=(ps?"Zusatz "+ps:"Packschein "+(p.ps||""))+" · "+fmt(e.t).slice(0,6)+" von "+nmA(e,"by");
+ rPhoto(id).then(u=>{if(u)v.querySelector("img").src=u});const close=()=>v.remove();v.querySelector("img").onclick=close;v.querySelector("[data-mfvz]").onclick=close;
+ if(edit){v.querySelector("[data-mfvc]").onclick=()=>{close();mfTextDlg(e.c||"",t=>mfSave(p,ps,mfList(p,ps).map(x=>x.id===id?{...x,c:t}:x)).then(()=>toast("Text gespeichert",1)))};
+  v.querySelector("[data-mfvx]").onclick=()=>{close();ask("Foto löschen?",async()=>{try{await mfSave(p,ps,mfList(p,ps).filter(x=>x.id!==id));await db.doc("fotos/"+id).delete().catch(()=>{});toast("Foto gelöscht",1)}catch(x){errBox("Löschen fehlgeschlagen.")}})}}
+ document.body.appendChild(v)}
+function mfTextDlg(cur,fn){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card" style="width:100%;max-width:400px;margin:0"><b>Kurze Beschreibung</b><input id="mftx" maxlength="80" placeholder="z. B. 3 Gitterboxen + 1 Palette" style="width:100%;margin:8px 0"><div class="row"><button class="btn" id="mfty">Speichern</button><button class="btn ghost" id="mftn">Abbrechen</button></div></div>';
+ document.body.appendChild(o);const i=o.querySelector("#mftx");i.value=cur;i.focus();o.querySelector("#mftn").onclick=()=>o.remove();o.querySelector("#mfty").onclick=()=>{o.remove();fn(i.value.trim())}}
+const mfSave=(p,ps,L)=>pkHSet(p,{[mfKey(ps)]:L.length?L:null});
+/* Foto aufnehmen/auswählen → Beschreibung → speichern; after() läuft danach (auch bei Abbrechen) */
+function mfPick(p,ps,after){const left=MF_MAX-mfList(p,ps).length;if(left<=0){toast("Maximal "+MF_MAX+" Fotos pro Packschein.");if(after)after();return}
+ const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.multiple=true;inp.hidden=true;inp.id="mffile";document.body.appendChild(inp);let done=false;
+ const fin=()=>{if(done)return;done=true;inp.remove();if(after)after()};
+ inp.addEventListener("cancel",fin);
+ inp.onchange=async()=>{let fs=[...inp.files];if(!fs.length)return fin();if(fs.length>left){toast("Nur noch "+left+" Foto"+(left===1?"":"s")+" möglich – die ersten werden genommen.");fs=fs.slice(0,left)}
+  const D=[];for(const f of fs){try{D.push(await shrink(f))}catch(x){}}if(!D.length){errBox("Foto konnte nicht gelesen werden.");return fin()}mfCapDlg(p,ps,D,fin)};
+ inp.click()}
+function mfCapDlg(p,ps,D,fin){const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b>Foto vom Material'+(D.length>1?' ('+D.length+')':'')+'</b><p class="mute" style="margin:2px 0 6px">'+(ps?'Zusatz '+esc(ps):'Packschein '+esc(p.ps||""))+'</p><div class="rph">'+D.map(()=>'<img alt="Vorschau">').join("")+'</div>'+
+  '<label class="mute" for="mfc">Kurze Beschreibung (freiwillig)</label><input id="mfc" maxlength="80" placeholder="z. B. 3 Gitterboxen + 1 Palette" style="width:100%;margin:4px 0 10px"><div class="row"><button class="btn" id="mfok">Speichern</button><button class="btn ghost" id="mfno">Abbrechen</button></div></div>';
+ o.querySelectorAll(".rph img").forEach((im,k)=>im.src=D[k]);document.body.appendChild(o);
+ o.querySelector("#mfno").onclick=()=>{o.remove();fin()};
+ o.querySelector("#mfok").onclick=async()=>{const b=o.querySelector("#mfok");b.disabled=true;b.textContent="Wird gespeichert …";const c=o.querySelector("#mfc").value.trim(),add=[];
+  try{for(const d of D){const id=p.id+"-m"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);await db.doc("fotos/"+id).set({d});RPH[id]=d;add.push({id,c,by:me,...tabAs("by"),t:Date.now()})}
+   await mfSave(p,ps,mfList(p,ps).concat(add));o.remove();toast(add.length===1?"Foto gespeichert":add.length+" Fotos gespeichert",1);fin()}
+  catch(x){console.error(x);if(add.length){try{await mfSave(p,ps,mfList(p,ps).concat(add))}catch(y){}}o.remove();errBox("Foto konnte nicht gespeichert werden. Bitte Internetverbindung prüfen und nochmal versuchen.");fin()}}}
+/* nach „Packschein abschließen“: fragen (nur wenn noch kein Foto da ist) */
+function mfAfterFin(p,ps,next){if(window.MF_NOASK||mfList(p,ps).length)return next();/* MF_NOASK: nur für ältere Tests */ask2("Foto vom fertigen Material machen? Dann sehen Projektleiter und Retoure, wie viel es ist.","📷 Foto machen","Ohne Foto",()=>mfPick(p,ps,next),next)}
+/* Löschen: ganze Packliste / ein Zusatz / automatisch 3 Monate nach Endretoure */
+async function mfDelAll(p){const H=pkH(p);for(const k of Object.keys(H).filter(k=>/^mf_/.test(k)&&Array.isArray(H[k])))for(const e of H[k]){try{await db.doc("fotos/"+e.id).delete()}catch(x){}}}
+async function mfDel(p,ps){const L=mfList(p,ps);if(!L.length)return;for(const e of L){try{await db.doc("fotos/"+e.id).delete()}catch(x){}}await mfSave(p,ps,[])}
+function mfDoneT(p){const H=pkH(p);let t=0;pkRets(p).forEach(r=>{if(r.closed&&r.art!=="teil")t=Math.max(t,r.closedT||r.modT||0)});if(H.klar&&H.klar.t)t=Math.max(t,H.klar.t);return t}
+function mfClean(now){now=now||Date.now();let n=0;packs.forEach(p=>{const H=pkH(p),ks=Object.keys(H).filter(k=>/^mf_/.test(k)&&Array.isArray(H[k])&&H[k].length);if(!ks.length)return;const t=mfDoneT(p);if(!t||now-t<MF_KEEP)return;
+  ks.forEach(k=>H[k].forEach(e=>{n++;db.doc("fotos/"+e.id).delete().catch(()=>{})}));pkHSet(p,Object.fromEntries(ks.map(k=>[k,null])))});return n}
+function mfCleanTick(){try{if(typeof me==="undefined"||!me||!can("pk_s")||!packs.length)return;const d=new Date().toDateString();let last="";try{last=localStorage.getItem("tpc_mfclean")||""}catch(e){}if(last===d)return;mfClean();try{localStorage.setItem("tpc_mfclean",d)}catch(e){}}catch(e){console.warn("Fotos aufräumen",e)}}
+setTimeout(mfCleanTick,30000);setInterval(mfCleanTick,3600e3);
+(function(){try{const st=document.createElement("style");st.textContent=
+'.mfbox{margin:8px 14px 10px;padding-top:8px;border-top:2px solid var(--line)}.mfh{display:flex;align-items:center;justify-content:space-between;gap:8px}.mfh .btn{width:auto}.mf0{margin:4px 0 0;font-size:13px}'+
+'.mfr{gap:10px}.mft{margin:0;width:84px}.mft figcaption{font-size:12px;line-height:1.25;margin-top:3px;color:var(--ink);word-break:break-word}.mfg{font-size:13px;font-weight:700;color:var(--mute);margin-top:8px}'+
+'.mfv{flex-direction:column;gap:10px}.mfv img{max-height:calc(100% - 130px)}.mfvb{background:#fff;color:#17212f;border-radius:12px;padding:10px 12px;width:100%;max-width:520px}.mfvt{font-weight:700}.mfvb small{color:#4a5568}.mfvk{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}.mfvk .btn{width:auto}.mfvk .btn.ghost{background:#fff!important;color:#114a97!important;border:2px solid #114a97!important}.mfvk .btn.ghost.red{color:#b8322a!important;border-color:#b8322a!important}'+
+/* Packschein-Feld ist auch im Dunkelmodus hell (wie die Zeilen ab 1.164) */
+'.pkf .mfbox{border-top-color:#d5dbe5;color:#17212f}.pkf .mfh b,.pkf .mft figcaption{color:#17212f!important}.pkf .mf0{color:#4a5568!important}.pkf .mfh .btn.ghost{background:#fff!important;color:#114a97!important;border:2px solid #114a97!important}.pkf .rph img{background:#d5dbe5}';
+document.head.appendChild(st)}catch(e){}})();
 
 /* ===== 1.136 – Projektleiter Übersicht (Jürgen, 6.11.; Entwurf 2 https://claude.ai/artifact/PcSVpxgpZZaZLDP1xFSGY8;
    gewählt: roter Block „Zu erledigen“ ganz oben (Fehlmaterial-Fragen, Dispo abgelaufen, Fremdverschulden, Abweichungen beim Herrichten),

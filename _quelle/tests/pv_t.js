@@ -8,7 +8,7 @@ const t0=new Date();t0.setHours(0,0,0,0);const D=n=>t0.getTime()+n*864e5+8*36e5;
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
  const ctx=await b.newContext({viewport:{width:390,height:900}});const p=await ctx.newPage();p.on("pageerror",e=>errs.push(e.message));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
- await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(400);
+ await p.goto("https://app.test/");await p.evaluate(()=>window.MF_NOASK=true);await p.waitForTimeout(800);await p.mouse.click(200,400);await p.waitForTimeout(400);
  await p.evaluate(()=>{curPack="A";view="packopen";draw()});await p.waitForTimeout(300);
  ok("Kopf: Veranstaltung, Auftrag · PL, Dispo",/Gala Wien/.test(await p.textContent(".pkev"))&&/2601080-01 · Heinz T\./.test(await p.textContent(".pkhead")));
  ok("Zwei Felder, zugeklappt",(await p.$$(".pkf")).length===2&&!(await p.$(".pkf [data-pc]")));

@@ -99,10 +99,10 @@ function rPkSec(p,B){const old=document.getElementById("rpksec");if(old)old.remo
 function rAbgInject(){try{if(!abgOk())return;const ex=document.getElementById("rabg");if(ex)ex.remove();let p=null,B=null;
  if(view==="retedit"&&rs){p=abgPackOf(rs.ord);if(p)B=abgBal(p,{id:rs.id,items:rs.items})}
  else if(view==="retopen"){const r=rets.find(x=>x.id===curRet);if(r){p=abgPackOf(r.ord);if(p)B=abgBal(p)}}
- if(!p||!B){const o=document.getElementById("rpksec");if(o)o.remove();return}try{rPkSec(p,B)}catch(e){console.warn("Packliste im Retourschein",e)}const off=Math.max(0,B.raus-B.zur),pct=B.raus?Math.min(100,Math.round(B.zur*100/B.raus)):0;
+ if(!p||!B){const o=document.getElementById("rpksec");if(o)o.remove();const m=document.getElementById("mfret");if(m)m.remove();return}try{rPkSec(p,B)}catch(e){console.warn("Packliste im Retourschein",e)}const off=Math.max(0,B.raus-B.zur),pct=B.raus?Math.min(100,Math.round(B.zur*100/B.raus)):0;
  const h='<button class="rabg" id="rabg" type="button"><span class="rabgt"><span><b>Mit Packliste:</b> '+B.zur+' von '+B.raus+' zurück</span><b class="rabgr">'+(off?off+' offen':'alles da ✓')+(B.zuviel?' · '+B.zuviel+' zu viel':'')+' ›</b></span><span class="rabgbar"><i style="width:'+pct+'%"></i></span></button>';
  const app=$("#app"),first=app&&app.querySelector(".card");if(!app)return;if(first)first.insertAdjacentHTML("afterend",h);else app.insertAdjacentHTML("afterbegin",h);
- $("#rabg").onclick=()=>{if(view==="retedit"&&typeof rPersist==="function")rPersist(true);curPack=p.id;go("pkabg")}}catch(e){console.warn("Abgleich-Zeile",e)}}
+ $("#rabg").onclick=()=>{if(view==="retedit"&&typeof rPersist==="function")rPersist(true);curPack=p.id;go("pkabg")};if(typeof mfRetInject==="function")mfRetInject(p)}catch(e){console.warn("Abgleich-Zeile",e)}}
 /* ---------- Retourschein abschließen: Teil- oder Endretoure ---------- */
 function rCloseDlg(r,fn){const p=abgOk()?abgPackOf(r.ord):null,o=document.createElement("div");o.className="ov";let art=null;
  let pv="";if(p){const B=abgBal(p),mL=B.miss.slice(0,3),zL=B.more.slice(0,2);
