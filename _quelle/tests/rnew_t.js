@@ -17,7 +17,7 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  await p.click('#rpksec [data-ra="'+a1.nr+'"]');await p.waitForTimeout(300);
  const pad=await p.$(".ov");ok("Zahlenfeld öffnet",!!pad);
  await p.evaluate(a=>{rAdd(a.nr,{nr:a.nr,name:a.name,g:a.g,u:a.u||""},6);retEdit()},a1);await p.waitForTimeout(400);await p.evaluate(()=>document.querySelectorAll(".ov").forEach(o=>o.remove()));
- const t2=await p.$eval('#rpksec [data-ra="'+a1.nr+'"]',e=>e.className+"|"+e.textContent);ok("6 von 6, grün "+t2,/dn/.test(t2)&&/6 von 6/.test(t2));await p.screenshot({path:S+"rnew.png"});
+ const t2=await p.$eval('#rpksec [data-ra="'+a1.nr+'"]',e=>e.className+"|"+e.textContent);ok("6 von 6, grün "+t2,/dn/.test(t2)&&/6 von 6/.test(t2));await p.screenshot({path:S+"rnew.png"});await p.evaluate(()=>scrollTo(0,0));await p.screenshot({path:S+"rnew_top.png"});
  await p.evaluate(()=>{rPersist(true)});await p.waitForTimeout(500);
  await p.evaluate(()=>{curPack="A";view="packopen";draw()});await p.waitForTimeout(300);await p.click("#pkret");await p.waitForTimeout(200);await p.click("#pknewr");await p.waitForTimeout(300);ok("Offener Schein: Rückfrage",/schon einen offenen Retourschein/.test(await p.textContent(".ov")));
  await p.click("[data-pnro]");await p.waitForTimeout(300);ok("Öffnet den offenen",await p.evaluate(()=>view==="retopen"));

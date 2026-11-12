@@ -1,5 +1,5 @@
-rep("b.innerHTML=x;rFit();return}","b.innerHTML=x+rManBtn();rFit();rManBind();return}")
-rep("""'<div id="rbody">'+x+'</div>'+rBar();rFit()}""","""'<div id="rbody">'+x+rManBtn()+'</div>'+rBar();rFit();rManBind()}""")
+rep("b.innerHTML=x;rFit();return}","b.innerHTML='<div class=\"rmtop\">'+rManBtn()+'</div>'+x;rFit();rManBind();return}")  # 1.172: Knöpfe oben (Jürgen)
+rep("""'<div id="rbody">'+x+'</div>'+rBar();rFit()}""","""'<div id="rbody"><div class="rmtop">'+rManBtn()+'</div>'+x+'</div>'+rBar();rFit();rManBind()}""")
 rep('(x.nr?"Nr. "+esc(x.nr):"Zubehör")','(x.nr?"Nr. "+esc(x.nr):x.manual?"Händisch eingetragen":"Zubehör")')
 rep('(r.nr?"Nr. "+esc(r.nr):"Zubehör")','(r.nr?"Nr. "+esc(r.nr):r.manual?"Händisch eingetragen":"Zubehör")')
 rep('userBlock();werkBlock();lagerBlock();retAdmin()}','userBlock();werkBlock();lagerBlock();retAdmin();fehlBlock()}')
