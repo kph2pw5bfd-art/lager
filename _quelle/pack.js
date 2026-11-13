@@ -524,11 +524,12 @@ function packOverView(){$("#t").textContent="Übersicht";const D=pkOvData(),wide
    return '<section class="pktray'+(today?' today':'')+(past?' past open':'')+'"'+(past?' data-pkd="'+d.t+'"':'')+'><div class="pktl"><span>'+pkDayLabel(d.t,D.t0)+'</span><small>'+(d.items.length?d.items.length+(d.items.length===1?' Packliste':' Packlisten'):'')+'</small></div>'+(d.items.length?d.items.map(pkCard).join(""):'<div class="pkempty">leer</div>')+'</section>'}).join("");
   $("#app").innerHTML=top+tabH+(pkTab==="w0"?pkLateHtml(D,false):'')+'<div class="pktrays">'+body+'</div>';
  }else{
-  const week=(lab,sub,days,isNow)=>'<div class="pkwh"><span>'+lab+'</span><small>'+sub+'</small></div>'+days.map(d=>{const past=d.t<D.t0,open=pkOpenDays.has(d.t);
+  const pkCnt=n=>' <b class="pkwn">· '+n+(n===1?' Packliste':' Packlisten')+'</b>';/* 1.175: Anzahl neben der Überschrift (Jürgen) */
+  const week=(lab,sub,days,isNow)=>'<div class="pkwh"><span>'+lab+pkCnt(days.reduce((n,d)=>n+d.items.length,0))+'</span><small>'+sub+'</small></div>'+days.map(d=>{const past=d.t<D.t0,open=pkOpenDays.has(d.t);
    if(past&&!open)return '<button class="pkdrow past" type="button" data-pkd="'+d.t+'"><span class="pkl1">'+pkDayLabel(d.t,D.t0)+'</span><span class="pksum">'+pkPastSum(d)+'</span></button>';
    return '<div class="pkdh'+(d.t===D.t0?' today':'')+'"'+(past?' data-pkd="'+d.t+'"':'')+'>'+pkDayLabel(d.t,D.t0)+(d.items.length?'':' <small>leer</small>')+'</div>'+d.items.map(o=>pkLine(o)).join("")}).join("");
   const left=pkLateHtml(D,true)+week("Diese Woche","KW "+pkKW(D.m0)+" · "+pkDM(D.m0)+"–"+pkDM(pkAddD(D.m0,4)),D.w0);
-  const right=week("Nächste Woche","KW "+pkKW(D.m1)+" · "+pkDM(D.m1)+"–"+pkDM(pkAddD(D.m1,4)),D.w1)+'<div class="pkwh later"><span>Später</span><small>nach Kalenderwoche</small></div>'+D.kw.map(k=>'<div class="pkdh">'+esc(k.lab)+(k.items.length?'':' <small>leer</small>')+'</div>'+k.items.map(o=>pkLine(o,pkDayLabel(o.s.t,0))).join("")).join("");
+  const right=week("Nächste Woche","KW "+pkKW(D.m1)+" · "+pkDM(D.m1)+"–"+pkDM(pkAddD(D.m1,4)),D.w1)+'<div class="pkwh later"><span>Später'+pkCnt(D.kw.reduce((n,k)=>n+k.items.length,0))+'</span><small>nach Kalenderwoche</small></div>'+D.kw.map(k=>'<div class="pkdh">'+esc(k.lab)+(k.items.length?'':' <small>leer</small>')+'</div>'+k.items.map(o=>pkLine(o,pkDayLabel(o.s.t,0))).join("")).join("");
   $("#app").innerHTML=top+'<div class="pkwide"><div>'+left+'</div><div>'+right+'</div></div>'}
  document.querySelectorAll("[data-pkt]").forEach(b=>b.onclick=()=>{pkTab=b.dataset.pkt;packOverView()});
  document.querySelectorAll("[data-pkd]").forEach(b=>b.onclick=e=>{if(e.target.closest("[data-pk]"))return;const t=+b.dataset.pkd;pkOpenDays.has(t)?pkOpenDays.delete(t):pkOpenDays.add(t);packOverView()});

@@ -544,3 +544,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.174 (Jürgen, 13.11.): Erledigte Defekte nach Wochen
 - Gewählt: nach Meldedatum (`d.t`), NUR bei den erledigten (offene unverändert), ältere nach Monaten. `dxWeeks(E,fn)` in defx.js: „Diese Woche (n)“, „Letzte Woche (n)“ (Woche ab Montag; ohne Suche immer gezeigt, leer = „Keine.“), dann „Oktober 2026 (n)“ … nur mit Inhalt; bei Suche nur Gruppen mit Treffern. Gilt im Reiter Erledigt und bei „Erledigte anzeigen“ unter Alle. Überschrift `.dxwk`. Test `tests/dxwk_t.js`.
+
+## 1.175 (Jürgen, 13.11.): Übersicht (breit) – Anzahl neben der Überschrift
+- „Diese Woche · 17 Packlisten“, ebenso „Nächste Woche“ und „Später“ (Zahl der Karten inkl. erledigter und Zusätze mit eigener Karte, Wochenende beim Freitag). `pkCnt` in packOverView (pack.js), CSS `.pkwh .pkwn`. Handy-Ansicht (Reiter) unverändert. Test `tests/pkwn_t.js`.
