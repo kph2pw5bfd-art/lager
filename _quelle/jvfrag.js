@@ -152,7 +152,7 @@ function jvOverDays(n){if(!jvPkOk())return JV_NOPK;const m=n.match(/(\d+|[a-zä�
 function jvOverLongest(){if(!jvPkOk())return JV_NOPK;const L=pkGroups().over;if(!L.length)return{say:["Bei keinem Auftrag ist die Dispo abgelaufen."]};const p=L[0];
  return{say:["Am längsten abgelaufen ist die Dispo bei "+jvEv(p)+", Auftrag "+(p.ord||"–")+": Dispo-Ende war "+jvDL(p.de)+", also "+jvSince(p.de)+"."+(jvF()?" Zeit für einen Anruf.":"")+(jvPl(p)?" Projektleiter: "+jvPl(p)+".":"")],rows:L.slice(0,5).map(p=>jvPkRow(p,"Dispo abgelaufen "+jvSince(p.de)))}}
 const jvPl=p=>shortName(p.pl)||"";
-function jvBackDay(D){if(!jvPkOk())return JV_NOPK;const L=packs.filter(p=>p.de&&pkDay(p.de)===D.t);
+function jvBackDay(D){if(!jvPkOk())return JV_NOPK;const L=packs.filter(p=>p.de&&pkDay(p.de)===D.t&&!pkSto(p));
  if(!L.length)return{say:[(D.lab==="gestern"?"Gestern hätte":"Am "+pkDM(D.t)+" hätte")+" laut Packlisten nichts zurückkommen sollen."]};
  const ok=L.filter(p=>pkState(p).k==="done"),no=L.filter(p=>pkState(p).k!=="done");
  return{say:[(D.lab==="gestern"?"Gestern":jvDL(D.t))+" hätte"+(L.length===1?"":"n")+" "+(L.length===1?"eine Packliste":L.length+" Packlisten")+" zurückkommen sollen."].concat(ok.length?[jvList(ok.map(jvEv))+(ok.length===1?" ist":" sind")+" zurück."]:[]).concat(no.length?[jvList(no.map(jvEv))+(no.length===1?" fehlt":" fehlen")+" noch."]:[]),

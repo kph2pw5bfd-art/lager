@@ -65,10 +65,10 @@ function jvOrder(q,open){const L=jvFindPacks(q),R=jvFindRets(q);
  if(!p){const r=R[0];if(open){curRet=r.id;go("retopen");return{say:["Ich öffne den Retourschein."],quiet:true}}return{say:["Retourschein "+(r.ev||"")+": "+(r.closed?"abgeschlossen.":"noch offen.")],rows:[{l:(r.ev||"")+" · "+(r.ord||""),r:r.closed?"abgeschlossen":"offen",ret:r.id}]}}
  const g=pkProg(p),s=pkState(p),RR=pkRets(p),say=[(p.ev||"Packliste")+", Auftrag "+(p.ord||"–")+"."];
  say.push(g.fin?"Hergerichtet.":g.d?g.d+" von "+g.n+" Positionen hergerichtet.":"Noch nicht hergerichtet.");
- say.push("Herrichten "+jvDayName(pkHDay(p))+", Dispo bis "+jvDayName(pkDay(p.de))+".");
+ say.push((pkSto(p)?"Herrichten war "+jvDayName(pkDay(p.db||0)):"Herrichten "+jvDayName(pkHDay(p)))+", Dispo bis "+jvDayName(pkDay(p.de))+".");
  if(can("ret_s"))say.push(!RR.length?"Retourschein gibt es noch keinen.":RR.some(r=>r.closed)?"Die Retoure ist abgeschlossen.":"Ein Retourschein ist angefangen, aber noch offen.");
  if(s.k==="over")say.push(jvF()?"Und ja: Die Dispo ist abgelaufen.":"Die Dispo ist abgelaufen.");
- const KL=pkH(p).klar;if(KL&&KL.t)say.push("Mit dem Projektleiter geklärt, von "+nmA(KL,"by")+" am "+pkDM(KL.t)+".");
+ const SO=pkSto(p);if(SO)say.push("Der Auftrag wurde storniert, eingetragen von "+nmA(SO,"by")+" am "+pkDM(SO.t)+(SO.why?": "+SO.why:"")+".");const KL=pkH(p).klar;if(KL&&KL.t)say.push("Mit dem Projektleiter geklärt, von "+nmA(KL,"by")+" am "+pkDM(KL.t)+".");
  if(typeof jvNotes==="function")jvNotes(p).forEach(x=>say.push("Notiz von "+nmA(x,"by")+": "+x.txt));
  const acts=[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}];RR.forEach(r=>acts.push({l:"Retourschein öffnen",fn:()=>{curRet=r.id;go("retopen")}}));
  return{say,acts}}

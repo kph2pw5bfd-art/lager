@@ -58,7 +58,7 @@ function mfAfterFin(p,ps,next){if(window.MF_NOASK||mfList(p,ps).length)return ne
 /* Löschen: ganze Packliste / ein Zusatz / automatisch 3 Monate nach Endretoure */
 async function mfDelAll(p){const H=pkH(p);for(const k of Object.keys(H).filter(k=>/^mf_/.test(k)&&Array.isArray(H[k])))for(const e of H[k]){try{await db.doc("fotos/"+e.id).delete()}catch(x){}}}
 async function mfDel(p,ps){const L=mfList(p,ps);if(!L.length)return;for(const e of L){try{await db.doc("fotos/"+e.id).delete()}catch(x){}}await mfSave(p,ps,[])}
-function mfDoneT(p){const H=pkH(p);let t=0;pkRets(p).forEach(r=>{if(r.closed&&r.art!=="teil")t=Math.max(t,r.closedT||r.modT||0)});if(H.klar&&H.klar.t)t=Math.max(t,H.klar.t);return t}
+function mfDoneT(p){const H=pkH(p);let t=0;pkRets(p).forEach(r=>{if(r.closed&&r.art!=="teil")t=Math.max(t,r.closedT||r.modT||0)});if(H.klar&&H.klar.t)t=Math.max(t,H.klar.t);if(H.sto&&H.sto.t)t=Math.max(t,H.sto.t);return t}
 function mfClean(now){now=now||Date.now();let n=0;packs.forEach(p=>{const H=pkH(p),ks=Object.keys(H).filter(k=>/^mf_/.test(k)&&Array.isArray(H[k])&&H[k].length);if(!ks.length)return;const t=mfDoneT(p);if(!t||now-t<MF_KEEP)return;
   ks.forEach(k=>H[k].forEach(e=>{n++;db.doc("fotos/"+e.id).delete().catch(()=>{})}));pkHSet(p,Object.fromEntries(ks.map(k=>[k,null])))});return n}
 function mfCleanTick(){try{if(typeof me==="undefined"||!me||!can("pk_s")||!packs.length)return;const d=new Date().toDateString();let last="";try{last=localStorage.getItem("tpc_mfclean")||""}catch(e){}if(last===d)return;mfClean();try{localStorage.setItem("tpc_mfclean",d)}catch(e){}}catch(e){console.warn("Fotos aufräumen",e)}}

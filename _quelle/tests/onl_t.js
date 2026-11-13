@@ -23,7 +23,7 @@ const onl=p=>p.evaluate(()=>__T.docs.filter(d=>d.col==="online").map(d=>({id:d.i
   const p=await ctx.newPage();const errs=[];p.on("pageerror",e=>errs.push(e.message));
   await p.goto("https://app.test/");await p.waitForTimeout(900);await p.mouse.click(512,600);await p.waitForTimeout(600);
   await p.click('[data-tbu="u2"]');await p.waitForTimeout(400);await p.evaluate(()=>{onlLast=0;onlBeat(true)});await p.waitForTimeout(300);
-  let d=(await onl(p))[0]||{};ok("Tablet-Eintrag mit Name",d.u==="u1"&&d.dev==="Lager-Tablet"&&d.tn==="Max Muster"&&d.tid==="u2"&&d.p_u2>0&&d.vis===true&&d.v==="1.171",JSON.stringify(d).slice(0,160));
+  let d=(await onl(p))[0]||{};ok("Tablet-Eintrag mit Name",d.u==="u1"&&d.dev==="Lager-Tablet"&&d.tn==="Max Muster"&&d.tid==="u2"&&d.p_u2>0&&d.vis===true&&/^1\.\d+$/.test(d.v),JSON.stringify(d).slice(0,160));
   ok("ein Eintrag pro Gerät",(await onl(p)).length===1&&/^u1_/.test(d.id),d.id);
   await p.click('[data-g="pack"]');await p.waitForTimeout(12000);
   d=(await onl(p))[0];ok("Bereich wechselt mit",d.b&&d.b!=="Hauptseite",d.b);

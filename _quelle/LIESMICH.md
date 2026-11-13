@@ -533,3 +533,11 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.172 (Jürgen, 12.11.): Retourschein – „Artikel scannen“ und „Manuell eintragen“ oben
 - Standen am Ende von #rbody, seit 1.155 unter „Aus der Packliste“ ganz unten. Jetzt in `<div class="rmtop">` direkt unter dem Suchfeld, auf allen Ebenen und bei der Suche (manpatch.py). CSS `.rmtop .mbtn.sbtn{margin-top:4px}`.
+
+## 1.173 (Jürgen, 13.11.): Packliste „Storniert“
+- Anlass: Packschein fertig hergerichtet, dann sagt der PL, der Job ist storniert. Gewählt: als „Storniert“ behalten (nicht löschen), KEINE Zurückräum-Liste, stornieren darf wer hochladen darf (`pk_b`).
+- `sto.js` (in build.py nach onl.js): Zahnrad der Packliste → „Auftrag storniert“ (Fenster mit Grund optional, Hinweis „bitte zurückräumen“, wenn schon etwas hergerichtet ist) bzw. „Storno zurücknehmen“. Gespeichert `packh.sto = {by,t,why}` (+ Tablet-Name über tabAs).
+- pack.js: `pkSto(p)`; `pkState` → {k:"done", l:"Storniert", c:"sto"} vor allem anderen; `pkHDay` = 0 (→ nicht bei Heute herrichten, Wand, Woche, Briefing, Assistent); `pkShifted` falsch; Packschein-Feld zeigt den Dispo-Beginn und nicht rot; grauer Hinweis „✕ Storniert – Grund · wer, Datum“; Schild `.tag.pksto` in „Alle Packlisten“ (Erledigt).
+- Ausgenommen auch: Fehlmaterial-Liste und Vorschläge „Zu viel zurück“ (abg.js), „Kommt heute zurück“ (jvfrag), PL „Zu erledigen“ und Heute/Woche (pl.js). Meine Aufträge: Schild „Storniert“ grau, gilt als erledigt, Zeitleiste „Storniert“. Assistent sagt „Der Auftrag wurde storniert …“.
+- Aufräumen: `pkStoClean` löscht 3 Monate nach dem Storno Packliste + packh + Material-Fotos (einmal am Tag auf einem Gerät mit `pk_l`, Papierkorb 30 Tage); Material-Fotos sonst auch über `mfDoneT`.
+- Test `tests/sto_t.js`. `onl_t.js` prüft die Version jetzt nur noch als Muster.

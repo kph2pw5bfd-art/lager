@@ -555,7 +555,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.172";
+<script>const APPV="1.173";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1402,10 +1402,12 @@ function pkRets(p){const r=pkRoot(p),os=new Set([r].concat(pkVerlKids(r)).map(x=
 const pkYmd=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const pkFromYmd=s=>{const m=String(s||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?new Date(+m[1],+m[2]-1,+m[3]).getTime():0};
 function pkHd(p){if(p&&p._z){const h=(packh[p.id]||{})["zd_"+pkZK(p._z)];return h&&pkFromYmd(h.d)?h:null}const h=(packh[p.id]||{}).hd;return h&&pkFromYmd(h.d)?h:null}
-function pkHDay(p){if(p&&p._z){const z=pkZOf(p._p,p._z);return z?pkZDay(p._p,z):0}if(pkNoH(p))return 0;const h=pkHd(p);return h?pkFromYmd(h.d):(p.db?pkDay(p.db):0)}
-const pkShifted=p=>!(p&&p._z)&&!!pkHd(p)&&pkHDay(p)!==(p.db?pkDay(p.db):0);
+function pkHDay(p){if(pkSto(p))return 0;if(p&&p._z){const z=pkZOf(p._p,p._z);return z?pkZDay(p._p,z):0}if(pkNoH(p))return 0;const h=pkHd(p);return h?pkFromYmd(h.d):(p.db?pkDay(p.db):0)}
+const pkShifted=p=>!(p&&p._z)&&!pkSto(p)&&!!pkHd(p)&&pkHDay(p)!==(p.db?pkDay(p.db):0);
 const pkWd=t=>t?new Date(t).toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit"}):"–";
-function pkState(p){const t0=pkDay(Date.now()),R=pkRets(p),done=R.some(r=>r.closed&&r.art!=="teil"),hd=pkHDay(p);
+/* 1.173: Storniert (packh.sto = {by,t,why}) – gilt wie erledigt, nicht mehr herzurichten */
+function pkSto(p){const s=(packh[p&&p.id]||{}).sto;return s&&s.t?s:null}
+function pkState(p){if(pkSto(p))return{k:"done",l:"Storniert",c:"sto"};const t0=pkDay(Date.now()),R=pkRets(p),done=R.some(r=>r.closed&&r.art!=="teil"),hd=pkHDay(p);
  if(done)return{k:"done",l:"Retoure abgeschlossen",c:"ok"};
  const kl=(packh[p.id]||{}).klar;if(kl&&kl.t)return{k:"done",l:"Mit Projektleiter geklärt",c:"ok"};
  if(pkNoH(p)){if(p.art==="verl"){const o=pkRoot(p);if(o!==p){const so=pkState(o);return so.k==="done"?so:{k:"out",l:"Verlängerung",c:"verl"}}}
@@ -1422,7 +1424,7 @@ const pkPosN=n=>n+(n===1?" Position":" Positionen");
 const pkF=p=>pkPosAll(p).filter(x=>x.f>0);
 function pkGroups(){const G={over:[],late:[],herr:[],back:[],out:[],next:[],done:[]};packs.forEach(p=>G[pkState(p).k].push(p));
  G.over.sort((a,b)=>(a.de||0)-(b.de||0));G.herr.sort((a,b)=>(a.db||0)-(b.db||0));G.back.sort((a,b)=>(a.de||0)-(b.de||0));G.out.sort((a,b)=>(a.de||0)-(b.de||0));G.next.sort((a,b)=>pkHDay(a)-pkHDay(b));G.late.sort((a,b)=>pkHDay(a)-pkHDay(b));G.done.sort((a,b)=>(b.de||0)-(a.de||0));return G}
-function pkHint(p,noZ){const s=pkState(p),h=pkHd(p),out=[];
+function pkHint(p,noZ){const s=pkState(p),h=pkHd(p),out=[];const so=pkSto(p);if(so)out.push('<div class="pkhint sto">✕ Storniert'+(so.why?' – '+esc(so.why):'')+' · '+esc(nmA(so,"by"))+', '+fmt(so.t).slice(0,6)+'</div>');
  if(s.k==="late")out.push('<div class="pkhint '+(s.c==="part"?'part">◐ Teilweise hergerichtet':'warn">⚠ Nicht hergerichtet')+' – '+(pkShifted(p)?'verschoben auf '+pkWd(pkHDay(p))+', ':'')+'Dispo-Beginn war '+pkWd(p.db)+'</div>');
  else if(pkShifted(p))out.push('<div class="pkhint">↻ Herrichten verschoben auf '+pkWd(pkHDay(p))+' (Dispo-Beginn '+pkWd(p.db)+')'+(h.why?' – '+esc(h.why):'')+(h.by?' · '+esc(nmA(h,"by")):'')+'</div>');
  if(!p._z)out.push(...pkArtHints(p));const H=packh[p.id]||{};
@@ -1433,7 +1435,7 @@ function pkHint(p,noZ){const s=pkState(p),h=pkHd(p),out=[];
  const t0=pkDay(Date.now());if(!p._z&&!noZ)(p.zus||[]).forEach(z=>{const f=pkZFin(p,z),d=pkZDay(p,z);out.push(f?'<div class="pkhint">＋ Zusatz '+esc(z.ps)+' hergerichtet</div>':d<t0?'<div class="pkhint warn">⚠ Zusatz '+esc(z.ps)+' noch nicht hergerichtet – war für '+pkWd(d)+' geplant</div>':'<div class="pkhint">＋ Zusatz '+esc(z.ps)+' – herrichten '+(d===t0?'heute':pkWd(d))+'</div>')});
  return out.join("")}
 /* 1.150: kurze Karte in „Alle Packlisten“ (Jürgen, 9.11.) – Veranstaltung, Auftrag · PL, Dispo, rechts nur der Stand. Alles andere in der Packliste. */
-function pkRowStand(p){const s=pkState(p),g=pkProg(p);if(s.k==="done")return s.l==="Retoure abgeschlossen"?"":'<span class="tag pkok" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>';if(pkNoH(p))return '<span class="tag pk'+(s.c||"")+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>';return g.fin?'<span class="tag pkok" style="flex:0;white-space:nowrap">Hergerichtet</span>':g.d?'<b style="flex:0;white-space:nowrap;font-size:14px">'+g.d+'/'+g.n+'</b>':''}
+function pkRowStand(p){const s=pkState(p),g=pkProg(p);if(s.k==="done")return s.l==="Retoure abgeschlossen"?"":'<span class="tag '+(s.c==="sto"?"pksto":"pkok")+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>';if(pkNoH(p))return '<span class="tag pk'+(s.c||"")+'" style="flex:0;white-space:nowrap">'+esc(s.l)+'</span>';return g.fin?'<span class="tag pkok" style="flex:0;white-space:nowrap">Hergerichtet</span>':g.d?'<b style="flex:0;white-space:nowrap;font-size:14px">'+g.d+'/'+g.n+'</b>':''}
 function pkRow(p){return '<div class="card pkr" data-pk="'+esc(p.id)+'"><div class="row" style="align-items:center"><b style="flex:1;min-width:0">'+esc(p.ev||"Ohne Veranstaltung")+pkWorkTag(p.id)+'</b>'+pkRowStand(p)+'</div><div class="mute">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+'</div><div class="mute">'+(p.db?pkDM(p.db):"–")+' – '+(p.de?pkDM(p.de):"–")+'</div></div>'}
 function pkUpHtml(){return can("pk_b")?'<button class="btn" id="pkup">Packliste hochladen (PDF)</button><input id="pkfile" type="file" accept="application/pdf,.pdf" multiple hidden><div class="pkdrop" id="pkdrop" role="button" tabindex="0"><b>PDF hierher ziehen</b><small>direkt aus der Mail – auch mehrere auf einmal</small></div>':''}
 function pkUpBind(){if($("#pkup")){$("#pkup").onclick=()=>$("#pkfile").click();$("#pkfile").onchange=e=>{const fs=[...e.target.files];e.target.value="";pkUpload(fs)};const z=$("#pkdrop");if(z){z.onclick=()=>$("#pkfile").click();z.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("#pkfile").click()}}}}}
@@ -1626,12 +1628,12 @@ function pkFTile(t,c){return '<div class="pkft pkft-'+c+'">'+t+'</div>'}
 function pkFRows(p,rows){const D=rows.filter(r=>r.dev);let out=D.length?'<div class="pkg pkgdev">Abweichungen ('+D.length+')</div>'+D.map(r=>pkRowHtml(p,r,pkGrp(r.x))).join(""):'';let lg=null;
  rows.forEach(r=>{if(r.dev)return;const gl=pkGrp(r.x);if(gl!==lg)out+='<div class="pkg">'+esc(gl)+'</div>';lg=gl;out+=pkRowHtml(p,r,"")});return out}
 function pkField(p,key,rows0){const z=key==="main"?null:pkZOf(p,key.slice(1)),ps=z?String(z.ps):null;
- const g=z?pkZProg(p,ps):pkProg(p),fin=z?!!pkZFin(p,z):!!(g.fin),fo=z?pkZFin(p,z):pkH(p).fin,day=z?pkZDay(p,z):pkHDay(p);
+ const g=z?pkZProg(p,ps):pkProg(p),fin=z?!!pkZFin(p,z):!!(g.fin),fo=z?pkZFin(p,z):pkH(p).fin,day=z?pkZDay(p,z):(pkSto(p)?(p.db?pkDay(p.db):0):pkHDay(p));
  const mine=rows0.filter(r=>(r.z||null)===ps),nPos=mine.filter(r=>!r.l55).length,filt=pkFS.filt[key]||"alle",open=!!(pkFS.open[key]||window.PK_FOPEN);
  const left=g.n&&g.d>=g.n?pkFTile('hergerichtet<small>'+g.d+' / '+g.n+'</small>','ok'):g.d>0?pkFTile('teilweise hergerichtet<small>'+g.d+' / '+g.n+'</small>','part'):pkFTile('nicht hergerichtet<small>0 / '+g.n+'</small>','bad');
  const mid=g.dev?pkFTile('mit '+g.dev+(g.dev===1?' Abweichung':' Abweichungen'),'part'):pkFTile('ohne Abweichung',g.n&&g.d>=g.n?'ok':'neu');
  const right=fin?pkFTile('✓ abgeschlossen','ok'):pkFTile('noch nicht abgeschlossen','neu');
- const late=!fin&&day<pkDay(Date.now());const pct=g.n?Math.round(g.d*100/g.n):0;
+ const late=!fin&&!pkSto(p)&&day<pkDay(Date.now());const pct=g.n?Math.round(g.d*100/g.n):0;
  let h='<section class="pkf '+(z?'zus':'main')+(open?' open':'')+'" data-pkf="'+esc(key)+'"><div class="pkfh"><button type="button" class="pkft0" data-pkfk="'+esc(key)+'" aria-expanded="'+open+'"><b>'+(z?'<span class="pkzb">ZUSATZ</span>':'')+'Packschein '+esc((z?z.ps:p.ps)||"–")+'</b>'+
   '<span class="pkfsub'+(late?' late':'')+'">Herrichten '+esc(pkWd(day))+(!z&&pkShifted(p)?' (verschoben'+(pkHd(p).why?' – '+esc(pkHd(p).why):'')+')':'')+(z&&(pkH(p)["zd_"+pkZK(ps)]||{}).why?' ('+esc(pkH(p)["zd_"+pkZK(ps)].why)+')':'')+(late?' – noch nicht hergerichtet':'')+' · '+nPos+(nPos===1?' Position':' Positionen')+(fin&&fo&&fo.by?' · abgeschlossen von '+esc(nmA(fo,"by"))+', '+fmt(fo.t).slice(0,6):'')+'</span></button>'+
   '<button type="button" class="pkgear" data-pkfg="'+esc(key)+'" aria-label="Einstellungen Packschein '+esc((z?z.ps:p.ps)||"")+'">'+PKGEAR+'</button></div>'+
@@ -1649,11 +1651,13 @@ function pkHeadMenu(p){const H=pkH(p),fin=!!(H.fin&&H.fin.t),kl=H.klar&&H.klar.t
  if(noh)return pkMenu("Packliste",[can("pk_b")&&{l:"Projektleiter ändern",id:"pkplch",fn:()=>pkPlDlg(p)},can("pk_b")&&{l:"Kunde ändern",s:" kommt mit dem Umzug auf den Firmenserver",dis:true},
   can("pk_b")&&{l:"Art ändern",id:"pkmart",s:" Normal / Von Baustelle / Verlängerung",fn:()=>pkArtDlg(p)},can("pk_b")&&p.art==="bst"&&{l:"Doch selbst herrichten",id:"pkselbst",fn:()=>ask("Doch selbst herrichten? Die Packliste kommt dann wie gewohnt auf die Wand.",()=>pkArtSave(p,{art:"",von:""}))},
   can("pk_b")&&{l:"Info zum Herrichten",id:"pkmhi",fn:()=>pkHiDlg(p,null)},
+  can("pk_b")&&{l:pkSto(p)?"Storno zurücknehmen":"Auftrag storniert",id:"pksto",s:pkSto(p)?"":" Packliste bleibt, muss nicht mehr hergerichtet werden",fn:()=>pkStoDlg(p)},
   can("pk_l")&&{l:"Packliste löschen",red:true,id:"pkdel",fn:()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{if(typeof mfDelAll==="function")await mfDelAll(p);await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}]);
  pkMenu("Packliste",[!fin&&{l:"Herrichten verschieben",id:"pkmv",fn:()=>pkMove(p)},can("pk_b")&&{l:"Projektleiter ändern",id:"pkplch",fn:()=>pkPlDlg(p)},can("pk_b")&&{l:"Kunde ändern",s:" kommt mit dem Umzug auf den Firmenserver",dis:true},
   can("pk_b")&&{l:"Info zum Herrichten",id:"pkmhi",s:pkHiList(p).length?" ändern / weitere":"",fn:()=>pkHiDlg(p,null)},can("pk_b")&&{l:"Art ändern",id:"pkmart",s:" Von Baustelle / Verlängerung",fn:()=>pkArtDlg(p)},
   {l:"Info an Projektleiter",id:"pkinfo",fn:()=>pkMail(p)},
   {l:kl?"„Mit Projektleiter geklärt“ zurücknehmen":"Mit Projektleiter geklärt",fn:()=>kl?ask("„Geklärt“ zurücknehmen?",()=>pkHSet(p,{klar:null})):ask("Auftrag "+(p.ord||"")+" als mit dem Projektleiter geklärt markieren? Dann zählt er nicht mehr bei „Fehlmaterial“ und nicht mehr bei „Dispo abgelaufen“.",()=>pkHSet(p,{klar:{by:me,...tabAs("by"),t:Date.now()}}))},
+  can("pk_b")&&{l:pkSto(p)?"Storno zurücknehmen":"Auftrag storniert",id:"pksto",s:pkSto(p)?"":" Packliste bleibt, muss nicht mehr hergerichtet werden",fn:()=>pkStoDlg(p)},
   can("pk_l")&&{l:"Packliste löschen",red:true,id:"pkdel",fn:()=>ask("Packliste „"+(p.ev||p.ord)+"“ wirklich löschen?",async()=>{try{if(typeof mfDelAll==="function")await mfDelAll(p);await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});view="pack";hist=hist.filter(v=>v!=="packopen");draw();toast("Packliste gelöscht",1)}catch(e){errBox("Löschen fehlgeschlagen.")}})}])}
 function pkFieldMenu(p,key){if(key==="main"){const fin=!!(pkH(p).fin&&pkH(p).fin.t);
   return pkMenu("Packschein "+esc(p.ps||""),[fin?{l:"Packschein öffnen",id:"pkreo",fn:()=>ask("Herrichten wieder öffnen?",()=>pkHSet(p,{fin:null}))}:{l:"Packschein abschließen",id:"pkfin",fn:()=>pkFinish(p)},
@@ -2176,10 +2180,10 @@ function jvOrder(q,open){const L=jvFindPacks(q),R=jvFindRets(q);
  if(!p){const r=R[0];if(open){curRet=r.id;go("retopen");return{say:["Ich öffne den Retourschein."],quiet:true}}return{say:["Retourschein "+(r.ev||"")+": "+(r.closed?"abgeschlossen.":"noch offen.")],rows:[{l:(r.ev||"")+" · "+(r.ord||""),r:r.closed?"abgeschlossen":"offen",ret:r.id}]}}
  const g=pkProg(p),s=pkState(p),RR=pkRets(p),say=[(p.ev||"Packliste")+", Auftrag "+(p.ord||"–")+"."];
  say.push(g.fin?"Hergerichtet.":g.d?g.d+" von "+g.n+" Positionen hergerichtet.":"Noch nicht hergerichtet.");
- say.push("Herrichten "+jvDayName(pkHDay(p))+", Dispo bis "+jvDayName(pkDay(p.de))+".");
+ say.push((pkSto(p)?"Herrichten war "+jvDayName(pkDay(p.db||0)):"Herrichten "+jvDayName(pkHDay(p)))+", Dispo bis "+jvDayName(pkDay(p.de))+".");
  if(can("ret_s"))say.push(!RR.length?"Retourschein gibt es noch keinen.":RR.some(r=>r.closed)?"Die Retoure ist abgeschlossen.":"Ein Retourschein ist angefangen, aber noch offen.");
  if(s.k==="over")say.push(jvF()?"Und ja: Die Dispo ist abgelaufen.":"Die Dispo ist abgelaufen.");
- const KL=pkH(p).klar;if(KL&&KL.t)say.push("Mit dem Projektleiter geklärt, von "+nmA(KL,"by")+" am "+pkDM(KL.t)+".");
+ const SO=pkSto(p);if(SO)say.push("Der Auftrag wurde storniert, eingetragen von "+nmA(SO,"by")+" am "+pkDM(SO.t)+(SO.why?": "+SO.why:"")+".");const KL=pkH(p).klar;if(KL&&KL.t)say.push("Mit dem Projektleiter geklärt, von "+nmA(KL,"by")+" am "+pkDM(KL.t)+".");
  if(typeof jvNotes==="function")jvNotes(p).forEach(x=>say.push("Notiz von "+nmA(x,"by")+": "+x.txt));
  const acts=[{l:"Packliste öffnen",fn:()=>{curPack=p.id;go("packopen")}}];RR.forEach(r=>acts.push({l:"Retourschein öffnen",fn:()=>{curRet=r.id;go("retopen")}}));
  return{say,acts}}
@@ -2363,7 +2367,7 @@ function jvOverDays(n){if(!jvPkOk())return JV_NOPK;const m=n.match(/(\d+|[a-zä�
 function jvOverLongest(){if(!jvPkOk())return JV_NOPK;const L=pkGroups().over;if(!L.length)return{say:["Bei keinem Auftrag ist die Dispo abgelaufen."]};const p=L[0];
  return{say:["Am längsten abgelaufen ist die Dispo bei "+jvEv(p)+", Auftrag "+(p.ord||"–")+": Dispo-Ende war "+jvDL(p.de)+", also "+jvSince(p.de)+"."+(jvF()?" Zeit für einen Anruf.":"")+(jvPl(p)?" Projektleiter: "+jvPl(p)+".":"")],rows:L.slice(0,5).map(p=>jvPkRow(p,"Dispo abgelaufen "+jvSince(p.de)))}}
 const jvPl=p=>shortName(p.pl)||"";
-function jvBackDay(D){if(!jvPkOk())return JV_NOPK;const L=packs.filter(p=>p.de&&pkDay(p.de)===D.t);
+function jvBackDay(D){if(!jvPkOk())return JV_NOPK;const L=packs.filter(p=>p.de&&pkDay(p.de)===D.t&&!pkSto(p));
  if(!L.length)return{say:[(D.lab==="gestern"?"Gestern hätte":"Am "+pkDM(D.t)+" hätte")+" laut Packlisten nichts zurückkommen sollen."]};
  const ok=L.filter(p=>pkState(p).k==="done"),no=L.filter(p=>pkState(p).k!=="done");
  return{say:[(D.lab==="gestern"?"Gestern":jvDL(D.t))+" hätte"+(L.length===1?"":"n")+" "+(L.length===1?"eine Packliste":L.length+" Packlisten")+" zurückkommen sollen."].concat(ok.length?[jvList(ok.map(jvEv))+(ok.length===1?" ist":" sind")+" zurück."]:[]).concat(no.length?[jvList(no.map(jvEv))+(no.length===1?" fehlt":" fehlen")+" noch."]:[]),
@@ -2755,7 +2759,7 @@ function abgMlHit(fromP,toP,e){/* Materialliste „geht weiter“ von toP-Verans
  const L=typeof lists!=="undefined"?lists:[],n=s=>jvNorm(s);
  return L.some(c=>c.mode!=="bleibt"&&n(c.ev1)&&n(c.ev2)&&n(toP.ev).includes(n(c.ev1))&&n(fromP.ev).includes(n(c.ev2))&&Object.values(jvMlItems(c)).some(x=>abgKey(artCode(x.art),x.name||jvArtNm(x.art,x))===e.k))}
 /* Wo fehlt derselbe Artikel? (für „zu viel“ bei Auftrag A) */
-function abgCands(A,e,need){const out=[];packs.forEach(p=>{if(p.id===A.id)return;const k=(packh[p.id]||{}).klar;if(k&&k.t)return;
+function abgCands(A,e,need){const out=[];packs.forEach(p=>{if(p.id===A.id||pkSto(p))return;const k=(packh[p.id]||{}).klar;if(k&&k.t)return;
   const B=abgBal(p),m=B.miss.find(x=>x.k===e.k);if(!m)return;const fehlt=m.soll-m.back,why=[];
   if(fehlt===need)why.push("Menge passt genau");if(abgOverlap(A,p))why.push("Dispo zur selben Zeit");if(p.pl&&A.pl&&jvNorm(p.pl)===jvNorm(A.pl))why.push("gleicher Projektleiter");if(abgMlHit(A,p,e))why.push("Materialliste „geht weiter“");const pl=typeof plSays==="function"&&plSays(p,A,e.k);if(pl)why.unshift("Projektleiter sagt: ist dort");
   out.push({p,fehlt,why,pl,over:pkState(p).k==="over",end:B.hasEnd})});
@@ -2766,7 +2770,7 @@ function abgMoreElse(B0,e){const out=[];packs.forEach(p=>{if(p.id===B0.id)return
 function abgAllMore(){const out=[];packs.forEach(p=>{const B=abgBal(p);B.more.forEach(e=>{const q=e.back-e.soll-e.fr-e.l55;const last=B.R.slice().sort((a,b)=>(b.modT||b.closedT||b.t||0)-(a.modT||a.closedT||a.t||0))[0];out.push({p,e,q,last})})});
  return out.sort((a,b)=>((b.last&&(b.last.closedT||b.last.modT||b.last.t))||0)-((a.last&&(a.last.closedT||a.last.modT||a.last.t))||0))}
 function abgMissing(){/* Aufträge mit Endretoure oder abgelaufener Dispo, nicht geklärt; pro Artikel zusammengezählt */
- const G={};packs.forEach(p=>{const kl=(packh[p.id]||{}).klar;if(kl&&kl.t)return;const st=pkState(p).k,B=abgBal(p);if(!(B.hasEnd||st==="over"))return;
+ const G={};packs.forEach(p=>{const kl=(packh[p.id]||{}).klar;if(kl&&kl.t||pkSto(p))return;const st=pkState(p).k,B=abgBal(p);if(!(B.hasEnd||st==="over"))return;
   B.miss.forEach(e=>{const f=typeof fmOpenQ==="function"?fmOpenQ(p,e):e.soll-e.back;if(f<=0)return;const g=G[e.k]=G[e.k]||{k:e.k,name:e.name,n:0,at:[]};g.n+=f;g.at.push({p,f,over:st==="over",end:B.hasEnd})})});
  return Object.values(G).map(g=>{g.at.sort((a,b)=>(b.over-a.over)||b.f-a.f);g.hint=null;
   for(const a of g.at){const m=abgMoreElse(a.p,{k:g.k});if(m.length){g.hint={from:m[0].p,q:m[0].q};break}}return g}).sort((a,b)=>b.n-a.n)}
@@ -3389,13 +3393,14 @@ function auIsMine(p){const u=auToks(auMyName()),l=auToks(p&&p.pl);if(!u.length||
 /* ---------- Stand eines Auftrags ---------- */
 const auOutDay=p=>Math.max(p.db?pkDay(p.db):0,pkHDay(p)||0);
 function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.klar&&H.klar.t),t0=pkDay(Date.now()),over=st.k==="over",late=st.k==="late";
- const missShow=(B.hasEnd||over)&&!kl&&B.fehlt>0;const done=kl||(B.hasEnd&&!B.fehlt);
+ const so=pkSto(p);const missShow=!so&&(B.hasEnd||over)&&!kl&&B.fehlt>0;const done=!!so||kl||(B.hasEnd&&!B.fehlt);
  const out=B.R.length>0||(g.fin&&auOutDay(p)&&auOutDay(p)<=t0);
  /* 1.161: alles hergerichtet (auch Zusätze) = blau, auch mit Abweichungen; letzter Schritt „Geprüft“ (Sonja, docs abpr) */
  const zAll=(p.zus||[]).every(z=>pkZFin(p,z)),endT=B.R.filter(r=>r.closed&&r.art==="end").reduce((a,r)=>Math.max(a,r.closedT||0),0),pr=typeof ABP!=="undefined"?ABP[p.id]:null,chk=!!(B.hasEnd&&pr&&(pr.t||0)>=endT);
  const S=[{c:"d"},{c:g.fin&&zAll?"d":g.d||g.fin?"n":late?"r":""},{c:over?"r":out||B.R.length?"d":""},{c:B.hasEnd?(B.fehlt&&!kl?"r":"d"):B.R.length?"n":""},{c:chk?"d":""}];
  let lab,cls;
- if(done){lab=kl?"Geklärt":chk?"Geprüft ✓":"Zurück – vollständig";cls="ok"}
+ if(so){lab="Storniert";cls="g"}
+ else if(done){lab=kl?"Geklärt":chk?"Geprüft ✓":"Zurück – vollständig";cls="ok"}
  else if(over&&!B.hasEnd){lab="Dispo abgelaufen";cls="red"}
  else if(missShow){lab="Fehlt "+B.fehlt;cls="red"}
  else if(late){lab="Nicht hergerichtet";cls="red"}
@@ -3405,7 +3410,7 @@ function auInfo(p){const g=pkProg(p),st=pkState(p),B=abgBal(p),H=pkH(p),kl=!!(H.
  else if(g.d){lab=g.d+" / "+g.n;cls="b"}
  else{lab=st.k==="herr"?"Heute herrichten":"Herrichten "+pkDM(pkHDay(p));cls="g"}
  const zlate=(p.zus||[]).some(z=>!pkZFin(p,z)&&pkZDay(p,z)<t0);const hot=!done&&(missShow||over||late||zlate);
- return{p,g,st,B,kl,done,over,late,missShow,S,lab,cls,hot,chk}}
+ return{p,g,st,B,kl,so,done,over,late,missShow,S,lab,cls,hot,chk}}
 const auAns=(p,k)=>PLAW.filter(a=>a.pk===p.id&&a.k===k&&a.typ!=="msg");
 const auAnsTxt=a=>{const T={anders:"Ist auf einer anderen Baustelle: "+(a.toEv||"")+(a.toOrd?" ("+a.toOrd+")":""),bau:"Ist noch auf der Baustelle"+(a.bis?", kommt bis "+pkWd(pkFromYmd(a.bis)):""),kunde:"Bleibt beim Kunden",verr:"Dem Kunden verrechnet",zur:"Ist schon zurück – bitte nachzählen",weiss:"Weiß ich nicht / kläre ich",msg:"Nachricht"};
  return (T[a.typ]||"")+(a.txt?(a.typ==="msg"?": ":" – ")+"„"+a.txt+"“":"")};
@@ -3470,7 +3475,7 @@ function auOpenView(){const p=packs.find(x=>x.id===curAu);if(!p||!can("au_s")){v
  const outT=I.over?te("r","Dispo abgelaufen","Dispo-Ende war "+pkWd(p.de)+(B.R.length?"":" – noch nichts zurück")):I.S[2].c==="d"?te("d","Unterwegs","Dispo "+pkWd(p.db)+" – "+pkWd(p.de)):te("","Unterwegs","ab "+pkWd(auOutDay(p)));
  const R=B.R.slice().sort((a,b)=>(abgRetT(a)||0)-(abgRetT(b)||0));
  const retT=R.length?R.map(r=>te(r.closed?(r.art==="teil"?"d":(B.fehlt&&!I.kl?"r":"d")):"n",abgRetLbl(r),fmt(abgRetT(r)).slice(0,6)+" · "+abgRetN(r)+" Stück"+(r.closed&&r.art!=="teil"?" · "+(B.fehlt?B.fehlt+" fehlen noch":"alles da"):""))).join(""):te("","Retouren","noch nichts zurück");
- const prA=typeof ABP!=="undefined"?ABP[p.id]:null,doneT=(I.kl?te("d","Mit Projektleiter geklärt",fmt(H.klar.t).slice(0,6)+" · "+esc(nmA(H.klar,"by"))):"")+(I.chk&&prA?te("d","Geprüft",fmt(prA.t).slice(0,6)+" · "+esc(nmA(prA,"by"))+(prA.note?" – „"+esc(prA.note)+"“":"")):te("","Geprüft",B.hasEnd?"Endretoure da – wartet auf die Prüfung im Lager":"nach der Endretoure prüft das Lager"));/* 1.161 */
+ const prA=typeof ABP!=="undefined"?ABP[p.id]:null,doneT=(I.so?te("r","Storniert",(I.so.why?esc(I.so.why)+" · ":"")+fmt(I.so.t).slice(0,6)+" · "+esc(nmA(I.so,"by"))):"")+(I.kl?te("d","Mit Projektleiter geklärt",fmt(H.klar.t).slice(0,6)+" · "+esc(nmA(H.klar,"by"))):"")+(I.chk&&prA?te("d","Geprüft",fmt(prA.t).slice(0,6)+" · "+esc(nmA(prA,"by"))+(prA.note?" – „"+esc(prA.note)+"“":"")):te("","Geprüft",B.hasEnd?"Endretoure da – wartet auf die Prüfung im Lager":"nach der Endretoure prüft das Lager"));/* 1.161 */
  const tl='<section class="card aucd"><b class="ausec">Wie weit ist das Lager?</b><div class="autl">'+te("d","Packliste da",(p.t?fmt(p.t).slice(0,6)+" · ":"")+pkPosN(pkPosAll(p).length)+(fr?", davon "+fr+" mit Fremdmiete":"")+((p.zus||[]).length?" · "+(p.zus.length===1?"1 Zusatz":p.zus.length+" Zusätze"):""))+chgT+herr+zusT+outT+retT+doneT+'</div></section>';
  const ansH=a=>'<div class="auans"><b>'+(a.by===me?'Deine Antwort':esc(nmA(a,"by")))+'</b> · '+fmt(a.t).slice(0,6)+'<br>'+esc(auAnsTxt(a))+(a.read&&a.read.t?'<small>Gelesen von '+esc(nmA(a.read,"by"))+'</small>':'<small>Noch nicht gelesen</small>')+'</div>';
  const miss=I.missShow?'<section class="card aucd red"><b class="ausec red">Fehlmaterial</b>'+B.miss.map((e,i)=>{const a=auAns(p,e.k)[0];return '<div class="aurow"><b class="auq">'+auQ(e.soll-e.back,auUnit(p,e.k))+'</b><span class="aun">'+esc(e.name)+'</span>'+(act?'<button class="btn ghost s auab" type="button" data-aua="'+i+'">'+(a?'Ändern':'Antworten')+'</button>':'')+'</div>'+(a?ansH(a):'')}).join("")+'</section>':
@@ -4677,7 +4682,7 @@ function mfAfterFin(p,ps,next){if(window.MF_NOASK||mfList(p,ps).length)return ne
 /* Löschen: ganze Packliste / ein Zusatz / automatisch 3 Monate nach Endretoure */
 async function mfDelAll(p){const H=pkH(p);for(const k of Object.keys(H).filter(k=>/^mf_/.test(k)&&Array.isArray(H[k])))for(const e of H[k]){try{await db.doc("fotos/"+e.id).delete()}catch(x){}}}
 async function mfDel(p,ps){const L=mfList(p,ps);if(!L.length)return;for(const e of L){try{await db.doc("fotos/"+e.id).delete()}catch(x){}}await mfSave(p,ps,[])}
-function mfDoneT(p){const H=pkH(p);let t=0;pkRets(p).forEach(r=>{if(r.closed&&r.art!=="teil")t=Math.max(t,r.closedT||r.modT||0)});if(H.klar&&H.klar.t)t=Math.max(t,H.klar.t);return t}
+function mfDoneT(p){const H=pkH(p);let t=0;pkRets(p).forEach(r=>{if(r.closed&&r.art!=="teil")t=Math.max(t,r.closedT||r.modT||0)});if(H.klar&&H.klar.t)t=Math.max(t,H.klar.t);if(H.sto&&H.sto.t)t=Math.max(t,H.sto.t);return t}
 function mfClean(now){now=now||Date.now();let n=0;packs.forEach(p=>{const H=pkH(p),ks=Object.keys(H).filter(k=>/^mf_/.test(k)&&Array.isArray(H[k])&&H[k].length);if(!ks.length)return;const t=mfDoneT(p);if(!t||now-t<MF_KEEP)return;
   ks.forEach(k=>H[k].forEach(e=>{n++;db.doc("fotos/"+e.id).delete().catch(()=>{})}));pkHSet(p,Object.fromEntries(ks.map(k=>[k,null])))});return n}
 function mfCleanTick(){try{if(typeof me==="undefined"||!me||!can("pk_s")||!packs.length)return;const d=new Date().toDateString();let last="";try{last=localStorage.getItem("tpc_mfclean")||""}catch(e){}if(last===d)return;mfClean();try{localStorage.setItem("tpc_mfclean",d)}catch(e){}}catch(e){console.warn("Fotos aufräumen",e)}}
@@ -4723,7 +4728,7 @@ const plH=s=>{let h=0;String(s).split("").forEach(c=>{h=(h*31+c.charCodeAt(0))|0
 const plDig=s=>String(s||"").replace(/\D/g,"");
 /* „Zu erledigen“ */
 function plTodo(M){const T=[],t0=pkDay(Date.now());
- M.forEach(I=>{const p=I.p;
+ M.forEach(I=>{const p=I.p;if(pkSto(p))return;
   if(I.missShow){const un=I.B.miss.filter(e=>!auAns(p,e.k).length);if(un.length){const n=un.reduce((a,e)=>a+(e.soll-e.back),0),nm=un.slice(0,2).map(e=>pkNum(e.soll-e.back)+" "+auUnit(p,e.k)+" "+e.name).join(", ")+(un.length>2?" …":"");
    T.push(I.B.hasEnd?{why:"Lager wartet auf Antwort",t:pkNum(n)+" "+(n===1?"Stück fehlt":"Stück fehlen")+" nach der Endretoure",s:esc(p.ev||"")+" · "+esc(nm),p,un,ord:0}:{why:"Dispo abgelaufen",t:"Noch "+pkNum(n)+" Stk unterwegs",s:esc(p.ev||"")+" · Dispo bis "+pkDM(p.de)+" · "+esc(nm),p,un,ord:1})}}
   const H=pkH(p);const parts=[[null,H.fin&&H.fin.t?H.fin:auHerrAll(p,null)]].concat((p.zus||[]).map(z=>[String(z.ps),pkZFin(p,z)||auHerrAll(p,String(z.ps))]));
@@ -4735,7 +4740,7 @@ function plTodo(M){const T=[],t0=pkDay(Date.now());
  return T.sort((a,b)=>a.ord-b.ord)}
 function plHot(){try{plSeenSub();const M=packs.filter(plMine).map(auInfo).filter(I=>!I.done||I.g.dev);const n=plTodo(M).length;return n?String(n):""}catch(e){return ""}}
 /* Ereignisse eines Tages */
-function plEvents(M,t){const E=[];M.forEach(I=>{const p=I.p;
+function plEvents(M,t){const E=[];M.forEach(I=>{const p=I.p;if(pkSto(p))return;
   const day=x=>{if(!x)return 0;const d=pkDay(x),w=new Date(d).getDay();return w===6?pkAddD(d,-1):w===0?pkAddD(d,-2):d};
   if(!pkNoH(p)&&day(pkHDay(p))===t)E.push({c:"h",l:"Herrichten",p,ok:!!I.g.fin,x:I.g.fin?"":(I.g.d?I.g.d+"/"+I.g.n:"")});
   (p.zus||[]).forEach(z=>{if(day(pkZDay(p,z))===t){const f=pkZFin(p,z)||auHerrAll(p,String(z.ps));E.push({c:"z",l:"Zusatz",p,ok:!!f,x:""})}});
@@ -4872,6 +4877,29 @@ function onlUsers(){if(!owner)return;
  if(Date.now()-onlLoadT>10000)get();
  if(!onlPoll)onlPoll=setInterval(()=>{if(typeof view==="undefined"||view!=="users"||!document.querySelector("[data-onl]")){clearInterval(onlPoll);onlPoll=null;return}if(document.visibilityState==="visible")get()},30000)}
 (function(){try{const st=document.createElement("style");st.textContent='.onl{display:flex;gap:8px;align-items:flex-start;margin-top:4px;font-size:13.5px;line-height:1.35;color:var(--mute)}.onld{width:10px;height:10px;border-radius:50%;background:#9aa4b2;flex:none;margin-top:4px}.onld.on{background:#1e9e55;box-shadow:0 0 0 3px rgba(30,158,85,.25)}.onl b{color:#1e7a46}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .onl b{color:#6fd39a}}:root[data-theme="dark"] .onl b{color:#6fd39a}';document.head.appendChild(st)}catch(e){}})();
+
+/* ===== Packliste „Storniert“ (1.173, Jürgen 13.11.) =====
+   Job storniert, Packliste evtl. schon hergerichtet. Zahnrad → „Auftrag storniert“ (nur Recht Packlisten-Hochladen), Grund freiwillig.
+   packh.sto = {by,t,why}. pkSto/pkState (pack.js): gilt als erledigt „Storniert“, pkHDay = 0 → nicht mehr bei Herrichten/Wand/Woche/Briefing,
+   nicht bei Dispo abgelaufen, Fehlmaterial, Vorschlägen „Zu viel zurück“, PL-„Zu erledigen“. Zurückräumen macht das Lager ohne App (Jürgens Wahl).
+   „Storno zurücknehmen“ stellt alles wieder her. 3 Monate nach dem Storno wird die Packliste automatisch gelöscht (Papierkorb 30 Tage). */
+const STO_KEEP=90*864e5;
+function pkStoDlg(P){if(!can("pk_b"))return;const so=pkSto(P);
+ if(so)return ask("Storno von „"+(P.ev||P.ord||"")+"“ zurücknehmen? Die Packliste ist dann wieder normal offen.",async()=>{await pkHSet(P,{sto:null});toast("Storno zurückgenommen",1);if(view==="packopen")packOpenView()});
+ const g=pkProg(P),hz=g.d>0||(P.zus||[]).some(z=>pkZProg(P,z.ps).d>0),o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0"><b>Auftrag storniert</b><p class="mute" style="margin:4px 0 8px">'+esc(P.ev||"")+' · Auftrag '+esc(P.ord||"–")+(P.pl?' · '+esc(shortName(P.pl)):'')+'</p>'+
+  '<p style="margin:0 0 8px">Die Packliste bleibt erhalten und wird als <b>Storniert</b> markiert. Sie muss nicht mehr hergerichtet werden und zählt nicht bei „Dispo abgelaufen“ oder „Fehlmaterial“. Nach 3 Monaten wird sie automatisch gelöscht.</p>'+
+  (hz?'<div class="pkhint warn" style="margin:0 0 8px">Es ist schon Material hergerichtet – bitte zurückräumen.</div>':'')+
+  '<label class="mute" for="pkstow">Grund (optional)</label><textarea id="pkstow" rows="2" placeholder="z. B. Kunde hat abgesagt"></textarea>'+
+  '<div class="row" style="margin-top:8px"><button class="btn ghost" id="pkstoc" type="button">Abbrechen</button><button class="btn" id="pkstoo" type="button" style="background:#5b6573;border-color:#5b6573">Storniert</button></div></div>';
+ document.body.appendChild(o);o.querySelector("#pkstoc").onclick=()=>o.remove();
+ o.querySelector("#pkstoo").onclick=async()=>{const why=o.querySelector("#pkstow").value.trim();o.remove();await pkHSet(P,{sto:{by:me,...tabAs("by"),t:Date.now(),why}});toast("Packliste als storniert markiert",1);if(view==="packopen")packOpenView()}}
+/* automatisch löschen: 3 Monate nach dem Storno, einmal am Tag auf einem Gerät mit Löschen-Recht */
+async function pkStoClean(now){now=now||Date.now();let n=0;for(const p of packs.slice()){const so=pkSto(p);if(!so||now-so.t<STO_KEEP)continue;
+  try{if(typeof mfDelAll==="function")await mfDelAll(p);await db.doc("pack/"+p.id).delete();if(packh[p.id])await db.doc("packh/"+p.id).delete().catch(()=>{});n++}catch(e){console.warn("Storno aufräumen",e)}}return n}
+function pkStoTick(){try{if(typeof me==="undefined"||!me||!can("pk_l")||!packs.length)return;const d=new Date().toDateString();let last="";try{last=localStorage.getItem("tpc_stoclean")||""}catch(e){}if(last===d)return;try{localStorage.setItem("tpc_stoclean",d)}catch(e){}pkStoClean()}catch(e){console.warn("Storno aufräumen",e)}}
+setTimeout(pkStoTick,40000);setInterval(pkStoTick,3600e3);
+(function(){try{const st=document.createElement("style");st.textContent='.pkhint.sto{background:#5b6573;color:#fff;border-color:#5b6573;font-weight:700}.tag.pksto{background:#5b6573;color:#fff;border-color:#5b6573}';document.head.appendChild(st)}catch(e){}})();
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};

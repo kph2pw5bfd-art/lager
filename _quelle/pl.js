@@ -31,7 +31,7 @@ const plH=s=>{let h=0;String(s).split("").forEach(c=>{h=(h*31+c.charCodeAt(0))|0
 const plDig=s=>String(s||"").replace(/\D/g,"");
 /* „Zu erledigen“ */
 function plTodo(M){const T=[],t0=pkDay(Date.now());
- M.forEach(I=>{const p=I.p;
+ M.forEach(I=>{const p=I.p;if(pkSto(p))return;
   if(I.missShow){const un=I.B.miss.filter(e=>!auAns(p,e.k).length);if(un.length){const n=un.reduce((a,e)=>a+(e.soll-e.back),0),nm=un.slice(0,2).map(e=>pkNum(e.soll-e.back)+" "+auUnit(p,e.k)+" "+e.name).join(", ")+(un.length>2?" …":"");
    T.push(I.B.hasEnd?{why:"Lager wartet auf Antwort",t:pkNum(n)+" "+(n===1?"Stück fehlt":"Stück fehlen")+" nach der Endretoure",s:esc(p.ev||"")+" · "+esc(nm),p,un,ord:0}:{why:"Dispo abgelaufen",t:"Noch "+pkNum(n)+" Stk unterwegs",s:esc(p.ev||"")+" · Dispo bis "+pkDM(p.de)+" · "+esc(nm),p,un,ord:1})}}
   const H=pkH(p);const parts=[[null,H.fin&&H.fin.t?H.fin:auHerrAll(p,null)]].concat((p.zus||[]).map(z=>[String(z.ps),pkZFin(p,z)||auHerrAll(p,String(z.ps))]));
@@ -43,7 +43,7 @@ function plTodo(M){const T=[],t0=pkDay(Date.now());
  return T.sort((a,b)=>a.ord-b.ord)}
 function plHot(){try{plSeenSub();const M=packs.filter(plMine).map(auInfo).filter(I=>!I.done||I.g.dev);const n=plTodo(M).length;return n?String(n):""}catch(e){return ""}}
 /* Ereignisse eines Tages */
-function plEvents(M,t){const E=[];M.forEach(I=>{const p=I.p;
+function plEvents(M,t){const E=[];M.forEach(I=>{const p=I.p;if(pkSto(p))return;
   const day=x=>{if(!x)return 0;const d=pkDay(x),w=new Date(d).getDay();return w===6?pkAddD(d,-1):w===0?pkAddD(d,-2):d};
   if(!pkNoH(p)&&day(pkHDay(p))===t)E.push({c:"h",l:"Herrichten",p,ok:!!I.g.fin,x:I.g.fin?"":(I.g.d?I.g.d+"/"+I.g.n:"")});
   (p.zus||[]).forEach(z=>{if(day(pkZDay(p,z))===t){const f=pkZFin(p,z)||auHerrAll(p,String(z.ps));E.push({c:"z",l:"Zusatz",p,ok:!!f,x:""})}});

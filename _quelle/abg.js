@@ -44,7 +44,7 @@ function abgMlHit(fromP,toP,e){/* Materialliste „geht weiter“ von toP-Verans
  const L=typeof lists!=="undefined"?lists:[],n=s=>jvNorm(s);
  return L.some(c=>c.mode!=="bleibt"&&n(c.ev1)&&n(c.ev2)&&n(toP.ev).includes(n(c.ev1))&&n(fromP.ev).includes(n(c.ev2))&&Object.values(jvMlItems(c)).some(x=>abgKey(artCode(x.art),x.name||jvArtNm(x.art,x))===e.k))}
 /* Wo fehlt derselbe Artikel? (für „zu viel“ bei Auftrag A) */
-function abgCands(A,e,need){const out=[];packs.forEach(p=>{if(p.id===A.id)return;const k=(packh[p.id]||{}).klar;if(k&&k.t)return;
+function abgCands(A,e,need){const out=[];packs.forEach(p=>{if(p.id===A.id||pkSto(p))return;const k=(packh[p.id]||{}).klar;if(k&&k.t)return;
   const B=abgBal(p),m=B.miss.find(x=>x.k===e.k);if(!m)return;const fehlt=m.soll-m.back,why=[];
   if(fehlt===need)why.push("Menge passt genau");if(abgOverlap(A,p))why.push("Dispo zur selben Zeit");if(p.pl&&A.pl&&jvNorm(p.pl)===jvNorm(A.pl))why.push("gleicher Projektleiter");if(abgMlHit(A,p,e))why.push("Materialliste „geht weiter“");const pl=typeof plSays==="function"&&plSays(p,A,e.k);if(pl)why.unshift("Projektleiter sagt: ist dort");
   out.push({p,fehlt,why,pl,over:pkState(p).k==="over",end:B.hasEnd})});
@@ -55,7 +55,7 @@ function abgMoreElse(B0,e){const out=[];packs.forEach(p=>{if(p.id===B0.id)return
 function abgAllMore(){const out=[];packs.forEach(p=>{const B=abgBal(p);B.more.forEach(e=>{const q=e.back-e.soll-e.fr-e.l55;const last=B.R.slice().sort((a,b)=>(b.modT||b.closedT||b.t||0)-(a.modT||a.closedT||a.t||0))[0];out.push({p,e,q,last})})});
  return out.sort((a,b)=>((b.last&&(b.last.closedT||b.last.modT||b.last.t))||0)-((a.last&&(a.last.closedT||a.last.modT||a.last.t))||0))}
 function abgMissing(){/* Aufträge mit Endretoure oder abgelaufener Dispo, nicht geklärt; pro Artikel zusammengezählt */
- const G={};packs.forEach(p=>{const kl=(packh[p.id]||{}).klar;if(kl&&kl.t)return;const st=pkState(p).k,B=abgBal(p);if(!(B.hasEnd||st==="over"))return;
+ const G={};packs.forEach(p=>{const kl=(packh[p.id]||{}).klar;if(kl&&kl.t||pkSto(p))return;const st=pkState(p).k,B=abgBal(p);if(!(B.hasEnd||st==="over"))return;
   B.miss.forEach(e=>{const f=typeof fmOpenQ==="function"?fmOpenQ(p,e):e.soll-e.back;if(f<=0)return;const g=G[e.k]=G[e.k]||{k:e.k,name:e.name,n:0,at:[]};g.n+=f;g.at.push({p,f,over:st==="over",end:B.hasEnd})})});
  return Object.values(G).map(g=>{g.at.sort((a,b)=>(b.over-a.over)||b.f-a.f);g.hint=null;
   for(const a of g.at){const m=abgMoreElse(a.p,{k:g.k});if(m.length){g.hint={from:m[0].p,q:m[0].q};break}}return g}).sort((a,b)=>b.n-a.n)}
