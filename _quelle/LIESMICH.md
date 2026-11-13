@@ -541,3 +541,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Ausgenommen auch: Fehlmaterial-Liste und Vorschläge „Zu viel zurück“ (abg.js), „Kommt heute zurück“ (jvfrag), PL „Zu erledigen“ und Heute/Woche (pl.js). Meine Aufträge: Schild „Storniert“ grau, gilt als erledigt, Zeitleiste „Storniert“. Assistent sagt „Der Auftrag wurde storniert …“.
 - Aufräumen: `pkStoClean` löscht 3 Monate nach dem Storno Packliste + packh + Material-Fotos (einmal am Tag auf einem Gerät mit `pk_l`, Papierkorb 30 Tage); Material-Fotos sonst auch über `mfDoneT`.
 - Test `tests/sto_t.js`. `onl_t.js` prüft die Version jetzt nur noch als Muster.
+
+## 1.174 (Jürgen, 13.11.): Erledigte Defekte nach Wochen
+- Gewählt: nach Meldedatum (`d.t`), NUR bei den erledigten (offene unverändert), ältere nach Monaten. `dxWeeks(E,fn)` in defx.js: „Diese Woche (n)“, „Letzte Woche (n)“ (Woche ab Montag; ohne Suche immer gezeigt, leer = „Keine.“), dann „Oktober 2026 (n)“ … nur mit Inhalt; bei Suche nur Gruppen mit Treffern. Gilt im Reiter Erledigt und bei „Erledigte anzeigen“ unter Alle. Überschrift `.dxwk`. Test `tests/dxwk_t.js`.

@@ -216,6 +216,12 @@ function dxEvSug(fe,fo,cb){if(!fe||fe._dxev)return;fe._dxev=1;fe.removeAttribute
 '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dxdone,:root:not([data-theme="light"]) .dxhit button{color:#8fb0ea}}:root[data-theme="dark"] .dxdone,:root[data-theme="dark"] .dxhit button{color:#8fb0ea}';
 document.head.appendChild(st)}catch(e){}})();
 let dxDQ="",dxDoneOpen=false;
+/* 1.174 (Jürgen, 13.11.): erledigte Defekte nach Meldedatum eingeteilt – Diese Woche / Letzte Woche / ältere nach Monaten, Überschrift mit Anzahl (offene unverändert) */
+function dxWeeks(E,fn,now){const d0=new Date(now||Date.now());d0.setHours(0,0,0,0);const wd=(d0.getDay()+6)%7,mo=d0.getTime()-wd*864e5,lmo=mo-7*864e5,M=["Jänner","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+ const G=[{k:"w0",l:"Diese Woche",L:[]},{k:"w1",l:"Letzte Woche",L:[]}],byM={};
+ E.slice().sort((a,b)=>(b.t||0)-(a.t||0)).forEach(d=>{const t=d.t||0;if(t>=mo)G[0].L.push(d);else if(t>=lmo)G[1].L.push(d);else{const D=new Date(t),k=D.getFullYear()*12+D.getMonth();if(!byM[k]){byM[k]={k:"m"+k,l:M[D.getMonth()]+" "+D.getFullYear(),L:[]};G.push(byM[k])}byM[k].L.push(d)}});
+ const q=dxDQ.trim();return G.filter((g,i)=>g.L.length||(!q&&i<2)).map(g=>'<div class="dxwk">'+g.l+' ('+g.L.length+')</div>'+(g.L.length?g.L.map(fn).join(""):'<div class="mute dxwk0">Keine.</div>')).join("")}
+(function(){try{const st=document.createElement("style");st.textContent='.dxwk{font-size:16px;font-weight:800;color:var(--navy);margin:16px 0 8px;padding-bottom:5px;border-bottom:3px solid var(--navy)}.dxwk0{margin:0 0 6px;font-size:14px}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dxwk{color:#8fb0ea;border-color:#8fb0ea}}:root[data-theme="dark"] .dxwk{color:#8fb0ea;border-color:#8fb0ea}';document.head.appendChild(st)}catch(e){}})();
 function dxDefHay(d){let who="";try{who=nmA(d,"by")}catch(e){}return dxNorm([d.art,d.anr,d.ev,d.ord,d.desc,d.fvw,d.rep,d.fb,who].filter(Boolean).join(" "))}
 function dxDefMatch(d){const q=dxDQ.trim();if(!q)return true;const T=dxNorm(q).split(" ").filter(Boolean),h=" "+dxDefHay(d)+" ";if(T.length&&T.every(t=>h.includes(t)))return true;
  if(/^[A-Za-z0-9]{3,10}$/.test(q)){const c=artCode(q);if(!c)return false;if(artCode(String(d.anr||"").split(/[\s\-‐‑‒–—―−]+/)[0])===c)return true;const k=typeof art!=="undefined"&&art[c];if(k&&dxNorm(k.name)===dxNorm(d.art))return true}return false}
@@ -223,11 +229,11 @@ function dxDefSearch(){return '<div class="srow"><input id="dxdq" type="search" 
 function dxDefRows(l,fn){const q=dxDQ.trim();let h="";
  if(q)h+='<div class="dxhit"><span>'+(l.length?l.length+' Treffer':'Keine Treffer für „'+esc(q)+'“')+'</span><button type="button" id="dxdqx">Suche löschen</button></div>';
  if(!l.length)return h+(q?'':'<div class="card mute">'+(df==="offen"?'Keine offenen Defekte.':'Keine Defekte gemeldet.')+'</div>');
- if(df!=="alle")return h+l.map(fn).join("");
+ if(df!=="alle")return h+(df==="erledigt"?dxWeeks(l,fn):l.map(fn).join(""));
  const O=l.filter(d=>!d.done),E=l.filter(d=>d.done);h+=O.length?O.map(fn).join(""):(q?'':'<div class="card mute">Keine offenen Defekte.</div>');
  if(!E.length)return h;
- if(q)return h+'<div class="dxdh">Erledigt ('+E.length+')</div>'+E.map(fn).join("");
- return h+(dxDoneOpen?'<button type="button" class="dxdone" id="dxdtog">Erledigte ausblenden ('+E.length+')</button>'+E.map(fn).join(""):'<button type="button" class="dxdone" id="dxdtog">Erledigte anzeigen ('+E.length+')</button>')}
+ if(q)return h+'<div class="dxdh">Erledigt ('+E.length+')</div>'+dxWeeks(E,fn);
+ return h+(dxDoneOpen?'<button type="button" class="dxdone" id="dxdtog">Erledigte ausblenden ('+E.length+')</button>'+dxWeeks(E,fn):'<button type="button" class="dxdone" id="dxdtog">Erledigte anzeigen ('+E.length+')</button>')}
 function dxDefBind(foc){const i=document.getElementById("dxdq");if(!i)return;
  i.oninput=()=>{dxDQ=i.value;defView()};
  if(foc!==null&&foc!==undefined){i.focus();try{i.setSelectionRange(foc,foc)}catch(e){}}
