@@ -547,3 +547,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.175 (Jürgen, 13.11.): Übersicht (breit) – Anzahl neben der Überschrift
 - „Diese Woche · 17 Packlisten“, ebenso „Nächste Woche“ und „Später“ (Zahl der Karten inkl. erledigter und Zusätze mit eigener Karte, Wochenende beim Freitag). `pkCnt` in packOverView (pack.js), CSS `.pkwh .pkwn`. Handy-Ansicht (Reiter) unverändert. Test `tests/pkwn_t.js`.
+
+## 1.176 (Jürgen, 13.11.): Anzahl auch am Handy
+- Unter den Reitern blauer Balken wie am PC: „Diese Woche · n Packlisten · KW“, „Nächste Woche · n“, „Später · n“ (`.pkwh.pkwhm`, `pkCnt` jetzt vor der Verzweigung). Zahl im Reiter bleibt = offene. Test `tests/pkwn_t.js` erweitert.

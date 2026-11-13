@@ -514,6 +514,7 @@ function pkPastSum(d){const I=d.items.filter(o=>!pkNoH(o.p)),n=I.length,f=I.filt
  return n?(f?'<span class="ok">'+f+' hergerichtet ✓</span>':'')+(f&&o2?' · ':'')+(o2?'<b class="warn">'+o2+' nicht fertig</b>':''):'<span class="mute">leer</span>'}
 function packOverView(){$("#t").textContent="Übersicht";const D=pkOvData(),wide=window.innerWidth>=900;pkWideLast=wide;document.body.classList.toggle("pkovw",wide);
  const top='<div class="pkovtop">'+pkUpHtml()+'<button class="btn ghost" id="pkall" type="button">Alle Packlisten</button></div>';
+ const pkCnt=n=>' <b class="pkwn">· '+n+(n===1?' Packliste':' Packlisten')+'</b>';/* 1.175/1.176: Anzahl neben der Überschrift, PC und Handy (Jürgen) */
  if(!wide){
   const tabs=[["w0","Diese Woche",pkDM(D.m0)+"–"+pkDM(pkAddD(D.m0,4)),D.w0.reduce((n,d)=>n+pkOpenN(d.items),0)],["w1","Nächste Woche",pkDM(D.m1)+"–"+pkDM(pkAddD(D.m1,4)),D.w1.reduce((n,d)=>n+pkOpenN(d.items),0)],["sp","Später","ab "+pkDM(D.m2),D.kw.reduce((n,k)=>n+pkOpenN(k.items),0)]];
   const tabH='<div class="pktabs" role="tablist">'+tabs.map(([k,a,b,n])=>'<button type="button" role="tab" aria-selected="'+(pkTab===k)+'" class="'+(pkTab===k?'on':'')+'" data-pkt="'+k+'">'+a+'<small>'+b+(n?' · '+n:'')+'</small></button>').join("")+'</div>';
@@ -522,9 +523,9 @@ function packOverView(){$("#t").textContent="Übersicht";const D=pkOvData(),wide
   else body=(pkTab==="w0"?D.w0:D.w1).map(d=>{const past=d.t<D.t0,today=d.t===D.t0,open=pkOpenDays.has(d.t);
    if(past&&!open)return '<button class="pktray past" type="button" data-pkd="'+d.t+'"><span class="pktl"><span>'+pkDayLabel(d.t,D.t0)+'</span></span><span class="pksum">'+pkPastSum(d)+'</span></button>';
    return '<section class="pktray'+(today?' today':'')+(past?' past open':'')+'"'+(past?' data-pkd="'+d.t+'"':'')+'><div class="pktl"><span>'+pkDayLabel(d.t,D.t0)+'</span><small>'+(d.items.length?d.items.length+(d.items.length===1?' Packliste':' Packlisten'):'')+'</small></div>'+(d.items.length?d.items.map(pkCard).join(""):'<div class="pkempty">leer</div>')+'</section>'}).join("");
-  $("#app").innerHTML=top+tabH+(pkTab==="w0"?pkLateHtml(D,false):'')+'<div class="pktrays">'+body+'</div>';
+  const wn=pkTab==="sp"?["Später",D.kw.reduce((n,k)=>n+k.items.length,0),"nach Kalenderwoche"]:pkTab==="w0"?["Diese Woche",D.w0.reduce((n,d)=>n+d.items.length,0),"KW "+pkKW(D.m0)]:["Nächste Woche",D.w1.reduce((n,d)=>n+d.items.length,0),"KW "+pkKW(D.m1)];
+  $("#app").innerHTML=top+tabH+(pkTab==="w0"?pkLateHtml(D,false):'')+'<div class="pkwh pkwhm"><span>'+wn[0]+pkCnt(wn[1])+'</span><small>'+wn[2]+'</small></div><div class="pktrays">'+body+'</div>';
  }else{
-  const pkCnt=n=>' <b class="pkwn">· '+n+(n===1?' Packliste':' Packlisten')+'</b>';/* 1.175: Anzahl neben der Überschrift (Jürgen) */
   const week=(lab,sub,days,isNow)=>'<div class="pkwh"><span>'+lab+pkCnt(days.reduce((n,d)=>n+d.items.length,0))+'</span><small>'+sub+'</small></div>'+days.map(d=>{const past=d.t<D.t0,open=pkOpenDays.has(d.t);
    if(past&&!open)return '<button class="pkdrow past" type="button" data-pkd="'+d.t+'"><span class="pkl1">'+pkDayLabel(d.t,D.t0)+'</span><span class="pksum">'+pkPastSum(d)+'</span></button>';
    return '<div class="pkdh'+(d.t===D.t0?' today':'')+'"'+(past?' data-pkd="'+d.t+'"':'')+'>'+pkDayLabel(d.t,D.t0)+(d.items.length?'':' <small>leer</small>')+'</div>'+d.items.map(o=>pkLine(o)).join("")}).join("");

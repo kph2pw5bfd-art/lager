@@ -1,4 +1,4 @@
-/* Test 1.175: Übersicht (breit) – Anzahl Packlisten neben „Diese Woche“, „Nächste Woche“, „Später“ (SP = Ordner mit fakesb.js) */
+/* Test 1.175/1.176: Übersicht (breit und Handy) – Anzahl Packlisten neben „Diese Woche“, „Nächste Woche“, „Später“ (SP = Ordner mit fakesb.js) */
 const {chromium}=require("playwright");const fs=require("fs");const S=(process.env.SP||"/tmp")+"/";const J=o=>JSON.stringify(o);
 (async()=>{const b=await chromium.launch();let fail=0;const ok=(t,c,x)=>{if(!c)fail++;console.log((c?"OK   ":"FEHLT")+" "+t+(x!==undefined?" → "+x:""))};const errs=[];
  const t0=new Date();t0.setHours(0,0,0,0);const wd=(t0.getDay()+6)%7,mo=t0.getTime()-wd*864e5;const at=(d)=>mo+d*864e5+8*36e5;
@@ -11,4 +11,8 @@ const {chromium}=require("playwright");const fs=require("fs");const S=(process.e
  await p.evaluate(()=>go("pack"));await p.waitForTimeout(400);
  const H=await p.$$eval(".pkwh span",l=>l.map(x=>x.textContent));
  ok("Überschriften mit Anzahl",J(H)===J(["Diese Woche · 5 Packlisten","Nächste Woche · 2 Packlisten","Später · 3 Packlisten"]),J(H));
- await p.screenshot({path:S+"pkwn.png"});ok("keine JS-Fehler",!errs.length,errs.join("|"));await b.close();console.log(fail?"FEHLER: "+fail:"ALLES OK")})();
+ await p.screenshot({path:S+"pkwn.png"});
+ await p.setViewportSize({width:390,height:844});await p.evaluate(()=>{pkTab="w0";packOverView()});await p.waitForTimeout(300);
+ let m=await p.$$eval(".pkwh span",l=>l.map(x=>x.textContent));ok("Handy: Diese Woche mit Anzahl",J(m)===J(["Diese Woche · 5 Packlisten"]),J(m));await p.screenshot({path:S+"pkwn_m.png"});
+ await p.click('[data-pkt="w1"]');await p.waitForTimeout(200);m=await p.$$eval(".pkwh span",l=>l.map(x=>x.textContent));ok("Handy: Nächste Woche",J(m)===J(["Nächste Woche · 2 Packlisten"]),J(m));
+ await p.click('[data-pkt="sp"]');await p.waitForTimeout(200);m=await p.$$eval(".pkwh span",l=>l.map(x=>x.textContent));ok("Handy: Später",J(m)===J(["Später · 3 Packlisten"]),J(m));ok("keine JS-Fehler",!errs.length,errs.join("|"));await b.close();console.log(fail?"FEHLER: "+fail:"ALLES OK")})();
