@@ -550,3 +550,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.176 (Jürgen, 13.11.): Anzahl auch am Handy
 - Unter den Reitern blauer Balken wie am PC: „Diese Woche · n Packlisten · KW“, „Nächste Woche · n“, „Später · n“ (`.pkwh.pkwhm`, `pkCnt` jetzt vor der Verzweigung). Zahl im Reiter bleibt = offene. Test `tests/pkwn_t.js` erweitert.
+
+## 1.177 (Jürgen, 15.11.): Weihnachten & Silvester
+- Vorschau: https://claude.ai/artifact/NBpeBYbpz2MgLiagX9nPwF (Jürgen: „Passt!“). Dezent, nichts bunt: Weihnachten (1. Advent – 26.12.) 10 blasse Schneeflocken + warm-weiße, langsam glimmende Lichterkette unten im blauen Kopfbalken; Silvester (27.12. – 6.1.) 3 aufsteigende weiße Striche mit hellem Funkenstern im Kopfbalken. Startbild unverändert (Logo-Zoom, Original-Hexe) + 14 Flocken bzw. 4 Striche (splashpatch.py, Klasse `.xs`).
+- `xmas.js` (in build.py nach sto.js): `tpcSeason(d)` → "w"/"s"/"" (1. Advent = 4. Advent − 21 Tage; steht auch im Startbild-Skript), `xmApply` setzt `header .xdeco` (absolut, overflow hidden, z-index 0; Header-Kinder z-index 1), stündlich und bei Größenänderung neu. Schalter in den Einstellungen `prefRow("xmas")` (localStorage `tpc_pref_xmas`, Standard an), sofort wirksam. Druckstation (`tpc_druckst=1`) und „Bewegung reduzieren“ ohne Animation. PDFs/Etiketten unberührt.
+- Test `tests/xmas_t.js` (Playwright `page.clock`).
