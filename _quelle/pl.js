@@ -25,22 +25,24 @@ function plIs(){if(plForce)return true;try{const t=typeof hoTit==="function"?hoT
 try{Object.defineProperty(HO_NAME,"jarvis",{get:()=>wsIs()?"Werkstatt Übersicht":plIs()?"Projektleiter Übersicht":"Lager Übersicht",enumerable:true,configurable:true})}catch(e){}
 function plSeenSub(){if(plSeenOn||typeof db==="undefined"||!db||!me)return;plSeenOn=true;try{db.collection("plseen").onSnapshot(s=>{const M={};s.docs.forEach(d=>{const x=d.data();if(x.by===me)M[x.k]=x});PLSEEN=M;if(view==="jarvis"&&plIs())plView()},()=>{plSeenOn=false})}catch(e){plSeenOn=false}}
 const plSeen=k=>!!PLSEEN[k];
+let plSeenOpen=false;
+async function plUnSeen(k){delete PLSEEN[k];try{await db.doc("plseen/"+String(me).slice(0,12)+"_"+k.replace(/[^0-9A-Za-z_]/g,"").slice(0,80)).delete()}catch(e){toast("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}
 async function plSetSeen(k){PLSEEN[k]={k,by:me,t:Date.now()};try{await db.doc("plseen/"+String(me).slice(0,12)+"_"+k.replace(/[^0-9A-Za-z_]/g,"").slice(0,80)).set({k,by:me,...tabAs("by"),t:Date.now()})}catch(e){toast("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}
 function plMine(p){if(!p||p._z||p.art==="verl"&&pkRoot(p)!==p)return false;if(!plAs)return auIsMine(p);const u=auToks(plAs),l=auToks(p.pl);return !!(u.length&&l.length&&u.every(w=>l.includes(w)))}
 const plH=s=>{let h=0;String(s).split("").forEach(c=>{h=(h*31+c.charCodeAt(0))|0});return (h>>>0).toString(36)};
 const plDig=s=>String(s||"").replace(/\D/g,"");
 /* „Zu erledigen“ */
-function plTodo(M){const T=[],t0=pkDay(Date.now());
+function plTodo(M,all){const T=[],t0=pkDay(Date.now());/* all: auch schon „Gesehen“ (1.180) */
  M.forEach(I=>{const p=I.p;if(pkSto(p))return;
   if(I.missShow){const un=I.B.miss.filter(e=>!auAns(p,e.k).length);if(un.length){const n=un.reduce((a,e)=>a+(e.soll-e.back),0),nm=un.slice(0,2).map(e=>pkNum(e.soll-e.back)+" "+auUnit(p,e.k)+" "+e.name).join(", ")+(un.length>2?" …":"");
    T.push(I.B.hasEnd?{why:"Lager wartet auf Antwort",t:pkNum(n)+" "+(n===1?"Stück fehlt":"Stück fehlen")+" nach der Endretoure",s:esc(p.ev||"")+" · "+esc(nm),p,un,ord:0}:{why:"Dispo abgelaufen",t:"Noch "+pkNum(n)+" Stk unterwegs",s:esc(p.ev||"")+" · Dispo bis "+pkDM(p.de)+" · "+esc(nm),p,un,ord:1})}}
   const H=pkH(p);const parts=[[null,H.fin&&H.fin.t?H.fin:auHerrAll(p,null)]].concat((p.zus||[]).map(z=>[String(z.ps),pkZFin(p,z)||auHerrAll(p,String(z.ps))]));
-  parts.forEach(([zps,f])=>{if(!f)return;const L=auDevNet(p,zps);if(!L.length)return;const k="dev_"+p.id+"_"+(zps||"")+"_"+plH(L.join("|"));if(plSeen(k))return;
+  parts.forEach(([zps,f])=>{if(!f)return;const L=auDevNet(p,zps);if(!L.length)return;const k="dev_"+p.id+"_"+(zps||"")+"_"+plH(L.join("|"));if(plSeen(k)&&!all)return;
    T.push({why:"Abweichung zum Packschein",t:(zps?"Zusatz "+zps+" ":"")+"hergerichtet mit "+(L.length===1?"1 Abweichung":L.length+" Abweichungen"),s:esc(p.ev||"")+(f.t?" · "+fmt(f.t).slice(0,6):"")+"<br>"+L.map(esc).join("<br>"),p,seen:k,ord:3})})});
  const ords=M.map(I=>plDig(I.p.ord)).filter(Boolean),evs=M.map(I=>dxNorm(I.p.ev));
- (typeof defs!=="undefined"?defs:[]).forEach(d=>{if(!d.fv||d.del)return;const o=plDig(d.ord),hit=o?ords.includes(o):evs.includes(dxNorm(d.ev));if(!hit)return;const k="fv_"+d.id;if(plSeen(k))return;
+ (typeof defs!=="undefined"?defs:[]).forEach(d=>{if(!d.fv||d.del)return;const o=plDig(d.ord),hit=o?ords.includes(o):evs.includes(dxNorm(d.ev));if(!hit)return;const k="fv_"+d.id;if(plSeen(k)&&!all)return;
   T.push({why:"Kunde verrechnen?",t:"Defekt mit Fremdverschulden",s:esc((dxQ(d)>1?dxQ(d)+" × ":"")+d.art)+(d.desc?" – "+esc(d.desc):"")+" · "+esc(d.ev||"")+(d.fvw?" · „"+esc(d.fvw)+"“":""),d,seen:k,ord:2})});
- return T.sort((a,b)=>a.ord-b.ord)}
+ T.forEach(x=>{if(x.seen&&PLSEEN[x.seen])x.seenT=PLSEEN[x.seen].t||1});return T.sort((a,b)=>a.ord-b.ord)}
 function plHot(){try{plSeenSub();const M=packs.filter(plMine).map(auInfo).filter(I=>!I.done||I.g.dev);const n=plTodo(M).length;return n?String(n):""}catch(e){return ""}}
 /* Ereignisse eines Tages */
 function plEvents(M,t){const E=[];M.forEach(I=>{const p=I.p;if(pkSto(p))return;
@@ -48,7 +50,9 @@ function plEvents(M,t){const E=[];M.forEach(I=>{const p=I.p;if(pkSto(p))return;
   if(!pkNoH(p)&&day(pkHDay(p))===t)E.push({c:"h",l:"Herrichten",p,ok:!!I.g.fin,x:I.g.fin?"":(I.g.d?I.g.d+"/"+I.g.n:"")});
   (p.zus||[]).forEach(z=>{if(day(pkZDay(p,z))===t){const f=pkZFin(p,z)||auHerrAll(p,String(z.ps));E.push({c:"z",l:"Zusatz",p,ok:!!f,x:""})}});
   if(p.db&&day(p.db)===t)E.push({c:"x",l:"Raus",p,ok:false,x:""});
-  if(p.de&&day(p.de)===t)E.push({c:"r",l:I.B.hasEnd?"Zurückgekommen":"Kommt zurück",p,ok:!!I.B.hasEnd,x:I.B.hasEnd&&I.B.fehlt?"Fehlmaterial":""})});
+  /* 1.180: mit Endretoure am Tag der Endretoure „Zurückgekommen“, sonst am Dispo-Ende „Kommt zurück“ (Jürgen: kam früher zurück, stand trotzdem am Dispo-Ende) */
+  const rt=I.B.hasEnd?(I.B.endR&&(I.B.endR.closedT||I.B.endR.t))||p.de:p.de;
+  if(rt&&day(rt)===t)E.push({c:"r",l:I.B.hasEnd?"Zurückgekommen":"Kommt zurück",p,ok:!!I.B.hasEnd,x:I.B.hasEnd&&I.B.fehlt?"Fehlmaterial":""})});
  /* 1.137: eine Zeile pro Auftrag und Tag (Jürgen: „zu viel Info“) – Herrichten + Raus am selben Tag → nur „Raus“ (✓ = hergerichtet), Zusatz am selben Tag wie Herrichten → mit drin */
  const O=[];E.forEach(e=>{let g=O.find(x=>x.p===e.p);if(!g)O.push(g={p:e.p,E:[]});g.E.push(e)});
  return O.map(g=>{const f=c=>g.E.find(e=>e.c===c),h=f("h"),z=f("z"),x=f("x"),r=f("r");
@@ -87,6 +91,9 @@ function plView(){plSeenSub();if(!plIn2){plIn2=true;try{plPrev=+localStorage.get
  h+=T.length?'<section class="pltodo"><h3>Zu erledigen <span>'+T.length+'</span></h3>'+T.map((x,i)=>'<div class="plti"><span class="why">'+esc(x.why)+'</span><b>'+esc(x.t)+'</b><small>'+x.s+'</small><span class="plact">'+
    (x.un?'<button type="button" class="p" data-plans="'+i+'">Antworten</button><button type="button" data-plo="'+i+'">Auftrag öffnen</button>':'<button type="button" class="p" data-plseen="'+i+'">Gesehen</button>'+(x.d?'<button type="button" data-pld="'+i+'">Defekt öffnen</button>':'<button type="button" data-plo="'+i+'">Auftrag öffnen</button>'))+'</span></div>').join("")+'</section>'
   :'<div class="pldone">✓ Nichts zu erledigen<small>Das Lager braucht gerade nichts von dir.</small></div>';
+ /* 1.180: eingeklappt „Gesehen (n)“ mit Datum und „Wieder anzeigen“ (Jürgen 16.11.: PL tippte „Gesehen“, Punkt war weg) */
+ const TS=plTodo(M,true).filter(x=>x.seenT).sort((a,b)=>b.seenT-a.seenT);
+ if(TS.length)h+='<section class="plseen"><button type="button" class="plsh" id="plsh" aria-expanded="'+(plSeenOpen?"true":"false")+'">Gesehen ('+TS.length+') <span aria-hidden="true">'+(plSeenOpen?"▴":"▾")+'</span></button>'+(plSeenOpen?TS.map((x,i)=>'<div class="plti seen"><span class="why">'+esc(x.why)+'</span><b>'+esc(x.t)+'</b><small>'+x.s+'</small><small class="plst">Gesehen '+(x.seenT>1?fmt(x.seenT).slice(0,6):'')+'</small><span class="plact"><button type="button" class="p" data-plun="'+i+'">Wieder anzeigen</button>'+(x.d?'<button type="button" data-plsd="'+i+'">Defekt öffnen</button>':'<button type="button" data-plso="'+i+'">Auftrag öffnen</button>')+'</span></div>').join(""):'')+'</section>';
  h+='<div class="plbig">'+(can("au_s")?'<button type="button" id="plau">Meine Aufträge</button>':'')+'<button type="button" class="g" id="plmsg">Nachricht ans Lager</button></div>';
  const today=plEvents(M,t0);
  h+='<section class="plsec"><h4>Heute</h4>'+(today.length?today.map(e=>'<button type="button" class="plli" data-plp="'+esc(e.p.id)+'"><span><b>'+esc(e.p.ev||"")+'</b><small>'+(e.c==="r"&&e.ok?"zurück":e.x||"Auftrag "+esc(e.p.ord||"–"))+'</small></span><span class="r'+(e.ok?' ok':'')+'">'+e.l+'</span></button>').join(""):'<p class="mute" style="margin:0">Heute passiert bei deinen Aufträgen nichts.</p>')+'</section>';
@@ -104,6 +111,10 @@ function plView(){plSeenSub();if(!plIn2){plIn2=true;try{plPrev=+localStorage.get
  q("[data-plo]").forEach(b=>b.onclick=()=>{curAu=T[+b.dataset.plo].p.id;go("auopen")});
  q("[data-pld]").forEach(b=>b.onclick=()=>{curDef=T[+b.dataset.pld].d.id;go("defopen")});
  q("[data-plseen]").forEach(b=>b.onclick=async()=>{b.disabled=true;await plSetSeen(T[+b.dataset.plseen].seen);plView()});
+ const sh=$("#plsh");if(sh)sh.onclick=()=>{plSeenOpen=!plSeenOpen;plView()};
+ q("[data-plun]").forEach(b=>b.onclick=async()=>{b.disabled=true;await plUnSeen(TS[+b.dataset.plun].seen);plView()});
+ q("[data-plso]").forEach(b=>b.onclick=()=>{const x=TS[+b.dataset.plso];if(x&&x.p){curAu=x.p.id;go("auopen")}});
+ q("[data-plsd]").forEach(b=>b.onclick=()=>{const x=TS[+b.dataset.plsd];if(x&&x.d){curDef=x.d.id;go("defopen")}});
  q("[data-plans]").forEach(b=>b.onclick=()=>{const x=T[+b.dataset.plans];if(!can("au_b")&&!plAs)return errBox("Antworten darfst du nicht (Recht „Aufträge – Antworten“).");if(x.un.length===1)auAnsDlg(x.p,x.un[0]);else{curAu=x.p.id;go("auopen")}});
  const au=$("#plau");if(au)au.onclick=()=>go("au");$("#plmsg").onclick=()=>{const own=M.filter(I=>!I.done);if(own.length===1)return auMsgDlg(own[0].p);curAu=null;go("au");toast("Auftrag wählen, dann „Nachricht ans Lager“",1)};
  try{jvClock();jvAskBind();$("#jvsp").onclick=plSpeak;$("#jvvc").onclick=jvVoiceDlg;$("#jvhl").onclick=jvHelpOpen;const q0=$("#jvaq");

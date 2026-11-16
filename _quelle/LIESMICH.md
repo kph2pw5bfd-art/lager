@@ -563,3 +563,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.179 (Jürgen, 16.11., Video): nach dem Eintippen springt es nach oben
 - `retEdit` endet mit `window.scrollTo(0,0)` (für Gruppenwechsel gedacht). Seit „Aus der Packliste“ ganz unten (1.155) sprang man beim Zählen dort nach jedem ✓ nach oben. retfix.js: die retEdit-Hülle merkt sich die Scroll-Position und stellt sie wieder her, wenn man auf derselben Ebene bleibt (gleiche `rCtxNow`: id/lvl/g/u/q). Gruppenwechsel springt weiter nach oben. Test in `tests/retfix_t.js`.
+
+## 1.180 (Jürgen, 16.11., Notiz aus dem Sprachanruf https://claude.ai/artifact/WFYfyMqxEhg29MsYjcELxc)
+- Projektleiter Übersicht: eingeklappter Bereich „Gesehen (n)“ unter „Zu erledigen“ (neueste zuerst, „Gesehen TT.MM.“, „Wieder anzeigen“ löscht den plseen-Eintrag, Auftrag/Defekt öffnen). `plTodo(M,all)` liefert mit all auch Gesehenes (`seenT`), `plUnSeen`, `plSeenOpen`.
+- Fehler: Auftrag kam vor dem Dispo-Ende zurück (Endretoure + geprüft), PL-Übersicht zeigte am Dispo-Ende weiter „Kommt zurück“. `plEvents`: mit Endretoure steht „Zurückgekommen“ am Tag der Endretoure (`endR.closedT`), sonst „Kommt zurück“ am Dispo-Ende. Assistent „Was kommt heute zurück“ ohne Aufträge mit Endretoure. Wochenbericht war schon richtig (pkState erledigt).
+- Test `tests/pl180_t.js`.
