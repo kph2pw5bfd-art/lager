@@ -22,7 +22,9 @@ function rKeepY(y){if(!(y>0))return;const go=()=>{if(Math.abs(window.scrollY-y)>
 /* nach jedem Aufbau merken, was gerade zu sehen ist (auch wenn Knöpfe retEdit/retOpen direkt aufrufen) */
 /* retEdit/retOpen stehen in einem späteren <script> → erst danach einhängen */
 let rWrapped=false;function rWrap(){if(rWrapped||typeof retEdit!=="function"||typeof retOpen!=="function")return;rWrapped=true;
- const f=retEdit;retEdit=function(){const v=f.apply(this,arguments);rMark();return v};
+ /* 1.179: retEdit springt am Ende immer nach oben (für Gruppenwechsel gedacht) – bleibt man auf derselben Ebene
+    (z. B. Menge in „Aus der Packliste“ eingetippt), bleibt die Scroll-Position */
+ const f=retEdit;retEdit=function(){const c0=rCtxNow(),keep=view==="retedit"&&c0===rCtxLast&&rMarkOk(),y=window.scrollY;const v=f.apply(this,arguments);if(keep&&rCtxNow()===c0)rKeepY(y);rMark();return v};
  const g=retOpen;retOpen=function(){const v=g.apply(this,arguments);rMark();return v}}
 setTimeout(rWrap,0);
 function retDrawSafe(){rWrap();

@@ -28,8 +28,12 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  /* Herrichten an der Packliste desselben Auftrags → „Aus der Packliste“ aktualisiert */
  const n1=await p.evaluate(()=>window.__n);await p.evaluate(()=>{DBX.local("packh","A",{h_1:{ok:true,by:"u2",t:Date.now()}});draw()});await p.waitForTimeout(300);
  ok("Herricht-Stand desselben Auftrags: neu gezeichnet",await p.evaluate(n=>window.__n>n,n1));
+ /* 1.179: Menge eintippen (Knopf ruft retEdit direkt) → bleibt unten */
+ await p.evaluate(()=>{window.scrollTo(0,1200)});await p.waitForTimeout(100);const yb=await y();
+ await p.evaluate(nr=>{rs.items[nr]=rs.items[nr]||{nr,name:"x",q:0};rs.items[nr].q++;retEdit()},K[2].nr);await p.waitForTimeout(300);
+ ok("Menge eingetippt: Scroll bleibt",Math.abs((await y())-yb)<3,(await y())+" / "+yb);
  /* Navigation im Schein funktioniert weiter */
- await p.evaluate(()=>window.scrollTo(0,0));const g=await p.$("[data-rg],.rtile");if(g){await g.click();await p.waitForTimeout(300)}ok("Gruppe öffnen geht",await p.evaluate(()=>rs.lvl!=="groups"||!document.querySelector(".rtile")));
+ await p.evaluate(()=>window.scrollTo(0,300));const lv0=await p.evaluate(()=>rs.lvl);await p.evaluate(()=>{rs.lvl="subs";rs.g=(rKat()[0]||{}).g;retEdit()});await p.waitForTimeout(300);ok("Gruppe wechseln: nach oben",(await y())===0&&lv0==="groups",await y());
  /* andere Ansicht und zurück → wird gezeichnet */
  await p.evaluate(()=>{view="start";draw();view="retedit";draw()});await p.waitForTimeout(200);ok("Zurück in den Schein: angezeigt",!!(await p.$("#rbody")));
  ok("keine JS-Fehler",!errs.length,errs.join("|"));await b.close();console.log(fail?"FEHLER: "+fail:"ALLES OK")})();
