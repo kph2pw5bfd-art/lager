@@ -532,6 +532,7 @@ function packOverView(){$("#t").textContent="Übersicht";const D=pkOvData(),wide
   const left=pkLateHtml(D,true)+week("Diese Woche","KW "+pkKW(D.m0)+" · "+pkDM(D.m0)+"–"+pkDM(pkAddD(D.m0,4)),D.w0);
   const right=week("Nächste Woche","KW "+pkKW(D.m1)+" · "+pkDM(D.m1)+"–"+pkDM(pkAddD(D.m1,4)),D.w1)+'<div class="pkwh later"><span>Später'+pkCnt(D.kw.reduce((n,k)=>n+k.items.length,0))+'</span><small>nach Kalenderwoche</small></div>'+D.kw.map(k=>'<div class="pkdh">'+esc(k.lab)+(k.items.length?'':' <small>leer</small>')+'</div>'+k.items.map(o=>pkLine(o,pkDayLabel(o.s.t,0))).join("")).join("");
   $("#app").innerHTML=top+'<div class="pkwide"><div>'+left+'</div><div>'+right+'</div></div>'}
+ if(typeof pkRetWall==="function")try{$("#app").insertAdjacentHTML("beforeend",pkRetWall(wide));pkRBind()}catch(e){console.warn("Retouren-Wand",e)}/* 1.182 */
  document.querySelectorAll("[data-pkt]").forEach(b=>b.onclick=()=>{pkTab=b.dataset.pkt;packOverView()});
  document.querySelectorAll("[data-pkd]").forEach(b=>b.onclick=e=>{if(e.target.closest("[data-pk]"))return;const t=+b.dataset.pkd;pkOpenDays.has(t)?pkOpenDays.delete(t):pkOpenDays.add(t);packOverView()});
  document.querySelectorAll("[data-pk]").forEach(e=>e.onclick=ev=>{ev.stopPropagation();curPack=e.dataset.pk;go("packopen")});

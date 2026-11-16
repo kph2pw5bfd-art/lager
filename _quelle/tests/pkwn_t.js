@@ -9,10 +9,10 @@ const {chromium}=require("playwright");const fs=require("fs");const S=(process.e
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(800);await p.mouse.click(640,500);await p.waitForTimeout(400);
  await p.evaluate(()=>go("pack"));await p.waitForTimeout(400);
- const H=await p.$$eval(".pkwh span",l=>l.map(x=>x.textContent));
+ const H=await p.$$eval(".pkwh:not(.pkrwh) span",l=>l.map(x=>x.textContent));
  ok("Überschriften mit Anzahl",J(H)===J(["Diese Woche · 5 Packlisten","Nächste Woche · 2 Packlisten","Später · 3 Packlisten"]),J(H));
  await p.screenshot({path:S+"pkwn.png"});
  await p.setViewportSize({width:390,height:844});await p.evaluate(()=>{pkTab="w0";packOverView()});await p.waitForTimeout(300);
- let m=await p.$$eval(".pkwh span",l=>l.map(x=>x.textContent));ok("Handy: Diese Woche mit Anzahl",J(m)===J(["Diese Woche · 5 Packlisten"]),J(m));await p.screenshot({path:S+"pkwn_m.png"});
- await p.click('[data-pkt="w1"]');await p.waitForTimeout(200);m=await p.$$eval(".pkwh span",l=>l.map(x=>x.textContent));ok("Handy: Nächste Woche",J(m)===J(["Nächste Woche · 2 Packlisten"]),J(m));
- await p.click('[data-pkt="sp"]');await p.waitForTimeout(200);m=await p.$$eval(".pkwh span",l=>l.map(x=>x.textContent));ok("Handy: Später",J(m)===J(["Später · 3 Packlisten"]),J(m));ok("keine JS-Fehler",!errs.length,errs.join("|"));await b.close();console.log(fail?"FEHLER: "+fail:"ALLES OK")})();
+ let m=await p.$$eval(".pkwh:not(.pkrwh) span",l=>l.map(x=>x.textContent));ok("Handy: Diese Woche mit Anzahl",J(m)===J(["Diese Woche · 5 Packlisten"]),J(m));await p.screenshot({path:S+"pkwn_m.png"});
+ await p.click('[data-pkt="w1"]');await p.waitForTimeout(200);m=await p.$$eval(".pkwh:not(.pkrwh) span",l=>l.map(x=>x.textContent));ok("Handy: Nächste Woche",J(m)===J(["Nächste Woche · 2 Packlisten"]),J(m));
+ await p.click('[data-pkt="sp"]');await p.waitForTimeout(200);m=await p.$$eval(".pkwh:not(.pkrwh) span",l=>l.map(x=>x.textContent));ok("Handy: Später",J(m)===J(["Später · 3 Packlisten"]),J(m));ok("keine JS-Fehler",!errs.length,errs.join("|"));await b.close();console.log(fail?"FEHLER: "+fail:"ALLES OK")})();
