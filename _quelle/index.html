@@ -570,7 +570,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.177";
+<script>const APPV="1.178";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -4958,6 +4958,40 @@ document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest('[da
 '@media (prefers-reduced-motion:reduce){.xdeco *{animation:none!important}.xdeco .xrk,.xdeco .xbu{display:none}}';document.head.appendChild(st)}catch(e){}})();
 /* einschalten, sobald der Kopfbalken da ist; um Mitternacht/Zeitraum-Wechsel stündlich prüfen */
 setTimeout(()=>xmApply(),300);setInterval(()=>xmApply(),3600e3);window.addEventListener("resize",()=>{clearTimeout(window.__xmR);window.__xmR=setTimeout(()=>xmApply(true),400)});
+
+/* ===== 1.178: Retourschein flackert / springt nach oben (Jürgen, 16.11.) =====
+   Ursache: jedes draw() (eigener „In Arbeit“-Herzschlag ed_<id> alle 30 s, Herzschlag beim Herrichten pked, Änderungen von Kollegen,
+   5-Min-Nachladen …) baute den Retourschein komplett neu auf → Flackern, und weil „Mit Packliste“/„Aus der Packliste“ erst danach
+   eingefügt werden, sprang die Seite nach oben.
+   Jetzt: im Zählen (retedit) und in der Ansicht (retopen) wird nur neu gezeichnet, wenn sich etwas ändert, das dort zu sehen ist
+   (der Schein ohne Herzschlag-Felder, Packliste + Herricht-Stand desselben Auftrags, Defekte des Scheins, Artikelliste).
+   Wird doch neu gezeichnet, bleibt die Scroll-Position stehen. */
+let rSigLast=null,rSigEl=null,rCtxLast="";
+function rDig(x){return String(x||"").replace(/\D/g,"")}
+function rSigNow(){try{let id=null,r=null;
+ if(view==="retedit"&&rs){id=rs.id;r=id?rets.find(x=>x.id===id):null}else if(view==="retopen"){id=curRet;r=rets.find(x=>x.id===id)}else return null;
+ const o={};if(r)Object.keys(r).sort().forEach(k=>{if(!/^edn?_/.test(k)&&k!=="draft"&&typeof r[k]!=="function")o[k]=r[k]});
+ const ord=rDig(r?r.ord:(rs&&rs.ord)),P=ord?packs.filter(p=>rDig(p.ord)===ord).map(p=>[p,packh[p.id]||null]):[];
+ const D=id?defs.filter(d=>d.ret===id).map(d=>[d.id,d.n||1,!!d.done]):[];
+ /* wer sonst gerade mitzählt (für „… arbeitet gerade auch …“) – ohne Uhrzeit */
+ const W=r?Object.keys(r).filter(k=>/^ed_/.test(k)&&k!=="ed_"+me&&+r[k]&&Date.now()-r[k]<90000).map(k=>k+"="+(r["edn_"+k.slice(3)]||"")).sort():[];
+ return view+"|"+JSON.stringify([o,P,D,W,(rkat||[]).length])}catch(e){return null}}
+function rCtxNow(){return view+"|"+(view==="retopen"?curRet:(rs?[rs.id,rs.lvl,rs.g,rs.u,rs.q].join("/"):""))}
+function rMark(){rSigLast=rSigNow();rCtxLast=rCtxNow();const a=$("#app");let m=document.getElementById("rsigm");if(!m||m.parentNode!==a){if(m)m.remove();m=document.createElement("i");m.id="rsigm";m.hidden=true;a.appendChild(m)}rSigEl=m}
+const rMarkOk=()=>!!rSigEl&&rSigEl.parentNode===$("#app")
+function rKeepY(y){if(!(y>0))return;const go=()=>{if(Math.abs(window.scrollY-y)>2)window.scrollTo(0,y)};go();setTimeout(go,0);setTimeout(go,60);requestAnimationFrame(go)}
+/* nach jedem Aufbau merken, was gerade zu sehen ist (auch wenn Knöpfe retEdit/retOpen direkt aufrufen) */
+/* retEdit/retOpen stehen in einem späteren <script> → erst danach einhängen */
+let rWrapped=false;function rWrap(){if(rWrapped||typeof retEdit!=="function"||typeof retOpen!=="function")return;rWrapped=true;
+ const f=retEdit;retEdit=function(){const v=f.apply(this,arguments);rMark();return v};
+ const g=retOpen;retOpen=function(){const v=g.apply(this,arguments);rMark();return v}}
+setTimeout(rWrap,0);
+function retDrawSafe(){rWrap();
+ if(view==="retedit"||view==="retopen"){
+  const s=rSigNow();if(s!==null&&s===rSigLast&&rMarkOk()&&rCtxNow()===rCtxLast)return;
+  const same=rCtxNow()===rCtxLast&&rMarkOk(),y=window.scrollY;
+  retDraw();if(same)rKeepY(y);return}
+ rSigLast=null;rSigEl=null;rCtxLast="";return retDraw()}
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -4986,7 +5020,7 @@ async function res(ids){const m=[...new Set(ids)].filter(i=>i&&!names[i]);if(!m.
 function draw(){if(!db)return;document.body.classList.toggle("jvon",view==="jarvis");if(view!=="pack")document.body.classList.remove("pkovw");if(view!=="jarvis"&&typeof jvSpeaking!=="undefined"&&jvSpeaking)speechSynthesis.cancel();$("#bk").hidden=view==="start";$("#pv").hidden=!(realOwner&&!owner);if(view==="defnew"&&document.getElementById("dnart"))return;if(view==="infonew"&&document.getElementById("inx"))return;if(view==="defedit"&&document.getElementById("deart"))return;if(view==="infoopen"&&document.activeElement&&document.activeElement.id==="irp")return;const c=cur&&lists.find(l=>l.id===cur);
  tabHead();
  if(view.startsWith("ret")&&!canLager()){view="start";hist=[]}
- if(view.startsWith("ret")){const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&$("#app").contains(ae))return;return retDraw()}
+ if(view.startsWith("ret")){const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA/.test(ae.tagName)&&$("#app").contains(ae))return;return retDrawSafe()}
  if(view==="jarvis"&&can("jv_s"))return wsIs()?wsView():plIs()?plView():jarvisView();
  if(view==="jarvis"){view="start";hist=[]}
  if(view==="au"&&can("au_s"))return auView();
