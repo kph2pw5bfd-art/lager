@@ -568,3 +568,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Projektleiter Übersicht: eingeklappter Bereich „Gesehen (n)“ unter „Zu erledigen“ (neueste zuerst, „Gesehen TT.MM.“, „Wieder anzeigen“ löscht den plseen-Eintrag, Auftrag/Defekt öffnen). `plTodo(M,all)` liefert mit all auch Gesehenes (`seenT`), `plUnSeen`, `plSeenOpen`.
 - Fehler: Auftrag kam vor dem Dispo-Ende zurück (Endretoure + geprüft), PL-Übersicht zeigte am Dispo-Ende weiter „Kommt zurück“. `plEvents`: mit Endretoure steht „Zurückgekommen“ am Tag der Endretoure (`endR.closedT`), sonst „Kommt zurück“ am Dispo-Ende. Assistent „Was kommt heute zurück“ ohne Aufträge mit Endretoure. Wochenbericht war schon richtig (pkState erledigt).
 - Test `tests/pl180_t.js`.
+
+## 1.181 (Jürgen, 16.11., Notiz): manuelle Artikel aus der Packliste im Retourschein
+- Anlass: frei mitgegebener Artikel wurde beim Zurückschreiben leicht anders geschrieben → „zu viel“. abg.js: `abgFree(B)` = Konto-Einträge mit soll>0 ohne Artikel aus der Artikelliste (frei mitgegeben, freie Alternativen, Positionen ohne Nummer). `rPkSec` zeigt sie in „Aus der Packliste“ (Kachel `.rpkm`, „· manuell“, data-rmp); Zählen legt sie mit genau dem Packlisten-Namen an (Schlüssel `rManFind` bzw. `M:`+Name).
+- `rManDlg` (shim.js): Vorschläge „Aus der Packliste (manuell mitgegeben)“ als Knöpfe (`.mpkc`), antippen füllt den Namen. Beim Hinzufügen: ähnlicher Name (`abgSimilar`: gleiche Zahlen, kleine Tippfehler/Leerzeichen, ≥60 % gleiche Wörter) → „Ist „…“ derselbe Artikel wie „…“ aus der Packliste?“ Ja = Packlisten-Name, Nein = eigener Name. Ein Packlisten-Name wird nicht mehr als „fehlender Artikel“ gemeldet.
+- Test `tests/rman181_t.js`.

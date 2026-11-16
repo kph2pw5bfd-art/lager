@@ -91,11 +91,29 @@ function abgPkBind(){document.querySelectorAll("[data-abgo]").forEach(b=>b.oncli
 /* Zeile im Retourschein (beim Zählen und in der Ansicht) */
 /* 1.154: beim Zählen (Ebene Gruppen) oben die Artikel aus der Packliste – Packschein, Zusätze, Alternativen, zusätzlich Mitgegebenes; ohne Lager 55 und Fremdmiete (zählen nicht als raus) */
 function rPkSec(p,B){const old=document.getElementById("rpksec");if(old)old.remove();if(view!=="retedit"||!rs||rs.lvl!=="groups"||(rs.q&&rs.q.trim()))return;
- const K=rKat(),A=[],E=[];B.L.filter(e=>e.soll>0).forEach(e=>{const a=e.code&&K.find(k=>artCode(k.nr)===e.code);if(a&&!A.includes(a)){A.push(a);E.push(e)}});if(!A.length)return;
+ const K=rKat(),A=[],E=[];B.L.filter(e=>e.soll>0).forEach(e=>{const a=e.code&&K.find(k=>artCode(k.nr)===e.code);if(a&&!A.includes(a)){A.push(a);E.push(e)}});
+ const F=abgFree(B);if(!A.length&&!F.length)return;
  const g=document.querySelector("#app .rgrid");if(!g)return;
- g.insertAdjacentHTML("afterend",'<div id="rpksec"><h3 class="rpkh">Aus der Packliste <span class="mute">'+A.length+'</span></h3><div class="rgrid">'+A.map((a,i)=>{const e=E[i],c=rs.items[a.nr]?rs.items[a.nr].q:0,dn=Math.min(e.back,e.soll)>=e.soll;
-  return '<button class="rtile rpkt'+(dn?' dn':'')+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(a.name)+'</b><span class="mute">'+(dn?'✓ ':'')+abgN(Math.min(e.back,e.soll))+' von '+abgN(e.soll)+' zurück · Nr. '+esc(a.nr)+'</span></button>'}).join("")+'</div></div>');/* 1.155: unter den Gruppen (Jürgen) */
- rTileBind(A)}
+ /* 1.181: auch frei (manuell) mitgegebene Artikel – Zählen legt sie mit genau dem Namen aus der Packliste an (Jürgen 16.11.) */
+ const fk=e=>rManFind("",e.name)||"M:"+(rNorm(e.name)||Date.now());
+ g.insertAdjacentHTML("afterend",'<div id="rpksec"><h3 class="rpkh">Aus der Packliste <span class="mute">'+(A.length+F.length)+'</span></h3><div class="rgrid">'+A.map((a,i)=>{const e=E[i],c=rs.items[a.nr]?rs.items[a.nr].q:0,dn=Math.min(e.back,e.soll)>=e.soll;
+  return '<button class="rtile rpkt'+(dn?' dn':'')+'" data-ra="'+esc(a.nr)+'">'+rBdg(c)+'<b>'+rLbl(a.name)+'</b><span class="mute">'+(dn?'✓ ':'')+abgN(Math.min(e.back,e.soll))+' von '+abgN(e.soll)+' zurück · Nr. '+esc(a.nr)+'</span></button>'}).join("")+
+  F.map((e,i)=>{const k=fk(e),c=rs.items[k]?rs.items[k].q:0,dn=Math.min(e.back,e.soll)>=e.soll;
+  return '<button class="rtile rpkt rpkm'+(dn?' dn':'')+'" data-rmp="'+i+'">'+rBdg(c)+'<b>'+rLbl(e.name)+'</b><span class="mute">'+(dn?'✓ ':'')+abgN(Math.min(e.back,e.soll))+' von '+abgN(e.soll)+' zurück · manuell</span></button>'}).join("")+'</div></div>');/* 1.155: unter den Gruppen (Jürgen) */
+ rTileBind(A);
+ document.querySelectorAll("[data-rmp]").forEach(b=>b.onclick=ev=>{const e=F[+b.dataset.rmp];if(!e)return;const k=fk(e),base={nr:"",name:e.name,g:"Manuell",u:"",manual:true};
+  if(ev.target.closest("[data-rm]")){rAdd(k,base,-1);return retEdit()}rPad({nr:k,name:e.name,lbl:"Manuell · aus der Packliste"},base)})}
+/* frei mitgegebene Artikel einer Packliste (ohne Artikelnummer aus der Artikelliste) */
+function abgFree(B){const K=rKat();return (B&&B.L||[]).filter(e=>e.soll>0&&e.name&&!(e.code&&K.some(k=>artCode(k.nr)===e.code)))}
+function abgFreeOf(ord){try{const p=abgPackOf(ord);return p?abgFree(abgBal(p,rs&&rs.id?{id:rs.id,items:rs.items}:undefined)):[]}catch(e){return []}}
+/* ähnliche Namen: gleiche Wörter/Zahlen, kleine Tippfehler */
+function abgSimN(x){return String(x||"").toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g," ").trim()}
+function abgLev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m||!n)return m||n;let pr=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const cu=[i];for(let j=1;j<=n;j++)cu[j]=Math.min(pr[j]+1,cu[j-1]+1,pr[j-1]+(a[i-1]===b[j-1]?0:1));pr=cu}return pr[n]}
+function abgSimilar(a,b){const x=abgSimN(a),y=abgSimN(b);if(!x||!y)return false;if(x===y)return true;const xs=x.replace(/ /g,""),ys=y.replace(/ /g,"");if(xs===ys)return true;
+ if((xs.match(/\d+/g)||[]).join()!==(ys.match(/\d+/g)||[]).join())return false;/* andere Zahlen (2m / 5m, 32A / 63A) = anderer Artikel */
+ if(abgLev(xs,ys)<=Math.max(2,Math.floor(Math.min(xs.length,ys.length)*.2)))return true;
+ const tx=x.split(" "),ty=y.split(" "),nx=tx.filter(t=>/\d/.test(t)).sort().join(),ny=ty.filter(t=>/\d/.test(t)).sort().join();if(nx!==ny)return false;
+ const inter=tx.filter(t=>ty.includes(t)).length;return inter/Math.max(tx.length,ty.length)>=.6||(xs.length>=5&&(xs.includes(ys)||ys.includes(xs)))}
 function rAbgInject(){try{if(!abgOk())return;const ex=document.getElementById("rabg");if(ex)ex.remove();let p=null,B=null;
  if(view==="retedit"&&rs){p=abgPackOf(rs.ord);if(p)B=abgBal(p,{id:rs.id,items:rs.items})}
  else if(view==="retopen"){const r=rets.find(x=>x.id===curRet);if(r){p=abgPackOf(r.ord);if(p)B=abgBal(p)}}

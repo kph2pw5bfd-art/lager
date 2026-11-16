@@ -1,4 +1,4 @@
-const APPV="1.180";
+const APPV="1.181";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -204,12 +204,20 @@ function rEditHead(r){const o=document.createElement("div");o.className="ov";
 function rManBtn(){const q=(rs&&rs.q||"").trim();return rScanBtn()+'<button class="mbtn" id="rman" type="button">'+(q?'„'+esc(q)+'“ manuell eintragen':'+ Artikel nicht in der Liste? Manuell eintragen')+'</button>'}
 function rManBind(){const b=$("#rman");if(b)b.onclick=()=>rManDlg((rs&&rs.q||"").trim());const c=$("#rscanb");if(c)c.onclick=()=>rScanCam()}
 function rManDlg(pre,pnr){const o=document.createElement("div");o.className="ov";
- o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Artikel manuell eintragen</b><p class="mute" style="margin:4px 0 10px">Wird als „fehlender Artikel“ vorgemerkt, damit er in die Artikelliste aufgenommen werden kann.</p><label class="mute" for="mnm">Artikelname <span class="rq">*</span></label><input id="mnm" autocomplete="off"><label class="mute" for="mnr">Artikelnummer (falls bekannt)</label><input id="mnr" inputmode="numeric" autocomplete="off"><label class="mute" for="mq">Stückzahl</label><input id="mq" type="number" inputmode="numeric" min="1" value="1"><div class="row"><button class="btn ghost" id="mcn">Abbrechen</button><button class="btn" id="mok">Hinzufügen</button></div></div>';
+ o.innerHTML='<div class="card" style="width:100%;max-width:380px;margin:0"><b>Artikel manuell eintragen</b><p class="mute" style="margin:4px 0 10px">Wird als „fehlender Artikel“ vorgemerkt, damit er in die Artikelliste aufgenommen werden kann.</p><div id="mpks"></div><label class="mute" for="mnm">Artikelname <span class="rq">*</span></label><input id="mnm" autocomplete="off"><label class="mute" for="mnr">Artikelnummer (falls bekannt)</label><input id="mnr" inputmode="numeric" autocomplete="off"><label class="mute" for="mq">Stückzahl</label><input id="mq" type="number" inputmode="numeric" min="1" value="1"><div class="row"><button class="btn ghost" id="mcn">Abbrechen</button><button class="btn" id="mok">Hinzufügen</button></div></div>';
  document.body.appendChild(o);const g=i=>o.querySelector("#"+i);g("mnm").value=pre||"";if(pnr)g("mnr").value=pnr;g("mcn").onclick=()=>o.remove();
  g("mok").onclick=()=>{const name=g("mnm").value.trim().replace(/\s+/g," "),nr=g("mnr").value.trim(),q=Math.max(1,parseInt(g("mq").value,10)||1);if(!name){g("mnm").classList.add("bad");return errBox("Bitte den Artikelnamen eingeben.")}
   const cat=rKat().find(a=>(nr&&rNorm(a.nr)===rNorm(nr))||String(a.name).trim().toLowerCase()===name.toLowerCase());o.remove();
   if(cat){rAdd(cat.nr,{nr:cat.nr,name:cat.name,g:cat.g,u:cat.u||""},q);rs.q="";retEdit();toast("Ist schon in der Liste: "+cat.name+" (+"+q+")",1);return}
-  const key=rManFind(nr,name)||"M:"+(rNorm(nr)||rNorm(name)||Date.now());rAdd(key,{nr,name,g:"Manuell",u:"",manual:true},q);rs.q="";retEdit();toast("+"+q+" "+name+" (manuell)",1);rLogMissing(name,nr,q)};
+  const put=nm=>{const key=rManFind(nr,nm)||"M:"+(rNorm(nr)||rNorm(nm)||Date.now());rAdd(key,{nr,name:nm,g:"Manuell",u:"",manual:true},q);rs.q="";retEdit();toast("+"+q+" "+nm+" (manuell)",1);if(!PF.some(f=>f.name===nm))rLogMissing(nm,nr,q)};
+  /* 1.181: ähnlich wie ein frei mitgegebener Artikel aus der Packliste? → nachfragen (Jürgen 16.11.) */
+  const sim=!nr&&!PF.some(f=>abgSimN(f.name)===abgSimN(name))&&PF.find(f=>abgSimilar(f.name,name));
+  if(sim)return ask2("Ist „"+name+"“ derselbe Artikel wie „"+sim.name+"“ aus der Packliste?","Ja, „"+sim.name+"“","Nein, neuer Artikel",()=>put(sim.name),()=>put(name));
+  put(PF.find(f=>abgSimN(f.name)===abgSimN(name))?PF.find(f=>abgSimN(f.name)===abgSimN(name)).name:name)};
+ /* 1.181: frei mitgegebene Artikel aus der Packliste als Vorschläge – antippen statt tippen */
+ const PF=typeof abgFreeOf==="function"&&rs?abgFreeOf(rs.ord):[];
+ if(PF.length){g("mpks").innerHTML='<div class="mute" style="font-size:13px;margin:0 0 6px">Aus der Packliste (manuell mitgegeben) – antippen:</div><div class="mpkc">'+PF.map((f,i)=>'<button type="button" data-mpk="'+i+'">'+esc(f.name)+'<small>'+f.soll+' raus'+(f.back?' · '+Math.min(f.back,f.soll)+' zurück':'')+'</small></button>').join("")+'</div>';
+  o.querySelectorAll("[data-mpk]").forEach(b=>b.onclick=()=>{const f=PF[+b.dataset.mpk];g("mnm").value=f.name;g("mnr").value="";o.querySelectorAll("[data-mpk]").forEach(x=>x.classList.toggle("on",x===b));g("mq").focus();g("mq").select()})}
  setTimeout(()=>(pre?g("mq"):g("mnm")).focus(),60)}
 
 /* Artikel scannen im Retourschein: Code lesen, dann Zahlenfeld. Bei Artikeln mit ID zählen nur die ersten 4 Ziffern (1234–56 -> 1234). */
