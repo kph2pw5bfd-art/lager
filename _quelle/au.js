@@ -48,7 +48,7 @@ function auCard(I){const p=I.p,mine=auIsMine(p),pills=[];
  if(I.g.dev&&!I.done)pills.push(abgTag(I.g.dev+(I.g.dev===1?" Abweichung":" Abweichungen")+" zum Packschein","or"));
  if(I.B.zuviel&&!I.done)pills.push(abgTag(I.B.zuviel+" mehr zurück","grey"));
  const sub="Dispo "+pkDM(p.db)+" – "+pkDM(p.de)+(I.over?" · Dispo abgelaufen":!I.done&&I.st.k==="herr"?" · Herrichten heute":"");
- return '<button class="aucard'+(mine?' mine':'')+(I.hot?' hot':'')+'" type="button" data-au="'+esc(p.id)+'"><span class="auct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+abgTag(I.lab,I.cls==="b"?"blue":I.cls==="g"?"grey":I.cls)+'</span>'+
+ return '<button class="aucard'+(mine?' mine':' other')+(I.hot?' hot':'')+'" type="button" data-au="'+esc(p.id)+'"><span class="auct"><b>'+esc(p.ev||"Ohne Veranstaltung")+'</b>'+abgTag(I.lab,I.cls==="b"?"blue":I.cls==="g"?"grey":I.cls)+'</span>'+
   '<small class="aum">'+esc(p.ord||"–")+(p.pl?' · '+esc(shortName(p.pl)):'')+(typeof mfN==="function"&&mfN(p)?' · 📷 '+mfN(p):'')+'</small><small class="aum">'+sub+'</small>'+
   '<span class="aus">'+I.S.map(s=>'<i class="'+s.c+'"></i>').join("")+'</span>'+auStepL+(pills.length?'<span class="aupills">'+pills.join("")+'</span>':'')+'</button>'}
 function auList(){const t0=pkDay(Date.now()),q=jvNorm(auq);
@@ -60,9 +60,10 @@ function auView(){if(!can("au_s")){view="start";return startView()}$("#t").textC
  const noMine=!L.mine.length&&!packs.some(auIsMine);
  $("#app").innerHTML=chips([["lauf","Laufend"],["done","Erledigt"],["alle","Alle"]],auf,"data-auf")+
   '<input id="auq" type="search" placeholder="Suchen: Veranstaltung, Auftrag, Projektleiter" autocomplete="off" style="margin:0 0 10px">'+
-  '<div class="aug"><b>Meine Aufträge</b><small>'+L.mine.length+'</small></div>'+
+  /* 1.183: eigene Aufträge abgehoben (Jürgen 17.11.: Bereiche mit Überschrift, beide offen; andere schlichter) */
+  '<h3 class="auh mine">Meine Aufträge <span>'+L.mine.length+'</span></h3>'+
   (L.mine.length?L.mine.map(auCard).join(""):'<div class="card mute" style="font-size:14px">'+(noMine?'Keine Packliste mit '+(nm0?'„'+esc(nm0)+'“':'deinem Namen')+' als Projektleiter.':empty)+'</div>')+
-  '<div class="audiv"></div><div class="aug"><b>Alle anderen Aufträge</b><small>'+L.rest.length+'</small></div>'+
+  '<h3 class="auh other">Andere Projektleiter <span>'+L.rest.length+'</span></h3>'+
   (L.rest.length?L.rest.map(auCard).join(""):'<div class="card mute" style="font-size:14px">'+empty+'</div>')+
   '<p class="mute" style="font-size:12px;margin:12px 2px 0;line-height:1.4">Eigene Aufträge: Projektleiter in der Packliste = dein Name. Erledigt = Endretoure ohne Fehlmaterial oder mit dem Projektleiter geklärt. Geprüft = das Lager hat die Endretoure geprüft.</p>';
  const qi=$("#auq");qi.value=auq;qi.oninput=()=>{auq=qi.value;const pos=qi.selectionStart;auView();const n=$("#auq");n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}};

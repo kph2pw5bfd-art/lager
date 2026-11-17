@@ -43,7 +43,7 @@ async function run(b,role,rolle,extra,fn){const docs=base.concat(rolle?[{col:"ro
   await p.click('[data-g="au"]');await p.waitForTimeout(300);
   const mine=await p.$$eval(".aucard.mine b",l=>l.map(x=>x.innerText)),rest=await p.$$eval(".aucard:not(.mine) .auct b",l=>l.map(x=>x.innerText));
   ok("Eigene (auch „Hartmann Jürgen“) oben, rot zuerst",mine.join(",")==="Stadtfest Eisenstadt,Firmenfeier Parndorf,Weihnachtsmarkt Spittelberg 2026",mine.join(","));
-  ok("Trennstrich + andere",!!(await p.$(".audiv"))&&rest.join(",")==="Messe Wieselburg",rest.join(","));
+  ok("Überschrift Andere Projektleiter + andere",!!(await p.$(".auh.other"))&&rest.join(",")==="Messe Wieselburg",rest.join(","));
   console.log("Karten:",await T(".aucard"));await p.screenshot({path:S+"au_liste.png",fullPage:true});
   await p.click('[data-auf="done"]');await p.waitForTimeout(200);ok("Erledigt-Filter",(await T(".aucard .auct b"))==="Sommerfest Rust | Winterwunder Mörbisch",await T(".aucard .auct b"));
   await p.click('[data-auf="lauf"]');await p.waitForTimeout(200);await p.fill("#auq","wiesel");await p.waitForTimeout(200);ok("Suche",(await T(".aucard .auct b"))==="Messe Wieselburg");await p.fill("#auq","");await p.waitForTimeout(200);
