@@ -581,3 +581,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.183 (Jürgen, 17.11.): Meine Aufträge – eigene abgehoben
 - Gewählt: zwei Bereiche mit Überschrift, beide offen. „MEINE AUFTRÄGE (n)“ (blaue Zahl) mit Karten `.aucard.mine` 3 px dunkelblau (Dunkelmodus #6f9be6), darunter mit Abstand „ANDERE PROJEKTLEITER (n)“ (grau) mit schlichteren Karten `.aucard.other` (1,5 px, Titel 16 px, rot ohne Innenschatten). Trennstrich `.audiv` entfällt. au.js `auView`/`auCard`, CSS in build.py Zeile 17. `au_t.js` angepasst.
+
+## 1.184 (Jürgen, 23.11.): Kein Material (z. B. „Übernachtungskosten“)
+- PL schreiben Kosten/Leistungen als freie Position in den Packschein (keine Artikelnummer, Namen verschieden). Packliste: Position antippen → „Kein Material – rausnehmen (z. B. Kosten)“ (nur bei Positionen, die nicht in der Artikelliste stehen). `packh h_<Pos>.km=true`, Name in docs `kmat` (id = Name normalisiert, `kmId`) → in allen Packlisten automatisch raus (Jürgens Wahl „Merken, automatisch raus“). Antippen einer rausgenommenen Position → „Doch Material“: km=false + Name vergessen.
+- `kmat.js` (nach rwall.js): `pkKM(x,h)`; `pkL55` liefert auch für Kein Material true → wie Lager 55 nicht im Fortschritt, keine Abweichung, nicht in Info-Mail/Monteur/Scan. Eigene graue Gruppe „Kein Material – nicht herrichten“; nicht im Abgleich (abg.js), nicht im PDF (pkdruck.js), nicht in Meine Aufträge → Material (aumat.js), nicht im Assistenten (jvfrag.js).
+- Test `tests/kmat_t.js`.

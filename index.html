@@ -570,7 +570,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.183";
+<script>const APPV="1.184";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -1557,7 +1557,7 @@ function pkPS(x,h){const need=pkNeed(x,h);if(!h)return{s:"open",need,alt:[]};con
 const pkOver=(x,h,st)=>st.s==="ok"&&h&&typeof h.q==="number"&&h.q>st.need?h.q-st.need:0;
 const pkDevRow=(x,h,st)=>pkNbN(x,h)>0||st.s==="part"||st.alt.length>0||pkOver(x,h,st)>0||!!(h&&h.fm==="lager"&&x.f>0&&st.s!=="open");
 let pkScanHl=null;
-function pkL55(x,h){if(h&&typeof h.l55==="boolean")return h.l55;const k=pkKat(x);return !!(k&&k.l55)}
+function pkL55(x,h){if(typeof pkKM==="function"&&pkKM(x,h))return true;/* 1.184 Kein Material verhält sich wie Lager 55 */if(h&&typeof h.l55==="boolean")return h.l55;const k=pkKat(x);return !!(k&&k.l55)}
 function pkProg(P){if(P&&P._z)return pkZProg(P._p,P._z);return pkProgOf(P,null,!!(pkH(P).fin&&pkH(P).fin.t))}
 function pkProgOf(P,zps,fin){const H=pkH(P);let d=0,dev=0,n=0,l55=0;pkItems(P).forEach(o=>{if((o.z||null)!==zps)return;const x=o.x,h=H[o.k];if(pkL55(x,h)){l55++;return}n++;const st=pkPS(x,h);if(st.s!=="open")d++;if(pkDevRow(x,h,st)||(h&&h.fm==="lager"&&x.f>0))dev++});
  if(typeof pkXz==="function")dev+=pkXz(P,zps).length;
@@ -1661,11 +1661,12 @@ function pkField(p,key,rows0){const z=key==="main"?null:pkZOf(p,key.slice(1)),ps
   '<span class="pkfsub'+(late?' late':'')+'">Herrichten '+esc(pkWd(day))+(!z&&pkShifted(p)?' (verschoben'+(pkHd(p).why?' – '+esc(pkHd(p).why):'')+')':'')+(z&&(pkH(p)["zd_"+pkZK(ps)]||{}).why?' ('+esc(pkH(p)["zd_"+pkZK(ps)].why)+')':'')+(late?' – noch nicht hergerichtet':'')+' · '+nPos+(nPos===1?' Position':' Positionen')+(fin&&fo&&fo.by?' · abgeschlossen von '+esc(nmA(fo,"by"))+', '+fmt(fo.t).slice(0,6):'')+'</span></button>'+
   '<button type="button" class="pkgear" data-pkfg="'+esc(key)+'" aria-label="Einstellungen Packschein '+esc((z?z.ps:p.ps)||"")+'">'+PKGEAR+'</button></div>'+
   '<button type="button" class="pkftiles" data-pkfk="'+esc(key)+'" aria-label="Aufklappen">'+left+mid+right+'</button><div class="pkbar pkfbar"><i style="width:'+pct+'%"></i></div>'+(typeof mfFieldHtml==="function"?mfFieldHtml(p,ps,fin):'');
- if(open){const rows=mine.filter(r=>!r.l55&&(filt==="alle"||r.st.s!=="ok")),r55=filt==="alle"?mine.filter(r=>r.l55):[],lock=mine.every(r=>pkRowFin(p,r.i)),nOff=mine.filter(r=>!r.l55&&r.st.s!=="ok").length;
+ if(open){const rows=mine.filter(r=>!r.l55&&(filt==="alle"||r.st.s!=="ok")),r55=filt==="alle"?mine.filter(r=>r.l55&&!pkKM(r.x,r.h)):[],rkm=filt==="alle"?mine.filter(r=>r.l55&&pkKM(r.x,r.h)):[],lock=mine.every(r=>pkRowFin(p,r.i)),nOff=mine.filter(r=>!r.l55&&r.st.s!=="ok").length;
   h+='<div class="pkfbody"><div class="pkfchips"><button type="button" class="'+(filt==="alle"?'on':'')+'" data-pkff="'+esc(key)+'" data-v="alle">Alle</button><button type="button" class="'+(filt==="offen"?'on':'')+'" data-pkff="'+esc(key)+'" data-v="offen">Noch offen ('+nOff+')</button></div>'+
    (lock?'':'<button class="mbtn sbtn pkfscan" type="button" data-pkfscan="1"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M16.5 8v8"/></svg>Artikel scannen</button>')+
    '<div class="pkl">'+(rows.length?pkFRows(p,rows):'<div class="mute" style="padding:10px 0">'+(filt==="offen"?'Nichts mehr offen.':'Keine Positionen.')+'</div>')+
    (r55.length?'<div class="pkg pkg55">Lager 55</div>'+r55.map(({x,i})=>'<div class="pkp pk-l55"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+'<em class="pk55">holt Fahrer/Monteur'+(x.f>0?' · davon '+esc(pkNum(x.f))+' Fremdmiete':'')+'</em></span></div>').join(""):'')+
+   (rkm.length?'<div class="pkg pkgkm">Kein Material – nicht herrichten</div>'+rkm.map(({x,i,h})=>'<div class="pkp pk-l55 pk-km"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(x.t)+'<em>'+(h&&h.km===true?'rausgenommen von '+esc(nmA(h,"by")):'automatisch rausgenommen')+'</em></span></div>').join(""):'')+
    (typeof pkXHtml==="function"?pkXHtml(p,fin,ps,true):'')+'</div>'+
    '<button type="button" class="pkfclose" data-pkfk="'+esc(key)+'">Zuklappen ▴</button></div>'}
  else h+='<button type="button" class="pkfmore" data-pkfk="'+esc(key)+'">Antippen zum Aufklappen ▾</button>';
@@ -1771,6 +1772,7 @@ function pkFmAsk(x,cb){const o=document.createElement("div");o.className="ov";
  document.body.appendChild(o);o.querySelector("#fml").onclick=()=>{o.remove();cb("lager")};o.querySelector("#fmm").onclick=()=>{o.remove();cb("miete")};o.querySelector("#fmx").onclick=()=>o.remove()}
 /* Menge, Alternative, Fremdmiete bearbeiten */
 function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k]||{};let fm=h.fm||"",alt=(h.alt||[]).map(a=>({...a})),pick=null;
+ if(pkKM(x,h))return kmDlg(P,i);
  if(pkL55(x,h)){const o=document.createElement("div");o.className="ov";
   o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b style="font-size:17px">'+esc(pkName(x))+'</b>'+(x.a?' <span class="mute">'+esc(x.a)+'</span>':'')+'<p class="mute" style="margin:4px 0 12px">Laut Packliste: '+pkNum(x.n)+(x.u?' '+esc(x.u):'')+'. Steht auf <b>Lager 55</b> – holt der Fahrer oder Monteur selbst.</p>'+
    '<button class="btn" id="p55s" type="button">Packe ich doch selbst</button><button class="btn ghost" id="p55x" type="button" style="margin-top:8px">Schließen</button></div>';
@@ -1793,6 +1795,7 @@ function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH
   '<input id="penbg" autocomplete="off" placeholder="Grund (optional)" style="margin-top:6px">'+
   '<div class="row" style="margin-top:14px"><button class="btn ghost" id="pex" type="button">Abbrechen</button><button class="btn" id="pes" type="button">Speichern</button></div>'+
   '<button class="btn ghost" id="pe55" type="button" style="margin-top:10px">Holt Fahrer/Monteur – Lager 55</button>'+
+  (pkKat(x)?'':'<button class="btn ghost" id="pekm" type="button" style="margin-top:8px">Kein Material – rausnehmen (z. B. Kosten)</button>')+
   '<button class="lnk" id="per" type="button" style="margin-top:6px;color:var(--bad)">Position zurücksetzen</button></div>';
  document.body.appendChild(o);const g=id=>o.querySelector("#"+id),qi=g("peq");
  if(h.nb){g("penb").value=String(+h.nb.n||"");g("penbw").value=h.nb.w||"";g("penbg").value=h.nb.why||""}
@@ -1819,6 +1822,7 @@ function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH
  if(g("pekat"))g("pekat").onclick=()=>pkKatAdd(P,x,o);
  g("per").onclick=()=>{o.remove();pkHSet(P,{[k]:null})};
  g("pe55").onclick=()=>{o.remove();pkHSet(P,{[k]:{l55:true,by:me,...tabAs("by"),t:Date.now()}})};
+ if(g("pekm"))g("pekm").onclick=()=>{o.remove();kmSet(P,i,true)};
  g("pes").onclick=()=>{const pend=g("pean").value&&g("peat").value.trim();if(pend)g("peadd").click();const q=qv();if(x.f>0&&!fm&&(q!==null||alt.length))return toast("Bitte zuerst klären: aus dem Lager oder zugemietet.");
   const nn=nbv(),nw=g("penbw").value.trim(),ng=g("penbg").value.trim(),nb=nn>0?{n:nn,w:nw,why:ng,by:h.nb&&+h.nb.n===nn&&(h.nb.w||"")===nw&&(h.nb.why||"")===ng?h.nb.by:me,t:h.nb&&+h.nb.n===nn&&(h.nb.w||"")===nw&&(h.nb.why||"")===ng?h.nb.t:Date.now(),...(h.nb&&h.nb.pl&&+h.nb.n===nn&&(h.nb.w||"")===nw?{pl:true}:{})}:null;
   o.remove();if(q===null&&!alt.length)return pkHSet(P,{[k]:fm||nb?{fm,...(nb?{nb}:{}),by:me,...tabAs("by"),t:Date.now()}:null});
@@ -2303,7 +2307,7 @@ function jvWithArt(q,fn,none){const R=jvArtFind(q);if(!R)return none?none():{say
    draußen = hergerichtet (bzw. bei laufender/abgelaufener Dispo laut Packschein), ohne Fremdmiete, + Alternativen, − schon im Retourschein */
 function jvArtCnt(p,m){if(p.art==="verl"&&pkRoot(p)!==p)m=()=>false;const H=pkH(p),k=pkState(p).k,run=k==="over"||k==="out"||k==="back";let out=0,plan=0,back=0,l55=0;
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),own=Math.max(0,(+x.n||0)-(h&&h.fm==="lager"?0:(+x.f||0))-pkNbN(x,h));
-  if(m(artCode(x.a),x.t+" "+pkName(x))){if(pkL55(x,h)){if(run){out+=own;l55+=own}else plan+=own}else if(st.s==="open"){if(run)out+=own;else plan+=own}else out+=(h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st)}
+  if(m(artCode(x.a),x.t+" "+pkName(x))){if(typeof pkKM==="function"&&pkKM(x,h))return;if(pkL55(x,h)){if(run){out+=own;l55+=own}else plan+=own}else if(st.s==="open"){if(run)out+=own;else plan+=own}else out+=(h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st)}
   if(st.s!=="open")(st.alt||[]).forEach(a=>{if(m(artCode(a.a),a.t))out+=+a.n||0})});
  if(typeof pkX==="function")pkX(p).forEach(e=>{if(m(artCode(e.a),(e.nm||"")+" "+pkXName(e)))out+=+e.n||0});
  pkRets(p).forEach(r=>Object.values(rIt(r)).forEach(it=>{if(m(artCode(it.nr),it.name))back+=+it.q||0}));
@@ -2761,6 +2765,7 @@ function abgBal(p,ov){if(p&&p.art==="verl"&&pkRoot(p)!==p)return{p,L:[],R:[],mis
  const get=(k,c,nm)=>M[k]=M[k]||{k,code:c||"",name:nm,raus:0,nach:0,fr:0,l55:0,soll:0,back0:0,zin:0,zout:0,back:0,via55:0};
  const add=(c,nm,zus,q,f)=>{const e=get(abgKey(c,nm),c,nm);e.soll+=q;e.fr+=f;if(zus)e.nach+=q+f;else e.raus+=q+f};
  pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],st=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f-pkNbN(x,h));
+  if(typeof pkKM==="function"&&pkKM(x,h))return;/* 1.184 */
   if(pkL55(x,h)){get(abgKey(artCode(x.a),pkName(x)),artCode(x.a),pkName(x)).l55+=own;return}
   add(artCode(x.a),pkName(x),!!o.z,(st.s==="open"?own:h&&h.ok?own:Math.min(own,+st.q||0))+pkOver(x,h,st),f);
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const k=pkKat({a:a.a});add(artCode(a.a),k?k.name:a.t,!!o.z,+a.n||0,0)})});
@@ -3707,7 +3712,7 @@ const pkDrU=r=>r.u||"Stk";
 const pkDrQ=(n,u)=>pkNum(n)+" "+(u||"Stk");
 /* Zeilen in epirent-Reihenfolge */
 function pkDrRows(P){const H=pkH(P),IT=pkItems(P),rows=[];
- IT.forEach((o,i)=>{const x=o.x,h=H[o.k],l55=pkL55(x,h),k=pkAK(x),part={i,x,h,st:pkPS(x,h),l55,f:+x.f||0,fm:(h&&h.fm)||"",z:o.z||null,fin:pkRowFin(P,i)};
+ IT.forEach((o,i)=>{const x=o.x,h=H[o.k];if(typeof pkKM==="function"&&pkKM(x,h))return;/* 1.184 */const l55=pkL55(x,h),k=pkAK(x),part={i,x,h,st:pkPS(x,h),l55,f:+x.f||0,fm:(h&&h.fm)||"",z:o.z||null,fin:pkRowFin(P,i)};
   let r=o.z&&!l55?rows.find(q=>!q.z&&!q.l55&&q.k===k):null;
   if(!r){r={k,pos:(o.z?"Z ":"")+(x.p||String(i+1)),name:pkName(x),a:x.a||"",u:x.u||"Stk",z:o.z||null,l55,items:[]};rows.push(r)}
   r.items.push(part)});
@@ -4610,7 +4615,7 @@ document.head.appendChild(st)}catch(e){}})();
 let amF="alle",amQ="",amOpen={},amPk=null;
 function amRows(p,B){const H=pkH(p),M={},num=v=>pkNum(v);
  let ord=0;const get=(k,nm,code,u)=>M[k]=M[k]||{k,first:ord++,name:nm,code:code||"",u:u||"Stk",ps:0,zus:{},dev:[],ers:[],devBy:"",x:0,raus:0,fr:0,l55:0,back:0,op:0};
- pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],c=artCode(x.a),nm=pkName(x),e=get(abgKey(c,nm),nm,c,x.u),st=pkPS(x,h);e.ps+=+x.n||0;if(st.s==="open"&&!pkL55(x,h)){const f=h&&h.fm==="lager"?0:(+x.f||0);e.op+=Math.max(0,(+x.n||0)-f-pkNbN(x,h))}if(o.z)e.zus[o.z]=(e.zus[o.z]||0)+(+x.n||0);
+ pkItems(p).forEach(o=>{const x=o.x,h=H[o.k];if(typeof pkKM==="function"&&pkKM(x,h))return;const c=artCode(x.a),nm=pkName(x),e=get(abgKey(c,nm),nm,c,x.u),st=pkPS(x,h);e.ps+=+x.n||0;if(st.s==="open"&&!pkL55(x,h)){const f=h&&h.fm==="lager"?0:(+x.f||0);e.op+=Math.max(0,(+x.n||0)-f-pkNbN(x,h))}if(o.z)e.zus[o.z]=(e.zus[o.z]||0)+(+x.n||0);
   if(pkDevRow(x,h,st)&&h){let w="";try{w=nmA(h,"by")}catch(er){}e.devBy=[w,h.t?fmt(h.t).slice(0,6):""].filter(Boolean).join(" ")}
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const kk=pkKat({a:a.a}),an=kk?kk.name:a.t,ac=artCode(a.a),ea=get(abgKey(ac,an),an,ac,x.u);if(!ea.ers.includes(nm))ea.ers.push(nm)})});
  if(typeof pkX==="function")pkX(p).forEach(e=>{const c=artCode(e.a),nm=pkXName(e),r=get(abgKey(c,nm),nm,c,e.u);r.x+=+e.n||0});
@@ -4656,7 +4661,7 @@ function amBody(p,B,I){const R=amRows(p,B),ph2=!!(B.R&&B.R.length),endish=!!(B.h
 function amZus(p){if(amF!=="alle"||!(p.zus||[]).length)return "";const H=pkH(p),n=v=>pkNum(v),q=amQ.trim(),T=q?dxNorm(q).split(" ").filter(Boolean):[];
  return (p.zus||[]).map(z=>{const ps=String(z.ps||""),zf=pkZFin(p,z),za=zf?null:auHerrAll(p,ps),g=pkZProg(p,ps);
   const st=zf?"hergerichtet "+fmt(zf.t).slice(0,6)+" von "+nmA(zf,"by"):za?"hergerichtet"+(za.t?" "+fmt(za.t).slice(0,6):"")+(za.who?" von "+za.who:""):g.d?"wird hergerichtet: "+g.d+" von "+g.n+" Positionen":"herrichten "+pkWd(pkZDay(p,z));
-  let rows="";pkItems(p).forEach(o=>{if(o.z!==ps)return;const x=o.x,h=H[o.k],l55=pkL55(x,h),pst=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f-pkNbN(x,h)),nm=pkName(x),u=" "+(x.u||"Stk");
+  let rows="";pkItems(p).forEach(o=>{if(o.z!==ps)return;if(typeof pkKM==="function"&&pkKM(o.x,H[o.k]))return;const x=o.x,h=H[o.k],l55=pkL55(x,h),pst=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f-pkNbN(x,h)),nm=pkName(x),u=" "+(x.u||"Stk");
    if(T.length&&!T.every(t=>(" "+dxNorm(nm+" "+(x.a||""))+" ").includes(t)))return;
    const raus=l55?null:pst.s==="open"?null:h&&h.ok?own:Math.min(own,+pst.q||0)+pkOver(x,h,pst),dev=!l55&&pkDevRow(x,h,pst),notes=[];
    (pst.s!=="open"?pst.alt||[]:[]).forEach(al=>notes.push('<small class="or">stattdessen '+n(+al.n||0)+u+' '+esc(al.t)+'</small>'));
@@ -5089,6 +5094,31 @@ function pkRBind(){document.querySelectorAll("[data-pkrd]").forEach(b=>b.onclick
 '.pkrl .pkl3,.pkrc .pkbs{text-align:right}.pkrc .pkbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}'+
 '.pkline.rk-over,.pkcard.rk-over{border-color:#c62828}.pkline.rk-part,.pkcard.rk-part{border-color:#e65100}'+
 '.pksum b.part{color:#e65100}';document.head.appendChild(st)}catch(e){}})();
+
+/* ===== „Kein Material“ (1.184, Jürgen 23.11.) =====
+   Projektleiter schreiben z. B. „Übernachtungskosten“ als Position in den Packschein (ohne Artikelnummer, Namen unterschiedlich).
+   In der Packliste Position antippen → „Kein Material – rausnehmen“: packh h_<Pos>.km = true. Name wird gemerkt (docs kmat, id = Name normalisiert)
+   und in allen Packlisten automatisch rausgenommen (nur Positionen, die nicht in der Artikelliste stehen). „Doch Material“: km=false + Name vergessen.
+   Technisch wie Lager 55: pkL55() liefert auch für Kein Material true (→ nicht im Fortschritt, keine Abweichung, nicht in Info-Mail/Monteur/Scan),
+   aber eigene graue Gruppe, nicht im PDF, nicht im Abgleich, nicht in „Material“ bei Meine Aufträge. */
+let KMAT={};
+function kmNorm(t){return String(t||"").toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g," ").trim()}
+function kmId(t){return kmNorm(t).replace(/ /g,"_").slice(0,80)||"x"}
+function pkKM(x,h){if(!x)return false;if(h&&typeof h.km==="boolean")return h.km;if(pkKat(x))return false;return !!KMAT[kmId(x.t)]}
+async function kmSet(P,i,on){const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k]||{};
+ if(pkRowFin(P,i))return toast("Herrichten ist abgeschlossen – zum Ändern erst „Wieder öffnen“.",1);
+ const v={...h,km:on,by:me,...tabAs("by"),t:Date.now()};if(on){delete v.l55;delete v.ok;delete v.n;delete v.alt;delete v.nb}
+ await pkHSet(P,{[k]:v});
+ try{const id=kmId(x.t);if(on)await db.doc("kmat/"+id).set({n:x.t,by:me,...tabAs("by"),t:Date.now()});else if(KMAT[id])await db.doc("kmat/"+id).delete()}catch(e){}
+ toast(on?"„"+x.t+"“ ist kein Material – wird ab jetzt überall rausgenommen":"„"+x.t+"“ zählt wieder als Material",1)}
+function kmDlg(P,i){const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k]||{},o=document.createElement("div");o.className="ov";
+ const who=h.km===true&&h.by?nmA(h,"by")+", "+fmt(h.t).slice(0,6):"automatisch (Name gemerkt)";
+ o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b style="font-size:17px">'+esc(x.t)+'</b><p class="mute" style="margin:4px 0 12px">Laut Packschein: '+pkNum(x.n)+(x.u?' '+esc(x.u):'')+'. Als <b>Kein Material</b> rausgenommen – '+esc(who)+'.</p>'+
+  '<button class="btn" id="kmno" type="button">Doch Material</button><button class="btn ghost" id="kmx" type="button" style="margin-top:8px">Schließen</button></div>';
+ document.body.appendChild(o);o.querySelector("#kmx").onclick=()=>o.remove();o.querySelector("#kmno").onclick=()=>{o.remove();kmSet(P,i,false)}}
+(function kmWait(){if(typeof db==="undefined"||!db||typeof me==="undefined"||!me)return setTimeout(kmWait,1500);
+ try{db.collection("kmat").onSnapshot(s=>{KMAT={};s.docs.forEach(d=>KMAT[d.id]=d.data());if(typeof view!=="undefined"&&/^pack/.test(view))draw()})}catch(e){}})();
+(function(){try{const st=document.createElement("style");st.textContent='.pkg.pkgkm{color:#fff;background:#5b6573}.pkp.pk-km .pkt em{display:block;font-style:normal;font-size:13px;color:var(--mute)}.pkp.pk-km{opacity:1}';document.head.appendChild(st)}catch(e){}})();
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};

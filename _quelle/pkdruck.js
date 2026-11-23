@@ -8,7 +8,7 @@ const pkDrU=r=>r.u||"Stk";
 const pkDrQ=(n,u)=>pkNum(n)+" "+(u||"Stk");
 /* Zeilen in epirent-Reihenfolge */
 function pkDrRows(P){const H=pkH(P),IT=pkItems(P),rows=[];
- IT.forEach((o,i)=>{const x=o.x,h=H[o.k],l55=pkL55(x,h),k=pkAK(x),part={i,x,h,st:pkPS(x,h),l55,f:+x.f||0,fm:(h&&h.fm)||"",z:o.z||null,fin:pkRowFin(P,i)};
+ IT.forEach((o,i)=>{const x=o.x,h=H[o.k];if(typeof pkKM==="function"&&pkKM(x,h))return;/* 1.184 */const l55=pkL55(x,h),k=pkAK(x),part={i,x,h,st:pkPS(x,h),l55,f:+x.f||0,fm:(h&&h.fm)||"",z:o.z||null,fin:pkRowFin(P,i)};
   let r=o.z&&!l55?rows.find(q=>!q.z&&!q.l55&&q.k===k):null;
   if(!r){r={k,pos:(o.z?"Z ":"")+(x.p||String(i+1)),name:pkName(x),a:x.a||"",u:x.u||"Stk",z:o.z||null,l55,items:[]};rows.push(r)}
   r.items.push(part)});

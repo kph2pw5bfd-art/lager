@@ -159,7 +159,7 @@ function pkPS(x,h){const need=pkNeed(x,h);if(!h)return{s:"open",need,alt:[]};con
 const pkOver=(x,h,st)=>st.s==="ok"&&h&&typeof h.q==="number"&&h.q>st.need?h.q-st.need:0;
 const pkDevRow=(x,h,st)=>pkNbN(x,h)>0||st.s==="part"||st.alt.length>0||pkOver(x,h,st)>0||!!(h&&h.fm==="lager"&&x.f>0&&st.s!=="open");
 let pkScanHl=null;
-function pkL55(x,h){if(h&&typeof h.l55==="boolean")return h.l55;const k=pkKat(x);return !!(k&&k.l55)}
+function pkL55(x,h){if(typeof pkKM==="function"&&pkKM(x,h))return true;/* 1.184 Kein Material verhält sich wie Lager 55 */if(h&&typeof h.l55==="boolean")return h.l55;const k=pkKat(x);return !!(k&&k.l55)}
 function pkProg(P){if(P&&P._z)return pkZProg(P._p,P._z);return pkProgOf(P,null,!!(pkH(P).fin&&pkH(P).fin.t))}
 function pkProgOf(P,zps,fin){const H=pkH(P);let d=0,dev=0,n=0,l55=0;pkItems(P).forEach(o=>{if((o.z||null)!==zps)return;const x=o.x,h=H[o.k];if(pkL55(x,h)){l55++;return}n++;const st=pkPS(x,h);if(st.s!=="open")d++;if(pkDevRow(x,h,st)||(h&&h.fm==="lager"&&x.f>0))dev++});
  if(typeof pkXz==="function")dev+=pkXz(P,zps).length;
@@ -263,11 +263,12 @@ function pkField(p,key,rows0){const z=key==="main"?null:pkZOf(p,key.slice(1)),ps
   '<span class="pkfsub'+(late?' late':'')+'">Herrichten '+esc(pkWd(day))+(!z&&pkShifted(p)?' (verschoben'+(pkHd(p).why?' – '+esc(pkHd(p).why):'')+')':'')+(z&&(pkH(p)["zd_"+pkZK(ps)]||{}).why?' ('+esc(pkH(p)["zd_"+pkZK(ps)].why)+')':'')+(late?' – noch nicht hergerichtet':'')+' · '+nPos+(nPos===1?' Position':' Positionen')+(fin&&fo&&fo.by?' · abgeschlossen von '+esc(nmA(fo,"by"))+', '+fmt(fo.t).slice(0,6):'')+'</span></button>'+
   '<button type="button" class="pkgear" data-pkfg="'+esc(key)+'" aria-label="Einstellungen Packschein '+esc((z?z.ps:p.ps)||"")+'">'+PKGEAR+'</button></div>'+
   '<button type="button" class="pkftiles" data-pkfk="'+esc(key)+'" aria-label="Aufklappen">'+left+mid+right+'</button><div class="pkbar pkfbar"><i style="width:'+pct+'%"></i></div>'+(typeof mfFieldHtml==="function"?mfFieldHtml(p,ps,fin):'');
- if(open){const rows=mine.filter(r=>!r.l55&&(filt==="alle"||r.st.s!=="ok")),r55=filt==="alle"?mine.filter(r=>r.l55):[],lock=mine.every(r=>pkRowFin(p,r.i)),nOff=mine.filter(r=>!r.l55&&r.st.s!=="ok").length;
+ if(open){const rows=mine.filter(r=>!r.l55&&(filt==="alle"||r.st.s!=="ok")),r55=filt==="alle"?mine.filter(r=>r.l55&&!pkKM(r.x,r.h)):[],rkm=filt==="alle"?mine.filter(r=>r.l55&&pkKM(r.x,r.h)):[],lock=mine.every(r=>pkRowFin(p,r.i)),nOff=mine.filter(r=>!r.l55&&r.st.s!=="ok").length;
   h+='<div class="pkfbody"><div class="pkfchips"><button type="button" class="'+(filt==="alle"?'on':'')+'" data-pkff="'+esc(key)+'" data-v="alle">Alle</button><button type="button" class="'+(filt==="offen"?'on':'')+'" data-pkff="'+esc(key)+'" data-v="offen">Noch offen ('+nOff+')</button></div>'+
    (lock?'':'<button class="mbtn sbtn pkfscan" type="button" data-pkfscan="1"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M16.5 8v8"/></svg>Artikel scannen</button>')+
    '<div class="pkl">'+(rows.length?pkFRows(p,rows):'<div class="mute" style="padding:10px 0">'+(filt==="offen"?'Nichts mehr offen.':'Keine Positionen.')+'</div>')+
    (r55.length?'<div class="pkg pkg55">Lager 55</div>'+r55.map(({x,i})=>'<div class="pkp pk-l55"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(pkName(x))+(x.a?' <small>'+esc(x.a)+'</small>':'')+'<em class="pk55">holt Fahrer/Monteur'+(x.f>0?' · davon '+esc(pkNum(x.f))+' Fremdmiete':'')+'</em></span></div>').join(""):'')+
+   (rkm.length?'<div class="pkg pkgkm">Kein Material – nicht herrichten</div>'+rkm.map(({x,i,h})=>'<div class="pkp pk-l55 pk-km"><span class="pkc pkc55" aria-hidden="true"></span><span class="pkn" data-pe="'+i+'">'+esc(pkNum(x.n))+(x.u?' '+esc(x.u):'')+'</span><span class="pkt" data-pe="'+i+'">'+esc(x.t)+'<em>'+(h&&h.km===true?'rausgenommen von '+esc(nmA(h,"by")):'automatisch rausgenommen')+'</em></span></div>').join(""):'')+
    (typeof pkXHtml==="function"?pkXHtml(p,fin,ps,true):'')+'</div>'+
    '<button type="button" class="pkfclose" data-pkfk="'+esc(key)+'">Zuklappen ▴</button></div>'}
  else h+='<button type="button" class="pkfmore" data-pkfk="'+esc(key)+'">Antippen zum Aufklappen ▾</button>';
@@ -373,6 +374,7 @@ function pkFmAsk(x,cb){const o=document.createElement("div");o.className="ov";
  document.body.appendChild(o);o.querySelector("#fml").onclick=()=>{o.remove();cb("lager")};o.querySelector("#fmm").onclick=()=>{o.remove();cb("miete")};o.querySelector("#fmx").onclick=()=>o.remove()}
 /* Menge, Alternative, Fremdmiete bearbeiten */
 function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k]||{};let fm=h.fm||"",alt=(h.alt||[]).map(a=>({...a})),pick=null;
+ if(pkKM(x,h))return kmDlg(P,i);
  if(pkL55(x,h)){const o=document.createElement("div");o.className="ov";
   o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0"><b style="font-size:17px">'+esc(pkName(x))+'</b>'+(x.a?' <span class="mute">'+esc(x.a)+'</span>':'')+'<p class="mute" style="margin:4px 0 12px">Laut Packliste: '+pkNum(x.n)+(x.u?' '+esc(x.u):'')+'. Steht auf <b>Lager 55</b> – holt der Fahrer oder Monteur selbst.</p>'+
    '<button class="btn" id="p55s" type="button">Packe ich doch selbst</button><button class="btn ghost" id="p55x" type="button" style="margin-top:8px">Schließen</button></div>';
@@ -395,6 +397,7 @@ function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH
   '<input id="penbg" autocomplete="off" placeholder="Grund (optional)" style="margin-top:6px">'+
   '<div class="row" style="margin-top:14px"><button class="btn ghost" id="pex" type="button">Abbrechen</button><button class="btn" id="pes" type="button">Speichern</button></div>'+
   '<button class="btn ghost" id="pe55" type="button" style="margin-top:10px">Holt Fahrer/Monteur – Lager 55</button>'+
+  (pkKat(x)?'':'<button class="btn ghost" id="pekm" type="button" style="margin-top:8px">Kein Material – rausnehmen (z. B. Kosten)</button>')+
   '<button class="lnk" id="per" type="button" style="margin-top:6px;color:var(--bad)">Position zurücksetzen</button></div>';
  document.body.appendChild(o);const g=id=>o.querySelector("#"+id),qi=g("peq");
  if(h.nb){g("penb").value=String(+h.nb.n||"");g("penbw").value=h.nb.w||"";g("penbg").value=h.nb.why||""}
@@ -421,6 +424,7 @@ function pkEdit(P,i,opt){opt=opt||{};const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH
  if(g("pekat"))g("pekat").onclick=()=>pkKatAdd(P,x,o);
  g("per").onclick=()=>{o.remove();pkHSet(P,{[k]:null})};
  g("pe55").onclick=()=>{o.remove();pkHSet(P,{[k]:{l55:true,by:me,t:Date.now()}})};
+ if(g("pekm"))g("pekm").onclick=()=>{o.remove();kmSet(P,i,true)};
  g("pes").onclick=()=>{const pend=g("pean").value&&g("peat").value.trim();if(pend)g("peadd").click();const q=qv();if(x.f>0&&!fm&&(q!==null||alt.length))return toast("Bitte zuerst klären: aus dem Lager oder zugemietet.");
   const nn=nbv(),nw=g("penbw").value.trim(),ng=g("penbg").value.trim(),nb=nn>0?{n:nn,w:nw,why:ng,by:h.nb&&+h.nb.n===nn&&(h.nb.w||"")===nw&&(h.nb.why||"")===ng?h.nb.by:me,t:h.nb&&+h.nb.n===nn&&(h.nb.w||"")===nw&&(h.nb.why||"")===ng?h.nb.t:Date.now(),...(h.nb&&h.nb.pl&&+h.nb.n===nn&&(h.nb.w||"")===nw?{pl:true}:{})}:null;
   o.remove();if(q===null&&!alt.length)return pkHSet(P,{[k]:fm||nb?{fm,...(nb?{nb}:{}),by:me,t:Date.now()}:null});

@@ -18,7 +18,7 @@ document.head.appendChild(st)}catch(e){}})();
 let amF="alle",amQ="",amOpen={},amPk=null;
 function amRows(p,B){const H=pkH(p),M={},num=v=>pkNum(v);
  let ord=0;const get=(k,nm,code,u)=>M[k]=M[k]||{k,first:ord++,name:nm,code:code||"",u:u||"Stk",ps:0,zus:{},dev:[],ers:[],devBy:"",x:0,raus:0,fr:0,l55:0,back:0,op:0};
- pkItems(p).forEach(o=>{const x=o.x,h=H[o.k],c=artCode(x.a),nm=pkName(x),e=get(abgKey(c,nm),nm,c,x.u),st=pkPS(x,h);e.ps+=+x.n||0;if(st.s==="open"&&!pkL55(x,h)){const f=h&&h.fm==="lager"?0:(+x.f||0);e.op+=Math.max(0,(+x.n||0)-f-pkNbN(x,h))}if(o.z)e.zus[o.z]=(e.zus[o.z]||0)+(+x.n||0);
+ pkItems(p).forEach(o=>{const x=o.x,h=H[o.k];if(typeof pkKM==="function"&&pkKM(x,h))return;const c=artCode(x.a),nm=pkName(x),e=get(abgKey(c,nm),nm,c,x.u),st=pkPS(x,h);e.ps+=+x.n||0;if(st.s==="open"&&!pkL55(x,h)){const f=h&&h.fm==="lager"?0:(+x.f||0);e.op+=Math.max(0,(+x.n||0)-f-pkNbN(x,h))}if(o.z)e.zus[o.z]=(e.zus[o.z]||0)+(+x.n||0);
   if(pkDevRow(x,h,st)&&h){let w="";try{w=nmA(h,"by")}catch(er){}e.devBy=[w,h.t?fmt(h.t).slice(0,6):""].filter(Boolean).join(" ")}
   if(st.s!=="open")(st.alt||[]).forEach(a=>{const kk=pkKat({a:a.a}),an=kk?kk.name:a.t,ac=artCode(a.a),ea=get(abgKey(ac,an),an,ac,x.u);if(!ea.ers.includes(nm))ea.ers.push(nm)})});
  if(typeof pkX==="function")pkX(p).forEach(e=>{const c=artCode(e.a),nm=pkXName(e),r=get(abgKey(c,nm),nm,c,e.u);r.x+=+e.n||0});
@@ -64,7 +64,7 @@ function amBody(p,B,I){const R=amRows(p,B),ph2=!!(B.R&&B.R.length),endish=!!(B.h
 function amZus(p){if(amF!=="alle"||!(p.zus||[]).length)return "";const H=pkH(p),n=v=>pkNum(v),q=amQ.trim(),T=q?dxNorm(q).split(" ").filter(Boolean):[];
  return (p.zus||[]).map(z=>{const ps=String(z.ps||""),zf=pkZFin(p,z),za=zf?null:auHerrAll(p,ps),g=pkZProg(p,ps);
   const st=zf?"hergerichtet "+fmt(zf.t).slice(0,6)+" von "+nmA(zf,"by"):za?"hergerichtet"+(za.t?" "+fmt(za.t).slice(0,6):"")+(za.who?" von "+za.who:""):g.d?"wird hergerichtet: "+g.d+" von "+g.n+" Positionen":"herrichten "+pkWd(pkZDay(p,z));
-  let rows="";pkItems(p).forEach(o=>{if(o.z!==ps)return;const x=o.x,h=H[o.k],l55=pkL55(x,h),pst=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f-pkNbN(x,h)),nm=pkName(x),u=" "+(x.u||"Stk");
+  let rows="";pkItems(p).forEach(o=>{if(o.z!==ps)return;if(typeof pkKM==="function"&&pkKM(o.x,H[o.k]))return;const x=o.x,h=H[o.k],l55=pkL55(x,h),pst=pkPS(x,h),f=h&&h.fm==="lager"?0:(+x.f||0),own=Math.max(0,(+x.n||0)-f-pkNbN(x,h)),nm=pkName(x),u=" "+(x.u||"Stk");
    if(T.length&&!T.every(t=>(" "+dxNorm(nm+" "+(x.a||""))+" ").includes(t)))return;
    const raus=l55?null:pst.s==="open"?null:h&&h.ok?own:Math.min(own,+pst.q||0)+pkOver(x,h,pst),dev=!l55&&pkDevRow(x,h,pst),notes=[];
    (pst.s!=="open"?pst.alt||[]:[]).forEach(al=>notes.push('<small class="or">stattdessen '+n(+al.n||0)+u+' '+esc(al.t)+'</small>'));
