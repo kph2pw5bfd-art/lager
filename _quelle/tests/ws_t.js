@@ -41,12 +41,12 @@ const kat=JSON.parse(fs.readFileSync(__dirname+"/rkat.json","utf8")).map((x,i)=>
  /* Scan: 1081 → zwei offene → Auswahl */
  await p.evaluate(()=>wsScanHit("1081-03"));await p.waitForTimeout(300);ok("Scan mit 2 Meldungen → Auswahl",(await p.$$(".ov [data-wsd]")).length===2);
  await p.click('.ov [data-wsd="d"]');await p.waitForTimeout(600);ok("Auswahl → Defekt offen + Reparatur-Fenster",await p.evaluate(()=>view==="defopen"&&curDef==="d")&&!!(await p.$("#ets")));
- await p.fill("#etrep","Kupplung getauscht");await p.click("#ets");await p.waitForTimeout(800);let L=await DEFS();ok("Repariert: d erledigt",L.find(x=>x.id==="d").done===true);
+ await p.fill("#etrep","Kupplung getauscht");await p.evaluate(()=>document.querySelector("#ets").closest(".ov").rz.set(75));await p.click("#ets");await p.waitForTimeout(800);let L=await DEFS();ok("Repariert: d erledigt",L.find(x=>x.id==="d").done===true);
  /* Scan Kabel mit Stückzahl 3 → Wie viele? 2 → Teilung */
  await p.evaluate(()=>{view="jarvis";draw()});await p.waitForTimeout(200);await p.evaluate(()=>wsScanHit("1098"));await p.waitForTimeout(700);
  ok("Stückzahl 3: Frage „Wie viele sind repariert?“",/Wie viele sind repariert/.test(await p.textContent("body"))&&(await p.textContent("#wsqv"))==="3 von 3");
  await p.click("#wsqm");ok("Hinweis Rest",/1 Stk bleiben/.test(await p.textContent("#wsqh")));await p.screenshot({path:S+"ws_teil.png"});
- await p.click("#wsqo");await p.waitForTimeout(300);await p.fill("#etrep","2 Stecker getauscht");await p.click("#ets");await p.waitForTimeout(1200);L=await DEFS();
+ await p.click("#wsqo");await p.waitForTimeout(300);await p.fill("#etrep","2 Stecker getauscht");await p.evaluate(()=>document.querySelector("#ets").closest(".ov").rz.set(75));await p.click("#ets");await p.waitForTimeout(1200);L=await DEFS();
  const a=L.find(x=>x.id==="a"),rest=L.find(x=>x.teilVon==="a");ok("Original: 2 Stk erledigt",a.done===true&&a.n===2&&a.rep==="2 Stecker getauscht");
  ok("Rest: 1 Stk offen, gleiche Daten, Foto kopiert",rest&&rest.done===false&&rest.n===1&&rest.desc==="Stecker gebrochen"&&rest.ev==="Spittelberg"&&!rest.rep&&rest.fn===1&&await p.evaluate(id=>window.__T.docs.some(r=>r.col==="fotos"&&r.id===id+"-0"),rest.id));
  /* Abbrechen ändert nichts */

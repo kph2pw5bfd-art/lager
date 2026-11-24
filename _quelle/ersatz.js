@@ -7,13 +7,45 @@
 const etList=d=>Array.isArray(d&&d.et)?d.et.filter(e=>e&&e.nm):[];
 const etQ=e=>{const n=+e.n||0;return (Number.isInteger(n)?String(n):String(n).replace(".",","))+" "+(e.u||"Stk")};
 const etNrs=e=>[e.tnr?"TPC "+e.tnr:"",e.hnr?"Hersteller "+e.hnr:""].filter(Boolean).join(" · ");
+/* ===== 1.189 – Reparaturzeit (Jürgen/Chef, 24.11.): Drehräder Stunden + Minuten wie beim Apple-Timer, minutengenau, Pflicht beim Speichern der Reparatur.
+   Feld im Defekt: rz (Minuten). Anzeige im Defekt, Ersatzteile-Bericht (pro Reparatur + Summe), Werkstatt Übersicht (Diese Woche), Wochenbericht (Letzte Woche repariert). ===== */
+const RZ_H=12,RZ_IH=40;
+const rzMin=d=>Math.max(0,parseInt(d&&d.rz,10)||0);
+function rzTx(m){m=Math.max(0,Math.round(+m||0));const h=Math.floor(m/60),mm=m%60;return h?h+" Std"+(mm?" "+mm+" Min":""):mm+" Min"}
+(function(){try{const st=document.createElement("style");st.textContent=
+'.rzbox{border:2px solid var(--line);border-radius:12px;padding:10px 10px 6px;margin:12px 0 4px;background:var(--bg)}.rzbox.bad{border-color:#c0392b}.rzlab{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.rzlab b{font-size:15px}.rzlab small{color:var(--mute);font-size:12.5px}'+
+'.rzv{font-size:26px;font-weight:800;text-align:center;margin:4px 0 2px;font-variant-numeric:tabular-nums;color:var(--ink)}.rzv.zero{color:var(--mute)}.rzerr{color:#c0392b;font-size:13px;font-weight:700;text-align:center;min-height:0}'+
+'.rzw{position:relative;display:flex;justify-content:center;align-items:center;gap:4px;height:200px;user-select:none;-webkit-user-select:none}'+
+'.rzband{position:absolute;left:6px;right:6px;top:80px;height:40px;border-radius:9px;background:rgba(17,74,151,.10);pointer-events:none}'+
+'.rzcol{position:relative;height:200px;width:84px;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;'+
+'-webkit-mask-image:linear-gradient(to bottom,transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(to bottom,transparent,#000 30%,#000 70%,transparent)}.rzcol::-webkit-scrollbar{display:none}'+
+'.rzcol div{height:40px;line-height:40px;text-align:right;padding-right:12px;font-size:22px;font-variant-numeric:tabular-nums;scroll-snap-align:center;color:var(--mute);cursor:pointer}.rzcol div.on{color:var(--ink);font-weight:800}.rzcol .rzpad{scroll-snap-align:none;cursor:default}'+
+'.rzu{font-size:16px;font-weight:700;width:44px;color:var(--ink)}'+
+'.etrz{display:flex;justify-content:space-between;gap:10px;padding:2px 0 8px;font-size:15px}.etrz b{font-variant-numeric:tabular-nums}'+
+'@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rzband{background:rgba(143,176,234,.18)}}:root[data-theme="dark"] .rzband{background:rgba(143,176,234,.18)}';
+document.head.appendChild(st)}catch(e){}})();
+function rzHtml(p,lab){const col=(id,n)=>'<div class="rzcol" id="'+p+id+'" tabindex="0"><div class="rzpad"></div><div class="rzpad"></div>'+Array.from({length:n},(_,i)=>'<div data-rzi="'+i+'">'+i+'</div>').join("")+'<div class="rzpad"></div><div class="rzpad"></div></div>';
+ return '<div class="rzbox" id="'+p+'box"><div class="rzlab"><b>'+(lab||"Reparaturzeit")+'</b><small>Wie lange hat die Reparatur gedauert?</small></div><div class="rzv zero" id="'+p+'v">0 Min</div>'+
+  '<div class="rzw"><div class="rzband"></div>'+col("h",RZ_H+1)+'<span class="rzu">Std</span>'+col("m",60)+'<span class="rzu">Min</span></div><div class="rzerr" id="'+p+'err"></div></div>'}
+/* Räder aktivieren (nach dem Einfügen ins Dokument) – liefert {get,set} in Minuten */
+function rzBind(root,p,val,onCh){const H=root.querySelector("#"+p+"h"),M=root.querySelector("#"+p+"m"),V=root.querySelector("#"+p+"v"),E=root.querySelector("#"+p+"err"),B=root.querySelector("#"+p+"box");
+ const idx=c=>{const n=c.querySelectorAll("[data-rzi]").length;return Math.max(0,Math.min(n-1,Math.round(c.scrollTop/RZ_IH)))};
+ const mark=c=>{const i=idx(c);c.querySelectorAll("[data-rzi]").forEach(x=>x.classList.toggle("on",+x.dataset.rzi===i))};
+ const get=()=>idx(H)*60+idx(M);
+ const show=()=>{mark(H);mark(M);const m=get();V.textContent=rzTx(m);V.classList.toggle("zero",!m);if(m){E.textContent="";B.classList.remove("bad")}if(onCh)onCh(m)};
+ const set=m=>{m=Math.max(0,Math.min(RZ_H*60+59,Math.round(+m||0)));H.scrollTop=Math.floor(m/60)*RZ_IH;M.scrollTop=(m%60)*RZ_IH;show()};
+ [H,M].forEach(c=>{let t=0;c.addEventListener("scroll",()=>{mark(c);clearTimeout(t);t=setTimeout(show,90)},{passive:true});
+  c.addEventListener("click",e=>{const x=e.target.closest("[data-rzi]");if(x)c.scrollTo({top:+x.dataset.rzi*RZ_IH,behavior:"smooth"})});
+  c.addEventListener("keydown",e=>{if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();c.scrollTop+=(e.key==="ArrowDown"?1:-1)*RZ_IH;show()}})});
+ set(val||0);requestAnimationFrame(()=>set(val||0));
+ return {get,set,err:t=>{E.textContent=t;B.classList.add("bad");B.scrollIntoView({block:"center",behavior:"smooth"})}}}
 /* Vorschläge: alle bisher eingetragenen Teile, nach Häufigkeit */
 function etKnown(){const M={};defs.forEach(d=>etList(d).forEach(e=>{const k=String(e.nm).trim().toLowerCase();if(!k)return;const m=M[k]||(M[k]={nm:e.nm,tnr:"",hnr:"",u:e.u||"Stk",c:0,t:0});m.c++;
   const t=d.doneT||d.t||0;if(t>=m.t){m.t=t;m.nm=e.nm;if(e.tnr)m.tnr=e.tnr;if(e.hnr)m.hnr=e.hnr;m.u=e.u||m.u}else{if(!m.tnr&&e.tnr)m.tnr=e.tnr;if(!m.hnr&&e.hnr)m.hnr=e.hnr}}));
  return Object.values(M).sort((a,b)=>b.c-a.c||a.nm.localeCompare(b.nm,"de"))}
 /* Karte „Reparatur“ beim Defekt */
-function etCard(d){const L=etList(d),rf=+d.rfn||0;if(!d.rep&&!L.length&&!rf)return "";
- return '<div class="card etc"><div class="dsh">Reparatur</div>'+(d.rep?'<p style="white-space:pre-wrap;margin:0 0 8px">'+esc(d.rep)+'</p>':'')+
+function etCard(d){const L=etList(d),rf=+d.rfn||0,rz=rzMin(d);if(!d.rep&&!L.length&&!rf&&!rz)return "";
+ return '<div class="card etc"><div class="dsh">Reparatur</div>'+(rz?'<div class="etrz"><span>Reparaturzeit</span><b>'+esc(rzTx(rz))+'</b></div>':'')+(d.rep?'<p style="white-space:pre-wrap;margin:0 0 8px">'+esc(d.rep)+'</p>':'')+
   '<b class="eth">Verwendete Ersatzteile</b>'+(L.length?L.map(e=>'<div class="etr"><b>'+esc(etQ(e))+'</b><span>'+esc(e.nm)+(etNrs(e)?'<small>'+esc(etNrs(e))+'</small>':'')+'</span></div>').join(""):'<div class="mute">Keine Ersatzteile.</div>')+
   (rf?'<div id="etph" class="thr" style="margin-top:8px"></div>':'')+'</div>'}
 function etBind(d){if((+d.rfn||0)&&$("#etph"))loadTh("etph",{id:d.id+"r",fn:+d.rfn});
@@ -21,11 +53,11 @@ function etBind(d){if((+d.rfn||0)&&$("#etph"))loadTh("etph",{id:d.id+"r",fn:+d.r
 /* Fenster „Reparatur“ – fin=true: danach als erledigt markieren */
 async function etDlg(d,fin,part){const o=document.createElement("div");o.className="ov";let L=etList(d).map(e=>({...e}));const ph=[],n0=+d.rfn||0;
  o.innerHTML='<div class="card etd"><b style="font-size:17px">Reparatur</b><div class="mute">'+esc(d.art)+(d.ev?' · '+esc(d.ev):'')+'</div>'+
-  '<label class="mute" for="etrep" style="margin-top:10px;display:block">Was wurde gemacht? (optional)</label><textarea id="etrep" placeholder="z. B. Stecker getauscht, Kabel 20 cm gekürzt" style="min-height:80px"></textarea>'+
+  rzHtml("etrz")+'<label class="mute" for="etrep" style="margin-top:10px;display:block">Was wurde gemacht? (optional)</label><textarea id="etrep" placeholder="z. B. Stecker getauscht, Kabel 20 cm gekürzt" style="min-height:80px"></textarea>'+
   '<b class="eth">Verwendete Ersatzteile</b><div id="etl"></div><button class="etadd" id="etadd" type="button">+ Ersatzteil</button>'+
   '<div id="etp" class="thr"></div><button class="btn ghost" id="etpb" type="button">Foto hinzufügen</button><input id="etpf" type="file" accept="image/*" capture="environment" hidden>'+
   '<div class="row" style="margin-top:12px"><button class="btn ghost" id="etx" type="button">Abbrechen</button><button class="btn" id="ets" type="button"'+(fin?' style="background:var(--ok)"':'')+'>'+(fin?'Speichern und erledigt':'Speichern')+'</button></div></div>';
- document.body.appendChild(o);const g=k=>o.querySelector("#"+k);g("etrep").value=d.rep||"";
+ document.body.appendChild(o);const g=k=>o.querySelector("#"+k);g("etrep").value=d.rep||"";const RZ=rzBind(o,"etrz",rzMin(d));o.rz=RZ;
  const draw=()=>{g("etl").innerHTML=L.length?L.map((e,i)=>'<div class="etr"><b>'+esc(etQ(e))+'</b><span>'+esc(e.nm)+(etNrs(e)?'<small>'+esc(etNrs(e))+'</small>':'')+'</span><button class="lnk" type="button" data-ete="'+i+'">Ändern</button></div>').join(""):'<div class="mute" style="margin:2px 0 6px">Noch keine – wenn keine Teile gebraucht wurden, einfach leer lassen.</div>';
   g("etl").querySelectorAll("[data-ete]").forEach(b=>b.onclick=()=>{const i=+b.dataset.ete;etPartDlg(L[i],r=>{if(r===null)L.splice(i,1);else L[i]=r;draw()})})};draw();
  g("etadd").onclick=()=>etPartDlg(null,r=>{if(r){L.push(r);draw()}});
@@ -35,10 +67,10 @@ async function etDlg(d,fin,part){const o=document.createElement("div");o.classNa
  g("etx").onclick=()=>o.remove();
  if(n0){g("ets").disabled=true;for(let k=0;k<n0;k++){const key=d.id+"r-"+k;let u=pc[key];if(!u){try{const sn=await db.doc("fotos/"+key).get();if(sn.exists){u=sn.data().d;pc[key]=u}}catch(e){}}if(u)ph.push(u)}g("ets").disabled=false}
  showP();
- g("ets").onclick=async()=>{g("ets").disabled=true;
+ g("ets").onclick=async()=>{const rzv=RZ.get();if(!rzv){RZ.err("Bitte Reparaturzeit einstellen.");return}g("ets").disabled=true;
   try{const n=await savePhotos(d.id+"r",ph);for(let k=n;k<n0;k++){try{await db.doc("fotos/"+d.id+"r-"+k).delete()}catch(e){}}
    Object.keys(pc).filter(k=>k.startsWith(d.id+"r-")).forEach(k=>delete pc[k]);
-   const up={rep:g("etrep").value.trim(),et:L.map(e=>({n:+e.n||0,u:e.u||"Stk",nm:e.nm,tnr:e.tnr||"",hnr:e.hnr||""})),rfn:n,repBy:me,...tabAs("repBy"),repT:Date.now()};
+   const up={rep:g("etrep").value.trim(),et:L.map(e=>({n:+e.n||0,u:e.u||"Stk",nm:e.nm,tnr:e.tnr||"",hnr:e.hnr||""})),rfn:n,rz:rzv,repBy:me,...tabAs("repBy"),repT:Date.now()};
    if(fin)Object.assign(up,{done:true,doneBy:me,...tabAs("doneBy"),doneT:Date.now()});
    if(fin&&part&&typeof wsSplit==="function"&&part<dxQ(d)){await wsSplit(d,part);up.n=part}/* 1.125: Teil-Reparatur – Rest bleibt offen */
    await db.doc("defekte/"+d.id).update(up);o.remove();toast(fin?"Repariert – Defekt erledigt":"Gespeichert",1)}
@@ -76,10 +108,10 @@ function etRangeTx(k,r){const M=["Jänner","Februar","März","April","Mai","Juni
  const span=etDs(r[0])+" – "+etDs(r[1]);if(k==="m"||k==="lm")return M[d.getMonth()]+" "+d.getFullYear()+" ("+span+")";if(k==="y")return "Jahr "+d.getFullYear()+" ("+span+")";return span}
 function etData(r){const D=vdefs().filter(d=>d.done&&d.doneT>=r[0]&&d.doneT<=r[1]).sort((a,b)=>a.doneT-b.doneT),S={};let parts=0;
  D.forEach(d=>etList(d).forEach(e=>{parts+=/^stk/i.test(e.u||"Stk")?Math.ceil(+e.n||0):1; /* Stück zählen, Meterware usw. als 1 Teil */const k=String(e.nm).trim().toLowerCase()+"|"+String(e.u||"Stk").toLowerCase(),s=S[k]||(S[k]={nm:e.nm,u:e.u||"Stk",n:0,tnr:"",hnr:""});s.n+=+e.n||0;if(e.tnr)s.tnr=e.tnr;if(e.hnr)s.hnr=e.hnr}));
- const sum=Object.values(S).sort((a,b)=>b.n-a.n||a.nm.localeCompare(b.nm,"de"));return {D,sum,parts}}
+ const sum=Object.values(S).sort((a,b)=>b.n-a.n||a.nm.localeCompare(b.nm,"de"));const rz=D.reduce((a,d)=>a+rzMin(d),0),rzOhne=D.filter(d=>!d.aus&&!rzMin(d)).length;return {D,sum,parts,rz,rzOhne}}
 async function etPdf(k,r){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb}=PDFLib,doc=await PDFDocument.create(),F=await doc.embedFont(StandardFonts.Helvetica),B=await doc.embedFont(StandardFonts.HelveticaBold);
  const W=595.28,HP=841.89,ML=36,MR=36,MT=36,MB=44,CW=W-ML-MR,NAVY=rgb(.067,.29,.592),INK=rgb(.09,.13,.18),GREY=rgb(.36,.41,.47),LINE=rgb(.73,.76,.83),HAIR=rgb(.89,.91,.93),TINT=rgb(.933,.953,.98);
- const {D,sum,parts}=etData(r),rt=etRangeTx(k,r);let pg,y;const pages=[];
+ const {D,sum,parts,rz,rzOhne}=etData(r),rt=etRangeTx(k,r);let pg,y;const pages=[];
  const txt=(s,x,yy,o)=>{o=o||{};pg.drawText(wbTx(s),{x,y:yy,size:o.size||9,font:o.bold?B:F,color:o.color||INK})};
  const tw=(s,f,z)=>f.widthOfTextAtSize(wbTx(s),z);
  const wrap=(s,f,z,w)=>{const out=[];let cur="";wbTx(s).split(/\n/).forEach((par,pi)=>{if(pi){out.push(cur);cur=""}par.split(" ").forEach(word=>{const t=cur?cur+" "+word:word;if(f.widthOfTextAtSize(t,z)<=w){cur=t;return}if(cur)out.push(cur);cur=word;
@@ -96,7 +128,7 @@ async function etPdf(k,r){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb
  const p1="Erstellt "+fmt(Date.now()),p2="von "+meName();txt(p1,W-MR-tw(p1,F,8.5),y-9,{size:8.5,color:GREY});txt(p2,W-MR-tw(p2,F,8.5),y-20,{size:8.5,color:GREY});
  txt("Ersatzteile-Bericht",ML,y-30,{size:18,bold:true});txt(rt+" · nach Reparaturdatum",ML,y-45,{size:9.5,color:GREY});y-=52;
  pg.drawLine({start:{x:ML,y},end:{x:W-MR,y},thickness:1.6,color:NAVY});y-=12;
- const bw=(CW-16)/3;[[D.length,"Reparaturen"],[String(parts).replace(".",","),"Ersatzteile verbaut"],[sum.length,"verschiedene Teile"]].forEach((s,i)=>{const x=ML+i*(bw+8);pg.drawRectangle({x,y:y-40,width:bw,height:40,color:TINT});txt(String(s[0]),x+10,y-20,{size:16,bold:true,color:NAVY});txt(s[1],x+10,y-33,{size:8.5,color:GREY})});y-=54;
+ const bw=(CW-24)/4;[[D.length,"Reparaturen"],[rzTx(rz),"Reparaturzeit"+(rzOhne?" ("+rzOhne+" ohne Zeit)":"")],[String(parts).replace(".",","),"Ersatzteile verbaut"],[sum.length,"verschiedene Teile"]].forEach((s,i)=>{const x=ML+i*(bw+8);pg.drawRectangle({x,y:y-40,width:bw,height:40,color:TINT});let z=16;while(z>9&&tw(String(s[0]),B,z)>bw-18)z-=.5;txt(String(s[0]),x+10,y-20,{size:z,bold:true,color:NAVY});txt(s[1],x+10,y-33,{size:8.5,color:GREY})});y-=54;
  const sec=t=>{need(40);pg.drawRectangle({x:ML,y:y-17,width:CW,height:17,color:NAVY});txt(t,ML+8,y-12,{size:9.5,bold:true,color:rgb(1,1,1)});y-=24};
  sec("Reparaturen ("+D.length+")");
  if(!D.length){txt("Keine Reparaturen in diesem Zeitraum.",ML,y-10,{size:9,color:GREY});y-=20}
@@ -105,7 +137,7 @@ async function etPdf(k,r){await wbLoadPdf();const {PDFDocument,StandardFonts,rgb
   const rs="repariert "+etDs(d.doneT)+" · "+nmA(d,"doneBy");txt(rs,W-MR-tw(rs,F,8.5),y-11,{size:8.5,color:GREY});
   hd.forEach((l,i)=>txt(l,ML,y-11-i*13,{size:10.5,bold:true}));y-=hd.length*13+3;
   const meta=[["Defekt",d.desc||"Keine Beschreibung."],["Veranstaltung",(d.ev||"–")+"   ·   Auftrag "+(d.ord||"–")],["Gemeldet",etDs(d.t)+" von "+nmA(d,"by")+(d.urg?" · dringend":"")]];
-  if(d.fb)meta.push(["Werkstatt",d.fb]);if(d.rep)meta.push(["Reparatur",d.rep]);
+  meta.push(["Reparaturzeit",rzMin(d)?rzTx(rzMin(d)):"–"]);if(d.fb)meta.push(["Werkstatt",d.fb]);if(d.rep)meta.push(["Reparatur",d.rep]);
   meta.forEach(([l,v])=>{const vl=wrap(v,F,8.5,CW-78);need(vl.length*10.5+2);txt(l,ML,y-9,{size:8.5,color:GREY});vl.forEach((s,i)=>txt(s,ML+76,y-9-i*10.5,{size:8.5}));y-=vl.length*10.5+1.5});y-=4;
   if(L.length){need(28);thead(ML,CW);L.forEach(prow)}else{txt("Keine Ersatzteile eingetragen.",ML+76,y-9,{size:8.5,color:GREY});y-=14}
   y-=12});
@@ -124,8 +156,8 @@ function etRepDlg(){const mob=wbMobile(),o=document.createElement("div");o.class
  document.body.appendChild(o);const g=id=>o.querySelector("#"+id);g("etf").value=iso(new Date(now.getFullYear(),now.getMonth(),1));g("ett2").value=iso(now);
  const cur=()=>etRange(k,g("etf").value,g("ett2").value);
  const upd=()=>{o.querySelectorAll("[data-erg]").forEach(b=>b.classList.toggle("act",b.dataset.erg===k));g("etcu").style.display=k==="c"?"flex":"none";const r=cur();
-  if(!r){g("etinfo").textContent="Bitte ein gültiges Von- und Bis-Datum wählen.";return}const {D,sum,parts}=etData(r);
-  g("etinfo").textContent=etRangeTx(k,r)+": "+D.length+" Reparatur"+(D.length===1?"":"en")+" · "+String(parts).replace(".",",")+" Ersatzteile · "+sum.length+" verschiedene"};
+  if(!r){g("etinfo").textContent="Bitte ein gültiges Von- und Bis-Datum wählen.";return}const {D,sum,parts,rz}=etData(r);
+  g("etinfo").textContent=etRangeTx(k,r)+": "+D.length+" Reparatur"+(D.length===1?"":"en")+" · Reparaturzeit "+rzTx(rz)+" · "+String(parts).replace(".",",")+" Ersatzteile · "+sum.length+" verschiedene"};
  o.querySelectorAll("[data-erg]").forEach(b=>b.onclick=()=>{k=b.dataset.erg;upd()});g("etf").onchange=upd;g("ett2").onchange=upd;upd();
  const fnm=r=>"Ersatzteile-Bericht "+etDs(r[0]).replace(/\./g,"-")+" bis "+etDs(r[1]).replace(/\./g,"-")+".pdf";
  const mk=async()=>{const r=cur();if(!r){errBox("Bitte ein gültiges Von- und Bis-Datum wählen.");return null}g("etinfo").textContent="PDF wird erstellt …";

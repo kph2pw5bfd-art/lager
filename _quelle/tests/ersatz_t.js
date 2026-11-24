@@ -24,7 +24,7 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  await p.click("#etadd");await p.waitForTimeout(150);await p.click("#etps");ok("Pflichtfeld Name",await E(()=>document.querySelector("#etn").classList.contains("bad")));await p.fill("#etn","Kippschalter 16A rot");await p.click("#etps");await p.waitForTimeout(150);
  await p.screenshot({path:S+"ersatz_dlg.png"});
  await p.click('[data-ete="1"]');await p.waitForTimeout(150);await p.fill("#etq","3");await p.click("#etps");await p.waitForTimeout(150);
- await p.click("#ets");await p.waitForTimeout(500);
+ await p.evaluate(()=>document.querySelector("#ets").closest(".ov").rz.set(75));await p.click("#ets");await p.waitForTimeout(500);
  const d=await E(()=>JSON.stringify((({done,rep,et,rfn})=>({done,rep,et,rfn}))(defs.find(x=>x.id==="b"))));ok("Gespeichert + erledigt",/"done":true,"rep":"Schalter getauscht","et":\[\{"n":2,"u":"Stk","nm":"CEE-Stecker 32A 5-polig","tnr":"5012","hnr":"PCE 025-6"\},\{"n":3,"u":"Stk","nm":"Kippschalter 16A rot","tnr":"","hnr":""\}\],"rfn":0/.test(d),d);
  await p.waitForTimeout(200);await E(()=>draw());await p.waitForTimeout(200);const card=await p.innerText(".etc");ok("Karte Reparatur",/Schalter getauscht[\s\S]*2 Stk[\s\S]*CEE-Stecker[\s\S]*3 Stk/.test(card),card.replace(/\n/g," | "));
  ok("Knopf Reparatur ändern",(await p.innerText("#etedit")).trim()==="Reparatur ändern");await p.screenshot({path:S+"ersatz_open.png",fullPage:true});
@@ -32,7 +32,7 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  ok("Ändern: Teil entfernt, bleibt erledigt",await E(()=>{const x=defs.find(x=>x.id==="b");return x.done&&x.et.length===1&&x.et[0].nm==="Kippschalter 16A rot"}));
  /* Bericht */
  await E(()=>{view="def";draw()});await p.waitForTimeout(200);await p.click("#etrep");await p.waitForTimeout(200);
- const inf=await p.innerText("#etinfo");ok("Letzter Monat: 2 Reparaturen, 4 Teile, 2 verschiedene",/2 Reparaturen · 4 Ersatzteile · 2 verschiedene/.test(inf),inf);
+ const inf=await p.innerText("#etinfo");ok("Letzter Monat: 2 Reparaturen, 4 Teile, 2 verschiedene",/2 Reparaturen · Reparaturzeit 0 Min · 4 Ersatzteile · 2 verschiedene/.test(inf),inf);
  await p.click('[data-erg="c"]');await p.waitForTimeout(100);ok("Von–bis sichtbar",await p.isVisible("#etf"));
  const sum=await E(()=>{const r=etRange("lm");return etData(r).sum.map(s=>s.n+" "+s.u+" "+s.nm+" "+s.tnr+"/"+s.hnr).join(" ; ")});ok("Summe pro Teil",sum==="3 Stk CEE-Stecker 32A 5-polig 5012/PCE 025-6 ; 1.5 m Gummikabel 5x6 /",sum);
  const b64=await E(async()=>{const u=await etPdf("lm",etRange("lm"));let s="";for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode(...u.subarray(i,i+8192));return btoa(s)});fs.writeFileSync(S+"ersatz.pdf",Buffer.from(b64,"base64"));

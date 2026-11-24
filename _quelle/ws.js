@@ -30,15 +30,15 @@ function wsLine(d){let who="";try{who=nmA(d,"by")}catch(e){}const ago=fmt(d.t);
 function wsView(){if(!wsIn){wsIn=true;const s=+wsLS("tpc_ws_seen")||0;wsPrev=s||Date.now()-864e5}
  $("#t").textContent="Werkstatt Übersicht";const O=wsOpen().sort((a,b)=>b.t-a.t),U=O.filter(d=>d.urg),N=O.filter(d=>d.t>wsPrev);
  if(!wsTab)wsTab=U.length?"urg":N.length?"neu":"alle";const L=wsTab==="urg"?U:wsTab==="neu"?N:O.slice().sort((a,b)=>(b.urg?1:0)-(a.urg?1:0)||b.t-a.t);
- const w0=wsWeek(),all=vdefs(),rep=all.filter(d=>d.done&&!d.aus&&(d.doneT||0)>=w0).reduce((s,d)=>s+dxQ(d),0),neu=all.filter(d=>d.t>=w0).reduce((s,d)=>s+dxQ(d),0),last=all.filter(d=>d.done&&d.doneT).sort((a,b)=>b.doneT-a.doneT).slice(0,4);
+ const w0=wsWeek(),all=vdefs(),repL=all.filter(d=>d.done&&!d.aus&&(d.doneT||0)>=w0),rep=repL.reduce((s,d)=>s+dxQ(d),0),rzW=repL.reduce((s,d)=>s+rzMin(d),0),neu=all.filter(d=>d.t>=w0).reduce((s,d)=>s+dxQ(d),0),last=all.filter(d=>d.done&&d.doneT).sort((a,b)=>b.doneT-a.doneT).slice(0,4);
  const tab=(k,l,n,red)=>'<button type="button" class="wstab'+(wsTab===k?' on':'')+(red&&n?' red':'')+'" data-wst="'+k+'"><b>'+n+'</b>'+l+'</button>';
  $("#app").innerHTML='<div class="jv" id="wsv"><section class="jvhead"><div class="jvhrow"><div class="jvtime"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div></div></div><div class="jvgreet">'+esc(jvGreet())+'</div>'+
   '<div class="wsbig"><button type="button" class="wsrep" id="wsrep">Repariert melden<small>Teil scannen</small></button><button type="button" class="wsnew" id="wsnew">Defekt erfassen<small>neu melden</small></button></div></section>'+
   '<div class="wscard"><div class="wstabs">'+tab("urg","Dringend",U.length,1)+tab("neu","Neu",N.length)+tab("alle","Alle offen",O.length)+'</div>'+
   (wsTab==="neu"?'<p class="wsnote">Seit deinem letzten Besuch ('+fmt(wsPrev)+')</p>':'')+
   (L.length?L.map(wsLine).join(""):'<p class="wsnote">'+(wsTab==="urg"?'Keine dringenden Defekte.':wsTab==="neu"?'Nichts Neues seit deinem letzten Besuch.':'Keine offenen Defekte. Sauber!')+'</p>')+'</div>'+
-  '<div class="wscard plain"><div class="wssub">Diese Woche</div><div class="wsrow"><span>Repariert</span><b>'+rep+' Stk</b></div><div class="wsrow"><span>Neu gemeldet</span><b>'+neu+' Stk</b></div>'+
-  (last.length?'<div class="wssub" style="margin-top:12px">Zuletzt repariert</div>'+last.map(d=>'<div class="wsrow"><span>'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+'</span><small class="mute">'+fmt(d.doneT)+'</small></div>').join(""):'')+
+  '<div class="wscard plain"><div class="wssub">Diese Woche</div><div class="wsrow"><span>Repariert</span><b>'+rep+' Stk</b></div><div class="wsrow"><span>Reparaturzeit</span><b>'+esc(rzTx(rzW))+'</b></div><div class="wsrow"><span>Neu gemeldet</span><b>'+neu+' Stk</b></div>'+
+  (last.length?'<div class="wssub" style="margin-top:12px">Zuletzt repariert</div>'+last.map(d=>'<div class="wsrow"><span>'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+'</span><small class="mute">'+(rzMin(d)?esc(rzTx(rzMin(d)))+' · ':'')+fmt(d.doneT)+'</small></div>').join(""):'')+
   '<div class="wslinks">'+(can("def_b")?'<button type="button" id="wsrepb">Ersatzteile-Bericht ›</button>':'<span></span>')+'<button type="button" id="wsall">Alle Defekte ›</button></div></div>'+
   (wsForce?'<button type="button" class="wsback" id="wsback">‹ Zurück zur Lager Übersicht</button>':'')+'</div>';
  if(typeof jvClock==="function")jvClock();
@@ -63,7 +63,7 @@ function wsRepair(d){const n=dxQ(d);if(n<=1)return etDlg(d,true);let k=n;const o
  q("#wsqm").onclick=()=>{if(k>1){k--;upd()}};q("#wsqp").onclick=()=>{if(k<n){k++;upd()}};q("#wsqx").onclick=()=>o.remove();
  q("#wsqo").onclick=()=>{o.remove();etDlg(d,true,k<n?k:0)}}
 /* Rest einer Meldung als eigene offene Meldung anlegen (vor dem Speichern der Reparatur) */
-async function wsSplit(d,k){const n=dxQ(d),id=Date.now().toString(36)+Math.random().toString(36).slice(2,5),skip=/^(id|rep|et|rfn|repBy|repBy_as|repT|done|doneBy|doneBy_as|doneT|fb|edT)$/;
+async function wsSplit(d,k){const n=dxQ(d),id=Date.now().toString(36)+Math.random().toString(36).slice(2,5),skip=/^(id|rep|et|rfn|repBy|repBy_as|repT|rz|done|doneBy|doneBy_as|doneT|fb|edT)$/;
  const c={};Object.keys(d).forEach(f=>{if(!skip.test(f))c[f]=d[f]});c.n=n-k;c.done=false;c.teilVon=d.id;
  const fn=+d.fn||0;let m=0;try{if(fn){for(let i=0;i<fn;i++){const sn=await db.doc("fotos/"+d.id+"-"+i).get();if(sn.exists){await db.doc("fotos/"+id+"-"+m).set(sn.data());m++}}}else if(d.foto){const sn=await db.doc("fotos/"+d.id).get();if(sn.exists){await db.doc("fotos/"+id+"-0").set(sn.data());m=1}}}catch(e){}
  c.fn=m;c.foto=m>0;await db.doc("defekte/"+id).set(c);return id}

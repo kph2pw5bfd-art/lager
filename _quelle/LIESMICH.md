@@ -606,3 +606,10 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Abschnitt 1 „Letzte Woche“: neue Liste „Letzte Woche in epirent ausgetragen“ (nur wenn es Einträge gibt; `fmWbDone(L0,L1)` nach `aus.t`): Auftrag bzw. „Ausgemustert“, Menge + Einheit, Artikel, Art.-Nr., ID, Art (verrechnet / verloren/kaputt / nicht reparierbar mit Grund), rechts grün Tag + wer. Auch im PDF/Ausdruck (wb.js `list`).
 - „Fehlmaterial noch in epirent auszutragen“ hat jetzt auch Art.-Nr./ID (`fmWbNr`).
 - Test `tests/wbaus_t.js`; `fm_t` Regex angepasst.
+
+## 1.189 (Jürgen/Chef, 24.11.): Reparaturzeit für die Werkstatt
+- Wunsch vom Chef: Norbert gibt an, wie lange eine Reparatur gedauert hat. Gewählt: Drehräder wie beim Apple-Timer (Stunden 0–12, Minuten 0–59, minutengenau), **Pflicht** beim Speichern der Reparatur.
+- Fenster „Reparatur“ (`etDlg`, ersatz.js): Kasten „Reparaturzeit“ ganz oben (`rzHtml`/`rzBind`, Scroll-Snap-Räder, Antippen einer Zahl dreht hin, Pfeiltasten am PC). 0 Min → roter Rahmen „Bitte Reparaturzeit einstellen.“, nichts gespeichert. Feld `rz` (Minuten) im Defekt; „Reparatur ändern“ ist vorausgefüllt. Teil-Reparatur: Zeit gilt für die reparierten Stück, der Rest (`wsSplit`) hat keine Zeit.
+- Anzeige: Karte „Reparatur“ im Defekt; Ersatzteile-Bericht (Kasten „Reparaturzeit“ als 2. von 4, „(n ohne Zeit)“, Zeile „Reparaturzeit“ pro Reparatur, Zeitraum-Info im Dialog); Werkstatt Übersicht „Diese Woche“ Zeile Reparaturzeit + Zeit bei „Zuletzt repariert“; Wochenbericht Abschnitt 1 Liste „Werkstatt – repariert · Reparaturzeit …“ (nur wenn es Reparaturen gab, ohne Ausgemusterte, „ohne Zeit“ rot), auch im PDF.
+- Alte Reparaturen ohne Zeit: „–“ bzw. „ohne Zeit“, zählen in Summen nicht. Kein SQL.
+- Test `tests/rz_t.js`; `ersatz_t`/`ws_t` stellen vor dem Speichern eine Zeit ein (`.ov.rz.set(75)`).
