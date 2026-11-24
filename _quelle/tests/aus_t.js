@@ -1,0 +1,32 @@
+/* Test 1.185: Defekt nicht reparierbar – ausmustern (Stückzahl, Grund, fmx-Eintrag, Noch auszutragen, Zurücknehmen) (SP = Ordner mit fakesb.js) */
+const {chromium}=require("playwright");const fs=require("fs");const S=(process.env.SP||"/tmp")+"/";const J=o=>JSON.stringify(o);
+(async()=>{const b=await chromium.launch();let fail=0;const ok=(t,c,x)=>{if(!c)fail++;console.log((c?"OK   ":"FEHLT")+" "+t+(x!==undefined?" → "+x:""))};const errs=[];
+ const seed=[{col:"defekte",id:"d1",data:{by:"u1",t:Date.now()-864e5,done:false,urg:false,art:"16A Kabel 5m",anr:"1062",ev:"Gala Wien",ord:"2601600-01",desc:"Stecker verschmort",n:2,fn:0,foto:false}}];
+ const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
+ const ctx=await b.newContext({viewport:{width:390,height:900}});const p=await ctx.newPage();p.on("pageerror",e=>errs.push(e.message));
+ await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+ await p.goto("https://app.test/");await p.waitForTimeout(1500);await p.mouse.click(200,400);await p.waitForTimeout(300);
+ await p.evaluate(()=>{if(typeof fmSub==="function")fmSub();curDef="d1";go("defopen")});await p.waitForTimeout(400);
+ ok("Knopf „Nicht reparierbar – ausmustern“",!!(await p.$("#dausm")));
+ await p.click("#dausm");await p.waitForTimeout(200);ok("fragt nach Stückzahl",/Wie viele sind nicht reparierbar/.test(await p.textContent(".ov .card")));
+ await p.click("#auqm");await p.click("#auqo");await p.waitForTimeout(200);
+ await p.click("#auso");await p.waitForTimeout(200);ok("ohne Grund nicht möglich",!!(await p.$("#ausw"))&&!!(await p.$(".eov")));await p.click(".eov button");
+ await p.fill("#ausw","Mantel gebrochen, Reparatur lohnt nicht");await p.click("#auso");await p.waitForTimeout(800);
+ const D=await p.evaluate(()=>__T.docs.filter(d=>d.col==="defekte").map(d=>({id:d.id,...d.data})));
+ const d1=D.find(d=>d.id==="d1"),rest=D.find(d=>d.id!=="d1");
+ ok("Defekt erledigt + ausgemustert (1 Stk)",d1.done&&d1.aus&&d1.aus.n===1&&d1.n===1&&/Mantel/.test(d1.aus.why),J(d1.aus));
+ ok("Rest bleibt als offener Defekt (1 Stk)",rest&&!rest.done&&rest.n===1&&rest.teilVon==="d1");
+ const x=await p.evaluate(()=>{const d=__T.docs.find(d=>d.col==="fmx"&&d.id==="ausg_d1");return d&&d.data});ok("Eintrag „Noch auszutragen“",x&&x.was==="ausg"&&x.q===1&&x.name==="16A Kabel 5m"&&x.pk==="ausg",J(x));
+ await p.evaluate(()=>draw());await p.waitForTimeout(300);
+ ok("Defekt zeigt roten Kasten + Schild",/Ausgemustert – nicht reparierbar/.test(await p.textContent("#app"))&&/noch in epirent auszutragen/.test(await p.textContent(".ausbox"))&&/Ausgemustert/.test(await p.textContent("#app .tag")));
+ await p.screenshot({path:S+"aus_def.png",fullPage:true});
+ await p.evaluate(()=>go("fmaus"));await p.waitForTimeout(300);const t=await p.textContent("#app");ok("Liste Noch auszutragen",/Ausgemustert \(Werkstatt\)/.test(t)&&/1 Stk 16A Kabel 5m/.test(t)&&/Ausgemustert – nicht reparierbar/.test(t),t.slice(0,200));
+ await p.screenshot({path:S+"aus_fm.png",fullPage:true});
+ await p.click("[data-fmaus]");await p.waitForTimeout(200);await p.evaluate(()=>{const b=[...document.querySelectorAll(".ov button")].find(x=>/^(Ja|OK)$/.test(x.textContent.trim()));if(b)b.click()});await p.waitForTimeout(400);
+ ok("Ausgetragen ✓",await p.evaluate(()=>{const d=__T.docs.find(d=>d.id==="ausg_d1");return !!(d.data.aus&&d.data.aus.t)}));
+ ok("Lagerstand-Kasten: ausgetragen",await p.evaluate(()=>{curDef="d1";view="defopen";draw();return /ausgetragen von/.test(document.querySelector(".ausbox").textContent)}));
+ /* Zurücknehmen */
+ await p.click("#dd");await p.waitForTimeout(200);const q=await p.textContent(".ov .card");ok("Warnung beim Zurücknehmen (schon ausgetragen)",/schon als ausgetragen/.test(q),q.slice(0,90));
+ await p.evaluate(()=>{const b=[...document.querySelectorAll(".ov button")].find(x=>/^(Ja|OK)$/.test(x.textContent.trim()));if(b)b.click()});await p.waitForTimeout(500);
+ ok("wieder offen, Eintrag weg",await p.evaluate(()=>{const d=__T.docs.find(d=>d.id==="d1").data;return !d.done&&!d.aus&&!__T.docs.some(d=>d.id==="ausg_d1")}));
+ ok("keine JS-Fehler",!errs.length,errs.join("|"));await b.close();console.log(fail?"FEHLER: "+fail:"ALLES OK")})();

@@ -8,8 +8,8 @@
    die Liste „Noch auszutragen“ gilt trotzdem. Rot ab 7 Tagen. Kein SQL (Standardregel). */
 let FMX=[],fmOn=false,fmT="offen";
 function fmSub(){if(fmOn)return;fmOn=true;try{db.collection("fmx").onSnapshot(s=>{FMX=s.docs.map(d=>({id:d.id,...d.data()}));draw()})}catch(e){console.warn(e)}}
-const FMW={zur:"Kommt noch zurück",bau:"Ist auf einer anderen Baustelle",verr:"Dem Kunden verrechnet",weg:"Verloren / gestohlen / kaputt",nicht:"Fehlt doch nicht"};
-const fmNeedsAus=x=>x.was==="verr"||x.was==="weg";
+const FMW={zur:"Kommt noch zurück",bau:"Ist auf einer anderen Baustelle",verr:"Dem Kunden verrechnet",weg:"Verloren / gestohlen / kaputt",nicht:"Fehlt doch nicht",ausg:"Ausgemustert – nicht reparierbar"};
+const fmNeedsAus=x=>x.was==="verr"||x.was==="weg"||x.was==="ausg";/* ausg = Defekt ausgemustert (1.185) */
 const fmFor=(pid,k)=>FMX.filter(x=>x.pk===pid&&x.k===k).sort((a,b)=>(a.t||0)-(b.t||0));
 const fmRes=(pid,k)=>fmFor(pid,k).filter(x=>x.was!=="zur").reduce((a,x)=>a+(+x.q||0),0);
 function fmOpenQ(p,e){return Math.max(0,(e.soll-e.back)-fmRes(p.id,e.k))}
@@ -67,7 +67,7 @@ function fmStrip(){if(!can("fm_a"))return"";const L=fmAus();if(!L.length)return"
 function fmAusView(){if(!can("fm_a")){view="start";return startView()}$("#t").textContent="Noch auszutragen";const L=fmT==="offen"?fmAus():fmAusDone();
  const G={};L.forEach(x=>{(G[x.pk]=G[x.pk]||[]).push(x)});
  $("#app").innerHTML='<div class="row tabs"><button class="btn ghost'+(fmT==="offen"?' act':'')+'" data-fmt="offen">Offen · '+fmAus().length+'</button><button class="btn ghost'+(fmT==="done"?' act':'')+'" data-fmt="done">Ausgetragen</button></div>'+
-  (Object.keys(G).length?Object.keys(G).map(pid=>{const p=packs.find(q=>q.id===pid);return '<div class="card fmg" style="cursor:default;padding:0;overflow:hidden"><button class="fmgh" type="button" data-fmgo="'+esc(pid)+'"><b>'+esc(p?p.ev||"Ohne Veranstaltung":"Gelöschte Packliste")+'</b><small>Auftrag '+esc(p?p.ord||"–":"–")+' ›</small></button>'+
+  (Object.keys(G).length?Object.keys(G).map(pid=>{const p=packs.find(q=>q.id===pid);return '<div class="card fmg" style="cursor:default;padding:0;overflow:hidden">'+(pid==="ausg"?'<div class="fmgh"><b>Ausgemustert (Werkstatt)</b><small>nicht reparierbar</small></div>':'<button class="fmgh" type="button" data-fmgo="'+esc(pid)+'"><b>'+esc(p?p.ev||"Ohne Veranstaltung":"Gelöschte Packliste")+'</b><small>Auftrag '+esc(p?p.ord||"–":"–")+' ›</small></button>')+
    G[pid].map(x=>'<div class="fmar"><span><b>'+pkNum(+x.q||0)+' '+esc(fmU(x))+' '+esc(x.name)+'</b><small>'+esc(FMW[x.was])+' · '+esc(nmA(x,"by"))+', '+fmt(x.t).slice(0,6)+(x.txt?' · '+esc(x.txt):'')+(fmT==="offen"&&fmOld(x)?' · <b class="fmred">seit '+fmDays(x.t)+' Tagen</b>':'')+(fmT==="done"?' · ausgetragen von '+esc(nmA(x.aus,"by"))+', '+fmt(x.aus.t).slice(0,6):'')+'</small></span>'+
     (fmT==="offen"?'<button class="btn s fmaus" type="button" data-fmaus="'+esc(x.id)+'">Ausgetragen ✓</button>':'<button class="lnk" type="button" data-fmaus0="'+esc(x.id)+'">Zurücknehmen</button>')+'</div>').join("")+'</div>'}).join(""):'<div class="card mute">'+(fmT==="offen"?'Nichts auszutragen – der Lagerstand ist aktuell.':'Noch nichts ausgetragen.')+'</div>')+
   (fmT==="offen"&&L.length?'<button class="btn ghost" id="fmxl" type="button">Liste als Excel (zum Austragen am PC)</button>':'')+
@@ -76,9 +76,9 @@ function fmAusView(){if(!can("fm_a")){view="start";return startView()}$("#t").te
 async function fmXl(){const dl=typeof claude!=="undefined"&&claude.use?await claude.use("downloads"):null;if(!dl)return toast("Speichern ist hier nicht verfügbar.");
  try{if(!window.ExcelJS)throw new Error("Excel-Bibliothek nicht geladen");const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Noch auszutragen");
   ws.columns=[{header:"Veranstaltung",width:28},{header:"Auftrag",width:14},{header:"Menge",width:8},{header:"Einheit",width:8},{header:"Artikel",width:32},{header:"Art.-Nr.",width:10},{header:"Grund",width:28},{header:"Eingetragen von",width:18},{header:"am",width:12},{header:"Notiz",width:28}];
-  fmAus().forEach(x=>{const p=packs.find(q=>q.id===x.pk);ws.addRow([p?p.ev||"":"",p?p.ord||"":"",+x.q||0,fmU(x),x.name,x.code||"",FMW[x.was],nmA(x,"by"),fmt(x.t).slice(0,10),x.txt||""])});
+  fmAus().forEach(x=>{const p=packs.find(q=>q.id===x.pk);ws.addRow([p?p.ev||"":(x.was==="ausg"?"Ausgemustert (Werkstatt)":""),p?p.ord||"":"",+x.q||0,fmU(x),x.name,x.code||"",FMW[x.was],nmA(x,"by"),fmt(x.t).slice(0,10),x.txt||""])});
   ws.getRow(1).font={bold:true};const buf=await wb.xlsx.writeBuffer(),d=new Date();
   await dl.save({filename:"Noch_auszutragen_"+d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+".xlsx",data:new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})})}
  catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);toast("Excel konnte nicht erstellt werden.")}}
 /* Wochenbericht: Zeilen „Noch in epirent auszutragen“ */
-function fmWbRows(){return fmAus().map(x=>{const p=packs.find(q=>q.id===x.pk),d=fmDays(x.t);return{n:p?p.ev||p.ord||"–":"–",d:pkNum(+x.q||0)+" "+fmU(x)+" "+x.name+" – "+(x.was==="verr"?"verrechnet":"verloren/kaputt"),r:d>=7?"seit "+d+" Tagen":"",cls:d>=7?"red":"",pk:x.pk}})}
+function fmWbRows(){return fmAus().map(x=>{const p=packs.find(q=>q.id===x.pk),d=fmDays(x.t);return{n:p?p.ev||p.ord||"–":(x.was==="ausg"?"Ausgemustert":"–"),d:pkNum(+x.q||0)+" "+fmU(x)+" "+x.name+" – "+(x.was==="verr"?"verrechnet":x.was==="ausg"?"nicht reparierbar":"verloren/kaputt"),r:d>=7?"seit "+d+" Tagen":"",cls:d>=7?"red":"",pk:x.pk}})}

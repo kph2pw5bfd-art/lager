@@ -570,7 +570,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.184";
+<script>const APPV="1.185";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -3040,8 +3040,8 @@ function abgJvBind(){const s=$("#abgstrip");if(s)s.onclick=()=>{abgPrT=abgToChec
    die Liste „Noch auszutragen“ gilt trotzdem. Rot ab 7 Tagen. Kein SQL (Standardregel). */
 let FMX=[],fmOn=false,fmT="offen";
 function fmSub(){if(fmOn)return;fmOn=true;try{db.collection("fmx").onSnapshot(s=>{FMX=s.docs.map(d=>({id:d.id,...d.data()}));draw()})}catch(e){console.warn(e)}}
-const FMW={zur:"Kommt noch zurück",bau:"Ist auf einer anderen Baustelle",verr:"Dem Kunden verrechnet",weg:"Verloren / gestohlen / kaputt",nicht:"Fehlt doch nicht"};
-const fmNeedsAus=x=>x.was==="verr"||x.was==="weg";
+const FMW={zur:"Kommt noch zurück",bau:"Ist auf einer anderen Baustelle",verr:"Dem Kunden verrechnet",weg:"Verloren / gestohlen / kaputt",nicht:"Fehlt doch nicht",ausg:"Ausgemustert – nicht reparierbar"};
+const fmNeedsAus=x=>x.was==="verr"||x.was==="weg"||x.was==="ausg";/* ausg = Defekt ausgemustert (1.185) */
 const fmFor=(pid,k)=>FMX.filter(x=>x.pk===pid&&x.k===k).sort((a,b)=>(a.t||0)-(b.t||0));
 const fmRes=(pid,k)=>fmFor(pid,k).filter(x=>x.was!=="zur").reduce((a,x)=>a+(+x.q||0),0);
 function fmOpenQ(p,e){return Math.max(0,(e.soll-e.back)-fmRes(p.id,e.k))}
@@ -3099,7 +3099,7 @@ function fmStrip(){if(!can("fm_a"))return"";const L=fmAus();if(!L.length)return"
 function fmAusView(){if(!can("fm_a")){view="start";return startView()}$("#t").textContent="Noch auszutragen";const L=fmT==="offen"?fmAus():fmAusDone();
  const G={};L.forEach(x=>{(G[x.pk]=G[x.pk]||[]).push(x)});
  $("#app").innerHTML='<div class="row tabs"><button class="btn ghost'+(fmT==="offen"?' act':'')+'" data-fmt="offen">Offen · '+fmAus().length+'</button><button class="btn ghost'+(fmT==="done"?' act':'')+'" data-fmt="done">Ausgetragen</button></div>'+
-  (Object.keys(G).length?Object.keys(G).map(pid=>{const p=packs.find(q=>q.id===pid);return '<div class="card fmg" style="cursor:default;padding:0;overflow:hidden"><button class="fmgh" type="button" data-fmgo="'+esc(pid)+'"><b>'+esc(p?p.ev||"Ohne Veranstaltung":"Gelöschte Packliste")+'</b><small>Auftrag '+esc(p?p.ord||"–":"–")+' ›</small></button>'+
+  (Object.keys(G).length?Object.keys(G).map(pid=>{const p=packs.find(q=>q.id===pid);return '<div class="card fmg" style="cursor:default;padding:0;overflow:hidden">'+(pid==="ausg"?'<div class="fmgh"><b>Ausgemustert (Werkstatt)</b><small>nicht reparierbar</small></div>':'<button class="fmgh" type="button" data-fmgo="'+esc(pid)+'"><b>'+esc(p?p.ev||"Ohne Veranstaltung":"Gelöschte Packliste")+'</b><small>Auftrag '+esc(p?p.ord||"–":"–")+' ›</small></button>')+
    G[pid].map(x=>'<div class="fmar"><span><b>'+pkNum(+x.q||0)+' '+esc(fmU(x))+' '+esc(x.name)+'</b><small>'+esc(FMW[x.was])+' · '+esc(nmA(x,"by"))+', '+fmt(x.t).slice(0,6)+(x.txt?' · '+esc(x.txt):'')+(fmT==="offen"&&fmOld(x)?' · <b class="fmred">seit '+fmDays(x.t)+' Tagen</b>':'')+(fmT==="done"?' · ausgetragen von '+esc(nmA(x.aus,"by"))+', '+fmt(x.aus.t).slice(0,6):'')+'</small></span>'+
     (fmT==="offen"?'<button class="btn s fmaus" type="button" data-fmaus="'+esc(x.id)+'">Ausgetragen ✓</button>':'<button class="lnk" type="button" data-fmaus0="'+esc(x.id)+'">Zurücknehmen</button>')+'</div>').join("")+'</div>'}).join(""):'<div class="card mute">'+(fmT==="offen"?'Nichts auszutragen – der Lagerstand ist aktuell.':'Noch nichts ausgetragen.')+'</div>')+
   (fmT==="offen"&&L.length?'<button class="btn ghost" id="fmxl" type="button">Liste als Excel (zum Austragen am PC)</button>':'')+
@@ -3108,12 +3108,12 @@ function fmAusView(){if(!can("fm_a")){view="start";return startView()}$("#t").te
 async function fmXl(){const dl=typeof claude!=="undefined"&&claude.use?await claude.use("downloads"):null;if(!dl)return toast("Speichern ist hier nicht verfügbar.");
  try{if(!window.ExcelJS)throw new Error("Excel-Bibliothek nicht geladen");const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Noch auszutragen");
   ws.columns=[{header:"Veranstaltung",width:28},{header:"Auftrag",width:14},{header:"Menge",width:8},{header:"Einheit",width:8},{header:"Artikel",width:32},{header:"Art.-Nr.",width:10},{header:"Grund",width:28},{header:"Eingetragen von",width:18},{header:"am",width:12},{header:"Notiz",width:28}];
-  fmAus().forEach(x=>{const p=packs.find(q=>q.id===x.pk);ws.addRow([p?p.ev||"":"",p?p.ord||"":"",+x.q||0,fmU(x),x.name,x.code||"",FMW[x.was],nmA(x,"by"),fmt(x.t).slice(0,10),x.txt||""])});
+  fmAus().forEach(x=>{const p=packs.find(q=>q.id===x.pk);ws.addRow([p?p.ev||"":(x.was==="ausg"?"Ausgemustert (Werkstatt)":""),p?p.ord||"":"",+x.q||0,fmU(x),x.name,x.code||"",FMW[x.was],nmA(x,"by"),fmt(x.t).slice(0,10),x.txt||""])});
   ws.getRow(1).font={bold:true};const buf=await wb.xlsx.writeBuffer(),d=new Date();
   await dl.save({filename:"Noch_auszutragen_"+d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+".xlsx",data:new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})})}
  catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);toast("Excel konnte nicht erstellt werden.")}}
 /* Wochenbericht: Zeilen „Noch in epirent auszutragen“ */
-function fmWbRows(){return fmAus().map(x=>{const p=packs.find(q=>q.id===x.pk),d=fmDays(x.t);return{n:p?p.ev||p.ord||"–":"–",d:pkNum(+x.q||0)+" "+fmU(x)+" "+x.name+" – "+(x.was==="verr"?"verrechnet":"verloren/kaputt"),r:d>=7?"seit "+d+" Tagen":"",cls:d>=7?"red":"",pk:x.pk}})}
+function fmWbRows(){return fmAus().map(x=>{const p=packs.find(q=>q.id===x.pk),d=fmDays(x.t);return{n:p?p.ev||p.ord||"–":(x.was==="ausg"?"Ausgemustert":"–"),d:pkNum(+x.q||0)+" "+fmU(x)+" "+x.name+" – "+(x.was==="verr"?"verrechnet":x.was==="ausg"?"nicht reparierbar":"verloren/kaputt"),r:d>=7?"seit "+d+" Tagen":"",cls:d>=7?"red":"",pk:x.pk}})}
 
 /* ===== Gitterbox-Etiketten (1.121) =====
    Nachbau der GoLabel-Vorlagen „Projektlabel“ und „Projektlabel mit Inhalt“ (100 × 100 mm, Godex G530, 300 dpi),
@@ -4062,7 +4062,7 @@ function artImpPreview(out,zl){return new Promise(res=>{const old={};rkat.forEac
    gespeichert in Tabelle push_abos (endpoint, sub, typen). Verschickt wird von der Edge Function „push“ (push.sql löst aus).
    Antippen der Nachricht öffnet ./?go=pr | def:<id> | pk:<id> (bzw. Nachricht an die offene App). */
 const PUSH_FN=SB_URL+"/functions/v1/push",PUSH_EP="tpc_push_ep";
-const PUSH_T=[["pr","Aufträge zu prüfen","bei jeder neuen Endretoure"],["def","Dringende Defekte","wenn ein dringender Defekt gemeldet wird"],["pk","Neue Packlisten","wenn eine Packliste hochgeladen wird"]];
+const PUSH_T=[["pr","Aufträge zu prüfen","bei jeder neuen Endretoure und bei ausgemustertem Material"],["def","Dringende Defekte","wenn ein dringender Defekt gemeldet wird"],["pk","Neue Packlisten","wenn eine Packliste hochgeladen wird"]];
 const PUSH_DEF={pr:["lagerleiter"],def:["werkstatt"],pk:["lagerarbeiter"]};
 const pushTitOn=(tid,typ)=>{const pu=((typeof TIT!=="undefined"&&TIT[tid])||{}).push;return pu&&typeof pu[typ]==="boolean"?pu[typ]:(PUSH_DEF[typ]||[]).includes(tid)};
 const pushAllowed=typ=>(typeof realOwner!=="undefined"&&realOwner)||pushTitOn(hoMyTitle(),typ);
@@ -4084,7 +4084,7 @@ async function pushLoad(){pushRow=null;try{const ep=localStorage.getItem(PUSH_EP
  const reg=pushReg||await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(!sub||sub.endpoint!==ep){localStorage.removeItem(PUSH_EP);return}
  const {data}=await SB.from("push_abos").select("endpoint,typen").eq("endpoint",ep).maybeSingle();pushRow=data||null;
  if(!pushRow){const typen={};PUSH_T.forEach(([k])=>typen[k]=!realOwner&&pushAllowed(k));await pushSave(sub,typen)}}catch(e){console.warn(e)}}
-function pushGo(g){const run=()=>{if(g==="pr"){if(can("abg_p"))go("abgpr");return}const i=g.indexOf(":"),a=g.slice(0,i),id=g.slice(i+1);
+function pushGo(g){const run=()=>{if(g==="pr"){if(can("abg_p"))go("abgpr");return}if(g==="fma"){if(can("fm_a"))go("fmaus");return}const i=g.indexOf(":"),a=g.slice(0,i),id=g.slice(i+1);
   if(a==="def"&&id){curDef=id;go("defopen")}else if(a==="pk"&&id){curPack=id;go("packopen")}};setTimeout(run,900)}
 async function pushSave(sub,typen){const row={endpoint:sub.endpoint,user_id:ME.id,sub:sub.toJSON?sub.toJSON():sub,typen,geraet:pushDev(),t:new Date().toISOString()};
  const {error}=await SB.from("push_abos").upsert(row);if(error)throw error;pushRow=row;try{localStorage.setItem(PUSH_EP,sub.endpoint)}catch(e){}}
@@ -4556,7 +4556,7 @@ function wsLine(d){let who="";try{who=nmA(d,"by")}catch(e){}const ago=fmt(d.t);
 function wsView(){if(!wsIn){wsIn=true;const s=+wsLS("tpc_ws_seen")||0;wsPrev=s||Date.now()-864e5}
  $("#t").textContent="Werkstatt Übersicht";const O=wsOpen().sort((a,b)=>b.t-a.t),U=O.filter(d=>d.urg),N=O.filter(d=>d.t>wsPrev);
  if(!wsTab)wsTab=U.length?"urg":N.length?"neu":"alle";const L=wsTab==="urg"?U:wsTab==="neu"?N:O.slice().sort((a,b)=>(b.urg?1:0)-(a.urg?1:0)||b.t-a.t);
- const w0=wsWeek(),all=vdefs(),rep=all.filter(d=>d.done&&(d.doneT||0)>=w0).reduce((s,d)=>s+dxQ(d),0),neu=all.filter(d=>d.t>=w0).reduce((s,d)=>s+dxQ(d),0),last=all.filter(d=>d.done&&d.doneT).sort((a,b)=>b.doneT-a.doneT).slice(0,4);
+ const w0=wsWeek(),all=vdefs(),rep=all.filter(d=>d.done&&!d.aus&&(d.doneT||0)>=w0).reduce((s,d)=>s+dxQ(d),0),neu=all.filter(d=>d.t>=w0).reduce((s,d)=>s+dxQ(d),0),last=all.filter(d=>d.done&&d.doneT).sort((a,b)=>b.doneT-a.doneT).slice(0,4);
  const tab=(k,l,n,red)=>'<button type="button" class="wstab'+(wsTab===k?' on':'')+(red&&n?' red':'')+'" data-wst="'+k+'"><b>'+n+'</b>'+l+'</button>';
  $("#app").innerHTML='<div class="jv" id="wsv"><section class="jvhead"><div class="jvhrow"><div class="jvtime"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div></div></div><div class="jvgreet">'+esc(jvGreet())+'</div>'+
   '<div class="wsbig"><button type="button" class="wsrep" id="wsrep">Repariert melden<small>Teil scannen</small></button><button type="button" class="wsnew" id="wsnew">Defekt erfassen<small>neu melden</small></button></div></section>'+
@@ -5119,6 +5119,45 @@ function kmDlg(P,i){const x=pkPosAll(P)[i],k=pkKeys(P)[i],h=pkH(P)[k]||{},o=docu
 (function kmWait(){if(typeof db==="undefined"||!db||typeof me==="undefined"||!me)return setTimeout(kmWait,1500);
  try{db.collection("kmat").onSnapshot(s=>{KMAT={};s.docs.forEach(d=>KMAT[d.id]=d.data());if(typeof view!=="undefined"&&/^pack/.test(view))draw()})}catch(e){}})();
 (function(){try{const st=document.createElement("style");st.textContent='.pkg.pkgkm{color:#fff;background:#5b6573}.pkp.pk-km .pkt em{display:block;font-style:normal;font-size:13px;color:var(--mute)}.pkp.pk-km{opacity:1}';document.head.appendChild(st)}catch(e){}})();
+
+/* ===== Defekt: nicht reparierbar – ausmustern (1.185, Jürgen 24.11.; Notiz https://claude.ai/artifact/WFYfyMqxEhg29MsYjcELxc) =====
+   Anlass: 16A-Kabel 5 m nicht mehr zu reparieren – Sonja soll es in epirent austragen.
+   Im Defekt Knopf „Nicht reparierbar – ausmustern“ (Recht Defekte – Bearbeiten), Grund (Pflicht) + Fotos (optional), bei Stückzahl „Wie viele?“
+   (Rest bleibt offen, wsSplit). Defekt danach erledigt: aus={by,t,why,n,fn}. Zusätzlich Eintrag in docs fmx (id ausg_<Defekt>, pk "ausg", was "ausg")
+   → Liste „Noch in epirent auszutragen“ (fm.js), Sonja tippt „Ausgetragen ✓“. Push an „Aufträge zu prüfen“-Empfänger (Lagerleiter) über ausmustern.sql.
+   „Wieder auf offen setzen“ bei einem ausgemusterten Defekt nimmt das Ausmustern samt fmx-Eintrag zurück. */
+function ausBtn(d){return d.done?'':'<button class="btn" id="dausm" type="button" style="margin-top:10px;background:#b71c1c;border-color:#b71c1c;color:#fff">Nicht reparierbar – ausmustern</button>'}
+function ausLine(d){const a=d.aus;if(!a||!a.t)return "";const x=typeof FMX!=="undefined"?FMX.find(y=>y.id==="ausg_"+d.id):null,et=x&&x.aus&&x.aus.t;
+ return '<div class="ausbox"><b>Ausgemustert – nicht reparierbar'+(+a.n>1?' ('+a.n+' Stk)':'')+'</b><div>'+esc(a.why||"")+'</div><small>'+esc(nmA(a,"by"))+', '+fmt(a.t).slice(0,10)+' · '+(et?'in epirent ausgetragen von '+esc(nmA(x.aus,"by"))+', '+fmt(x.aus.t).slice(0,6):'noch in epirent auszutragen')+'</small>'+(+a.fn?'<div class="thr" id="dausph"></div>':'')+'</div>'}
+async function ausPhotos(d){const el=document.getElementById("dausph");if(!el||!d.aus)return;let h="";for(let i=0;i<(+d.aus.fn||0);i++){try{const s=await db.doc("fotos/"+d.id+"-a"+i).get();if(s.exists&&s.data().d)h+='<img src="'+s.data().d+'" alt="Foto '+(i+1)+'" style="width:84px;height:84px;object-fit:cover;border-radius:8px;margin:6px 6px 0 0" data-ausbig="'+i+'">'}catch(e){}}
+ el.innerHTML=h;el.querySelectorAll("img").forEach(im=>im.onclick=()=>{const o=document.createElement("div");o.className="ov";o.innerHTML='<img src="'+im.src+'" alt="Foto" style="max-width:96vw;max-height:86vh;border-radius:10px">';o.onclick=()=>o.remove();document.body.appendChild(o)})}
+function ausStart(d){if(!can("def_b"))return toast("Dafür brauchst du das Recht „Defekte – Bearbeiten“.");const n=dxQ(d);if(n<=1)return ausDlg(d,1);let k=n;const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:400px;margin:0"><b style="font-size:18px">Wie viele sind nicht reparierbar?</b><p class="mute" style="margin:2px 0 0">'+n+' × '+esc(d.art)+'</p><div class="wsq"><button type="button" id="auqm" aria-label="Weniger">−</button><b id="auqv"></b><button type="button" id="auqp" aria-label="Mehr">+</button></div><p class="mute" id="auqh" style="font-size:13px;min-height:18px;margin:0 0 10px"></p><div class="row"><button class="btn ghost" type="button" id="auqx">Abbrechen</button><button class="btn" type="button" id="auqo">Weiter</button></div></div>';
+ document.body.appendChild(o);const q=s=>o.querySelector(s),upd=()=>{q("#auqv").textContent=k+" von "+n;q("#auqh").textContent=k<n?(n-k)+" Stk bleiben als offener Defekt stehen.":"Alle Stück werden ausgemustert."};upd();
+ q("#auqm").onclick=()=>{if(k>1){k--;upd()}};q("#auqp").onclick=()=>{if(k<n){k++;upd()}};q("#auqx").onclick=()=>o.remove();q("#auqo").onclick=()=>{o.remove();ausDlg(d,k)}}
+function ausDlg(d,k){const n=dxQ(d),F=[],o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="width:100%;max-width:440px;margin:0"><b style="font-size:18px">Nicht reparierbar – ausmustern</b><p class="mute" style="margin:2px 0 10px">'+k+' × '+esc(d.art)+(d.anr?' · Nr. '+esc(d.anr):'')+'</p>'+
+  '<label class="mute" for="ausw">Grund (Pflicht)</label><textarea id="ausw" rows="3" placeholder="z. B. Mantel gebrochen, Stecker verschmort – Reparatur lohnt nicht"></textarea>'+
+  '<div class="row" style="margin-top:8px"><button class="btn ghost" type="button" id="ausc">📷 Foto machen</button><button class="btn ghost" type="button" id="ausg">🖼 Aus der Galerie</button></div><div id="ausf" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>'+
+  '<p class="mute" style="font-size:13px;margin:10px 0">Der Defekt ist danach erledigt. Der Artikel kommt auf die Liste „Noch in epirent auszutragen“, die Lagerleitung bekommt eine Nachricht.</p>'+
+  '<div class="row"><button class="btn ghost" type="button" id="ausx">Abbrechen</button><button class="btn" type="button" id="auso" style="background:#b71c1c;border-color:#b71c1c">Ausmustern</button></div></div>';
+ document.body.appendChild(o);const q=s=>o.querySelector(s);
+ const draw0=()=>{q("#ausf").innerHTML=F.map((f,i)=>'<span style="position:relative"><img src="'+f+'" alt="Foto '+(i+1)+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px"><button type="button" data-ausrm="'+i+'" aria-label="Foto entfernen" style="position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:#b71c1c;color:#fff;font-weight:800">✕</button></span>').join("");q("#ausf").querySelectorAll("[data-ausrm]").forEach(b=>b.onclick=()=>{F.splice(+b.dataset.ausrm,1);draw0()})};
+ const grab=cam=>{const i=document.createElement("input");i.type="file";i.accept="image/*";if(cam)i.setAttribute("capture","environment");else i.multiple=true;
+  i.onchange=async()=>{for(const f of [...i.files].slice(0,6-F.length)){try{F.push(await shrink(f))}catch(e){}}draw0()};i.click()};
+ q("#ausc").onclick=()=>grab(true);q("#ausg").onclick=()=>grab(false);q("#ausx").onclick=()=>o.remove();
+ q("#auso").onclick=async()=>{const why=q("#ausw").value.trim();if(!why){q("#ausw").focus();return toast("Bitte einen Grund angeben.")}
+  q("#auso").disabled=true;try{
+   if(k<n&&typeof wsSplit==="function")await wsSplit(d,k);
+   for(let i=0;i<F.length;i++)await db.doc("fotos/"+d.id+"-a"+i).set({d:F[i]});
+   const t=Date.now(),a={by:me,...tabAs("by"),t,why,n:k,fn:F.length};
+   await db.doc("defekte/"+d.id).update({...(k<n?{n:k}:{}),done:true,doneBy:me,...tabAs("doneBy"),doneT:t,aus:a});
+   await db.doc("fmx/ausg_"+d.id).set({pk:"ausg",k:"def:"+d.id,def:d.id,q:k,u:"Stk",name:d.art||"Artikel",code:d.anr||"",was:"ausg",by:me,...tabAs("by"),t,txt:why+(d.ev?" · "+d.ev:""),aus:null});
+   o.remove();toast("Ausgemustert – steht jetzt bei „Noch in epirent auszutragen“",1);draw()}catch(e){console.error(e);q("#auso").disabled=false;toast("Speichern fehlgeschlagen. Bitte nochmal versuchen.")}}}
+function ausUndo(d){if(!can("def_b"))return;const x=typeof FMX!=="undefined"?FMX.find(y=>y.id==="ausg_"+d.id):null;
+ ask((x&&x.aus&&x.aus.t?"Achtung: In epirent ist der Artikel schon als ausgetragen markiert. ":"")+"Ausmustern zurücknehmen? Der Defekt ist dann wieder offen.",async()=>{
+  try{await db.doc("defekte/"+d.id).update({done:false,doneBy:"",doneT:0,aus:null});if(x)await db.doc("fmx/"+x.id).delete();toast("Zurückgenommen – Defekt wieder offen",1)}catch(e){toast("Speichern fehlgeschlagen.")}})}
+(function(){try{const st=document.createElement("style");st.textContent='.ausbox{margin:10px 0;padding:10px 12px;border-radius:10px;background:#b71c1c;color:#fff}.ausbox b{display:block;font-size:16px}.ausbox small{display:block;opacity:.95;margin-top:4px}';document.head.appendChild(st)}catch(e){}})();
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -5304,14 +5343,14 @@ function defNewView(){setTimeout(()=>defFvSet("dn",null),0);$("#t").textContent=
   try{const fn=await savePhotos(id,dpho);await db.doc("defekte/"+id).set({art:a,anr:$("#dnnr").value.trim(),ev,desc:$("#dnds").value.trim(),ord:$("#dnord").value.trim(),by:me,...tabAs("by"),t:Date.now(),done:false,urg:$("#dnu").checked,n:dxQty("dn"),...defFvGet("dn"),fn,foto:fn>0});dpho=null;dxDone({id,art:a,ev,ord:$("#dnord").value.trim(),desc:ds,n:dxQty("dn"),urg:$("#dnu").checked})}catch(x){$("#dnsend").disabled=false;toast("Senden fehlgeschlagen. Bitte nochmal versuchen.")}}}
 function defOpenView(){const d=defs.find(x=>x.id===curDef);if(!d||!(can("def_s")||d.by===me)){view="def";return defView()}
  $("#t").textContent="Defekt";
- $("#app").innerHTML=nav()+'<div class="card dc'+(d.done?" done":"")+'" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;font-size:19px">'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+'</b>'+defFvTag(d)+(d.urg&&!d.done?'<span class="tag" style="flex:0;background:#7a0f08;color:#fff">DRINGEND</span> ':'')+'<span class="tag" style="flex:0">'+(d.done?"Erledigt":"Offen")+'</span></div>'+(d.anr?'<div class="mute">Artikelnummer: '+esc(d.anr)+'</div>':'')+'<div class="mute">Veranstaltung: '+esc(d.ev)+'</div>'+(d.ord?'<div class="mute">Auftragsnummer: '+esc(d.ord)+'</div>':'')+dxDefLines(d)+'<div class="mute">Gemeldet: '+esc(nmA(d,"by"))+', '+fmt(d.t)+'</div>'+(d.edT?'<div class="mute">Bearbeitet: '+fmt(d.edT)+'</div>':'')+(d.done?'<div class="mute">Erledigt: '+esc(nmA(d,"doneBy"))+', '+fmt(d.doneT)+'</div>':'')+
- defFvLine(d)+'<p style="white-space:pre-wrap;margin:10px 0">'+(d.desc?esc(d.desc):'<span class="mute">Keine Beschreibung.</span>')+'</p>'+(canDone()||d.fb?'<label class="mute">Rückmeldung der Werkstatt</label><input id="dfb" placeholder="z. B. Ersatzteil bestellt" '+(canDone()?'':'disabled ')+'value="'+esc(d.fb)+'">':'')+(d.foto?'<div id="dph" class="thr"></div>':'')+'</div>'+etCard(d)+
- (d.by===me?'<button class="btn ghost" id="ded" style="margin-bottom:10px">Bearbeiten</button>':'')+(canDone()?'<button class="btn'+(d.done?' ghost':'')+'" id="dd" style="'+(d.done?'':'background:var(--ok)')+'">'+(d.done?"Wieder auf offen setzen":"Repariert")+'</button>'+(d.done?'<button class="btn ghost" id="etedit" style="margin-top:10px">'+(d.rep||etList(d).length||d.rfn?"Reparatur ändern":"Reparatur / Ersatzteile eintragen")+'</button>':''):'<div class="mute" style="text-align:center">Nur die Werkstatt kann Defekte als erledigt markieren.</div>');
+ $("#app").innerHTML=nav()+'<div class="card dc'+(d.done?" done":"")+'" style="cursor:default"><div class="row" style="align-items:center"><b style="flex:1;font-size:19px">'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+'</b>'+defFvTag(d)+(d.urg&&!d.done?'<span class="tag" style="flex:0;background:#7a0f08;color:#fff">DRINGEND</span> ':'')+'<span class="tag" style="flex:0">'+(d.aus&&d.aus.t?"Ausgemustert":d.done?"Erledigt":"Offen")+'</span></div>'+(d.anr?'<div class="mute">Artikelnummer: '+esc(d.anr)+'</div>':'')+'<div class="mute">Veranstaltung: '+esc(d.ev)+'</div>'+(d.ord?'<div class="mute">Auftragsnummer: '+esc(d.ord)+'</div>':'')+dxDefLines(d)+'<div class="mute">Gemeldet: '+esc(nmA(d,"by"))+', '+fmt(d.t)+'</div>'+(d.edT?'<div class="mute">Bearbeitet: '+fmt(d.edT)+'</div>':'')+(d.done?'<div class="mute">Erledigt: '+esc(nmA(d,"doneBy"))+', '+fmt(d.doneT)+'</div>':'')+
+ defFvLine(d)+(typeof ausLine==="function"?ausLine(d):"")+'<p style="white-space:pre-wrap;margin:10px 0">'+(d.desc?esc(d.desc):'<span class="mute">Keine Beschreibung.</span>')+'</p>'+(canDone()||d.fb?'<label class="mute">Rückmeldung der Werkstatt</label><input id="dfb" placeholder="z. B. Ersatzteil bestellt" '+(canDone()?'':'disabled ')+'value="'+esc(d.fb)+'">':'')+(d.foto?'<div id="dph" class="thr"></div>':'')+'</div>'+etCard(d)+
+ (d.by===me?'<button class="btn ghost" id="ded" style="margin-bottom:10px">Bearbeiten</button>':'')+(canDone()?'<button class="btn'+(d.done?' ghost':'')+'" id="dd" style="'+(d.done?'':'background:var(--ok)')+'">'+(d.done?"Wieder auf offen setzen":"Repariert")+'</button>'+(canDone()&&can("def_b")&&typeof ausBtn==="function"?ausBtn(d):"")+(d.done?'<button class="btn ghost" id="etedit" style="margin-top:10px">'+(d.rep||etList(d).length||d.rfn?"Reparatur ändern":"Reparatur / Ersatzteile eintragen")+'</button>':''):'<div class="mute" style="text-align:center">Nur die Werkstatt kann Defekte als erledigt markieren.</div>');
  bindNav();
- if(d.foto)loadTh("dph",d);etBind(d);
+ if(d.foto)loadTh("dph",d);etBind(d);if($("#dausm"))$("#dausm").onclick=()=>ausStart(d);if(d.aus&&typeof ausPhotos==="function")ausPhotos(d);
  if($("#dfb"))$("#dfb").onchange=()=>db.doc("defekte/"+d.id).update({fb:$("#dfb").value.trim()});
  if($("#ded"))$("#ded").onclick=()=>go("defedit");
- if($("#dd"))$("#dd").onclick=()=>!d.done?wsRepair(d):db.doc("defekte/"+d.id).update(d.done?{done:false,doneBy:"",doneT:0}:{done:true,doneBy:me,...tabAs("doneBy"),doneT:Date.now()});
+ if($("#dd"))$("#dd").onclick=()=>d.done&&d.aus&&d.aus.t?ausUndo(d):!d.done?wsRepair(d):db.doc("defekte/"+d.id).update(d.done?{done:false,doneBy:"",doneT:0}:{done:true,doneBy:me,...tabAs("doneBy"),doneT:Date.now()});
 }
 let hist=[];
 function go(v){try{document.activeElement.blur()}catch(e){}stop();hist.push(view);view=v;draw()}

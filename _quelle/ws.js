@@ -30,7 +30,7 @@ function wsLine(d){let who="";try{who=nmA(d,"by")}catch(e){}const ago=fmt(d.t);
 function wsView(){if(!wsIn){wsIn=true;const s=+wsLS("tpc_ws_seen")||0;wsPrev=s||Date.now()-864e5}
  $("#t").textContent="Werkstatt Übersicht";const O=wsOpen().sort((a,b)=>b.t-a.t),U=O.filter(d=>d.urg),N=O.filter(d=>d.t>wsPrev);
  if(!wsTab)wsTab=U.length?"urg":N.length?"neu":"alle";const L=wsTab==="urg"?U:wsTab==="neu"?N:O.slice().sort((a,b)=>(b.urg?1:0)-(a.urg?1:0)||b.t-a.t);
- const w0=wsWeek(),all=vdefs(),rep=all.filter(d=>d.done&&(d.doneT||0)>=w0).reduce((s,d)=>s+dxQ(d),0),neu=all.filter(d=>d.t>=w0).reduce((s,d)=>s+dxQ(d),0),last=all.filter(d=>d.done&&d.doneT).sort((a,b)=>b.doneT-a.doneT).slice(0,4);
+ const w0=wsWeek(),all=vdefs(),rep=all.filter(d=>d.done&&!d.aus&&(d.doneT||0)>=w0).reduce((s,d)=>s+dxQ(d),0),neu=all.filter(d=>d.t>=w0).reduce((s,d)=>s+dxQ(d),0),last=all.filter(d=>d.done&&d.doneT).sort((a,b)=>b.doneT-a.doneT).slice(0,4);
  const tab=(k,l,n,red)=>'<button type="button" class="wstab'+(wsTab===k?' on':'')+(red&&n?' red':'')+'" data-wst="'+k+'"><b>'+n+'</b>'+l+'</button>';
  $("#app").innerHTML='<div class="jv" id="wsv"><section class="jvhead"><div class="jvhrow"><div class="jvtime"><div class="jvclock" id="jvclock"></div><div class="jvdate" id="jvdate"></div></div></div><div class="jvgreet">'+esc(jvGreet())+'</div>'+
   '<div class="wsbig"><button type="button" class="wsrep" id="wsrep">Repariert melden<small>Teil scannen</small></button><button type="button" class="wsnew" id="wsnew">Defekt erfassen<small>neu melden</small></button></div></section>'+

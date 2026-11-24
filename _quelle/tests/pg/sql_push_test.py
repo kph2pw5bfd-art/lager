@@ -51,4 +51,13 @@ chk("Eigenes Abo gespeichert mit user_id",sql("select user_id from push_abos whe
 chk("Andere sehen fremde Abos nicht",sql("select count(*) from push_abos",user=W)[0],"0")
 o,e=sql(f"""insert into push_abos(endpoint,user_id,sub) values ('e2','{M}','{{}}')""",user=W,ok_err=True);chk("Kein Abo im Namen anderer","nein" if e else "ja","nein")
 chk("Geheimnis nicht lesbar",("denied" in sql("select * from push_cfg",user=M,ok_err=True)[1]),True)
+# 1.185: ausmustern.sql – Push bei ausgemustertem Defekt
+sql("create or replace function net.http_post(url text, body jsonb, headers jsonb) returns bigint language sql as $$ insert into net.calls(url,body,headers) values (url,body,headers) returning n::bigint $$;")
+o=sql(open("/home/claude/gh/ausmustern.sql").read())[0].splitlines()[-1];chk("ausmustern.sql läuft",o.startswith("Fertig"),True);sql(open("/home/claude/gh/ausmustern.sql").read())
+n0=len(calls())
+sql(f"""insert into docs(col,id,data) values ('defekte','dA','{{"art":"16A Kabel 5m","by":"{A}","done":false}}')""",user=A)
+chk("Defekt anlegen: keine Nachricht",len(calls()),n0)
+sql(f"""update docs set data=data||'{{"done":true,"aus":{{"by":"{A}","t":1795000000000,"why":"Mantel gebrochen","n":2}}}}'::jsonb where col='defekte' and id='dA'""",user=A)
+c=calls();chk("Ausgemustert: Nachricht",len(c),n0+1);chk("Art pr, Ziel fma",(c[-1]["typ"],c[-1]["ziel"]),("pr","fma"));chk("Titel",c[-1]["titel"],"Ausgemustert: 16A Kabel 5m");print("     ",c[-1]["text"])
+sql(f"""update docs set data=data||'{{"desc":"x"}}'::jsonb where col='defekte' and id='dA'""",user=A);chk("Weitere Änderung: keine zweite Nachricht",len(calls()),n0+1)
 print("FEHLER GESAMT:",F)

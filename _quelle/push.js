@@ -5,7 +5,7 @@
    gespeichert in Tabelle push_abos (endpoint, sub, typen). Verschickt wird von der Edge Function „push“ (push.sql löst aus).
    Antippen der Nachricht öffnet ./?go=pr | def:<id> | pk:<id> (bzw. Nachricht an die offene App). */
 const PUSH_FN=SB_URL+"/functions/v1/push",PUSH_EP="tpc_push_ep";
-const PUSH_T=[["pr","Aufträge zu prüfen","bei jeder neuen Endretoure"],["def","Dringende Defekte","wenn ein dringender Defekt gemeldet wird"],["pk","Neue Packlisten","wenn eine Packliste hochgeladen wird"]];
+const PUSH_T=[["pr","Aufträge zu prüfen","bei jeder neuen Endretoure und bei ausgemustertem Material"],["def","Dringende Defekte","wenn ein dringender Defekt gemeldet wird"],["pk","Neue Packlisten","wenn eine Packliste hochgeladen wird"]];
 const PUSH_DEF={pr:["lagerleiter"],def:["werkstatt"],pk:["lagerarbeiter"]};
 const pushTitOn=(tid,typ)=>{const pu=((typeof TIT!=="undefined"&&TIT[tid])||{}).push;return pu&&typeof pu[typ]==="boolean"?pu[typ]:(PUSH_DEF[typ]||[]).includes(tid)};
 const pushAllowed=typ=>(typeof realOwner!=="undefined"&&realOwner)||pushTitOn(hoMyTitle(),typ);
@@ -27,7 +27,7 @@ async function pushLoad(){pushRow=null;try{const ep=localStorage.getItem(PUSH_EP
  const reg=pushReg||await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(!sub||sub.endpoint!==ep){localStorage.removeItem(PUSH_EP);return}
  const {data}=await SB.from("push_abos").select("endpoint,typen").eq("endpoint",ep).maybeSingle();pushRow=data||null;
  if(!pushRow){const typen={};PUSH_T.forEach(([k])=>typen[k]=!realOwner&&pushAllowed(k));await pushSave(sub,typen)}}catch(e){console.warn(e)}}
-function pushGo(g){const run=()=>{if(g==="pr"){if(can("abg_p"))go("abgpr");return}const i=g.indexOf(":"),a=g.slice(0,i),id=g.slice(i+1);
+function pushGo(g){const run=()=>{if(g==="pr"){if(can("abg_p"))go("abgpr");return}if(g==="fma"){if(can("fm_a"))go("fmaus");return}const i=g.indexOf(":"),a=g.slice(0,i),id=g.slice(i+1);
   if(a==="def"&&id){curDef=id;go("defopen")}else if(a==="pk"&&id){curPack=id;go("packopen")}};setTimeout(run,900)}
 async function pushSave(sub,typen){const row={endpoint:sub.endpoint,user_id:ME.id,sub:sub.toJSON?sub.toJSON():sub,typen,geraet:pushDev(),t:new Date().toISOString()};
  const {error}=await SB.from("push_abos").upsert(row);if(error)throw error;pushRow=row;try{localStorage.setItem(PUSH_EP,sub.endpoint)}catch(e){}}
