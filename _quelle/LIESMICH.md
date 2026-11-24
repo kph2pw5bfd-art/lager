@@ -601,3 +601,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## 1.187 (Jürgen, 24.11., Sprachanruf): Weg zu „Noch auszutragen“ ohne orangen Streifen
 - Bisher kam man nur über den orangen Streifen (`fmStrip`, nur wenn etwas offen ist) oder die Push-Nachricht zur Liste – war nichts offen, konnte Sonja nicht nachsehen, was schon ausgetragen ist. Neu: Karte „Austragen in epirent“ (`fmLink`, fm.js) unten in der Lager Übersicht unter dem Wochenbericht, immer da für Recht „Fehlmaterial austragen“ (fm_a). Zeigt „n noch auszutragen / Nichts offen · n ausgetragen“; öffnet „Offen“, wenn etwas offen ist, sonst „Ausgetragen“ (Bind in `abgJvBind`).
 - Test in `tests/aus_t.js`.
+
+## 1.188 (Jürgen, 24.11., Sprachanruf): Wochenbericht – was ausgetragen wurde
+- Abschnitt 1 „Letzte Woche“: neue Liste „Letzte Woche in epirent ausgetragen“ (nur wenn es Einträge gibt; `fmWbDone(L0,L1)` nach `aus.t`): Auftrag bzw. „Ausgemustert“, Menge + Einheit, Artikel, Art.-Nr., ID, Art (verrechnet / verloren/kaputt / nicht reparierbar mit Grund), rechts grün Tag + wer. Auch im PDF/Ausdruck (wb.js `list`).
+- „Fehlmaterial noch in epirent auszutragen“ hat jetzt auch Art.-Nr./ID (`fmWbNr`).
+- Test `tests/wbaus_t.js`; `fm_t` Regex angepasst.

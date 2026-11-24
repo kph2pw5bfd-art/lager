@@ -87,4 +87,10 @@ async function fmXl(){const dl=typeof claude!=="undefined"&&claude.use?await cla
   await dl.save({filename:"Noch_auszutragen_"+d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+".xlsx",data:new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})})}
  catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);toast("Excel konnte nicht erstellt werden.")}}
 /* Wochenbericht: Zeilen „Noch in epirent auszutragen“ */
-function fmWbRows(){return fmAus().map(x=>{const p=packs.find(q=>q.id===x.pk),d=fmDays(x.t);return{n:p?p.ev||p.ord||"–":(x.was==="ausg"?"Ausgemustert":"–"),d:pkNum(+x.q||0)+" "+fmU(x)+" "+x.name+" – "+(x.was==="verr"?"verrechnet":x.was==="ausg"?"nicht reparierbar":"verloren/kaputt"),r:d>=7?"seit "+d+" Tagen":"",cls:d>=7?"red":"",pk:x.pk}})}
+/* Wochenbericht (1.188): Artikelnummer/ID in den Zeilen; neu „Letzte Woche in epirent ausgetragen“ (aus.t in [a,b)) */
+const fmWbNr=x=>{const a=typeof ausFmNr==="function"?ausFmNr(x):{nr:x.code||"",id:""};return (a.nr?" · Art.-Nr. "+a.nr:"")+(a.id?" · ID "+a.id:"")};
+const fmWbWas=x=>x.was==="verr"?"verrechnet":x.was==="ausg"?"nicht reparierbar":"verloren/kaputt";
+const fmWbN=x=>{const p=packs.find(q=>q.id===x.pk);return p?p.ev||p.ord||"–":(x.was==="ausg"?"Ausgemustert":"–")};
+function fmWbRows(){return fmAus().map(x=>{const d=fmDays(x.t);return{n:fmWbN(x),d:pkNum(+x.q||0)+" "+fmU(x)+" "+x.name+fmWbNr(x)+" – "+fmWbWas(x),r:d>=7?"seit "+d+" Tagen":"",cls:d>=7?"red":"",pk:x.pk}})}
+function fmWbDone(a,b){return fmAusDone().filter(x=>x.aus.t>=a&&x.aus.t<b).sort((p,q)=>p.aus.t-q.aus.t).map(x=>{const why=x.was==="ausg"&&x.txt?String(x.txt).split(" · ")[0]:"";
+ return{n:fmWbN(x),d:pkNum(+x.q||0)+" "+fmU(x)+" "+x.name+fmWbNr(x)+" – "+fmWbWas(x)+(why?" („"+why+"“)":""),r:(typeof wbWd==="function"?wbWd(x.aus.t):fmt(x.aus.t).slice(0,6))+" · "+nmA(x.aus,"by"),cls:"ok",pk:x.pk}})}

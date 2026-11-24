@@ -54,7 +54,7 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5+8
  await p.click('[data-fmt="done"]');await p.waitForTimeout(200);ok("Reiter „Ausgetragen“ zeigt ihn",/Verteiler 63A/.test(await p.evaluate(()=>document.querySelector("#app").textContent)));
  /* Wochenbericht */
  await p.evaluate(()=>{view="wb";draw()});await p.waitForTimeout(400);const wb=await p.evaluate(()=>document.querySelector("#app").textContent);
- ok("Wochenbericht: „Fehlmaterial noch in epirent auszutragen“",/Fehlmaterial noch in epirent auszutragen/.test(wb)&&/2 Stk Kabel 32A 50m – verrechnet/.test(wb));
+ ok("Wochenbericht: „Fehlmaterial noch in epirent auszutragen“",/Fehlmaterial noch in epirent auszutragen/.test(wb)&&/2 Stk Kabel 32A 50m( · Art\.-Nr\. \d+)? – verrechnet/.test(wb));
  const b64=await p.evaluate(async()=>{const r=await wbPdf(wbData());const u=r instanceof Uint8Array?r:new Uint8Array(await (r.blob||r).arrayBuffer());let s="";for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode(...u.subarray(i,i+8192));return btoa(s)}).catch(e=>"ERR "+e.message);
  if(/^ERR/.test(b64))console.log("   PDF:",b64);else{fs.writeFileSync(S+"fm_wb.pdf",Buffer.from(b64,"base64"));const pt=require("child_process").execSync("pdftotext -layout "+S+"fm_wb.pdf -").toString();ok("Wochenbericht-PDF (Handy) mit Liste",/Fehlmaterial noch in epirent auszutragen/.test(pt)&&/Kabel 32A 50m/.test(pt))}
  /* PL: „Dem Kunden verrechnet“ für die restlichen 2 Kabel – erst „zur“ zurücknehmen */
