@@ -47,7 +47,7 @@ const t0=new Date();t0.setHours(0,0,0,0);const T0=t0.getTime(),D=n=>T0+n*864e5+8
  await p.screenshot({path:S+"fm_uebersicht.png",fullPage:true});
  /* Liste Noch auszutragen */
  await p.click("#fmstrip");await p.waitForTimeout(400);ok("Liste geöffnet, 2 Einträge",(await p.$$("#app [data-fmaus]")).length===2);
- await p.click("#fmxl");await p.waitForTimeout(500);const xl=await p.evaluate(()=>({f:window.__saved,r:window.__xl}));ok("Excel mit 2 Zeilen erstellt",xl.r&&xl.r.length===2&&xl.r[1][6]==="Dem Kunden verrechnet");
+ await p.click("#fmxl");await p.waitForTimeout(500);const xl=await p.evaluate(()=>({f:window.__saved,r:window.__xl}));ok("Excel mit 2 Zeilen erstellt",xl.r&&xl.r.length===2&&xl.r[1][7]==="Dem Kunden verrechnet");
  await p.screenshot({path:S+"fm_liste.png",fullPage:true});
  await p.click('#app [data-fmaus="alt"]');await p.waitForTimeout(200);await p.locator(".ov").last().locator(".btn:not(.ghost)").last().click();await p.waitForTimeout(600);
  L=await F();ok("Ausgetragen mit Name + Datum",L.find(x=>x.id==="alt").aus&&L.find(x=>x.id==="alt").aus.by==="u1");

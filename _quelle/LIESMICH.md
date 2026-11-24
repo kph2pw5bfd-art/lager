@@ -592,3 +592,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Speichern: Defekt erledigt mit `aus:{by,t,why,n,fn}`; Eintrag `fmx/ausg_<id>` (pk "ausg", was "ausg") → erscheint in Fehlmaterial „Noch in epirent auszutragen“ unter „Ausgemustert (Werkstatt)“, Sonja tippt „Ausgetragen“. Roter Kasten im Defekt (Grund, wer/wann, epirent-Status), Etikett „Ausgemustert“. „Wieder auf offen setzen“ nimmt das Ausmustern zurück (Warnung, wenn schon ausgetragen) und löscht den fmx-Eintrag.
 - Push an Lagerleiter: `ausmustern.sql` (push_ausloesen neu, typ pr, Ziel "fma" → Noch auszutragen). Läuft über die Einstellung „Aufträge zu prüfen“. Wochenbericht „repariert“ zählt Ausgemusterte nicht.
 - `aus.js` (nach kmat.js), fm.js, push.js, ws.js. Tests `tests/aus_t.js`, `tests/pg/sql_push_test.py`.
+
+## 1.186 (Jürgen, 24.11., Foto): Ausgemustert – Artikelnummer und ID fehlen
+- Sonja braucht Artikelnummer UND ID, um das richtige Stück in epirent auszutragen. Ausmustern-Dialog hat jetzt die Felder „Artikelnummer“ (Pflicht) und „ID“ (vorausgefüllt aus dem Defekt, Scan-Format „1062–56“, `ausNrId`). Ohne ID Nachfrage „Ohne ID ausmustern?“. Gespeichert im Defekt (`anr`) und im fmx-Eintrag (`code`, `nr`, `sid`).
+- „Noch auszutragen“: unter dem Artikel „Art.-Nr. 1062 · ID 56“ (`fmNrHtml`, bei Ausgemustert live aus dem Defekt – nachträglich im Defekt korrigierbar), ohne ID roter Hinweis „keine ID angegeben“, Link „Defekt öffnen ›“. Roter Kasten im Defekt zeigt Nr./ID. Excel mit eigener Spalte „ID“.
+- Tests `tests/aus_t.js`, `tests/fm_t.js` (Spalte verschoben).

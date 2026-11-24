@@ -11,7 +11,11 @@ const {chromium}=require("playwright");const fs=require("fs");const S=(process.e
  await p.click("#dausm");await p.waitForTimeout(200);ok("fragt nach Stückzahl",/Wie viele sind nicht reparierbar/.test(await p.textContent(".ov .card")));
  await p.click("#auqm");await p.click("#auqo");await p.waitForTimeout(200);
  await p.click("#auso");await p.waitForTimeout(200);ok("ohne Grund nicht möglich",!!(await p.$("#ausw"))&&!!(await p.$(".eov")));await p.click(".eov button");
- await p.fill("#ausw","Mantel gebrochen, Reparatur lohnt nicht");await p.click("#auso");await p.waitForTimeout(800);
+ ok("Artikelnummer vorausgefüllt",(await p.inputValue("#ausnr"))==="1062");
+ await p.fill("#ausw","Mantel gebrochen, Reparatur lohnt nicht");await p.click("#auso");await p.waitForTimeout(300);
+ ok("ohne ID: Nachfrage",/Ohne ID ausmustern/.test(await p.textContent("body")));await p.click("#n");await p.waitForTimeout(200);
+ await p.fill("#ausid","56");await p.click("#auso");await p.waitForTimeout(800);
+ ok("ID im Defekt gespeichert",await p.evaluate(()=>__T.docs.find(d=>d.col==="defekte"&&d.id==="d1").data.anr)==="1062–56");
  const D=await p.evaluate(()=>__T.docs.filter(d=>d.col==="defekte").map(d=>({id:d.id,...d.data})));
  const d1=D.find(d=>d.id==="d1"),rest=D.find(d=>d.id!=="d1");
  ok("Defekt erledigt + ausgemustert (1 Stk)",d1.done&&d1.aus&&d1.aus.n===1&&d1.n===1&&/Mantel/.test(d1.aus.why),J(d1.aus));
@@ -20,7 +24,7 @@ const {chromium}=require("playwright");const fs=require("fs");const S=(process.e
  await p.evaluate(()=>draw());await p.waitForTimeout(300);
  ok("Defekt zeigt roten Kasten + Schild",/Ausgemustert – nicht reparierbar/.test(await p.textContent("#app"))&&/noch in epirent auszutragen/.test(await p.textContent(".ausbox"))&&/Ausgemustert/.test(await p.textContent("#app .tag")));
  await p.screenshot({path:S+"aus_def.png",fullPage:true});
- await p.evaluate(()=>go("fmaus"));await p.waitForTimeout(300);const t=await p.textContent("#app");ok("Liste Noch auszutragen",/Ausgemustert \(Werkstatt\)/.test(t)&&/1 Stk 16A Kabel 5m/.test(t)&&/Ausgemustert – nicht reparierbar/.test(t),t.slice(0,200));
+ await p.evaluate(()=>go("fmaus"));await p.waitForTimeout(300);const t=await p.textContent("#app");ok("Art.-Nr. und ID in der Liste",/Art\.-Nr\. 1062 · ID 56/.test(t),t.slice(0,300));await p.screenshot({path:S+"aus_fm.png"});ok("Liste Noch auszutragen",/Ausgemustert \(Werkstatt\)/.test(t)&&/1 Stk 16A Kabel 5m/.test(t)&&/Ausgemustert – nicht reparierbar/.test(t),t.slice(0,200));
  await p.screenshot({path:S+"aus_fm.png",fullPage:true});
  await p.click("[data-fmaus]");await p.waitForTimeout(200);await p.evaluate(()=>{const b=[...document.querySelectorAll(".ov button")].find(x=>/^(Ja|OK)$/.test(x.textContent.trim()));if(b)b.click()});await p.waitForTimeout(400);
  ok("Ausgetragen ✓",await p.evaluate(()=>{const d=__T.docs.find(d=>d.id==="ausg_d1");return !!(d.data.aus&&d.data.aus.t)}));
