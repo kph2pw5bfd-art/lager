@@ -67,6 +67,9 @@ document.addEventListener("click",ev=>{const b=ev.target.closest&&ev.target.clos
 /* Streifen in der Lager Übersicht + Liste „Noch auszutragen“ */
 function fmStrip(){if(!can("fm_a"))return"";const L=fmAus();if(!L.length)return"";const old=L.filter(fmOld).length;
  return '<button class="fmstrip" type="button" id="fmstrip"><span class="fmcnt">'+L.length+'</span><span><b>'+(L.length===1?"1 Artikel":L.length+" Artikel")+' noch in epirent auszutragen</b><small>'+(old?old+' davon seit über einer Woche':'Verrechnet oder verloren – sonst stimmt der Lagerstand nicht')+'</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
+/* 1.187 (Jürgen 24.11.): fester Weg zur Liste, auch wenn nichts offen ist (Streifen verschwindet dann) – unten in der Lager Übersicht, Recht fm_a */
+function fmLink(){if(!can("fm_a"))return"";const n=fmAus().length,d=fmAusDone().length;
+ return '<button class="jvcard wbopen" type="button" id="jvfm"><span><b>Austragen in epirent</b><small>'+(n?n+' noch auszutragen':'Nichts offen')+' · '+d+' ausgetragen</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
 function fmAusView(){if(!can("fm_a")){view="start";return startView()}$("#t").textContent="Noch auszutragen";const L=fmT==="offen"?fmAus():fmAusDone();
  const G={};L.forEach(x=>{(G[x.pk]=G[x.pk]||[]).push(x)});
  $("#app").innerHTML='<div class="row tabs"><button class="btn ghost'+(fmT==="offen"?' act':'')+'" data-fmt="offen">Offen · '+fmAus().length+'</button><button class="btn ghost'+(fmT==="done"?' act':'')+'" data-fmt="done">Ausgetragen</button></div>'+

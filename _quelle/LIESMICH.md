@@ -597,3 +597,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Sonja braucht Artikelnummer UND ID, um das richtige Stück in epirent auszutragen. Ausmustern-Dialog hat jetzt die Felder „Artikelnummer“ (Pflicht) und „ID“ (vorausgefüllt aus dem Defekt, Scan-Format „1062–56“, `ausNrId`). Ohne ID Nachfrage „Ohne ID ausmustern?“. Gespeichert im Defekt (`anr`) und im fmx-Eintrag (`code`, `nr`, `sid`).
 - „Noch auszutragen“: unter dem Artikel „Art.-Nr. 1062 · ID 56“ (`fmNrHtml`, bei Ausgemustert live aus dem Defekt – nachträglich im Defekt korrigierbar), ohne ID roter Hinweis „keine ID angegeben“, Link „Defekt öffnen ›“. Roter Kasten im Defekt zeigt Nr./ID. Excel mit eigener Spalte „ID“.
 - Tests `tests/aus_t.js`, `tests/fm_t.js` (Spalte verschoben).
+
+## 1.187 (Jürgen, 24.11., Sprachanruf): Weg zu „Noch auszutragen“ ohne orangen Streifen
+- Bisher kam man nur über den orangen Streifen (`fmStrip`, nur wenn etwas offen ist) oder die Push-Nachricht zur Liste – war nichts offen, konnte Sonja nicht nachsehen, was schon ausgetragen ist. Neu: Karte „Austragen in epirent“ (`fmLink`, fm.js) unten in der Lager Übersicht unter dem Wochenbericht, immer da für Recht „Fehlmaterial austragen“ (fm_a). Zeigt „n noch auszutragen / Nichts offen · n ausgetragen“; öffnet „Offen“, wenn etwas offen ist, sonst „Ausgetragen“ (Bind in `abgJvBind`).
+- Test in `tests/aus_t.js`.

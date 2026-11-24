@@ -28,6 +28,10 @@ const {chromium}=require("playwright");const fs=require("fs");const S=(process.e
  await p.screenshot({path:S+"aus_fm.png",fullPage:true});
  await p.click("[data-fmaus]");await p.waitForTimeout(200);await p.evaluate(()=>{const b=[...document.querySelectorAll(".ov button")].find(x=>/^(Ja|OK)$/.test(x.textContent.trim()));if(b)b.click()});await p.waitForTimeout(400);
  ok("Ausgetragen ✓",await p.evaluate(()=>{const d=__T.docs.find(d=>d.id==="ausg_d1");return !!(d.data.aus&&d.data.aus.t)}));
+ await p.evaluate(()=>go("jarvis"));await p.waitForTimeout(600);
+ ok("Lager Übersicht: kein Streifen, aber fester Link",!(await p.$("#fmstrip"))&&!!(await p.$("#jvfm")),await p.evaluate(()=>{const e=document.getElementById("jvfm");return e?e.textContent:"–"}));
+ await p.screenshot({path:S+"aus_link.png",fullPage:true});
+ await p.click("#jvfm");await p.waitForTimeout(300);ok("Link öffnet Reiter Ausgetragen",/ausgetragen von/.test(await p.textContent("#app"))&&/Zurücknehmen/.test(await p.textContent("#app")));
  ok("Lagerstand-Kasten: ausgetragen",await p.evaluate(()=>{curDef="d1";view="defopen";draw();return /ausgetragen von/.test(document.querySelector(".ausbox").textContent)}));
  /* Zurücknehmen */
  await p.click("#dd");await p.waitForTimeout(200);const q=await p.textContent(".ov .card");ok("Warnung beim Zurücknehmen (schon ausgetragen)",/schon als ausgetragen/.test(q),q.slice(0,90));
