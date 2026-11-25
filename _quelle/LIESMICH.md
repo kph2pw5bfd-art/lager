@@ -632,3 +632,12 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Packlisten-Daten für Suche/Seite mit `pk_s` ODER `au_s` (`afPK`). Bereiche ohne Recht zeigen „Keine Berechtigung“ (Jürgen): Packschein und Herrichten ohne `pk_s`, Retourscheine und Abgleich ohne `ret_s`, Defekte ohne `def_s`/Werkstatt und ohne eigene (mit eigenen: Hinweis „Nur deine eigenen Defekte“). Ohne `ret_s`: „zurück“/„Fehlmaterial“ = „–“, Retouren/Geprüft in der Leiste grau, kein Fehlmaterial-Schild.
 - Kopf: „In „Meine Aufträge“ öffnen ›“ (Recht Aufträge) → auopen.
 - Test `tests/auftr_t.js` (Teil Projektleiter).
+
+## 1.193 (Jürgen, 25.11.): „Inhalt pro Box erfassen“ beim Herrichten
+- Entwurf https://claude.ai/artifact/MxTUj6mDhgHrBvmm1qF2qx (Ablauf am 25.11. per Sprache besprochen, Doc https://claude.ai/artifact/BQGLsRsqHZBrDj9L5yvZ3t), Name gewählt „Inhalt pro Box erfassen“ („Mit Boxen herrichten“ passte nicht – er richtet immer mit Boxen her). Normal herrichten bleibt Standard, keine Frage beim Öffnen.
+- Datei `bx.js` (nach auf.js), Hülle um `packOpenView`: unter den Knöpfen Etikett/Retourschein/Drucken Knopf „Inhalt pro Box erfassen“ bzw. Box-Leiste (offene Box mit Inhalt + grünem „Box fertig“, Schilder aller Boxen, „Boxen ansehen ›“, ohne offene Box „Nächste Box starten“).
+- Art: Große Box / Kleine Box / Palette / Runge / Sonstiges (Name frei). Nummern über alles durchgehend. packh `bx_<n>` = {n,typ,nm,it:{h_<Pos>:Menge},by,t,done,et}. Geht ohne Netz (pkHSet).
+- Offene Box: Kreis → „Wie viele in <Box>?“ (Vorschlag = offener Rest = max(Soll, hergerichtet) − schon in Boxen; „herausnehmen“). `bxPut`: Herricht-Stand = max(bisher, Summe in Boxen) → teilweise/komplett/zu viel wie gewohnt. Fremdmiete fragt vorher wie immer. Lager-55-Zeilen und abgeschlossene Zeilen wie bisher. Zeilen zeigen „10 in Große Box 1 · 20 in Palette 2“. Ohne offene Box normales Abhaken.
+- „Box fertig“: Inhalt (× nimmt heraus), Etikett „Mit Inhalt“ (vorgewählt) oder „Normales Etikett“ (vorgewählt bei Sonstiges mit höchstens 1 Artikel), Anzahl, „Etikett an die Druckstation“ / „Hier drucken“ / „Ohne Etikett“ / „Zurück in die Box“ → „Nächste Box?“ (Box n+1 starten / Fertig). „Boxen ansehen“: alle Boxen mit Inhalt, „Etikett nochmal“, „Wieder öffnen“ (wenn keine andere offen).
+- Etikett (etik.js): Druckauftrag mit `box` („PALETTE 2“) → schwarzes Schild rechts neben „Inhalt:“; mehr als 11 Zeilen → mehrere Etiketten „Inhalt 1 von 2“ (`gbParts`). Etiketten ohne `box` unverändert.
+- Test `tests/bx_t.js`. Am Tablet und mit echtem Godex noch nicht ausprobiert.
