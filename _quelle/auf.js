@@ -5,6 +5,8 @@
    Retourscheine und Abgleich, Defekte, Material vor Ort, Nachrichten und Notizen, Verlauf. Nur was die Rechte erlauben, leere Bereiche fallen weg.
    Kunde kommt erst nach dem Umzug (Entscheidung 9.11.). ===== */
 let curAuf=null,aufQ="";
+const afPK=()=>can("pk_s")||can("au_s");/* Packlisten-Daten: Lager oder Projektleiter (Recht Aufträge) */
+const afNoR='<div class="afinf mu afnor">Keine Berechtigung</div>';
 (function(){try{const st=document.createElement("style");st.textContent=
 '.aufs{display:flex;flex-direction:column;gap:4px;margin-top:10px;position:relative}.aufs label{font-size:12px;font-weight:800;color:var(--mute)}'+
 '.aufbox{display:flex;align-items:center;gap:8px;border:2.5px solid var(--navy);border-radius:10px;padding:0 6px 0 10px;background:var(--card)}.aufbox svg{flex:none;color:var(--navy)}'+
@@ -38,11 +40,11 @@ const afQ=(n,u)=>(typeof pkNum==="function"?pkNum(+n||0):String(n))+" "+(u||"Stk
 /* ---------- Suche ---------- */
 function aufIndex(){const M={},key=(ord,ev)=>afD(ord)?"o:"+afD(ord):(afN(ev)?"e:"+afN(ev):"");
  const put=(k,o)=>{if(!k)return null;const x=M[k]=M[k]||{k,ev:"",ord:"",pl:"",ps:[],t:0,p:null,act:false,ret:0,rop:false};if(o.ev&&!x.ev)x.ev=o.ev;if(o.ord&&!x.ord)x.ord=o.ord;if(o.pl&&!x.pl)x.pl=o.pl;x.t=Math.max(x.t,o.t||0);return x};
- if(typeof packs!=="undefined"&&can("pk_s"))packs.forEach(p=>{if(p._z)return;const r=typeof pkRoot==="function"?pkRoot(p):p;const k=key(r.ord,r.ev),x=put(k,{ev:r.ev,ord:r.ord,pl:r.pl,t:r.de||r.db||r.t});if(!x)return;
+ if(typeof packs!=="undefined"&&afPK())packs.forEach(p=>{if(p._z)return;const r=typeof pkRoot==="function"?pkRoot(p):p;const k=key(r.ord,r.ev),x=put(k,{ev:r.ev,ord:r.ord,pl:r.pl,t:r.de||r.db||r.t});if(!x)return;
   if(p.ps)x.ps.push(String(p.ps));(p.zus||[]).forEach(z=>z.ps&&x.ps.push(String(z.ps)));if(p!==r&&p.ord)x.ps.push(String(p.ord));
   if(p===r){x.p=r;x.ev=r.ev||x.ev;x.ord=r.ord||x.ord;x.pl=r.pl||x.pl;let s=null;try{s=pkState(r)}catch(e){}x.st=s;x.act=!!(s&&s.k!=="done");x.db=r.db;x.de=r.de}});
- if(typeof rets!=="undefined"&&can("ret_s"))rets.forEach(r=>{let k=key(r.ord,r.ev);const pp=r.ord&&typeof abgPackOf==="function"&&can("pk_s")?abgPackOf(r.ord):null;if(pp)k=key(pp.ord,pp.ev);const x=put(k,{ev:r.ev,ord:r.ord,t:r.modT||r.t});if(x){x.ret++;if(!r.closed)x.rop=true}});
- (typeof vdefs==="function"?vdefs():[]).forEach(d=>{if(d.del)return;const rr=d.ret&&!afD(d.ord)&&typeof rets!=="undefined"?rets.find(r=>r.id===d.ret):null;if(rr)d={...d,ord:rr.ord,ev:d.ev||rr.ev};let k=key(d.ord,d.ev);const pp=d.ord&&typeof abgPackOf==="function"&&can("pk_s")?abgPackOf(d.ord):null;if(pp)k=key(pp.ord,pp.ev);put(k,{ev:d.ev,ord:d.ord,t:d.t})});
+ if(typeof rets!=="undefined"&&can("ret_s"))rets.forEach(r=>{let k=key(r.ord,r.ev);const pp=r.ord&&typeof abgPackOf==="function"&&afPK()?abgPackOf(r.ord):null;if(pp)k=key(pp.ord,pp.ev);const x=put(k,{ev:r.ev,ord:r.ord,t:r.modT||r.t});if(x){x.ret++;if(!r.closed)x.rop=true}});
+ (typeof vdefs==="function"?vdefs():[]).forEach(d=>{if(d.del)return;const rr=d.ret&&!afD(d.ord)&&typeof rets!=="undefined"?rets.find(r=>r.id===d.ret):null;if(rr)d={...d,ord:rr.ord,ev:d.ev||rr.ev};let k=key(d.ord,d.ev);const pp=d.ord&&typeof abgPackOf==="function"&&afPK()?abgPackOf(d.ord):null;if(pp)k=key(pp.ord,pp.ev);put(k,{ev:d.ev,ord:d.ord,t:d.t})});
  /* nur Veranstaltung ohne Nummer → zum Auftrag mit gleicher Veranstaltung (neuester) */
  Object.values(M).filter(x=>x.k.startsWith("e:")).forEach(x=>{const c=Object.values(M).filter(y=>y.k.startsWith("o:")&&afN(y.ev)===x.k.slice(2)).sort((a,b)=>(b.t||0)-(a.t||0))[0];if(c){c.ret+=x.ret;c.rop=c.rop||x.rop;c.t=Math.max(c.t,x.t);delete M[x.k]}});
  return Object.values(M).map(x=>(x.p?x:{...x,act:x.rop}))}
@@ -69,10 +71,13 @@ function aufSearchBind(){const q=$("#aufq"),box=$("#aufsug"),x=$("#aufx");if(!q|
 function aufOpen(k){curAuf=k;go("auftr")}
 /* in die Kopfkarte der Lager Übersicht (nicht Werkstatt/PL) */
 (function(){const o=jarvisView;jarvisView=function(){o.apply(this,arguments);try{if(!$("#jv")||$("#aufs"))return;const op=document.querySelector("#jv .jvhead .jvopts");if(op){op.insertAdjacentHTML("afterend",aufSearchHtml());aufSearchBind()}}catch(e){console.warn(e)}}})();
+/* 1.192: auch in der Projektleiter Übersicht (Jürgen 25.11.) – plView baut alles neu, darum Fokus/Eingabe erhalten */
+(function(){if(typeof plView!=="function")return;const o=plView;plView=function(){const a=document.activeElement,foc=!!(a&&a.id==="aufq"),ss=foc?a.selectionStart:0;o.apply(this,arguments);
+ try{const op=document.querySelector("#plv .jvhead .jvopts");if(op&&!$("#aufs")){op.insertAdjacentHTML("afterend",aufSearchHtml());aufSearchBind();if(foc){const q=$("#aufq");q.focus();try{q.setSelectionRange(ss,ss)}catch(e){}q.dispatchEvent(new Event("input"))}}}catch(e){console.warn(e)}}})();
 /* ---------- Daten zu einem Auftrag ---------- */
 function aufData(k){const isO=String(k).startsWith("o:"),dig=isO?k.slice(2):"",evk=isO?"":String(k).slice(2);
- let p=null;if(isO&&can("pk_s")&&typeof abgPackOf==="function")p=abgPackOf(dig);
- if(!p&&!isO&&can("pk_s"))p=packs.find(x=>!x._z&&!afD(x.ord)&&afN(x.ev)===evk)||null;
+ let p=null;if(isO&&afPK()&&typeof abgPackOf==="function")p=abgPackOf(dig);
+ if(!p&&!isO&&afPK())p=packs.find(x=>!x._z&&!afD(x.ord)&&afN(x.ev)===evk)||null;
  const P=p?[p].concat(typeof pkVerlKids==="function"?pkVerlKids(p):[]):[],S=new Set(P.map(x=>afD(x.ord)).filter(Boolean));if(dig)S.add(dig);
  const ev=p?p.ev:"",match=(ord,e)=>S.size?S.has(afD(ord)):afN(e)===evk;
  const R=can("ret_s")?(p&&typeof pkRets==="function"?pkRets(p):rets.filter(r=>match(r.ord,r.ev))).slice().sort((a,b)=>(abgRetT(a)||0)-(abgRetT(b)||0)):[];
@@ -90,21 +95,22 @@ function aufData(k){const isO=String(k).startsWith("o:"),dig=isO?k.slice(2):"",e
 /* ---------- Auftrags-Seite ---------- */
 function afRow(attr,title,sub,tag,hot){return '<button type="button" class="afrow'+(hot?' hot':'')+'" '+attr+'><span class="tx"><b>'+esc(title)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span>'+(tag||'')+'<span class="ch" aria-hidden="true">›</span></button>'}
 const afTg=(t,c)=>'<span class="aftg '+c+'">'+esc(t)+'</span>';
-function auftrView(){try{if(typeof fmSub==="function"&&can("pk_s"))fmSub();if(typeof plawSub==="function"&&can("pk_s"))plawSub()}catch(e){}const A=aufData(curAuf);if(!A.p&&!A.R.length&&!A.D.length&&!A.L.length){$("#t").textContent="Auftrag";$("#app").innerHTML='<div class="card mute">Zu diesem Auftrag gibt es nichts (mehr) in der App.</div>';return}
+function auftrView(){try{if(typeof fmSub==="function"&&afPK())fmSub();if(typeof plawSub==="function"&&afPK())plawSub()}catch(e){}const A=aufData(curAuf);if(!A.p&&!A.R.length&&!A.D.length&&!A.L.length){$("#t").textContent="Auftrag";$("#app").innerHTML='<div class="card mute">Zu diesem Auftrag gibt es nichts (mehr) in der App.</div>';return}
  const p=A.p,secs=[],jumps=[],ver=[];$("#t").textContent="Auftrag";
  let I=null,B=null,H=null;if(p){try{I=auInfo(p)}catch(e){}try{B=abgBal(p)}catch(e){}H=pkH(p)}
  const openD=A.D.filter(d=>!d.done),chk=p&&typeof abgToCheck==="function"&&abgToCheck().some(c=>c.id===p.id);
  /* Kopf */
- const stc=I?I.S.map(s=>s.c==="d"?"d":s.c==="n"?"n":s.c==="r"?"r":""):null;if(stc&&chk)stc[4]="w";
+ const okR=can("ret_s"),stc=I?I.S.map(s=>s.c==="d"?"d":s.c==="n"?"n":s.c==="r"?"r":""):null;if(stc&&chk)stc[4]="w";if(stc&&!okR){stc[3]="";stc[4]=""}
  const tags=[];if(openD.length)tags.push(afTg(openD.length===1?"1 Defekt offen":openD.length+" Defekte offen","red"));if(chk)tags.push(afTg("Zu prüfen","or"));
- if(I&&I.missShow)tags.push(afTg(B.fehlt+" Stk Fehlmaterial","red"));if(I&&I.over&&!B.hasEnd)tags.push(afTg("Dispo abgelaufen","red"));if(I&&I.so)tags.push(afTg("Storniert","g"));if(I&&!tags.length)tags.push(afTg(I.lab,{ok:"ok",red:"red",b:"b",g:"g"}[I.cls]||"b"));
+ if(okR&&I&&I.missShow)tags.push(afTg(B.fehlt+" Stk Fehlmaterial","red"));if(I&&I.over&&!B.hasEnd)tags.push(afTg("Dispo abgelaufen","red"));if(I&&I.so)tags.push(afTg("Storniert","g"));if(I&&!tags.length)tags.push(afTg(I.lab,{ok:"ok",red:"red",b:"b",g:"g"}[I.cls]||"b"));
  const head='<section class="afk"><h2>'+esc(A.name||"Ohne Veranstaltung")+'</h2><div class="m">'+(A.ord?'Auftrag <b>'+esc(A.ord)+'</b>':'ohne Auftragsnummer')+(p&&p.pl?' · PL '+esc(afSN(p.pl)):'')+
   (p?'<br>Dispo '+esc(afDMY(p.db))+' – '+esc(afDMY(p.de))+(typeof pkHDay==="function"&&!pkNoH(p)?' · Herrichten '+esc(afDM(pkHDay(p))):''):'')+'</div>'+
   (stc?'<div class="afst"><span class="'+stc[0]+'">Packliste</span><span class="'+stc[1]+'">Herrichten</span><span class="'+stc[2]+'">Unterwegs</span><span class="'+stc[3]+'">Retouren</span><span class="'+stc[4]+'">Geprüft</span></div>':'')+
-  (tags.length?'<div class="aftags">'+tags.join("")+'</div>':'')+'</section>';
- const nums=B?'<div class="afnum"><div><b>'+B.raus+'</b><span>Stk raus</span></div><div><b>'+B.zur+'</b><span>zurück</span></div><div><b class="'+(B.fehlt&&(B.hasEnd||I&&I.over)?'red':'')+'">'+(B.hasEnd||I&&I.over?B.fehlt:"–")+'</b><span>Fehlmaterial</span></div><div><b class="'+(openD.length?'red':'')+'">'+A.D.length+'</b><span>Defekte</span></div></div>':'';
+  (tags.length?'<div class="aftags">'+tags.join("")+'</div>':'')+(p&&can("au_s")?'<button type="button" class="lnk" data-afau="'+esc(p.id)+'" style="align-self:flex-start;padding:2px 0;font-weight:700">In „Meine Aufträge“ öffnen ›</button>':'')+'</section>';
+ const nums=B?'<div class="afnum"><div><b>'+B.raus+'</b><span>Stk raus</span></div><div><b>'+(okR?B.zur:"–")+'</b><span>zurück</span></div><div><b class="'+(okR&&B.fehlt&&(B.hasEnd||I&&I.over)?'red':'')+'">'+(okR&&(B.hasEnd||I&&I.over)?B.fehlt:"–")+'</b><span>Fehlmaterial</span></div><div><b class="'+(openD.length?'red':'')+'">'+A.D.length+'</b><span>Defekte</span></div></div>':'';
  /* Packschein und Herrichten */
- if(p){const rows=[],g=pkProg(p);const afPos=n=>n+(n===1?" Position":" Positionen");let sub=afPos((p.pos||[]).length);
+ if(p&&!can("pk_s"))secs.push(['pk',"Packschein und Herrichten",afNoR]);
+ if(p&&can("pk_s")){const rows=[],g=pkProg(p);const afPos=n=>n+(n===1?" Position":" Positionen");let sub=afPos((p.pos||[]).length);
   if(pkNoH(p))sub+=" · kein Herrichten ("+(p.art==="bst"?"kommt von einer Baustelle":"Verlängerung")+")";
   else if(H.fin&&H.fin.t)sub+=" · hergerichtet "+afDM(H.fin.t)+" von "+afWho(H.fin,"by");else{const ha=typeof auHerrAll==="function"?auHerrAll(p,null):null;sub+=ha?" · hergerichtet "+(ha.t?afDM(ha.t):"")+(ha.who?" von "+ha.who:""):g.d?" · wird hergerichtet: "+g.d+" von "+g.n:" · Herrichten "+afDM(pkHDay(p))}
   rows.push(afRow('data-afpk="'+esc(p.id)+'"',"Packschein "+(p.ps||"–"),sub,(H.fin&&H.fin.t)||pkNoH(p)?afTg("✓","ok"):I&&I.late?afTg("nicht hergerichtet","red"):""));
@@ -118,7 +124,8 @@ function auftrView(){try{if(typeof fmSub==="function"&&can("pk_s"))fmSub();if(ty
   (p.chg||[]).forEach(c=>{ver.push([c.t,"Packschein geändert"])});if(mu.length)inf.push('<p class="mu">'+mu.map(esc).join(" · ")+'</p>');
   secs.push(['pk',"Packschein und Herrichten",rows.join("")+(inf.length?'<div class="afinf">'+inf.join("")+'</div>':'')])}
  /* Retourscheine und Abgleich */
- if(A.R.length||(p&&can("ret_s"))){const rows=A.R.map(r=>{const n=typeof abgRetN==="function"?abgRetN(r):0,f=(r.fotos||[]).length;
+ if(!okR)secs.push(['ret',"Retourscheine und Abgleich",afNoR]);
+ else if(A.R.length||p){const rows=A.R.map(r=>{const n=typeof abgRetN==="function"?abgRetN(r):0,f=(r.fotos||[]).length;
    if(r.closed)ver.push([r.closedT||r.t,abgRetLbl(r)+" · "+n+" Stk"]);else ver.push([r.t,"Retourschein angelegt"]);
    return afRow('data-afret="'+esc(r.id)+'"',abgRetLbl(r)+" "+afDM(abgRetT(r)),n+" Stk · "+(r.closed?"abgeschlossen von "+afWho(r,"closedBy"):"angelegt von "+afWho(r,"by"))+(f?" · "+f+(f===1?" Foto":" Fotos"):"")+(r.sent?" · Mail gesendet":""),r.closed?"":afTg("offen","b"))});
   if(p&&B&&abgOk())rows.push(afRow('data-afabg="'+esc(p.id)+'"',"Abgleich mit Retouren",B.zur+" von "+B.raus+" zurück"+(B.fehlt?" · "+B.fehlt+" Stk fehlen":"")+(B.zuviel?" · "+B.zuviel+" zu viel":" · nichts zu viel"),""));
@@ -129,13 +136,15 @@ function auftrView(){try{if(typeof fmSub==="function"&&can("pk_s"))fmSub();if(ty
   if(!rows.length)rows.push('<div class="afinf mu">Noch kein Retourschein.</div>');
   secs.push(['ret',"Retourscheine und Abgleich",rows.join("")+(inf.length?'<div class="afinf">'+inf.join("")+'</div>':'')])}
  /* Defekte */
+ const okD=can("def_s")||(typeof canDone==="function"&&canDone());
+ if(!A.D.length&&!okD)secs.push(['def',"Defekte",afNoR]);
  if(A.D.length){const rows=A.D.map(d=>{const q=typeof dxQ==="function"?dxQ(d):1,nm=(q>1?q+" × ":"")+(d.art||"Artikel");let sub,tag;
    ver.push([d.t,"Defekt gemeldet: "+nm+(d.ret?" (beim Zählen)":"")]);
    if(!d.done){sub=(d.desc||"Keine Beschreibung")+" · gemeldet "+afDM(d.t)+" von "+afWho(d,"by")+(d.ret?" beim Zählen":"");tag=afTg(d.urg?"OFFEN · DRINGEND":"OFFEN",d.urg?"rs":"red")}
    else if(d.aus){sub="Ausgemustert"+(d.aus.why?" – "+d.aus.why:"")+" · "+afWho(d.aus,"by")+", "+afDM(d.aus.t);tag=afTg("AUSGEMUSTERT","red");ver.push([d.aus.t||d.doneT,"Ausgemustert: "+nm])}
    else{const et=Array.isArray(d.et)?d.et.filter(e=>e&&e.nm).length:0,rz=typeof rzMin==="function"?rzMin(d):0;sub=[d.rep||"Repariert",et?et+(et===1?" Ersatzteil":" Ersatzteile"):"",rz?rzTx(rz):"",afWho(d,"doneBy")+", "+afDM(d.doneT)].filter(Boolean).join(" · ");tag=afTg("REPARIERT","ok");ver.push([d.doneT,"Repariert: "+nm+(rz?" ("+rzTx(rz)+")":"")])}
    if(d.fv)sub+=" · Fremdverschulden";return afRow('data-afdef="'+esc(d.id)+'"',nm,sub,tag,!d.done)});
-  secs.push(['def',"Defekte ("+A.D.length+(openD.length?" · "+openD.length+" offen":"")+")",rows.join("")])}
+  secs.push(['def',"Defekte ("+A.D.length+(openD.length?" · "+openD.length+" offen":"")+")",rows.join("")+(okD?'':'<div class="afinf mu">Nur deine eigenen Defekte – für alle fehlt die Berechtigung.</div>')])}
  /* Material vor Ort */
  if(A.L.length){secs.push(['mat',"Material vor Ort",A.L.map(l=>{let n=0;try{n=Object.values(JSON.parse(l.itemsJson||"{}")).reduce((a,i)=>a+(+i.q||+i.n||0),0)}catch(e){}ver.push([l.t,(l.mode==="weiter"?"Material geht weiter":"Material bleibt vor Ort")+" erfasst"]);
   return afRow('data-aflist="'+esc(l.id)+'"',l.mode==="weiter"?"Material geht weiter → "+(l.ev2||"–"):"Material bleibt vor Ort",(n?n+" Stk · ":"")+"erfasst von "+afWho(l,"by")+", "+afDM(l.t)+(l.chk?" · abgeschlossen":""),"")}).join("")])}
@@ -149,9 +158,9 @@ function auftrView(){try{if(typeof fmSub==="function"&&can("pk_s"))fmSub();if(ty
  $("#app").innerHTML='<div class="afwrap">'+head+nums+(jumps.length>1?'<div class="afjump">'+jumps.map(j=>'<button type="button" data-afj="'+j[0]+'">'+esc(j[1])+'</button>').join("")+'</div>':'')+
   secs.map(s=>'<section class="afsec" id="af_'+s[0]+'"><h3>'+esc(s[1])+'</h3>'+s[2]+'</section>').join("")+
   (V.length?'<section class="afver" id="af_ver"><h3>VERLAUF</h3>'+V.map(v=>'<div><span>'+afDM(v[0])+'</span><span>'+esc(v[1])+'</span></div>').join("")+'</section>':'')+
-  '<p class="afnote">Zeilen antippen öffnet Packliste, Retourschein, Abgleich, Defekt oder Materialliste. Du siehst nur, was deine Rechte erlauben.</p></div>';
+  '<p class="afnote">Zeilen antippen öffnet Packliste, Retourschein, Abgleich, Defekt oder Materialliste. Bereiche ohne Recht zeigen „Keine Berechtigung“.</p></div>';
  const q=s=>document.querySelectorAll(s);
  q("[data-afj]").forEach(b=>b.onclick=()=>{const t=$("#af_"+b.dataset.afj);if(t)t.scrollIntoView({behavior:"smooth",block:"start"})});
  q("[data-afpk]").forEach(b=>b.onclick=()=>{curPack=b.dataset.afpk;go("packopen")});q("[data-afret]").forEach(b=>b.onclick=()=>{curRet=b.dataset.afret;go("retopen")});
  q("[data-afabg]").forEach(b=>b.onclick=()=>{curPack=b.dataset.afabg;go("pkabg")});q("[data-afdef]").forEach(b=>b.onclick=()=>{curDef=b.dataset.afdef;go("defopen")});
- q("[data-aflist]").forEach(b=>b.onclick=()=>{cur=b.dataset.aflist;go("scan")});q("[data-afinfo]").forEach(b=>b.onclick=()=>{curInfo=b.dataset.afinfo;go("infoopen")})}
+ q("[data-aflist]").forEach(b=>b.onclick=()=>{cur=b.dataset.aflist;go("scan")});q("[data-afinfo]").forEach(b=>b.onclick=()=>{curInfo=b.dataset.afinfo;go("infoopen")});q("[data-afau]").forEach(b=>b.onclick=()=>{curAu=b.dataset.afau;go("auopen")})}

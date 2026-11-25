@@ -18,7 +18,7 @@ const seed=[
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(1200);await p.mouse.click(200,400);await p.waitForTimeout(400);
- ok("Version 1.191",await p.evaluate(()=>APPV==="1.191"));
+ ok("Version ab 1.191",await p.evaluate(()=>+APPV.split(".")[1]>=191));
  await p.evaluate(()=>{view="jarvis";draw()});await p.waitForTimeout(400);
  ok("Suchfeld in der Kopfkarte unter dem Frag-Feld",await p.evaluate(()=>{const s=document.querySelector(".jvhead #aufs");return !!s&&s.previousElementSibling.classList.contains("jvopts")}));
  const hits=async q=>{await p.fill("#aufq",q);await p.waitForTimeout(250);return p.evaluate(()=>[...document.querySelectorAll("#aufsug .aufr b")].map(b=>b.textContent))};
@@ -57,4 +57,25 @@ const seed=[
  /* Auftrag nur mit Retourschein */
  await p.evaluate(()=>{curAuf="o:777001";view="auftr";draw()});await p.waitForTimeout(300);ok("Auftrag ohne Packliste: Retourschein offen",/Messe Linz/.test(await p.textContent("#app"))&&/Retourschein offen/.test(await p.textContent("#app")));
  await p.emulateMedia({colorScheme:"dark"});await p.evaluate(()=>{curAuf="o:260130001";view="auftr";draw()});await p.waitForTimeout(300);await p.screenshot({path:S+"auf_dark.png",fullPage:true});
+ /* 1.192: Projektleiter (nur Recht Aufträge + Lager Übersicht) */
+ {const docs=seed.concat([{col:"titel",id:"tpl",data:{name:"Projektleiter",o:6,r:{jv_s:true,au_s:true,au_b:true}}},{col:"rolle",id:"u1",data:{t:"tpl"}}]);
+  const fk2=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(docs)).replace('role:"admin"','role:"user"');
+  const c2=await b.newContext({viewport:{width:390,height:900}});const q=await c2.newPage();q.on("pageerror",e=>errs.push("PL: "+e.message));
+  await c2.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk2,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
+  await q.goto("https://app.test/");await q.waitForTimeout(1200);await q.mouse.click(200,400);await q.waitForTimeout(400);
+  await q.evaluate(()=>{view="jarvis";draw()});await q.waitForTimeout(500);
+  ok("PL: Projektleiter Übersicht mit Suchfeld",await q.evaluate(()=>!!document.querySelector("#plv .jvhead #aufs")));
+  await q.fill("#aufq","gal");await q.waitForTimeout(200);await q.evaluate(()=>draw());await q.waitForTimeout(300);
+  ok("PL: Eingabe + Fokus bleiben beim Neuzeichnen",await q.evaluate(()=>document.activeElement&&document.activeElement.id==="aufq"&&document.activeElement.value==="gal"&&!document.querySelector("#aufsug").hidden));
+  const hh=await q.evaluate(()=>[...document.querySelectorAll("#aufsug .aufr b")].map(b=>b.textContent));ok("PL: findet alle Aufträge",hh.includes("Gala Wien 2026")&&hh.includes("Weihnachtsgala Hofburg"),J(hh));
+  await q.screenshot({path:S+"auf_pl_suche.png"});
+  await q.click('#aufsug [data-aufo]:has-text("Gala Wien 2026")');await q.waitForTimeout(500);
+  const tt=await q.textContent("#app");ok("PL: Seite offen, Kopf da",await q.evaluate(()=>view==="auftr")&&/Gala Wien 2026/.test(tt)&&/Auftrag 260130001/.test(tt));
+  const nor=await q.evaluate(()=>[...document.querySelectorAll(".afsec")].filter(s=>s.querySelector(".afnor")).map(s=>s.querySelector("h3").textContent));
+  ok("PL: Packschein und Retourscheine „Keine Berechtigung“",J(nor)===J(["Packschein und Herrichten","Retourscheine und Abgleich"]),J(nor));
+  ok("PL: zurück/Fehlmaterial als –",await q.evaluate(()=>[...document.querySelectorAll(".afnum b")].map(b=>b.textContent).slice(1,3).join(",")==="–,–"));
+  ok("PL: Nachrichten sichtbar",/Bitte Kabel zählen/.test(tt));
+  await q.screenshot({path:S+"auf_pl_seite.png",fullPage:true});
+  await q.click("[data-afau]");await q.waitForTimeout(400);ok("PL: „In Meine Aufträge öffnen“",await q.evaluate(()=>view==="auopen"&&curAu==="A"));
+  await c2.close()}
  ok("keine JS-Fehler",!errs.length,errs.join(" | "));await b.close();console.log(fail?"FEHLER: "+fail:"ALLES OK")})();
