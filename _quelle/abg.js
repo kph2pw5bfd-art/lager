@@ -266,6 +266,7 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
  B.miss.forEach(e=>{const M=abgMoreElse(p,e);if(M.length)wz.addRow([e.name,e.soll-e.back,"fehlt hier – Vorschlag",M.slice(0,3).map(m=>m.q+" zu viel bei "+(m.p.ev||m.p.ord)).join(", "),""]).eachCell(c=>c.border=bd)});
  ABZ.filter(z=>z.from===p.id||z.to===p.id).forEach(z=>{const o=packs.find(x=>x.id===(z.from===p.id?z.to:z.from));wz.addRow([z.name,z.q,"bestätigt",(z.from===p.id?"an ":"von ")+(o?o.ev||o.ord:"?"),nmA(z,"by")+", "+fmt(z.t)]).eachCell(c=>c.border=bd)});
  if(wz.rowCount<=5)wz.addRow(["Nichts zu viel, keine Zuordnungen."]);
+ try{if(typeof dfaXlAdd==="function")await dfaXlAdd(wb,dfaDefs(p,null))}catch(e){console.warn(e)}/* 1.190: Blatt „Defekte“, wenn alle erledigt */
  const buf=await wb.xlsx.writeBuffer(),fn="Abgleich_"+String(p.ev||p.ord||"Auftrag").replace(/[^A-Za-z0-9äöüÄÖÜß]+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".xlsx";
  const XT="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";return{fn,blob:new Blob([buf],{type:XT}),XT,B}}
 async function abgXl(p){const dl=await claude.use("downloads");if(!dl)return toast("Speichern ist hier nicht verfügbar.");try{const x=await abgXlMake(p);await dl.save({filename:x.fn,data:x.blob})}catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);toast("Excel konnte nicht erstellt werden.")}}

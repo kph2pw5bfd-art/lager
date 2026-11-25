@@ -14,7 +14,7 @@ const at=d=>{const x=new Date(M);x.setDate(x.getDate()+d);x.setHours(10,0,0,0);r
   if(u.includes("pdf-lib"))return r.fulfill({body:fs.readFileSync("/opt/npm-tools/node_modules/pdf-lib/dist/pdf-lib.min.js"),contentType:"text/javascript"});
   if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(1200);await p.mouse.click(200,400);await p.waitForTimeout(300);
- ok("Version 1.189",await p.evaluate(()=>APPV==="1.189"));
+ ok("Version ab 1.189",await p.evaluate(()=>+APPV.split(".")[1]>=189));
  const DEF=id=>p.evaluate(id=>{const r=window.__T.docs.find(x=>x.col==="defekte"&&x.id===id);return r&&r.data},id);
  ok("rzTx",await p.evaluate(()=>[rzTx(0),rzTx(5),rzTx(60),rzTx(75),rzTx(12*60+59)].join("|"))==="0 Min|5 Min|1 Std|1 Std 15 Min|12 Std 59 Min");
  /* Reparatur-Fenster */

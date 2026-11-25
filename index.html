@@ -570,7 +570,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.189";
+<script>const APPV="1.190";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -966,7 +966,7 @@ function jvPanels(D){const T=jvTabs(D);if(!jvTab||!T.some(t=>t.k===jvTab))jvTab=
  const ps=(typeof fmStrip==="function"?fmStrip():"")+(typeof abgPrStrip==="function"?abgPrStrip():"")+(typeof plStrip==="function"?plStrip():"");
  const wbn=typeof WBN!=="undefined"?WBN.filter(n=>!n.done).length:0;
  const wb='<button class="jvcard wbopen" type="button" id="jvwb"><span><b>Wochenbericht</b><small>Für die Besprechung, zum Drucken'+(wbn?' · '+wbn+(wbn===1?' Punkt':' Punkte')+' eingetragen':'')+'</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>';
- return{left:er+ps+tabs+more+wb+(typeof fmLink==="function"?fmLink():""),right:""}}
+ return{left:er+ps+tabs+more+(typeof berCard==="function"?berCard(wbn):wb+(typeof fmLink==="function"?fmLink():"")),right:""}}
 function jvReactor(){let t='';for(let i=0;i<90;i++){const a=i/90*Math.PI*2,big=i%6===0,r1=86,r2=r1+(big?12:5);t+='<line x1="'+(200+r1*Math.cos(a)).toFixed(1)+'" y1="'+(200+r1*Math.sin(a)).toFixed(1)+'" x2="'+(200+r2*Math.cos(a)).toFixed(1)+'" y2="'+(200+r2*Math.sin(a)).toFixed(1)+'" stroke="var(--jv-tick'+(big?'b':'')+')" stroke-width="1.2"/>'}
  return '<svg viewBox="0 0 400 400" aria-hidden="true"><g class="sd"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--jv-line-dim)" stroke-width="1" stroke-dasharray="2 7"/><path d="M200 10 A190 190 0 0 1 390 200" fill="none" stroke="var(--jv-cyan)" stroke-width="2"/><path d="M200 390 A190 190 0 0 1 10 200" fill="none" stroke="var(--jv-mid)" stroke-width="1.5"/></g><g class="sa"><circle cx="200" cy="200" r="168" fill="none" stroke="var(--jv-mid)" stroke-width="8" stroke-dasharray="90 24 12 24"/></g><circle cx="200" cy="200" r="150" fill="none" stroke="var(--jv-line-dim)" stroke-width="1"/><g class="sb"><circle cx="200" cy="200" r="134" fill="none" stroke="var(--jv-cyan)" stroke-width="14" stroke-dasharray="20 8"/></g><g class="sc"><circle cx="200" cy="200" r="108" fill="none" stroke="var(--jv-pale)" stroke-width="2.5" stroke-dasharray="140 30 14 30"/></g><g>'+t+'</g><circle cx="200" cy="200" r="72" fill="none" stroke="var(--jv-mid)" stroke-width="2"/><g class="sb"><circle cx="200" cy="200" r="56" fill="none" stroke="var(--jv-cyan)" stroke-width="7" stroke-dasharray="9 6"/></g><circle cx="200" cy="200" r="34" fill="none" stroke="var(--jv-ice)" stroke-width="2.5"/><g class="core"><circle cx="200" cy="200" r="19" fill="var(--jv-cyan)"/><circle cx="200" cy="200" r="8" fill="var(--jv-core)"/></g></svg>'}
 function jvClock(){const c=$("#jvclock");if(!c)return;const d=new Date();c.textContent=d.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});const e=$("#jvdate");if(e)e.textContent=d.toLocaleDateString("de-AT",{weekday:"long"})+", "+d.toLocaleDateString("de-AT",{day:"numeric",month:"long",year:"numeric"})}
@@ -3011,6 +3011,7 @@ async function abgXlMake(p){if(!window.ExcelJS)throw new Error("Excel-Bibliothek
  B.miss.forEach(e=>{const M=abgMoreElse(p,e);if(M.length)wz.addRow([e.name,e.soll-e.back,"fehlt hier – Vorschlag",M.slice(0,3).map(m=>m.q+" zu viel bei "+(m.p.ev||m.p.ord)).join(", "),""]).eachCell(c=>c.border=bd)});
  ABZ.filter(z=>z.from===p.id||z.to===p.id).forEach(z=>{const o=packs.find(x=>x.id===(z.from===p.id?z.to:z.from));wz.addRow([z.name,z.q,"bestätigt",(z.from===p.id?"an ":"von ")+(o?o.ev||o.ord:"?"),nmA(z,"by")+", "+fmt(z.t)]).eachCell(c=>c.border=bd)});
  if(wz.rowCount<=5)wz.addRow(["Nichts zu viel, keine Zuordnungen."]);
+ try{if(typeof dfaXlAdd==="function")await dfaXlAdd(wb,dfaDefs(p,null))}catch(e){console.warn(e)}/* 1.190: Blatt „Defekte“, wenn alle erledigt */
  const buf=await wb.xlsx.writeBuffer(),fn="Abgleich_"+String(p.ev||p.ord||"Auftrag").replace(/[^A-Za-z0-9äöüÄÖÜß]+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".xlsx";
  const XT="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";return{fn,blob:new Blob([buf],{type:XT}),XT,B}}
 async function abgXl(p){const dl=await claude.use("downloads");if(!dl)return toast("Speichern ist hier nicht verfügbar.");try{const x=await abgXlMake(p);await dl.save({filename:x.fn,data:x.blob})}catch(e){if(e&&(e.code==="declined"||e.name==="AbortError"))return;console.error(e);toast("Excel konnte nicht erstellt werden.")}}
@@ -5216,6 +5217,109 @@ function ausUndo(d){if(!can("def_b"))return;const x=typeof FMX!=="undefined"?FMX
  ask((x&&x.aus&&x.aus.t?"Achtung: In epirent ist der Artikel schon als ausgetragen markiert. ":"")+"Ausmustern zurücknehmen? Der Defekt ist dann wieder offen.",async()=>{
   try{await db.doc("defekte/"+d.id).update({done:false,doneBy:"",doneT:0,aus:null});if(x)await db.doc("fmx/"+x.id).delete();toast("Zurückgenommen – Defekt wieder offen",1)}catch(e){toast("Speichern fehlgeschlagen.")}})}
 (function(){try{const st=document.createElement("style");st.textContent='.ausbox{margin:10px 0;padding:10px 12px;border-radius:10px;background:#b71c1c;color:#fff}.ausbox b{display:block;font-size:16px}.ausbox small{display:block;opacity:.95;margin-top:4px}';document.head.appendChild(st)}catch(e){}})();
+
+/* ===== 1.190 – Lager Übersicht unten: Karte „Berichte und Listen“ (Jürgen 25.11., Entwurf https://claude.ai/artifact/EzeWgZHMvLimBhadpMgmko, Variante A)
+   Eine weiße Karte, Zeilen wie der Streifen „Nichts zu prüfen“: Symbol links, Name + Erklärung, rechts Stand-Schild, Pfeil.
+   Zeilen: Wochenbericht (alle mit Lager Übersicht, id jvwb), Austragen in epirent (Recht fm_a, id jvfm), Ersatzteile-Bericht (Defekte – Bearbeiten, id jvet).
+   Der Ersatzteile-Bericht ist dafür aus der Defekte-Liste raus (build.py, 1.95); Link in der Werkstatt Übersicht bleibt. ===== */
+(function(){try{const st=document.createElement("style");st.textContent=
+'.berh{font-size:12px;font-weight:800;color:var(--mute);margin:6px 4px -4px}'+
+'.bercard{background:var(--card);border:2.5px solid var(--navy);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}'+
+'.berrow{display:flex;align-items:center;gap:12px;width:100%;padding:13px 12px;border:0;background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer;min-height:64px}.berrow+.berrow{border-top:1px solid var(--line)}'+
+'.berrow:hover{background:rgba(17,74,151,.05)}.berrow:focus-visible{outline:3px solid var(--navy);outline-offset:-3px}'+
+'.berico{flex:none;width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center}.berico.b{background:#e6eef9;color:#114a97}.berico.o{background:#fdf0e3;color:#b35a00}.berico.g{background:#eaeef3;color:#3b4a5e}'+
+'.bertx{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}.bertx b{font-size:16px}.bertx small{font-size:13px;color:var(--mute)}'+
+'.berchip{flex:none;font-size:12px;font-weight:800;border-radius:999px;padding:3px 9px;white-space:nowrap}.berchip.n{background:#114a97;color:#fff}.berchip.ok{background:#e3f3ea;color:#1f6b41}.berchip.or{background:#b35a00;color:#fff}.berchip.gr{background:#eaeef3;color:#3b4a5e}'+
+'.berrow>svg{flex:none;color:var(--navy)}.bertx .berchip{display:none;align-self:flex-start;margin-top:4px}'+
+'@media (max-width:520px){.berrow>.berchip{display:none}.bertx .berchip{display:inline-block}}'+
+'@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .berico.b{background:#22406f;color:#cfe0fb}:root:not([data-theme="light"]) .berico.o{background:#6b3a0a;color:#ffd9b0}:root:not([data-theme="light"]) .berico.g{background:#2f3d52;color:#dfe6f0}:root:not([data-theme="light"]) .berchip.n{background:#3d6fc4}:root:not([data-theme="light"]) .berchip.ok{background:#1f7a4a;color:#fff}:root:not([data-theme="light"]) .berchip.gr{background:#3a4a62;color:#fff}:root:not([data-theme="light"]) .berrow>svg{color:#8fb0ea}:root:not([data-theme="light"]) .berrow:hover{background:rgba(143,176,234,.08)}}'+
+':root[data-theme="dark"] .berico.b{background:#22406f;color:#cfe0fb}:root[data-theme="dark"] .berico.o{background:#6b3a0a;color:#ffd9b0}:root[data-theme="dark"] .berico.g{background:#2f3d52;color:#dfe6f0}:root[data-theme="dark"] .berchip.n{background:#3d6fc4}:root[data-theme="dark"] .berchip.ok{background:#1f7a4a;color:#fff}:root[data-theme="dark"] .berchip.gr{background:#3a4a62;color:#fff}:root[data-theme="dark"] .berrow>svg{color:#8fb0ea}';
+document.head.appendChild(st)}catch(e){}})();
+const BER_CHEV='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+const BER_ICO={wb:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+ fm:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>',
+ et:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17v3h3l5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>'};
+function berCanEt(){try{return (typeof can==="function"&&can("def_b"))||(typeof canDone==="function"&&canDone())}catch(e){return false}}
+function berRow(id,ico,cls,title,sub,chip,chipCls){const c=chip?'<span class="berchip '+chipCls+'">'+esc(chip)+'</span>':'';/* Schild am Handy unter dem Text, sonst rechts */
+ return '<button class="berrow" type="button" id="'+id+'"><span class="berico '+cls+'">'+ico+'</span><span class="bertx"><b>'+esc(title)+'</b><small>'+esc(sub)+'</small>'+c+'</span>'+c+BER_CHEV+'</button>'}
+function berCard(wbn){const R=[];
+ R.push(berRow("jvwb",BER_ICO.wb,"b","Wochenbericht","Montags-Besprechung · Drucken / PDF",wbn?wbn+(wbn===1?" Punkt":" Punkte"):"","n"));
+ if(typeof can==="function"&&can("fm_a")&&typeof fmAus==="function"){const n=fmAus().length,d=fmAusDone().length;
+  R.push(berRow("jvfm",BER_ICO.fm,"o","Austragen in epirent","Fehlmaterial, Ausgemustertes · "+d+" ausgetragen",n?n+" offen":"✓ Nichts offen",n?"or":"ok"))}
+ if(berCanEt()&&typeof etRepDlg==="function"){const m0=new Date();m0.setDate(1);m0.setHours(0,0,0,0);const MN=["Jän","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+  const n=vdefs().filter(d=>d.done&&!d.aus&&(d.doneT||0)>=+m0).length;
+  R.push(berRow("jvet",BER_ICO.et,"g","Ersatzteile-Bericht","Verbaute Teile, Reparaturzeit · PDF",MN[m0.getMonth()]+": "+n+" Rep.","gr"))}
+ return '<div class="berh">Berichte und Listen</div><div class="bercard" id="bercard">'+R.join("")+'</div>'}
+document.addEventListener("click",e=>{const t=e.target&&e.target.closest&&e.target.closest("#jvet");if(t&&typeof etRepDlg==="function")etRepDlg()});
+
+/* ===== 1.190 – Defekte zum Auftrag (Jürgen 25.11.)
+   1) Zu prüfen: hat der Auftrag noch offene Defekte → rotes Schild in der Liste, Hinweis im Auftragskonto,
+      beim „Geprüft“ roter Kasten mit den Defekten + Knopf „Trotzdem geprüft“ (gewählt: Hinweis + Rückfrage, nicht sperren).
+   2) Excel: sind ALLE Defekte des Auftrags erledigt (repariert oder ausgemustert), bekommen Retourschein-Excel der Endretoure
+      und Abgleich-Excel ein Blatt „Defekte“: Übersicht + pro Defekt Beschreibung, Ersatzteile, Reparaturzeit, Fotos (Defekt, Reparatur, Ausmustern).
+   Zuordnung: gleiche Auftragsnummer (Ziffern, inkl. Verlängerungen) oder beim Zählen im Retourschein des Auftrags gemeldet (d.ret). ===== */
+function dfaOrdSet(p,r){const S=new Set(),R=new Set();
+ if(p){const root=typeof pkRoot==="function"?pkRoot(p):p;[root].concat(typeof pkVerlKids==="function"?pkVerlKids(root):[]).forEach(x=>{const o=pkDig(x.ord);if(o)S.add(o)});
+  (typeof pkRets==="function"?pkRets(root):[]).forEach(x=>R.add(x.id))}
+ if(r){const o=pkDig(r.ord);if(o)S.add(o);R.add(r.id)}return{S,R}}
+function dfaDefs(p,r){if(!p&&r&&typeof abgPackOf==="function")p=abgPackOf(r.ord);const {S,R}=dfaOrdSet(p,r);if(!S.size&&!R.size)return[];
+ return (typeof defs!=="undefined"?defs:[]).filter(d=>d&&!d.del&&((d.ord&&S.has(pkDig(d.ord)))||(d.ret&&R.has(d.ret)))).sort((a,b)=>(a.t||0)-(b.t||0))}
+const dfaOpen=L=>L.filter(d=>!d.done);
+/* Prüf-Eintrag (id = Packlisten-ID oder "r_<Retourschein-ID>") → Defekte */
+function dfaForCheck(id){if(String(id).startsWith("r_")){const r=rets.find(x=>x.id===String(id).slice(2));return r?dfaDefs(null,r):[]}const p=packs.find(x=>x.id===id);return p?dfaDefs(p,null):[]}
+function dfaQ(d){return typeof dxQ==="function"?dxQ(d):Math.max(1,parseInt(d.n,10)||1)}
+function dfaLine(d){return (dfaQ(d)>1?dfaQ(d)+" × ":"")+(d.art||"Artikel")}
+(function(){try{const st=document.createElement("style");st.textContent=
+'.dfabox{border:2px solid var(--bad);background:#fbebeb;border-radius:10px;padding:10px 12px;margin:10px 0 4px}.dfabox b{color:var(--bad)}.dfabox ul{margin:6px 0 0;padding-left:18px}.dfabox li{margin:3px 0}.dfabox .lnk{padding:0 0 0 6px}'+
+'.dfahint{display:flex;gap:8px;align-items:center;border:2px solid var(--bad);background:#fbebeb;color:var(--bad);border-radius:10px;padding:8px 12px;font-weight:700;margin:0 0 10px}'+
+'@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dfabox,:root:not([data-theme="light"]) .dfahint{background:#3d1d1d;color:#ffb3aa}:root:not([data-theme="light"]) .dfabox b{color:#ffb3aa}}'+
+':root[data-theme="dark"] .dfabox,:root[data-theme="dark"] .dfahint{background:#3d1d1d;color:#ffb3aa}:root[data-theme="dark"] .dfabox b{color:#ffb3aa}';
+document.head.appendChild(st)}catch(e){}})();
+const dfaTx=n=>n===1?"1 Defekt offen":n+" Defekte offen";
+/* Liste „Zu prüfen“: Schild nachtragen */
+(function(){const o=abgPrView;abgPrView=function(){o.apply(this,arguments);try{if(abgPrT==="ok")return;const L=abgToCheck(),T=document.querySelectorAll(".abgcard .abgtags");
+ L.forEach((x,i)=>{const n=dfaOpen(dfaForCheck(x.id)).length;if(n&&T[i])T[i].insertAdjacentHTML("afterbegin",abgTag(dfaTx(n),"red")+" ")})}catch(e){console.warn(e)}}})();
+/* Auftragskonto: Hinweis bei „Wartet auf Prüfung“ */
+(function(){const o=pkAbgView;pkAbgView=function(){o.apply(this,arguments);try{const s=document.querySelector(".abgchk");if(!s)return;const p=packs.find(x=>x.id===curPack);const L=p?dfaOpen(dfaDefs(p,null)):[];
+ if(L.length)s.insertAdjacentHTML("afterend",'<div class="dfahint" id="dfahint">⚠ '+esc(dfaTx(L.length))+': '+esc(L.map(dfaLine).join(", "))+'</div>')}catch(e){console.warn(e)}}})();
+/* „Geprüft“-Fenster: Rückfrage bei offenen Defekten */
+(function(){const o=abgCheckDlg;abgCheckDlg=function(id,endT,title){o.apply(this,arguments);try{const L=dfaOpen(dfaForCheck(id));if(!L.length)return;const ov=[...document.querySelectorAll(".ov")].pop(),b=ov&&ov.querySelector("#abgns");if(!b)return;
+ const box='<div class="dfabox" id="dfabox"><b>⚠ Zu diesem Auftrag '+(L.length===1?"ist noch 1 Defekt":"sind noch "+L.length+" Defekte")+' offen</b><ul>'+L.map(d=>'<li>'+esc(dfaLine(d))+(d.desc?' – '+esc(d.desc):'')+(d.urg?' <b>(dringend)</b>':'')+'<button class="lnk" type="button" data-dfa="'+esc(d.id)+'">Öffnen ›</button></li>').join("")+'</ul><div style="font-size:13px;margin-top:6px">Die Defekte kommen erst ins Excel, wenn alle erledigt sind.</div></div>';
+ (ov.querySelector(".card>.mute")||ov.querySelector(".card>b")).insertAdjacentHTML("afterend",box);b.textContent="Trotzdem geprüft";b.style.background="var(--bad)";
+ ov.querySelectorAll("[data-dfa]").forEach(x=>x.onclick=()=>{ov.remove();curDef=x.dataset.dfa;go("defopen")})}catch(e){console.warn(e)}}})();
+
+/* ---------- Excel-Blatt „Defekte“ ---------- */
+async function dfaPhoto(key){try{if(typeof pc!=="undefined"&&pc[key])return pc[key];const s=await db.doc("fotos/"+key).get();if(s.exists){const u=s.data().d;if(typeof pc!=="undefined")pc[key]=u;return u}}catch(e){}return null}
+function dfaPhotoKeys(d){const K=[],fn=+d.fn||0;if(fn)for(let k=0;k<fn;k++)K.push(["Defekt",d.id+"-"+k]);else if(d.foto)K.push(["Defekt",d.id]);
+ for(let k=0;k<(+d.rfn||0);k++)K.push(["Reparatur",d.id+"r-"+k]);const a=d.aus&&+d.aus.fn||0;for(let k=0;k<a;k++)K.push(["Ausmustern",d.id+"-a"+k]);return K}
+function dfaEt(d){return (Array.isArray(d.et)?d.et.filter(e=>e&&e.nm):[]).map(e=>{const n=+e.n||0;return (Number.isInteger(n)?n:String(n).replace(".",","))+" "+(e.u||"Stk")+" "+e.nm+(e.tnr?" (TPC "+e.tnr+")":"")+(e.hnr?" (Hersteller "+e.hnr+")":"")})}
+function dfaRz(d){const m=typeof rzMin==="function"?rzMin(d):(+d.rz||0);return m?(typeof rzTx==="function"?rzTx(m):m+" Min"):"–"}
+/* nur wenn es Defekte gibt UND alle erledigt sind; liefert true, wenn ein Blatt angelegt wurde */
+async function dfaXlAdd(wb,L){if(!wb||!L||!L.length||dfaOpen(L).length)return false;
+ const NAVY="FF114A97",fill=c=>({type:"pattern",pattern:"solid",fgColor:{argb:c}}),th={style:"thin",color:{argb:"FFD5DBE5"}},bd={top:th,left:th,bottom:th,right:th};
+ const ws=wb.addWorksheet("Defekte",{pageSetup:{orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}});ws.columns=[{width:24},{width:30},{width:16},{width:30},{width:14},{width:22}];
+ const t=ws.getCell("A1");t.value="Defekte zum Auftrag";t.font={size:18,bold:true,color:{argb:NAVY}};
+ const tot=L.reduce((a,d)=>a+((typeof rzMin==="function"?rzMin(d):+d.rz||0)),0);
+ ws.getCell("A2").value=L.length+(L.length===1?" Meldung":" Meldungen")+" · "+L.reduce((a,d)=>a+dfaQ(d),0)+" Stk · alle erledigt · Reparaturzeit gesamt "+(typeof rzTx==="function"?rzTx(tot):tot+" Min");ws.getCell("A2").font={color:{argb:"FF667385"}};
+ let rw=4;const hr=ws.getRow(rw);hr.values=["Artikel","Defekt","Ergebnis","Ersatzteile","Reparaturzeit","Erledigt"];hr.height=22;hr.eachCell(c=>{c.fill=fill(NAVY);c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=bd;c.alignment={vertical:"middle",horizontal:"center",wrapText:true}});
+ L.forEach((d,i)=>{rw++;const r=ws.getRow(rw);r.values=[dfaLine(d)+(d.anr?" ("+d.anr+")":""),d.desc||"–",d.aus?"Ausgemustert":"Repariert",dfaEt(d).join("\n")||"–",d.aus?"–":dfaRz(d),(typeof nmA==="function"?nmA(d,"doneBy"):"")+(d.doneT?", "+fmt(d.doneT).slice(0,10):"")];
+  r.eachCell({includeEmpty:true},(c,n)=>{if(n>6)return;c.border=bd;c.alignment={vertical:"top",wrapText:true};if(i%2)c.fill=fill("FFF6F8FB")});r.getCell(1).font={bold:true};if(d.aus)r.getCell(3).font={bold:true,color:{argb:"FFC0392B"}}});
+ const kv=(k,v,red)=>{rw++;ws.mergeCells("B"+rw+":F"+rw);const a=ws.getCell("A"+rw),b=ws.getCell("B"+rw);a.value=k;b.value=String(v==null||v===""?"–":v);a.font={bold:true};a.fill=fill("FFEEF2F8");a.border=bd;b.border=bd;b.alignment={wrapText:true,vertical:"top"};if(red)b.font={bold:true,color:{argb:"FFC0392B"}};
+  const lines=String(b.value).split("\n").reduce((s,l)=>s+Math.max(1,Math.ceil(l.length/80)),0);if(lines>1)ws.getRow(rw).height=15*lines};
+ for(let i=0;i<L.length;i++){const d=L[i];rw+=2;ws.mergeCells("A"+rw+":F"+rw);const h=ws.getCell("A"+rw);h.value=(i+1)+". "+dfaLine(d);h.font={bold:true,size:13,color:{argb:"FFFFFFFF"}};h.fill=fill(NAVY);ws.getRow(rw).height=22;h.alignment={vertical:"middle"};
+  kv("Artikelnummer",d.anr);kv("Veranstaltung",(d.ev||"–")+(d.ord?" · Auftrag "+d.ord:""));kv("Defekt",d.desc);kv("Gemeldet",(typeof nmA==="function"?nmA(d,"by"):"")+", "+fmt(d.t)+(d.urg?" · dringend":"")+(d.ret?" · beim Zählen gemeldet":""));
+  if(d.fv)kv("Fremdverschulden","Ja"+(d.fvw?" – "+d.fvw:""),true);
+  if(d.aus){kv("Ergebnis","Nicht reparierbar – ausgemustert"+(d.aus.n?" ("+d.aus.n+" Stk)":""),true);kv("Grund",d.aus.why);kv("Ausgemustert",(typeof nmA==="function"?nmA(d.aus,"by"):"")+(d.aus.t?", "+fmt(d.aus.t):""))}
+  else{kv("Reparatur",d.rep);kv("Ersatzteile",dfaEt(d).join("\n")||"Keine");kv("Reparaturzeit",dfaRz(d));kv("Repariert",(typeof nmA==="function"?nmA(d,"doneBy"):"")+(d.doneT?", "+fmt(d.doneT):""))}
+  if(d.fb)kv("Werkstatt",d.fb);
+  const K=dfaPhotoKeys(d);if(K.length){rw++;let col=0,rowH=0,start=rw+1;for(const [lab,key] of K){const u=await dfaPhoto(key);if(!u)continue;const im=new Image();im.src=u;try{await im.decode()}catch(e){continue}
+   const W=230,H=Math.round(im.naturalHeight*W/Math.max(1,im.naturalWidth));if(col>=2){start+=Math.ceil(rowH/20)+2;col=0;rowH=0}
+   ws.getCell((col?"D":"A")+start).value="Foto "+lab;ws.getCell((col?"D":"A")+start).font={bold:true,size:10,color:{argb:"FF667385"}};
+   ws.addImage(wb.addImage({base64:u,extension:/^data:image\/png/.test(u)?"png":"jpeg"}),{tl:{col:col?3:0,row:start},ext:{width:W,height:H}});rowH=Math.max(rowH,H);col++}
+   rw=start+Math.ceil(rowH/20)+1}}
+ return true}
+/* Retourschein-Excel: nur bei Endretoure (Hook am Ende von retXl über rXlPhotos) */
+(function(){const o=rXlPhotos;rXlPhotos=async function(wb,r,ws,last){await o.apply(this,arguments);try{if(r&&r.art==="end")await dfaXlAdd(wb,dfaDefs(null,r))}catch(e){console.warn(e)}}})();
 </script>
 <script>
 let db,user,me,owner=false,realOwner=false,lists=[],art={},names={},view="start",cur=null,pendQ=null,stream=null,timer=null,last="",draft={mode:"bleibt"};
@@ -5387,7 +5491,7 @@ function werkBlock(){const ids=Object.keys(usr).filter(i=>i!==me&&profActive(i))
 function shrink(f){return new Promise((ok,no)=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{let mx=1000,q=.7,out;for(let k=0;k<6;k++){const sc=Math.min(1,mx/Math.max(i.naturalWidth,i.naturalHeight)),cv=document.createElement("canvas");cv.width=Math.round(i.naturalWidth*sc);cv.height=Math.round(i.naturalHeight*sc);cv.getContext("2d").drawImage(i,0,0,cv.width,cv.height);out=cv.toDataURL("image/jpeg",q);if(out.length<170000)break;q=Math.max(.4,q-.1);mx=Math.round(mx*.8)}URL.revokeObjectURL(u);ok(out)};i.onerror=()=>{URL.revokeObjectURL(u);no()};i.src=u})}
 function defView(){$("#t").textContent="Defekte";
  const l=vdefs().filter(d=>df==="alle"||(df==="offen")===!d.done).filter(dxDefMatch).sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(b.urg&&!b.done?1:0)-(a.urg&&!a.done?1:0)||b.t-a.t);
- const dxF=document.activeElement&&document.activeElement.id==="dxdq"?document.activeElement.selectionStart:null;$("#app").innerHTML=nav()+defTools()+dxDefSearch()+(canDone()?'<button class="btn ghost" id="etrep" style="margin-bottom:10px">Ersatzteile-Bericht (PDF)</button>':'')+dxDefRows(l,d=>'<div class="sw"><button class="del" data-dd="'+d.id+'">Löschen</button><div class="fg dc'+(d.done?" done":"")+'" data-df="'+d.id+'"><div class="row" style="align-items:center"><b style="flex:1">'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+(d.anr?' <span class="mute" style="font-weight:400">'+esc(d.anr)+'</span>':'')+'</b>'+(d.urg&&!d.done?'<span class="tag" style="flex:0;background:#7a0f08;color:#fff">DRINGEND</span> ':'')+defFvTag(d)+'<span class="tag" style="flex:0">'+(d.done?"Erledigt":"Offen")+'</span></div><div class="mute">'+esc(d.ev)+' · '+fmt(d.t)+' · '+esc(nmA(d,"by"))+'</div></div></div>');
+ const dxF=document.activeElement&&document.activeElement.id==="dxdq"?document.activeElement.selectionStart:null;$("#app").innerHTML=nav()+defTools()+dxDefSearch()+dxDefRows(l,d=>'<div class="sw"><button class="del" data-dd="'+d.id+'">Löschen</button><div class="fg dc'+(d.done?" done":"")+'" data-df="'+d.id+'"><div class="row" style="align-items:center"><b style="flex:1">'+(dxQ(d)>1?dxQ(d)+' × ':'')+esc(d.art)+(d.anr?' <span class="mute" style="font-weight:400">'+esc(d.anr)+'</span>':'')+'</b>'+(d.urg&&!d.done?'<span class="tag" style="flex:0;background:#7a0f08;color:#fff">DRINGEND</span> ':'')+defFvTag(d)+'<span class="tag" style="flex:0">'+(d.done?"Erledigt":"Offen")+'</span></div><div class="mute">'+esc(d.ev)+' · '+fmt(d.t)+' · '+esc(nmA(d,"by"))+'</div></div></div>');
  bindNav();
  bindDefTools();dxDefBind(dxF);if($("#etrep"))$("#etrep").onclick=etRepDlg;document.querySelectorAll("[data-df]").forEach(e=>e.onclick=()=>{if(e.dataset.just)return;curDef=e.dataset.df;go("defopen")});if(can("def_l"))swipe()}
 function defNewView(){setTimeout(()=>defFvSet("dn",null),0);$("#t").textContent="Defekt melden";

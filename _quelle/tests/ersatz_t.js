@@ -12,7 +12,7 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  const E=(f,a)=>p.evaluate(f,a);
  await E(()=>{df="alle";curDef=null;view="def";hist=["start"];draw()});await p.waitForTimeout(300);
  await E(()=>{dxDoneOpen=true;defView()});const ord=await E(()=>[...document.querySelectorAll("[data-df]")].map(e=>e.dataset.df).join(""));ok("Sortierung: dringend offen, offen neu→alt, erledigt neu→alt",ord==="cbaed",ord);
- ok("Knopf Bericht",!!(await p.$("#etrep")));
+ ok("Kein Knopf Bericht in der Defekte-Liste (seit 1.190)",!(await p.$("#etrep")));
  /* Melden → Alle */
  await E(()=>{df="offen";go("defnew")});await p.waitForTimeout(200);await p.fill("#dnart","Testartikel");await p.fill("#dnev","Fest");await p.click("#dnsend");await p.waitForTimeout(500);await p.click("#dxfin");await p.waitForTimeout(300);
  ok("Nach Melden → Fertig: Reiter Alle",await E(()=>view==="def"&&df==="alle"&&document.querySelector('[data-dfl="alle"]').classList.contains("act")));
@@ -31,7 +31,7 @@ let F=0;const ok=(t,c,v)=>{F+=!c;console.log((c?"OK   ":"FEHLT")+" "+t+(v!==unde
  await p.click("#etedit");await p.waitForTimeout(300);await p.click('[data-ete="0"]');await p.waitForTimeout(150);await p.click("#etpd");await p.waitForTimeout(100);await p.click("#ets");await p.waitForTimeout(400);
  ok("Ändern: Teil entfernt, bleibt erledigt",await E(()=>{const x=defs.find(x=>x.id==="b");return x.done&&x.et.length===1&&x.et[0].nm==="Kippschalter 16A rot"}));
  /* Bericht */
- await E(()=>{view="def";draw()});await p.waitForTimeout(200);await p.click("#etrep");await p.waitForTimeout(200);
+ await E(()=>{view="jarvis";draw()});await p.waitForTimeout(200);await p.click("#jvet");await p.waitForTimeout(200);
  const inf=await p.innerText("#etinfo");ok("Letzter Monat: 2 Reparaturen, 4 Teile, 2 verschiedene",/2 Reparaturen · Reparaturzeit 0 Min · 4 Ersatzteile · 2 verschiedene/.test(inf),inf);
  await p.click('[data-erg="c"]');await p.waitForTimeout(100);ok("Von–bis sichtbar",await p.isVisible("#etf"));
  const sum=await E(()=>{const r=etRange("lm");return etData(r).sum.map(s=>s.n+" "+s.u+" "+s.nm+" "+s.tnr+"/"+s.hnr).join(" ; ")});ok("Summe pro Teil",sum==="3 Stk CEE-Stecker 32A 5-polig 5012/PCE 025-6 ; 1.5 m Gummikabel 5x6 /",sum);
