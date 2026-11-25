@@ -29,7 +29,7 @@ const XL=`(()=>{const mkCell=()=>({});class WS{constructor(n){this.name=n;this.r
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.waitForTimeout(1200);await p.mouse.click(200,400);await p.waitForTimeout(400);
- ok("Version 1.190",await p.evaluate(()=>APPV==="1.190"));
+ ok("Version ab 1.190",await p.evaluate(()=>+APPV.split(".")[1]>=190));
  /* 1) Berichte-Karte */
  await p.evaluate(()=>{view="jarvis";draw()});await p.waitForTimeout(400);
  const rows=await p.evaluate(()=>[...document.querySelectorAll("#bercard .berrow")].map(b=>b.id+":"+b.querySelector(".bertx b").textContent));
