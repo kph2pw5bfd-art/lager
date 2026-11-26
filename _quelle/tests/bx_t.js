@@ -8,9 +8,9 @@ const seed=[{col:"pack",id:"P1",data:{ord:"260130001",ps:"14402",ev:"Gala Wien 2
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.evaluate(()=>{window.MF_NOASK=true;window.PK_FOPEN=true});await p.waitForTimeout(1000);await p.mouse.click(195,420);await p.waitForTimeout(400);
- ok("Version 1.193",await p.evaluate(()=>APPV==="1.193"));
- const H=()=>p.evaluate(()=>(__T.docs.find(d=>d.col==="packh"&&d.id==="P1")||{}).data||{});
- const open=async()=>{await p.evaluate(()=>{curPack="P1";view="packopen";draw()});await p.waitForTimeout(400)};
+ ok("Version ab 1.193",await p.evaluate(()=>+APPV.split(".")[1]>=193));
+ const H=()=>p.evaluate(()=>{const d=(__T.docs.find(d=>d.col==="packh"&&d.id==="P1")||{}).data||{};const o={...d};Object.keys(d).filter(k=>/^bx_/.test(k)&&d[k]).forEach(k=>{o["bx_"+d[k].n]=d[k]});return o});
+ const open=async()=>{await p.evaluate(()=>{curPack="P1";view="packopen";draw();packOpenView()});await p.waitForTimeout(400)};
  const row=t=>p.evaluate(t=>{const r=[...document.querySelectorAll(".pkp")].find(x=>x.querySelector(".pkt").textContent.includes(t));return r?+r.dataset.pkrow:-1},t);
  await open();
  ok("Knopf „Inhalt pro Box erfassen“",(await p.textContent("#bxgo")).includes("Inhalt pro Box erfassen"));
@@ -52,8 +52,21 @@ const seed=[{col:"pack",id:"P1",data:{ord:"260130001",ps:"14402",ev:"Gala Wien 2
  /* Boxen ansehen + nochmal drucken */
  await p.click("#bxls");await p.waitForTimeout(200);const lt=await p.textContent(".ov");ok("Boxen ansehen: beide Boxen",/GROSSE BOX 1/.test(lt)&&/VERTEILERKASTEN 2/.test(lt));
  await p.screenshot({path:S+"bx_liste.png"});
- await p.click('[data-bxre="1"]');await p.waitForTimeout(300);ok("Nochmal drucken ohne „Ohne Etikett“",!(await p.$("#bxno"))&&/nochmal/.test(await p.textContent(".ov")));
+ await p.click('[data-bxre]');await p.waitForTimeout(300);ok("Nochmal drucken ohne „Ohne Etikett“",!(await p.$("#bxno"))&&/nochmal/.test(await p.textContent(".ov")));
  await p.click("#bxpr");await p.waitForTimeout(500);ok("zweiter Druckauftrag, keine „Nächste Box?“-Frage",(await p.evaluate(()=>__T.docs.filter(d=>d.col==="druck").length))===2&&!(await p.$("#bxnx")));
+ /* 1.194: zwei Tablets – jedes Gerät hat seine eigene offene Box */
+ await p.evaluate(()=>document.querySelectorAll(".ov").forEach(o=>o.remove()));
+ await p.evaluate(()=>localStorage.setItem("tpc_dev_id","tabletB"));await open();await p.click("#bxgo");await p.waitForTimeout(200);await p.click('[data-bxt="kb"]');await p.click("#bxok");await p.waitForTimeout(400);
+ await p.evaluate(()=>localStorage.setItem("tpc_dev_id","tabletA"));await open();await p.click("#bxgo");await p.waitForTimeout(200);await p.click('[data-bxt="pal"]');await p.click("#bxok");await p.waitForTimeout(400);
+ h=await p.evaluate(()=>{const d=(__T.docs.find(d=>d.col==="packh"&&d.id==="P1")||{}).data||{};return Object.values(d).filter(b=>b&&b.typ&&!b.done).map(b=>b.n+":"+b.typ+":"+b.dev).sort()});
+ ok("zwei offene Boxen gleichzeitig (3 auf Tablet B, 4 auf Tablet A)",JSON.stringify(h)===JSON.stringify(["3:kb:tabletB","4:pal:tabletA"]),JSON.stringify(h));
+ ok("Tablet A: eigene Box in der Leiste, fremde als „offen bei …“",/Palette 4/.test(await p.textContent(".bxtag"))&&/Kleine Box 3 · offen bei/.test(await p.textContent("#bxbar")));
+ await p.screenshot({path:S+"bx_zwei.png"});
+ i=await row("Schuko 5m");if(i<0)i=await row("Defender");
+ await p.evaluate(()=>{const d=__T.docs.find(d=>d.col==="packh"&&d.id==="P1").data;delete d.h_3});await open();
+ i=await row("Defender");await p.click('[data-pc="'+i+'"]');await p.waitForTimeout(300);ok("Tablet A tippt → Frage für Palette 4",/in Palette 4\?/.test(await p.textContent(".ov")));await p.click("#bxok");await p.waitForTimeout(400);
+ await p.evaluate(()=>localStorage.setItem("tpc_dev_id","tabletB"));await open();ok("Tablet B sieht seine Kleine Box 3",/Kleine Box 3/.test(await p.textContent(".bxtag"))&&/Palette 4 · offen bei/.test(await p.textContent("#bxbar")));
+ await p.evaluate(()=>localStorage.setItem("tpc_dev_id","tabletA"));
  /* Etikett: Box-Schild und Teilung */
  const d1=await p.evaluate(()=>gbDoc({art:"inh",ord:"260130001",ev:"Gala Wien 2026",n:1,box:"PALETTE 2",inh:"20 Stk Schuko 20m\n8 Stk Defender 32A",rot:0}));
  ok("Etikett mit Box-Schild",/PALETTE 2/.test(d1)&&/class="bxt/.test(d1)&&!/Inhalt 1 von/.test(d1));

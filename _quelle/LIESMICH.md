@@ -641,3 +641,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - „Box fertig“: Inhalt (× nimmt heraus), Etikett „Mit Inhalt“ (vorgewählt) oder „Normales Etikett“ (vorgewählt bei Sonstiges mit höchstens 1 Artikel), Anzahl, „Etikett an die Druckstation“ / „Hier drucken“ / „Ohne Etikett“ / „Zurück in die Box“ → „Nächste Box?“ (Box n+1 starten / Fertig). „Boxen ansehen“: alle Boxen mit Inhalt, „Etikett nochmal“, „Wieder öffnen“ (wenn keine andere offen).
 - Etikett (etik.js): Druckauftrag mit `box` („PALETTE 2“) → schwarzes Schild rechts neben „Inhalt:“; mehr als 11 Zeilen → mehrere Etiketten „Inhalt 1 von 2“ (`gbParts`). Etiketten ohne `box` unverändert.
 - Test `tests/bx_t.js`. Am Tablet und mit echtem Godex noch nicht ausprobiert.
+
+## 1.194 (Jürgen, 26.11.): zu zweit „Inhalt pro Box erfassen“ auf 2 Tablets
+- Gemeldet: es war nur eine Box pro Packliste offen → zu zweit ging nicht. Jetzt hat jedes Gerät seine eigene offene Box: Gerätekennung `tpc_dev_id` (localStorage), Box-Feld `dev`, Schlüssel `bx_<n>_<Gerät><Zeit>` (damit zwei Tablets nie dasselbe Feld überschreiben; Nummer = höchste + 1, bei gleichzeitigem Start ohne Netz theoretisch doppelt). Alte `bx_<n>` ohne `dev` gelten als eigene, wenn `by` = ich.
+- Leiste: eigene offene Box oben mit „Box fertig“; fremde offene Boxen als Schild „Kleine Box 3 · offen bei <Name>“. Kreis tippen fragt nur für die eigene Box; ohne eigene offene Box normales Abhaken. „Wieder öffnen“ übernimmt die Box auf dieses Gerät. Die Leiste wird bei jedem Neuzeichnen ersetzt.
+- Test `tests/bx_t.js` (Teil zwei Tablets).
