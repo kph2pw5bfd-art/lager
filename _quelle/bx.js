@@ -32,6 +32,21 @@ const bxSave=(P,b,extra)=>{const {k,...d}=b;return {[k]:{...d,...(extra||{})}}};
 const bxTyp=b=>b.typ==="son"?(b.nm||"Sonstiges"):BX_T[b.typ]||"Box";
 const bxName=b=>b?"Nr. "+b.n+" · "+bxTyp(b):"";
 const bxIn=(P,k)=>bxAll(P).reduce((a,b)=>a+(+((b.it||{})[k])||0),0);
+/* 1.197: Box-Inhalt immer = was wirklich hergerichtet ist (Jürgen: „Auf dem Etikett soll immer das stehen, was drin ist“).
+   Wurde nachträglich eine Alternative eingetragen (Bearbeiten/Scan) oder die Menge verringert, wandert der Überschuss vom Packschein-Artikel
+   zur Alternative derselben Position (neueste Box zuerst); Alternativen, die es nicht mehr gibt bzw. zu viel sind, fallen weg. Liefert den Patch oder null. */
+function bxReconcile(P){const B=bxAll(P);if(!B.length)return null;const IT=pkItems(P),H=pkH(P),it={};B.forEach(b=>it[b.k]={...(b.it||{})});
+ const sum=key=>B.reduce((a,b)=>a+(+it[b.k][key]||0),0);const keys=new Set();B.forEach(b=>Object.keys(b.it||{}).forEach(key=>keys.add(key.replace(/~\d+$/,""))));
+ const rev=B.slice().sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(b.n-a.n));
+ keys.forEach(k=>{const o=IT.find(i=>i.k===k);if(!o)return;const h=H[k]||null,alts=(h&&h.alt)||[];
+  /* Alternativen bereinigen */
+  B.forEach(b=>Object.keys(it[b.k]).forEach(key=>{const m=new RegExp("^"+k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"~(\\d+)$").exec(key);if(m&&!alts[+m[1]])delete it[b.k][key]}));
+  alts.forEach((a,j)=>{const key=k+"~"+j;let over=sum(key)-(+a.n||0);for(const b of rev){if(over<=0)break;const v=+it[b.k][key]||0;if(!v)continue;const d=Math.min(v,over);if(v-d)it[b.k][key]=v-d;else delete it[b.k][key];over-=d}});
+  /* Packschein-Artikel: Überschuss → Alternative */
+  let over=sum(k)-bxCur(o.x,h);for(const b of rev){if(over<=0)break;const v=+it[b.k][k]||0;if(!v)continue;const d=Math.min(v,over);if(v-d)it[b.k][k]=v-d;else delete it[b.k][k];over-=d;
+   let mv=d;alts.forEach((a,j)=>{if(mv<=0)return;const key=k+"~"+j,free=(+a.n||0)-sum(key);if(free<=0)return;const t=Math.min(free,mv);it[b.k][key]=(+it[b.k][key]||0)+t;mv-=t})}});
+ const patch={};B.forEach(b=>{const a=JSON.stringify(Object.entries(b.it||{}).filter(e=>+e[1]>0).sort()),c=JSON.stringify(Object.entries(it[b.k]).filter(e=>+e[1]>0).sort());if(a!==c)Object.assign(patch,bxSave(P,b,{it:Object.fromEntries(Object.entries(it[b.k]).filter(e=>+e[1]>0))}))});
+ return Object.keys(patch).length?patch:null}
 function bxCur(x,h){const st=pkPS(x,h);if(st.s==="ok")return h&&typeof h.q==="number"&&h.q>st.need?h.q:st.need;return st.s==="part"?st.q:0}
 /* 1.196: Alternativen landen mit eigenem Namen in der Box: Schlüssel „h_<Pos>~<Nr. der Alternative>“ */
 function bxAltOf(P,key){const m=/^(.*)~(\d+)$/.exec(key);if(!m)return null;const h=pkH(P)[m[1]];const a=h&&h.alt&&h.alt[+m[2]];return a?{k:m[1],i:+m[2],a}:{k:m[1],i:+m[2],a:{t:"Alternative",n:0}}}
@@ -55,7 +70,7 @@ function bxBarHtml(P){const B=bxAll(P),ob=B.find(bxMineB);if(!bxCanH(P)&&!B.leng
  const chips=B.map(b=>'<span class="bxchip '+(b.done?(b.et?'ok':'nd'):'op')+'">'+(b.done?'✓ ':'')+esc(bxName(b))+(b.done?(b.et?' · gedruckt':' · ohne Etikett'):' · offen'+(bxMineB(b)?'':' bei '+esc(nmA(b,"by"))))+'</span>').join("");
  if(ob){const L=bxLines(P,ob);return '<div class="bxbar" id="bxbar"><div class="bxtop"><span class="bxtag">'+esc(bxName(ob))+'</span><span class="bxinfo"><b>offen</b> · '+(L.length?L.length+(L.length===1?" Artikel drin":" Artikel drin"):"noch leer – Artikel antippen")+(L.length?'<small>'+esc(L.map(l=>l.txt).join(" · "))+'</small>':'')+'</span><button type="button" class="bxdone" id="bxfin">Box fertig</button></div><div class="bxchips">'+chips+'<button type="button" class="bxlnk" id="bxls">Boxen ansehen ›</button></div></div>'}
  return '<div class="bxbar idle" id="bxbar"><div class="bxchips">'+chips+'</div><div class="bxchips">'+(bxCanH(P)?'<button type="button" class="btn s" id="bxgo">Nächste Box starten</button>':'')+'<button type="button" class="bxlnk" id="bxls">Boxen ansehen ›</button></div></div>'}
-(function(){const o=packOpenView;packOpenView=function(){o.apply(this,arguments);try{if(view!=="packopen")return;const P=packs.find(x=>x.id===curPack);if(!P||pkNoH(P))return;["#bxbar","#bxgo"].forEach(q=>{const e=$(q);if(e&&!e.closest(".bxbar"))e.remove();else if(e&&q==="#bxbar")e.remove()});document.querySelectorAll("#app .bxin").forEach(e=>e.remove());
+(function(){const o=packOpenView;packOpenView=function(){try{if(view==="packopen"&&!document.querySelector(".ov")){const P0=packs.find(x=>x.id===curPack);const fx=P0&&bxReconcile(P0);if(fx)pkHSet(P0,fx)}}catch(e){console.warn(e)}o.apply(this,arguments);try{if(view!=="packopen")return;const P=packs.find(x=>x.id===curPack);if(!P||pkNoH(P))return;["#bxbar","#bxgo"].forEach(q=>{const e=$(q);if(e&&!e.closest(".bxbar"))e.remove();else if(e&&q==="#bxbar")e.remove()});document.querySelectorAll("#app .bxin").forEach(e=>e.remove());
   const a=document.querySelector("#app .pkacts");if(!a)return;a.insertAdjacentHTML("afterend",bxBarHtml(P));
   if($("#bxgo"))$("#bxgo").onclick=()=>bxStartDlg(P);if($("#bxfin"))$("#bxfin").onclick=()=>bxDoneDlg(P,bxOpen(P));if($("#bxls"))$("#bxls").onclick=()=>bxListDlg(P);
   const B=bxAll(P),IT=pkItems(P);if(B.length)document.querySelectorAll("#app [data-pkrow]").forEach(r=>{const i=+r.dataset.pkrow,o=IT[i];if(!o)return;const t=[];B.forEach(b=>Object.entries(b.it||{}).forEach(([key,q])=>{if(!(+q>0))return;if(key===o.k)t.push(pkNum(q)+" in "+bxName(b));else if(key.startsWith(o.k+"~")){const al=bxAltOf(P,key);t.push(pkNum(q)+" "+(al?al.a.t:"Alternative")+" in "+bxName(b))}}));
@@ -93,7 +108,7 @@ function bxQtyDlg(P,i){const b=bxOpen(P);if(!b)return;const IT=pkItems(P),o0=IT[
    ok.onclick=()=>{o.remove();if(c.orig)bxPut(P,b,i,q,fm);else{if(fm)pkHSet(P,{[k]:{...(h||{}),fm}});bxPutKey(P,b,c.key,q)}if(view==="packopen")packOpenView()};
    const rm=o.querySelector("#bxrm");if(rm)rm.onclick=()=>{o.remove();if(c.orig)bxPut(P,b,i,-here);else bxPutKey(P,b,c.key,-here);if(view==="packopen")packOpenView()}};drawQ()};
  if(x.f>0&&!(h&&h.fm))return pkFmAsk(x,fm=>go(fm));go(null)}
-function bxDoneDlg(P,b,re){if(!b)return;const L=bxLines(P,b);let art=b.typ==="son"&&L.length<=1?"pl":"inh",n=1;
+function bxDoneDlg(P,b,re){if(!b)return;try{const fx=bxReconcile(P);if(fx){pkHSet(P,fx);b=bxGet(P,b)}}catch(e){}const L=bxLines(P,b);let art=b.typ==="son"&&L.length<=1?"pl":"inh",n=1;
  const o=bxOv('<div id="bxdc"></div>');const draw=()=>{const LL=bxLines(P,b);
   o.querySelector("#bxdc").innerHTML='<b style="font-size:19px">'+esc(bxName(b))+(re?' – Etikett nochmal drucken':' ist fertig')+'</b>'+
    '<div class="bxlist"><div class="h">INHALT ('+LL.length+(LL.length===1?' ARTIKEL':' ARTIKEL')+')</div>'+(LL.length?LL.map(l=>'<div><span>'+esc(l.nm)+'</span><span><b>'+pkNum(l.q)+' '+esc(l.x.u||"Stk")+'</b>'+(re?'':' <button type="button" data-bxrm="'+esc(l.k)+'" aria-label="Aus der Box nehmen">×</button>')+'</span></div>').join(""):'<div class="mute">Noch nichts drin.</div>')+'</div>'+
@@ -106,7 +121,7 @@ function bxDoneDlg(P,b,re){if(!b)return;const L=bxLines(P,b);let art=b.typ==="so
   const q=s=>o.querySelector(s);o.querySelectorAll("[data-bxa]").forEach(x=>x.onclick=()=>{art=x.dataset.bxa;draw()});q("#bxem").onclick=()=>{n=Math.max(1,n-1);draw()};q("#bxep").onclick=()=>{n=Math.min(20,n+1);draw()};
   o.querySelectorAll("[data-bxrm]").forEach(x=>x.onclick=()=>{const k=x.dataset.bxrm,i=pkItems(P).findIndex(it=>it.k===k),cb=bxGet(P,b);if(/~\d+$/.test(k)){bxPutKey(P,cb,k,-(+((cb.it||{})[k])||0));setTimeout(()=>{b=bxGet(P,b);draw()},50)}else if(i>=0){bxPut(P,cb,i,-(+((cb.it||{})[k])||0));setTimeout(()=>{b=bxGet(P,b);draw();if(view==="packopen"&&!document.querySelector(".ov:not(:last-child)"))packOpenView()},50)}});
   q("#bxback").onclick=()=>o.remove();
-  const job=()=>{const cb=bxGet(P,b);return{pk:P.id,ord:P.ord||"",ev:P.ev||"",art,n,inh:art==="inh"?bxLines(P,cb).map(l=>l.txt).join("\n"):"",box:art==="inh"?bxName(cb).toUpperCase():"",bx:cb.n}};
+  const job=()=>{try{const fx=bxReconcile(P);if(fx)pkHSet(P,fx)}catch(e){}const cb=bxGet(P,b);return{pk:P.id,ord:P.ord||"",ev:P.ev||"",art,n,inh:art==="inh"?bxLines(P,cb).map(l=>l.txt).join("\n"):"",box:art==="inh"?bxName(cb).toUpperCase():"",bx:cb.n}};
   const fin=et=>{const cb=bxGet(P,b);pkHSet(P,bxSave(P,cb,{done:re&&cb.done?cb.done:{by:me,t:Date.now()},et:et||cb.et||null}));o.remove();if(view==="packopen")packOpenView();if(re)toast(et&&et.here?"Etikett wird gedruckt":"An die Druckstation geschickt",1);else bxNextAsk(P,cb,et)};
   if(q("#bxno"))q("#bxno").onclick=()=>fin(null);
   q("#bxhere").onclick=()=>{const j=job();gbPrint(j).catch(()=>errBox("Drucken hat nicht geklappt."));fin({art,n,t:Date.now(),here:true})};
@@ -115,7 +130,7 @@ function bxDoneDlg(P,b,re){if(!b)return;const L=bxLines(P,b);let art=b.typ==="so
 function bxNextAsk(P,b,et){const o=bxOv('<b style="font-size:17px">'+esc(bxName(b))+(et?(et.here?' – Etikett wird gedruckt ✓':' – an die Druckstation geschickt ✓'):' – fertig ✓')+'</b><div class="mute" style="margin:6px 0 12px">'+(et&&!et.here&&typeof gbStationOk==="function"&&!gbStationOk()?'Die Druckstation ist gerade aus – das Etikett wird gedruckt, sobald sie läuft. ':'')+'Nächste Box?</div>'+
  '<div class="row"><button class="btn ghost" type="button" id="bxend">Fertig</button><button class="btn" type="button" id="bxnx">Nr. '+(bxAll(P).reduce((a,y)=>Math.max(a,+y.n||0),0)+1)+' starten</button></div>');
  o.querySelector("#bxend").onclick=()=>o.remove();o.querySelector("#bxnx").onclick=()=>{o.remove();bxStartDlg(P)}}
-function bxListDlg(P){const B=bxAll(P);const o=bxOv('<b style="font-size:19px">Boxen ('+B.length+')</b>'+B.map(b=>{const L=bxLines(P,b);return '<div class="bxlist"><div class="h"><span>'+esc(bxName(b).toUpperCase())+' · '+(b.done?(b.et?'gedruckt':'ohne Etikett'):'offen')+'</span>'+
+function bxListDlg(P){try{const fx=bxReconcile(P);if(fx)pkHSet(P,fx)}catch(e){}const B=bxAll(P);const o=bxOv('<b style="font-size:19px">Boxen ('+B.length+')</b>'+B.map(b=>{const L=bxLines(P,b);return '<div class="bxlist"><div class="h"><span>'+esc(bxName(b).toUpperCase())+' · '+(b.done?(b.et?'gedruckt':'ohne Etikett'):'offen')+'</span>'+
   (b.done?'<span><button type="button" class="lnk" data-bxre="'+esc(b.k)+'" style="color:var(--navy);font-size:13px">Etikett nochmal</button>'+(bxOpen(P)||!bxCanH(P)?'':' · <button type="button" class="lnk" data-bxop="'+esc(b.k)+'" style="color:var(--navy);font-size:13px">Wieder öffnen</button>')+'</span>':'')+'</div>'+
   (L.length?L.map(l=>'<div><span>'+esc(l.nm)+'</span><b>'+pkNum(l.q)+' '+esc(l.x.u||"Stk")+'</b></div>').join(""):'<div class="mute">leer</div>')+'<div class="mute" style="font-size:12px">'+esc(nmA(b,"by"))+', '+fmt(b.t)+(b.done?' · fertig '+fmt(b.done.t).slice(-5):'')+'</div></div>'}).join("")+
   '<div style="position:sticky;bottom:-16px;background:var(--card);padding:8px 0 4px;margin-top:6px"><button class="btn ghost" type="button" id="bxx" style="width:100%">Schließen</button></div>');

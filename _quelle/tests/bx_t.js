@@ -8,10 +8,10 @@ const seed=[{col:"pack",id:"P1",data:{ord:"260130001",ps:"14402",ev:"Gala Wien 2
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.evaluate(()=>{window.MF_NOASK=true;window.PK_FOPEN=true});await p.waitForTimeout(1000);await p.mouse.click(195,420);await p.waitForTimeout(400);
- ok("Version ab 1.196",await p.evaluate(()=>+APPV.split(".")[1]>=196));
+ ok("Version ab 1.197",await p.evaluate(()=>+APPV.split(".")[1]>=197));
  const H=()=>p.evaluate(()=>{const d=(__T.docs.find(d=>d.col==="packh"&&d.id==="P1")||{}).data||{};const o={...d};Object.keys(d).filter(k=>/^bx_/.test(k)&&d[k]).forEach(k=>{o["bx_"+d[k].n]=d[k]});return o});
  const open=async()=>{await p.evaluate(()=>{curPack="P1";view="packopen";draw();packOpenView()});await p.waitForTimeout(400)};
- const row=t=>p.evaluate(t=>{const r=[...document.querySelectorAll(".pkp")].find(x=>x.querySelector(".pkt").textContent.includes(t));return r?+r.dataset.pkrow:-1},t);
+ const row=t=>p.evaluate(t=>{const r=[...document.querySelectorAll(".pkp")].find(x=>x.querySelector(".pkt").textContent.trim().startsWith(t));return r?+r.dataset.pkrow:-1},t);
  await open();
  ok("Knopf „Inhalt pro Box erfassen“",(await p.textContent("#bxgo")).includes("Inhalt pro Box erfassen"));
  /* normales Abhaken ohne Box unverändert */
@@ -74,12 +74,23 @@ const seed=[{col:"pack",id:"P1",data:{ord:"260130001",ps:"14402",ev:"Gala Wien 2
  ok("Boxen ansehen: Fenster passt auf den Bildschirm und lässt sich scrollen",sc.fits&&sc.scroll&&sc.top,JSON.stringify(sc));
  ok("Schließen bleibt erreichbar",await p.evaluate(()=>{const b=document.querySelector("#bxx").getBoundingClientRect();return b.bottom<=innerHeight&&b.top>=0}));
  await p.screenshot({path:S+"bx_scroll.png"});await p.click("#bxx");
+ /* 1.197: erst Packschein-Artikel in die Box, danach Alternative über Bearbeiten → Box zeigt die Alternative */
+ await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1");const pt={h_2:null};bxAll(P).forEach(b=>{const it={...(b.it||{})};delete it.h_2;Object.assign(pt,bxSave(P,b,{it}))});pkHSet(P,pt)});await open();
+ i=await row("Verteiler");await p.click('[data-pc="'+i+'"]');await p.waitForTimeout(300);await p.click("#bxok");await p.waitForTimeout(400);
+ let bb=await p.evaluate(()=>bxOpen(packs.find(x=>x.id==="P1")).it);ok("Verteiler 63A (2) in der offenen Box",bb.h_2===2,JSON.stringify(bb));
+ await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1");pkHSet(P,{h_2:{ok:false,q:0,alt:[{n:2,t:"Verteiler 32A",a:"1047"}],fm:"",by:me,t:Date.now()}})});await open();
+ bb=await p.evaluate(()=>bxOpen(packs.find(x=>x.id==="P1")).it);ok("nach Alternative: Box enthält Verteiler 32A statt 63A",!bb.h_2&&bb["h_2~0"]===2,JSON.stringify(bb));
+ ok("Zeile zeigt Alternative in der Box",/2 Verteiler 32A in Nr\. 4/.test(await p.textContent('[data-pkrow="'+i+'"]')));
+ await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1");pkHSet(P,{h_2:{ok:false,q:1,alt:[{n:1,t:"Verteiler 32A",a:"1047"}],fm:"",by:me,t:Date.now()}})});await open();
+ bb=await p.evaluate(()=>bxOpen(packs.find(x=>x.id==="P1")).it);ok("Alternative auf 1 verringert → Box passt sich an",(bb["h_2~0"]||0)===1,JSON.stringify(bb));
+ ok("Ansehen ohne Änderung schreibt nichts",await p.evaluate(async()=>{const P=packs.find(x=>x.id==="P1");return bxReconcile(P)===null}));
  /* 1.196: Alternative kommt mit ihrem Namen in die Box */
  await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1");pkHSet(P,{h_3:{ok:false,q:0,alt:[{n:8,t:"Defender 63A",a:"2202"}],fm:"",by:me,t:Date.now()}})});
  await open();
+ bb=await p.evaluate(()=>bxOpen(packs.find(x=>x.id==="P1")).it);ok("Defender 32A war in der Box, Alternative 63A eingetragen → Box enthält jetzt 63A",!bb.h_3&&bb["h_3~0"]===8,JSON.stringify(bb));
  i=await row("Defender");await p.click('[data-pc="'+i+'"]');await p.waitForTimeout(300);
- ok("Auswahl Packschein / Alternative, Alternative vorgewählt",await p.evaluate(()=>document.querySelectorAll("[data-bxc]").length===2&&document.querySelector('[data-bxc="1"]').classList.contains("on"))&&(await p.inputValue("#bxn"))==="8");
- await p.screenshot({path:S+"bx_alt.png"});await p.click("#bxok");await p.waitForTimeout(400);
+ ok("Mengen-Fenster: Auswahl Packschein / Alternative",await p.evaluate(()=>document.querySelectorAll("[data-bxc]").length===2));
+ await p.screenshot({path:S+"bx_alt.png"});await p.click("#bxx");await p.waitForTimeout(200);
  await p.click("#bxfin");await p.waitForTimeout(300);ok("Box-Inhalt zeigt die Alternative",/Defender 63A/.test(await p.textContent(".ov .bxlist")));
  await p.click("#bxpr");await p.waitForTimeout(500);const lj=await p.evaluate(()=>__T.docs.filter(d=>d.col==="druck").map(d=>d.data).pop());
  ok("Etikett mit Alternative statt Packschein-Artikel",/8 Stk Defender 63A/.test(lj.inh)&&/^NR\. 4 · PALETTE$/.test(lj.box),JSON.stringify(lj));
