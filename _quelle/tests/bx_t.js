@@ -67,6 +67,13 @@ const seed=[{col:"pack",id:"P1",data:{ord:"260130001",ps:"14402",ev:"Gala Wien 2
  i=await row("Defender");await p.click('[data-pc="'+i+'"]');await p.waitForTimeout(300);ok("Tablet A tippt → Frage für Palette 4",/in Palette 4\?/.test(await p.textContent(".ov")));await p.click("#bxok");await p.waitForTimeout(400);
  await p.evaluate(()=>localStorage.setItem("tpc_dev_id","tabletB"));await open();ok("Tablet B sieht seine Kleine Box 3",/Kleine Box 3/.test(await p.textContent(".bxtag"))&&/Palette 4 · offen bei/.test(await p.textContent("#bxbar")));
  await p.evaluate(()=>localStorage.setItem("tpc_dev_id","tabletA"));
+ /* 1.195: viele Boxen → Fenster scrollt */
+ await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1"),pt={};for(let n=10;n<22;n++)pt["bx_"+n+"_t"]={n,typ:"gb",nm:"",it:{h_1:1,h_2:1},dev:"zz",by:"u1",t:Date.now(),done:{by:"u1",t:Date.now()},et:null};pkHSet(P,pt)});await open();
+ await p.click("#bxls");await p.waitForTimeout(300);
+ const sc=await p.evaluate(()=>{const c=document.querySelector(".ov .bxov");const r=c.getBoundingClientRect();c.scrollTop=99999;return {fits:r.bottom<=innerHeight+1,scroll:c.scrollHeight>c.clientHeight,top:c.scrollTop>0}});
+ ok("Boxen ansehen: Fenster passt auf den Bildschirm und lässt sich scrollen",sc.fits&&sc.scroll&&sc.top,JSON.stringify(sc));
+ ok("Schließen bleibt erreichbar",await p.evaluate(()=>{const b=document.querySelector("#bxx").getBoundingClientRect();return b.bottom<=innerHeight&&b.top>=0}));
+ await p.screenshot({path:S+"bx_scroll.png"});await p.click("#bxx");
  /* Etikett: Box-Schild und Teilung */
  const d1=await p.evaluate(()=>gbDoc({art:"inh",ord:"260130001",ev:"Gala Wien 2026",n:1,box:"PALETTE 2",inh:"20 Stk Schuko 20m\n8 Stk Defender 32A",rot:0}));
  ok("Etikett mit Box-Schild",/PALETTE 2/.test(d1)&&/class="bxt/.test(d1)&&!/Inhalt 1 von/.test(d1));

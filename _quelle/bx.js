@@ -55,7 +55,7 @@ function bxBarHtml(P){const B=bxAll(P),ob=B.find(bxMineB);if(!bxCanH(P)&&!B.leng
    if(t.length){const s=r.querySelector(".pkt");if(s)s.insertAdjacentHTML("beforeend",'<em class="bxin">'+esc(t.join(" · "))+'</em>')}});
   if(bxOpen(P))document.querySelectorAll("#app [data-pc]").forEach(b=>{const i=+b.dataset.pc,x=IT[i]&&IT[i].x;if(!x||pkL55(x,pkH(P)[IT[i].k]))return;b.onclick=()=>{if(pkRowFin(P,i))return;bxQtyDlg(P,i)}})}catch(e){console.warn(e)}}})();
 /* ---------- Fenster ---------- */
-function bxOv(html){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card" style="width:100%;max-width:420px;margin:0">'+html+'</div>';document.body.appendChild(o);o.onclick=e=>{if(e.target===o)o.remove()};return o}
+function bxOv(html){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card bxov" style="width:100%;max-width:420px;margin:0;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">'+html+'</div>';/* 1.195: lange Fenster (z. B. Boxen ansehen) scrollen */document.body.appendChild(o);o.onclick=e=>{if(e.target===o)o.remove()};return o}
 function bxStartDlg(P){if(bxOpen(P))return bxDoneDlg(P,bxOpen(P));const n=bxAll(P).reduce((a,b)=>Math.max(a,+b.n||0),0)+1;let typ="",nm="";
  const o=bxOv('<b style="font-size:19px">Box '+n+' – was ist es?</b><div class="mute" style="font-size:14px;margin-top:4px">'+(n>1?'Die Nummern laufen durch.':'Danach tippst du die Artikel an, die hineinkommen.')+'</div>'+
   '<div class="bxgrid">'+["gb","kb","pal","run"].map(t=>'<button type="button" data-bxt="'+t+'">'+BX_T[t]+'</button>').join("")+'</div>'+
@@ -101,7 +101,7 @@ function bxNextAsk(P,b,et){const o=bxOv('<b style="font-size:17px">'+esc(bxName(
 function bxListDlg(P){const B=bxAll(P);const o=bxOv('<b style="font-size:19px">Boxen ('+B.length+')</b>'+B.map(b=>{const L=bxLines(P,b);return '<div class="bxlist"><div class="h"><span>'+esc(bxName(b).toUpperCase())+' · '+(b.done?(b.et?'gedruckt':'ohne Etikett'):'offen')+'</span>'+
   (b.done?'<span><button type="button" class="lnk" data-bxre="'+esc(b.k)+'" style="color:var(--navy);font-size:13px">Etikett nochmal</button>'+(bxOpen(P)||!bxCanH(P)?'':' · <button type="button" class="lnk" data-bxop="'+esc(b.k)+'" style="color:var(--navy);font-size:13px">Wieder öffnen</button>')+'</span>':'')+'</div>'+
   (L.length?L.map(l=>'<div><span>'+esc(pkName(l.x))+'</span><b>'+pkNum(l.q)+' '+esc(l.x.u||"Stk")+'</b></div>').join(""):'<div class="mute">leer</div>')+'<div class="mute" style="font-size:12px">'+esc(nmA(b,"by"))+', '+fmt(b.t)+(b.done?' · fertig '+fmt(b.done.t).slice(-5):'')+'</div></div>'}).join("")+
-  '<button class="btn ghost" type="button" id="bxx" style="margin-top:6px">Schließen</button>');
+  '<div style="position:sticky;bottom:-16px;background:var(--card);padding:8px 0 4px;margin-top:6px"><button class="btn ghost" type="button" id="bxx" style="width:100%">Schließen</button></div>');
  o.querySelector("#bxx").onclick=()=>o.remove();
  o.querySelectorAll("[data-bxop]").forEach(x=>x.onclick=()=>{const b=B.find(y=>y.k===x.dataset.bxop);o.remove();pkHSet(P,bxSave(P,b,{done:null,dev:bxDev(),by:me}));if(view==="packopen")packOpenView()});
  o.querySelectorAll("[data-bxre]").forEach(x=>x.onclick=()=>{const b=B.find(y=>y.k===x.dataset.bxre);o.remove();bxDoneDlg(P,b,true)})}

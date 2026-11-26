@@ -646,3 +646,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Gemeldet: es war nur eine Box pro Packliste offen → zu zweit ging nicht. Jetzt hat jedes Gerät seine eigene offene Box: Gerätekennung `tpc_dev_id` (localStorage), Box-Feld `dev`, Schlüssel `bx_<n>_<Gerät><Zeit>` (damit zwei Tablets nie dasselbe Feld überschreiben; Nummer = höchste + 1, bei gleichzeitigem Start ohne Netz theoretisch doppelt). Alte `bx_<n>` ohne `dev` gelten als eigene, wenn `by` = ich.
 - Leiste: eigene offene Box oben mit „Box fertig“; fremde offene Boxen als Schild „Kleine Box 3 · offen bei <Name>“. Kreis tippen fragt nur für die eigene Box; ohne eigene offene Box normales Abhaken. „Wieder öffnen“ übernimmt die Box auf dieses Gerät. Die Leiste wird bei jedem Neuzeichnen ersetzt.
 - Test `tests/bx_t.js` (Teil zwei Tablets).
+
+## 1.195 (Jürgen, 26.11.): „Boxen ansehen“ ließ sich nicht scrollen
+- Alle Fenster aus bx.js (`bxOv`) höchstens Bildschirmhöhe − 40 px und scrollbar (dvh, overscroll contain); in „Boxen ansehen“ bleibt „Schließen“ unten stehen (sticky). Test in `tests/bx_t.js`.
