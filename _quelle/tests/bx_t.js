@@ -8,7 +8,7 @@ const seed=[{col:"pack",id:"P1",data:{ord:"260130001",ps:"14402",ev:"Gala Wien 2
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.evaluate(()=>{window.MF_NOASK=true;window.PK_FOPEN=true});await p.waitForTimeout(1000);await p.mouse.click(195,420);await p.waitForTimeout(400);
- ok("Version ab 1.197",await p.evaluate(()=>+APPV.split(".")[1]>=197));
+ ok("Version ab 1.198",await p.evaluate(()=>+APPV.split(".")[1]>=198));
  const H=()=>p.evaluate(()=>{const d=(__T.docs.find(d=>d.col==="packh"&&d.id==="P1")||{}).data||{};const o={...d};Object.keys(d).filter(k=>/^bx_/.test(k)&&d[k]).forEach(k=>{o["bx_"+d[k].n]=d[k]});return o});
  const open=async()=>{await p.evaluate(()=>{curPack="P1";view="packopen";draw();packOpenView()});await p.waitForTimeout(400)};
  const row=t=>p.evaluate(t=>{const r=[...document.querySelectorAll(".pkp")].find(x=>x.querySelector(".pkt").textContent.trim().startsWith(t));return r?+r.dataset.pkrow:-1},t);
@@ -95,6 +95,22 @@ const seed=[{col:"pack",id:"P1",data:{ord:"260130001",ps:"14402",ev:"Gala Wien 2
  await p.click("#bxpr");await p.waitForTimeout(500);const lj=await p.evaluate(()=>__T.docs.filter(d=>d.col==="druck").map(d=>d.data).pop());
  ok("Etikett mit Alternative statt Packschein-Artikel",/8 Stk Defender 63A/.test(lj.inh)&&/^NR\. 4 · PALETTE$/.test(lj.box),JSON.stringify(lj));
  await p.evaluate(()=>document.querySelectorAll(".ov").forEach(o=>o.remove()));
+ /* 1.198: neue Alternative über Bearbeiten → automatisch in die offene Box */
+ const clean2=()=>p.evaluate(()=>{const P=packs.find(x=>x.id==="P1");const pt={h_2:null};bxAll(P).forEach(b=>{const it={...(b.it||{})};Object.keys(it).forEach(k=>{if(k==="h_2"||k.startsWith("h_2~"))delete it[k]});Object.assign(pt,bxSave(P,b,{it}))});pkHSet(P,pt)});
+ await clean2();await open();await p.evaluate(()=>document.querySelectorAll(".ov").forEach(o=>o.remove()));await p.click("#bxgo");await p.waitForTimeout(200);await p.click('[data-bxt="run"]');await p.click("#bxok");await p.waitForTimeout(400);ok("offene Box vorhanden",await p.evaluate(()=>!!bxOpen(packs.find(x=>x.id==="P1"))));
+ await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1");pkHSet(P,{h_2:{ok:false,q:0,alt:[{n:2,t:"Verteiler 32A",a:"1047"}],fm:"",by:me,t:Date.now()}})});await open();
+ bb=await p.evaluate(()=>bxOpen(packs.find(x=>x.id==="P1")).it);ok("Alternative (vorher in keiner Box) liegt automatisch in der offenen Box",bb["h_2~0"]===2&&!bb.h_2,JSON.stringify(bb));
+ await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1");pkHSet(P,{h_2:{ok:false,q:0,alt:[{n:3,t:"Verteiler 32A",a:"1047"}],fm:"",by:me,t:Date.now()}})});await open();
+ bb=await p.evaluate(()=>bxOpen(packs.find(x=>x.id==="P1")).it);ok("Alternative erhöht (2→3) → 1 dazu",bb["h_2~0"]===3,JSON.stringify(bb));
+ /* Weg B: erst 2 Stk Packschein-Artikel in die Box, dann 1 + 1 Alternative → nicht doppelt */
+ await clean2();await open();i=await row("Verteiler");await p.click('[data-pc="'+i+'"]');await p.waitForTimeout(300);await p.click("#bxok");await p.waitForTimeout(400);
+ await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1");pkHSet(P,{h_2:{ok:false,q:1,alt:[{n:1,t:"Verteiler 32A",a:"1047"}],fm:"",by:me,t:Date.now()}})});await open();
+ bb=await p.evaluate(()=>bxOpen(packs.find(x=>x.id==="P1")).it);ok("Weg B: Box = 1 Verteiler 63A + 1 Verteiler 32A (nicht doppelt)",bb.h_2===1&&bb["h_2~0"]===1,JSON.stringify(bb));
+ /* ohne eigene offene Box: nichts automatisch */
+ await clean2();await p.evaluate(()=>localStorage.setItem("tpc_dev_id","tabletC"));await open();
+ await p.evaluate(()=>{const P=packs.find(x=>x.id==="P1");pkHSet(P,{h_2:{ok:false,q:0,alt:[{n:2,t:"Verteiler 32A",a:"1047"}],fm:"",by:me,t:Date.now()}})});await open();
+ ok("ohne eigene offene Box: Alternative kommt in keine Box",await p.evaluate(()=>bxAll(packs.find(x=>x.id==="P1")).every(b=>!(b.it||{})["h_2~0"])));
+ await p.evaluate(()=>localStorage.setItem("tpc_dev_id","tabletA"));
  /* Etikett: Box-Schild und Teilung */
  const d1=await p.evaluate(()=>gbDoc({art:"inh",ord:"260130001",ev:"Gala Wien 2026",n:1,box:"NR. 2 · PALETTE",inh:"20 Stk Schuko 20m\n8 Stk Defender 32A",rot:0}));
  ok("Etikett mit Box-Schild",/NR\. 2 · PALETTE/.test(d1)&&/class="bxs/.test(d1)&&!/Inhalt 1 von/.test(d1));

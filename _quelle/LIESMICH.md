@@ -659,3 +659,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## 1.197 (Jürgen, 26.11.): Box-Inhalt = was wirklich drin ist
 - „Auf dem Etikett soll immer das stehen, was drin ist. Auch wenn es eine Alternative ist!“ – `bxReconcile(P)`: ist vom Packschein-Artikel mehr in Boxen als hergerichtet (z. B. nachträglich Alternative über Bearbeiten/Scan, Menge verringert), wandert der Überschuss zur Alternative derselben Position (offene/neueste Box zuerst); Alternativen, die es nicht mehr gibt oder zu viel sind, fallen weg. Läuft beim Anzeigen der Packliste (schreibt nur bei Änderung, nicht während ein Fenster offen ist), vor „Box fertig“, vor dem Druckauftrag und in „Boxen ansehen“.
 - Test `tests/bx_t.js` (Teil 1.197).
+
+## 1.198 (Jürgen, 26.11.): Alternative automatisch in die offene Box
+- `bxAutoAlt` + Hülle um `pkHSet` (nur Patches ohne bx_-Felder): wird bei einer Position über Bearbeiten/Scan eine Alternative neu eingetragen oder erhöht und hat dieses Gerät eine offene Box, kommt die zusätzliche Menge der Alternative gleich in diese Box (Hinweis „3 Stk … → Nr. 2 · Palette“). Lag der Packschein-Artikel schon in einer Box und wird dafür verringert (Weg B: erst 10 einlegen, dann 7 + 3 Alternative), tauscht `bxReconcile` in derselben Box – diese Menge wird nicht doppelt dazugelegt. Ohne eigene offene Box passiert nichts.
+- Test `tests/bx_t.js` (Teil 1.198).

@@ -137,3 +137,15 @@ function bxListDlg(P){try{const fx=bxReconcile(P);if(fx)pkHSet(P,fx)}catch(e){}c
  o.querySelector("#bxx").onclick=()=>o.remove();
  o.querySelectorAll("[data-bxop]").forEach(x=>x.onclick=()=>{const b=B.find(y=>y.k===x.dataset.bxop);o.remove();pkHSet(P,bxSave(P,b,{done:null,dev:bxDev(),by:me}));if(view==="packopen")packOpenView()});
  o.querySelectorAll("[data-bxre]").forEach(x=>x.onclick=()=>{const b=B.find(y=>y.k===x.dataset.bxre);o.remove();bxDoneDlg(P,b,true)})}
+/* ===== 1.198 – Alternative automatisch in die offene Box (Jürgen 26.11.: „Ja“)
+   Wird bei einer Position über Bearbeiten/Scan eine Alternative neu eingetragen oder erhöht und hat dieses Gerät eine offene Box,
+   kommt die zusätzliche Menge der Alternative gleich in diese Box. Lag der Packschein-Artikel schon in einer Box und wird dafür verringert,
+   tauscht bxReconcile ihn in derselben Box gegen die Alternative – diese Menge wird hier nicht noch einmal dazugelegt. ===== */
+function bxAutoAlt(P,patch){const ob=bxOpen(P);if(!ob||!patch)return patch;const IT=pkItems(P),H=pkH(P);let it=null;const msg=[];
+ Object.keys(patch).forEach(k=>{if(!/^h_/.test(k))return;const nh=patch[k],oh=H[k]||null,o=IT.find(i=>i.k===k);if(!o||!nh||!Array.isArray(nh.alt))return;
+  const oa=(oh&&oh.alt)||[];let D=0;const add=nh.alt.map((a,j)=>{const d=Math.max(0,(+a.n||0)-(+(oa[j]&&oa[j].t===a.t?oa[j].n:0)||0));D+=d;return d});if(!D)return;
+  let drop=Math.max(0,bxIn(P,k)-bxCur(o.x,nh));/* wird von bxReconcile in derselben Box getauscht */
+  add.forEach((d,j)=>{const t=Math.min(d,drop);drop-=t;const rest=d-t;if(rest<=0)return;const key=k+"~"+j,free=(+nh.alt[j].n||0)-bxIn(P,key);const q=Math.min(rest,Math.max(0,free));if(q<=0)return;
+   it=it||{...(ob.it||{})};it[key]=(+it[key]||0)+q;msg.push(pkNum(q)+" "+(o.x.u||"Stk")+" "+nh.alt[j].t)})});
+ if(!it)return patch;setTimeout(()=>{try{toast(msg.join(", ")+" → "+bxName(ob),1)}catch(e){}},50);return {...patch,...bxSave(P,ob,{it})}}
+(function(){const o=pkHSet;pkHSet=function(P,patch){try{if(P&&patch&&!Object.keys(patch).some(k=>/^bx_/.test(k)))patch=bxAutoAlt(P,patch)}catch(e){console.warn(e)}return o.call(this,P,patch)}})();
