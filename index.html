@@ -570,7 +570,7 @@ d.addEventListener("click",end);d.addEventListener("animationend",function(e){if
 <div id="pv" hidden style="background:#f2c200;color:#1f2a33;text-align:center;padding:8px;font-weight:600;cursor:pointer">Monteur-Ansicht · Tippen zum Beenden</div>
 <main id="app"><div class="card mute">Lade …</div></main>
 <div id="camp" hidden style="position:fixed;left:0;right:0;bottom:0;background:#000;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));z-index:8"><video id="vid" playsinline muted style="width:100%;height:28vh;object-fit:cover;border-radius:8px"></video><button class="btn ghost" id="cx" style="margin-top:6px;color:#fff;border-color:#888">Kamera schließen</button></div>
-<script>const APPV="1.195";
+<script>const APPV="1.196";
 
 /* ===== Verbindung zu Supabase (ersetzt die Claude-Datenbank) ===== */
 const RECOVERY=/type=recovery/.test(location.hash);
@@ -3177,6 +3177,11 @@ function gbParse(txt){const s=String(txt||"").trim();let m=s.match(/^TPC:(.+)$/i
 const gbEsc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 function gbHead(ord,ev){return '<div class="hd"><img class="lg" src="'+GB_LOGO+'" alt=""><div class="ad"><span>THE POWER COMPANY Energy Systems GmbH<br>Laaber Straße 67 - 2384 Breitenfurt bei Wien<br>Telefon +43 (0)2239/34 777-0<br>office@thepowercompany.at</span><b>www.tpc-rental.at</b></div><div class="qr">'+qrSvg(gbQr(ord,ev))+'</div></div>'}
 function gbLabel(j){const ord=gbEsc(j.ord||"–"),ev=gbEsc(j.ev||"");
+ /* 1.196: Box-Etikett (Jürgen 26.11.): Kopfzeile klein, Veranstaltung und Auftragsnummer groß, Box-Nummer senkrecht ganz rechts, mehr Platz für den Inhalt */
+ if(j.art==="inh"&&j.box)return '<div class="pg"><div class="hd2"><img class="lg" src="'+GB_LOGO+'" alt=""><b class="ad2">www.tpc-rental.at</b><div class="qr">'+qrSvg(gbQr(j.ord,j.ev))+'</div></div>'+
+  '<div class="bxw"><div class="bxl"><div class="bxh"><b class="bxe fit1">'+ev+'</b><div class="bxo"><span class="lb">Auftrags-Nr.</span><b class="fit1">'+ord+'</b></div></div>'+
+  '<div class="bd2"><span class="lb">Inhalt:</span><div class="inh fit">'+gbEsc(j.inh||"")+'</div><div class="bxf"><span>Gewicht: ________ kg</span>'+(j.part?'<b>Inhalt '+gbEsc(j.part)+'</b>':'')+'</div></div></div>'+
+  '<div class="bxs"><b class="fit1">'+gbEsc(j.box)+'</b></div></div></div>';
  if(j.art==="inh")return '<div class="pg">'+gbHead(j.ord,j.ev)+'<div class="rw"><div class="lc2"><div class="h2c"><span class="lb">Veranstaltung:</span><b class="v2 fit1">'+ev+'</b></div><div class="h2c"><span class="lb">Auftrags-Nr.:</span><b class="v2 fit1">'+ord+'</b></div></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd">'+(j.box?'<div class="bxr"><span class="lb">Inhalt:</span><b class="bxt fit1">'+gbEsc(j.box)+'</b></div>':'<span class="lb">Inhalt:</span>')+'<div class="inh fit">'+gbEsc(j.inh||"")+'</div>'+(j.part?'<div class="prt">Inhalt '+gbEsc(j.part)+'</div>':'')+'</div></div>';
  return '<div class="pg">'+gbHead(j.ord,j.ev)+'<div class="rw"><div class="lc"><span class="lb">Auftrags-Nr.:</span><b class="nr fit1">'+ord+'</b></div><div class="gw"><span class="lb">Gewicht:</span><span class="kg">kg</span></div></div><div class="bd"><span class="lb b">Projekt:</span><div class="pj fit">'+ev+'</div></div></div>'}
 /* 1.132: Drehung beim Drucken pro Gerät (localStorage tpc_et_rot: 0/90/180/270, Standard 90 = im Uhrzeigersinn) – Jürgen, 6.11.: an der Godex muss das Etikett um 90° gedreht werden */
@@ -3192,6 +3197,11 @@ function gbDoc(j){const n=Math.max(1,Math.min(60,+j.n||1)),rot=j.rot!==undefined
   '.rw{height:20.5mm;display:flex;border-top:.6mm solid #000;border-bottom:.6mm solid #000}.lc{flex:1;border-right:.6mm solid #000;padding:.8mm 2mm;display:flex;flex-direction:column;min-width:0}.lc2{flex:1;border-right:.6mm solid #000;display:flex;flex-direction:column;min-width:0}.h2c{flex:1;padding:.5mm 2mm .3mm;display:flex;flex-direction:column;min-height:0;overflow:hidden}.h2c .lb{font-size:2.8mm;line-height:1.1}.h2c+.h2c{border-top:.6mm solid #000}'+
   '.gw{width:26mm;padding:.8mm 2mm;display:flex;flex-direction:column;justify-content:space-between}.kg{font-size:6.5mm;text-align:right;margin-bottom:2.5mm}.lb{font-size:3mm}.lb.b{font-weight:bold}'+
   '.nr{flex:1;display:flex;align-items:center;justify-content:center;font-size:9mm;white-space:nowrap;overflow:hidden}.v2{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;font-size:5.3mm;line-height:1.05;white-space:nowrap;overflow:hidden}'+
+  '.hd2{height:12mm;flex:none;display:flex;align-items:center;gap:2mm;padding:1mm 2mm 1mm 2.5mm;border-bottom:.6mm solid #000}.hd2 .lg{width:20mm}.ad2{flex:1;font-size:2.6mm}.hd2 .qr{width:10mm;height:10mm}'+
+  '.bxw{flex:1;min-height:0;display:flex}.bxl{flex:1;min-width:0;display:flex;flex-direction:column}.bxh{flex:none;padding:1mm 2mm 1.2mm 2.5mm;border-bottom:.6mm solid #000;display:flex;flex-direction:column;gap:.3mm}'+
+  '.bxe{display:block;font-size:10mm;font-weight:900;line-height:1.05;white-space:nowrap;overflow:hidden}.bxo{display:flex;align-items:baseline;gap:2mm;min-width:0}.bxo .lb{flex:none;font-size:2.8mm}.bxo b{flex:1;min-width:0;font-size:9mm;font-weight:900;line-height:1.05;white-space:nowrap;overflow:hidden}'+
+  '.bd2{flex:1;min-height:0;padding:1mm 2mm 1.2mm 2.5mm;display:flex;flex-direction:column}.bd2 .inh{padding-left:1mm}.bxf{flex:none;display:flex;justify-content:space-between;font-size:2.8mm;padding-top:.6mm}'+
+  '.bxs{width:12mm;flex:none;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}.bxs b{writing-mode:vertical-rl;transform:rotate(180deg);font-size:8.5mm;font-weight:900;line-height:1;white-space:nowrap;max-height:84mm;overflow:hidden}'+
   '.bd{flex:1;min-height:0;padding:1.5mm 2mm 2mm;display:flex;flex-direction:column}.pj{flex:1;min-height:0;font-weight:900;font-size:16mm;line-height:1.08;padding:1.5mm 0 0 3.5mm;overflow:hidden;overflow-wrap:normal;word-break:normal;hyphens:manual}.bxr{display:flex;align-items:center;gap:2mm;min-height:0}.bxr .lb{flex:none}.bxt{flex:0 1 auto;margin-left:auto;min-width:0;background:#000;color:#fff;font-size:6.5mm;line-height:1.15;padding:.6mm 2mm;border-radius:1mm;white-space:nowrap;overflow:hidden;font-weight:900}.prt{flex:none;text-align:right;font-size:3mm;font-weight:bold;padding-top:.5mm}.inh{flex:1;min-height:0;font-weight:bold;font-size:5.2mm;line-height:1.3;padding:1.5mm 0 0 2.5mm;white-space:pre-wrap;overflow:hidden;overflow-wrap:normal;word-break:normal;hyphens:manual}'+
   '</style></head><body>'+pages+'<script>(function(){function fit(){document.querySelectorAll(".fit").forEach(function(e){var s=parseFloat(getComputedStyle(e).fontSize);for(var i=0;i<60&&(e.scrollHeight>e.clientHeight+1||e.scrollWidth>e.clientWidth+1)&&s>6;i++){s*=0.93;e.style.fontSize=s+"px"}if(e.scrollWidth>e.clientWidth+1)e.style.overflowWrap="anywhere"});document.querySelectorAll(".fit1").forEach(function(e){var s=parseFloat(getComputedStyle(e).fontSize);for(var i=0;i<40&&(e.scrollWidth>e.clientWidth+1||e.scrollHeight>e.clientHeight+1)&&s>6;i++){s*=0.93;e.style.fontSize=s+"px"}});document.body.setAttribute("data-fit","1")}if(document.readyState==="complete")fit();else window.addEventListener("load",fit)})();<\/script></body></html>'}
 /* Drucken über einen unsichtbaren Rahmen (an der Druckstation mit --kiosk-printing ohne Druckfenster) */
@@ -5522,10 +5532,17 @@ const bxMineB=b=>!b.done&&(b.dev?b.dev===bxDev():b.by===me);
 const bxOpen=P=>bxAll(P).find(bxMineB)||null;
 const bxGet=(P,b)=>bxAll(P).find(y=>y.k===b.k)||b;
 const bxSave=(P,b,extra)=>{const {k,...d}=b;return {[k]:{...d,...(extra||{})}}};
-const bxName=b=>b?(b.typ==="son"?(b.nm||"Sonstiges"):BX_T[b.typ]||"Box")+" "+b.n:"";
+/* 1.196: Nummer zuerst („Nr. 2 · Kleine Box“) – „Kleine Box 2“ klang wie die zweite kleine Box (Jürgen) */
+const bxTyp=b=>b.typ==="son"?(b.nm||"Sonstiges"):BX_T[b.typ]||"Box";
+const bxName=b=>b?"Nr. "+b.n+" · "+bxTyp(b):"";
 const bxIn=(P,k)=>bxAll(P).reduce((a,b)=>a+(+((b.it||{})[k])||0),0);
 function bxCur(x,h){const st=pkPS(x,h);if(st.s==="ok")return h&&typeof h.q==="number"&&h.q>st.need?h.q:st.need;return st.s==="part"?st.q:0}
-function bxLines(P,b){const IT=pkItems(P);return Object.entries(b.it||{}).filter(e=>+e[1]>0).map(([k,q])=>{const o=IT.find(i=>i.k===k);return{k,q:+q,x:o?o.x:{t:k},txt:pkNum(+q)+" "+((o&&o.x.u)||"Stk")+" "+(o?pkName(o.x):k)}})}
+/* 1.196: Alternativen landen mit eigenem Namen in der Box: Schlüssel „h_<Pos>~<Nr. der Alternative>“ */
+function bxAltOf(P,key){const m=/^(.*)~(\d+)$/.exec(key);if(!m)return null;const h=pkH(P)[m[1]];const a=h&&h.alt&&h.alt[+m[2]];return a?{k:m[1],i:+m[2],a}:{k:m[1],i:+m[2],a:{t:"Alternative",n:0}}}
+function bxLines(P,b){const IT=pkItems(P);return Object.entries(b.it||{}).filter(e=>+e[1]>0).map(([k,q])=>{const al=bxAltOf(P,k);const o=IT.find(i=>i.k===(al?al.k:k));
+ const nm=al?al.a.t:(o?pkName(o.x):k),u=(o&&o.x.u)||"Stk";return{k,q:+q,alt:!!al,x:al?{t:al.a.t,u,a:al.a.a}:(o?o.x:{t:k}),nm,txt:pkNum(+q)+" "+u+" "+nm}})}
+/* nur Box-Inhalt ändern (Alternativen – Herricht-Stand steht schon in der Position) */
+function bxPutKey(P,b,key,q){const it={...(b.it||{})},nq=Math.max(0,(+it[key]||0)+q);if(nq)it[key]=nq;else delete it[key];return pkHSet(P,bxSave(P,b,{it}))}
 function bxCanH(P){return can("pk_s")&&!(pkH(P).fin&&pkH(P).fin.t&&!(P.zus||[]).some(z=>!pkZFin(P,z)))}
 /* Menge q (kann negativ sein = herausnehmen) für Position i in Box b; Herricht-Stand = max(bisher, Summe in Boxen) */
 function bxPut(P,b,i,q,fm){const IT=pkItems(P),o=IT[i];if(!o)return;const k=o.k,x=o.x,h0=pkH(P)[k]||null,h=fm?{...(h0||{}),fm}:h0;
@@ -5545,35 +5562,45 @@ function bxBarHtml(P){const B=bxAll(P),ob=B.find(bxMineB);if(!bxCanH(P)&&!B.leng
 (function(){const o=packOpenView;packOpenView=function(){o.apply(this,arguments);try{if(view!=="packopen")return;const P=packs.find(x=>x.id===curPack);if(!P||pkNoH(P))return;["#bxbar","#bxgo"].forEach(q=>{const e=$(q);if(e&&!e.closest(".bxbar"))e.remove();else if(e&&q==="#bxbar")e.remove()});document.querySelectorAll("#app .bxin").forEach(e=>e.remove());
   const a=document.querySelector("#app .pkacts");if(!a)return;a.insertAdjacentHTML("afterend",bxBarHtml(P));
   if($("#bxgo"))$("#bxgo").onclick=()=>bxStartDlg(P);if($("#bxfin"))$("#bxfin").onclick=()=>bxDoneDlg(P,bxOpen(P));if($("#bxls"))$("#bxls").onclick=()=>bxListDlg(P);
-  const B=bxAll(P),IT=pkItems(P);if(B.length)document.querySelectorAll("#app [data-pkrow]").forEach(r=>{const i=+r.dataset.pkrow,o=IT[i];if(!o)return;const t=B.filter(b=>+((b.it||{})[o.k])>0).map(b=>pkNum(b.it[o.k])+" in "+bxName(b));
+  const B=bxAll(P),IT=pkItems(P);if(B.length)document.querySelectorAll("#app [data-pkrow]").forEach(r=>{const i=+r.dataset.pkrow,o=IT[i];if(!o)return;const t=[];B.forEach(b=>Object.entries(b.it||{}).forEach(([key,q])=>{if(!(+q>0))return;if(key===o.k)t.push(pkNum(q)+" in "+bxName(b));else if(key.startsWith(o.k+"~")){const al=bxAltOf(P,key);t.push(pkNum(q)+" "+(al?al.a.t:"Alternative")+" in "+bxName(b))}}));
    if(t.length){const s=r.querySelector(".pkt");if(s)s.insertAdjacentHTML("beforeend",'<em class="bxin">'+esc(t.join(" · "))+'</em>')}});
   if(bxOpen(P))document.querySelectorAll("#app [data-pc]").forEach(b=>{const i=+b.dataset.pc,x=IT[i]&&IT[i].x;if(!x||pkL55(x,pkH(P)[IT[i].k]))return;b.onclick=()=>{if(pkRowFin(P,i))return;bxQtyDlg(P,i)}})}catch(e){console.warn(e)}}})();
 /* ---------- Fenster ---------- */
 function bxOv(html){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card bxov" style="width:100%;max-width:420px;margin:0;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">'+html+'</div>';/* 1.195: lange Fenster (z. B. Boxen ansehen) scrollen */document.body.appendChild(o);o.onclick=e=>{if(e.target===o)o.remove()};return o}
 function bxStartDlg(P){if(bxOpen(P))return bxDoneDlg(P,bxOpen(P));const n=bxAll(P).reduce((a,b)=>Math.max(a,+b.n||0),0)+1;let typ="",nm="";
- const o=bxOv('<b style="font-size:19px">Box '+n+' – was ist es?</b><div class="mute" style="font-size:14px;margin-top:4px">'+(n>1?'Die Nummern laufen durch.':'Danach tippst du die Artikel an, die hineinkommen.')+'</div>'+
+ const o=bxOv('<b style="font-size:19px">Nr. '+n+' – was ist es?</b><div class="mute" style="font-size:14px;margin-top:4px">'+(n>1?'Die Nummern laufen durch.':'Danach tippst du die Artikel an, die hineinkommen.')+'</div>'+
   '<div class="bxgrid">'+["gb","kb","pal","run"].map(t=>'<button type="button" data-bxt="'+t+'">'+BX_T[t]+'</button>').join("")+'</div>'+
   '<div class="bxson" id="bxsonb"><label for="bxson">Sonstiges</label><input id="bxson" placeholder="z. B. Verteilerkasten" maxlength="40"></div>'+
   '<div class="row" style="margin-top:12px"><button class="btn ghost" type="button" id="bxx">Abbrechen</button><button class="btn" type="button" id="bxok" disabled>Starten</button></div>');
- const ok=o.querySelector("#bxok"),upd=()=>{o.querySelectorAll("[data-bxt]").forEach(b=>b.classList.toggle("on",b.dataset.bxt===typ));o.querySelector("#bxsonb").classList.toggle("on",typ==="son");ok.disabled=!typ||(typ==="son"&&!nm.trim());ok.textContent=typ?(typ==="son"?(nm.trim()||"Sonstiges"):BX_T[typ])+" "+n+" starten":"Starten"};
+ const ok=o.querySelector("#bxok"),upd=()=>{o.querySelectorAll("[data-bxt]").forEach(b=>b.classList.toggle("on",b.dataset.bxt===typ));o.querySelector("#bxsonb").classList.toggle("on",typ==="son");ok.disabled=!typ||(typ==="son"&&!nm.trim());ok.textContent=typ?"Nr. "+n+" · "+(typ==="son"?(nm.trim()||"Sonstiges"):BX_T[typ])+" starten":"Starten"};
  o.querySelectorAll("[data-bxt]").forEach(b=>b.onclick=()=>{typ=b.dataset.bxt;upd()});const si=o.querySelector("#bxson");si.oninput=()=>{nm=si.value;typ="son";upd()};si.onfocus=()=>{typ="son";upd()};
  o.querySelector("#bxx").onclick=()=>o.remove();
  ok.onclick=()=>{o.remove();const n2=bxAll(P).reduce((a,b)=>Math.max(a,+b.n||0),0)+1,dv=bxDev();pkHSet(P,{["bx_"+n2+"_"+dv.slice(0,5)+Date.now().toString(36).slice(-4)]:{n:n2,typ,nm:typ==="son"?nm.trim():"",it:{},dev:dv,by:me,...tabAs("by"),t:Date.now(),done:null,et:null}});pkFS.open.main=true;(P.zus||[]).forEach(z=>pkFS.open["z"+z.ps]=true);if(view==="packopen")packOpenView();toast(bxName({n,typ,nm:nm.trim()})+" ist offen – Artikel antippen",1)}}
 function bxQtyDlg(P,i){const b=bxOpen(P);if(!b)return;const IT=pkItems(P),o0=IT[i],x=o0.x,k=o0.k,h=pkH(P)[k];
- const go=fm=>{const hh=fm?{...(h||{}),fm}:h,need=pkNeed(x,hh),cur=bxCur(x,hh),inB=bxIn(P,k),here=+((b.it||{})[k])||0,rest=Math.max(0,Math.max(need,cur)-inB);let q=rest||1;
-  const u=esc(x.u||"Stk"),o=bxOv('<b style="font-size:17px">'+esc(pkName(x))+' – wie viele in '+esc(bxName(b))+'?</b><div class="mute" style="font-size:13.5px;margin-top:4px">'+pkNum(need)+' '+u+' laut Packschein'+(inB?' · '+pkNum(inB)+' schon in Boxen':'')+' · noch '+pkNum(rest)+' '+u+' offen</div>'+
-   '<div class="bxq"><button type="button" id="bxm" aria-label="weniger">−</button><input id="bxn" type="number" inputmode="decimal" min="0" step="1" value="'+q+'" aria-label="Menge"><button type="button" id="bxp" aria-label="mehr">+</button></div>'+
-   (here?'<div class="mute" style="font-size:13px;text-align:center;margin-bottom:6px">Schon in dieser Box: '+pkNum(here)+' '+u+' <button type="button" class="lnk" id="bxrm">herausnehmen</button></div>':'')+
-   '<div class="row"><button class="btn ghost" type="button" id="bxx">Abbrechen</button><button class="btn" type="button" id="bxok"></button></div><div class="mute" style="font-size:12.5px;margin-top:8px">Vorgeschlagen ist der offene Rest. Weniger eintragen → der Rest bleibt für die nächste Box offen.</div>');
-  const inp=o.querySelector("#bxn"),ok=o.querySelector("#bxok"),upd=()=>{q=Math.max(0,parseFloat(String(inp.value).replace(",","."))||0);ok.textContent=pkNum(q)+" "+(x.u||"Stk")+" in "+bxName(b);ok.disabled=!q};
-  o.querySelector("#bxm").onclick=()=>{inp.value=Math.max(0,(parseFloat(inp.value)||0)-1);upd()};o.querySelector("#bxp").onclick=()=>{inp.value=(parseFloat(inp.value)||0)+1;upd()};inp.oninput=upd;upd();
-  o.querySelector("#bxx").onclick=()=>o.remove();ok.onclick=()=>{o.remove();bxPut(P,b,i,q,fm);if(view==="packopen")packOpenView()};
-  const rm=o.querySelector("#bxrm");if(rm)rm.onclick=()=>{o.remove();bxPut(P,b,i,-here);if(view==="packopen")packOpenView()}};
+ const go=fm=>{const hh=fm?{...(h||{}),fm}:h,need=pkNeed(x,hh),cur=bxCur(x,hh),alts=(hh&&hh.alt)||[],st=pkPS(x,hh);
+  /* Auswahl: Artikel laut Packschein und jede Alternative (1.196) */
+  const C=[{key:k,nm:pkName(x),tot:Math.max(need,cur),orig:true}].concat(alts.map((a,j)=>({key:k+"~"+j,nm:a.t+(a.a?" ("+a.a+")":""),tot:+a.n||0,orig:false})));
+  C.forEach(c=>{c.inB=bxIn(P,c.key);c.rest=Math.max(0,c.tot-c.inB)});
+  let sel=alts.length&&(st.s==="part"?st.q:st.s==="ok"?need:0)<=0?1:0;if(alts.length&&C[sel].rest<=0){const f=C.findIndex(c=>c.rest>0);if(f>=0)sel=f}
+  const u=esc(x.u||"Stk");let q=C[sel].rest||1;
+  const o=bxOv('<div id="bxqd"></div>');const drawQ=()=>{const c=C[sel],here=+((b.it||{})[c.key])||0;
+   o.querySelector("#bxqd").innerHTML='<b style="font-size:17px">Was kommt in '+esc(bxName(b))+'?</b>'+
+    (C.length>1?'<div class="bxet" style="grid-template-columns:1fr">'+C.map((cc,j)=>'<button type="button" data-bxc="'+j+'" class="'+(j===sel?'on':'')+'">'+(j===sel?'✓ ':'')+esc(cc.nm)+(cc.orig?'':' <small>(Alternative)</small>')+'</button>').join("")+'</div>':'<div style="font-weight:700;margin-top:4px">'+esc(c.nm)+'</div>')+
+    '<div class="mute" style="font-size:13.5px;margin-top:4px">'+pkNum(c.tot)+' '+u+(c.orig?' laut Packschein':' als Alternative')+(c.inB?' · '+pkNum(c.inB)+' schon in Boxen':'')+' · noch '+pkNum(c.rest)+' '+u+' offen</div>'+
+    '<div class="bxq"><button type="button" id="bxm" aria-label="weniger">−</button><input id="bxn" type="number" inputmode="decimal" min="0" step="1" value="'+q+'" aria-label="Menge"><button type="button" id="bxp" aria-label="mehr">+</button></div>'+
+    (here?'<div class="mute" style="font-size:13px;text-align:center;margin-bottom:6px">Schon in dieser Box: '+pkNum(here)+' '+u+' <button type="button" class="lnk" id="bxrm">herausnehmen</button></div>':'')+
+    '<div class="row"><button class="btn ghost" type="button" id="bxx">Abbrechen</button><button class="btn" type="button" id="bxok"></button></div><div class="mute" style="font-size:12.5px;margin-top:8px">Vorgeschlagen ist der offene Rest. Weniger eintragen → der Rest bleibt für die nächste Box offen.</div>';
+   const inp=o.querySelector("#bxn"),ok=o.querySelector("#bxok"),upd=()=>{q=Math.max(0,parseFloat(String(inp.value).replace(",","."))||0);ok.textContent=pkNum(q)+" "+(x.u||"Stk")+" in "+bxName(b);ok.disabled=!q};
+   o.querySelectorAll("[data-bxc]").forEach(bt=>bt.onclick=()=>{sel=+bt.dataset.bxc;q=C[sel].rest||1;drawQ()});
+   o.querySelector("#bxm").onclick=()=>{inp.value=Math.max(0,(parseFloat(inp.value)||0)-1);upd()};o.querySelector("#bxp").onclick=()=>{inp.value=(parseFloat(inp.value)||0)+1;upd()};inp.oninput=upd;upd();
+   o.querySelector("#bxx").onclick=()=>o.remove();
+   ok.onclick=()=>{o.remove();if(c.orig)bxPut(P,b,i,q,fm);else{if(fm)pkHSet(P,{[k]:{...(h||{}),fm}});bxPutKey(P,b,c.key,q)}if(view==="packopen")packOpenView()};
+   const rm=o.querySelector("#bxrm");if(rm)rm.onclick=()=>{o.remove();if(c.orig)bxPut(P,b,i,-here);else bxPutKey(P,b,c.key,-here);if(view==="packopen")packOpenView()}};drawQ()};
  if(x.f>0&&!(h&&h.fm))return pkFmAsk(x,fm=>go(fm));go(null)}
 function bxDoneDlg(P,b,re){if(!b)return;const L=bxLines(P,b);let art=b.typ==="son"&&L.length<=1?"pl":"inh",n=1;
  const o=bxOv('<div id="bxdc"></div>');const draw=()=>{const LL=bxLines(P,b);
   o.querySelector("#bxdc").innerHTML='<b style="font-size:19px">'+esc(bxName(b))+(re?' – Etikett nochmal drucken':' ist fertig')+'</b>'+
-   '<div class="bxlist"><div class="h">INHALT ('+LL.length+(LL.length===1?' ARTIKEL':' ARTIKEL')+')</div>'+(LL.length?LL.map(l=>'<div><span>'+esc(pkName(l.x))+'</span><span><b>'+pkNum(l.q)+' '+esc(l.x.u||"Stk")+'</b>'+(re?'':' <button type="button" data-bxrm="'+esc(l.k)+'" aria-label="Aus der Box nehmen">×</button>')+'</span></div>').join(""):'<div class="mute">Noch nichts drin.</div>')+'</div>'+
+   '<div class="bxlist"><div class="h">INHALT ('+LL.length+(LL.length===1?' ARTIKEL':' ARTIKEL')+')</div>'+(LL.length?LL.map(l=>'<div><span>'+esc(l.nm)+'</span><span><b>'+pkNum(l.q)+' '+esc(l.x.u||"Stk")+'</b>'+(re?'':' <button type="button" data-bxrm="'+esc(l.k)+'" aria-label="Aus der Box nehmen">×</button>')+'</span></div>').join(""):'<div class="mute">Noch nichts drin.</div>')+'</div>'+
    '<div style="font-weight:700;font-size:14px">Welches Etikett?</div><div class="bxet"><button type="button" data-bxa="inh" class="'+(art==="inh"?'on':'')+'">'+(art==="inh"?'✓ ':'')+'Mit Inhalt</button><button type="button" data-bxa="pl" class="'+(art==="pl"?'on':'')+'">'+(art==="pl"?'✓ ':'')+'Normales Etikett</button></div>'+
    '<div class="row" style="align-items:center;justify-content:space-between;margin:8px 0"><b style="font-size:14px">Anzahl</b><span style="display:flex;align-items:center;gap:10px"><button class="btn ghost s" type="button" id="bxem" aria-label="weniger">−</button><b style="font-size:20px">'+n+'</b><button class="btn ghost s" type="button" id="bxep" aria-label="mehr">+</button></span></div>'+
    (typeof gbStLine==="function"?gbStLine():'')+
@@ -5581,7 +5608,7 @@ function bxDoneDlg(P,b,re){if(!b)return;const L=bxLines(P,b);let art=b.typ==="so
    '<div class="row" style="margin-top:8px"><button class="btn ghost" type="button" id="bxhere">Hier drucken</button>'+(re?'':'<button class="btn ghost" type="button" id="bxno">Ohne Etikett</button>')+'</div>'+
    '<button class="btn ghost" type="button" id="bxback" style="margin-top:8px">'+(re?'Abbrechen':'Zurück in die Box')+'</button>';
   const q=s=>o.querySelector(s);o.querySelectorAll("[data-bxa]").forEach(x=>x.onclick=()=>{art=x.dataset.bxa;draw()});q("#bxem").onclick=()=>{n=Math.max(1,n-1);draw()};q("#bxep").onclick=()=>{n=Math.min(20,n+1);draw()};
-  o.querySelectorAll("[data-bxrm]").forEach(x=>x.onclick=()=>{const k=x.dataset.bxrm,i=pkItems(P).findIndex(it=>it.k===k),cb=bxGet(P,b);if(i>=0){bxPut(P,cb,i,-(+((cb.it||{})[k])||0));setTimeout(()=>{b=bxGet(P,b);draw();if(view==="packopen"&&!document.querySelector(".ov:not(:last-child)"))packOpenView()},50)}});
+  o.querySelectorAll("[data-bxrm]").forEach(x=>x.onclick=()=>{const k=x.dataset.bxrm,i=pkItems(P).findIndex(it=>it.k===k),cb=bxGet(P,b);if(/~\d+$/.test(k)){bxPutKey(P,cb,k,-(+((cb.it||{})[k])||0));setTimeout(()=>{b=bxGet(P,b);draw()},50)}else if(i>=0){bxPut(P,cb,i,-(+((cb.it||{})[k])||0));setTimeout(()=>{b=bxGet(P,b);draw();if(view==="packopen"&&!document.querySelector(".ov:not(:last-child)"))packOpenView()},50)}});
   q("#bxback").onclick=()=>o.remove();
   const job=()=>{const cb=bxGet(P,b);return{pk:P.id,ord:P.ord||"",ev:P.ev||"",art,n,inh:art==="inh"?bxLines(P,cb).map(l=>l.txt).join("\n"):"",box:art==="inh"?bxName(cb).toUpperCase():"",bx:cb.n}};
   const fin=et=>{const cb=bxGet(P,b);pkHSet(P,bxSave(P,cb,{done:re&&cb.done?cb.done:{by:me,...tabAs("by"),t:Date.now()},et:et||cb.et||null}));o.remove();if(view==="packopen")packOpenView();if(re)toast(et&&et.here?"Etikett wird gedruckt":"An die Druckstation geschickt",1);else bxNextAsk(P,cb,et)};
@@ -5590,11 +5617,11 @@ function bxDoneDlg(P,b,re){if(!b)return;const L=bxLines(P,b);let art=b.typ==="so
   q("#bxpr").onclick=async()=>{const j=job(),bt=q("#bxpr");bt.disabled=true;try{await db.doc("druck/"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)).set({...j,by:me,...tabAs("by"),t:Date.now(),st:"neu"});fin({art,n,t:Date.now()})}
    catch(e){bt.disabled=false;errBox("Konnte nicht gesendet werden"+(typeof sbErr==="function"?sbErr(e):"")+".")}}};draw()}
 function bxNextAsk(P,b,et){const o=bxOv('<b style="font-size:17px">'+esc(bxName(b))+(et?(et.here?' – Etikett wird gedruckt ✓':' – an die Druckstation geschickt ✓'):' – fertig ✓')+'</b><div class="mute" style="margin:6px 0 12px">'+(et&&!et.here&&typeof gbStationOk==="function"&&!gbStationOk()?'Die Druckstation ist gerade aus – das Etikett wird gedruckt, sobald sie läuft. ':'')+'Nächste Box?</div>'+
- '<div class="row"><button class="btn ghost" type="button" id="bxend">Fertig</button><button class="btn" type="button" id="bxnx">Box '+(bxAll(P).reduce((a,y)=>Math.max(a,+y.n||0),0)+1)+' starten</button></div>');
+ '<div class="row"><button class="btn ghost" type="button" id="bxend">Fertig</button><button class="btn" type="button" id="bxnx">Nr. '+(bxAll(P).reduce((a,y)=>Math.max(a,+y.n||0),0)+1)+' starten</button></div>');
  o.querySelector("#bxend").onclick=()=>o.remove();o.querySelector("#bxnx").onclick=()=>{o.remove();bxStartDlg(P)}}
 function bxListDlg(P){const B=bxAll(P);const o=bxOv('<b style="font-size:19px">Boxen ('+B.length+')</b>'+B.map(b=>{const L=bxLines(P,b);return '<div class="bxlist"><div class="h"><span>'+esc(bxName(b).toUpperCase())+' · '+(b.done?(b.et?'gedruckt':'ohne Etikett'):'offen')+'</span>'+
   (b.done?'<span><button type="button" class="lnk" data-bxre="'+esc(b.k)+'" style="color:var(--navy);font-size:13px">Etikett nochmal</button>'+(bxOpen(P)||!bxCanH(P)?'':' · <button type="button" class="lnk" data-bxop="'+esc(b.k)+'" style="color:var(--navy);font-size:13px">Wieder öffnen</button>')+'</span>':'')+'</div>'+
-  (L.length?L.map(l=>'<div><span>'+esc(pkName(l.x))+'</span><b>'+pkNum(l.q)+' '+esc(l.x.u||"Stk")+'</b></div>').join(""):'<div class="mute">leer</div>')+'<div class="mute" style="font-size:12px">'+esc(nmA(b,"by"))+', '+fmt(b.t)+(b.done?' · fertig '+fmt(b.done.t).slice(-5):'')+'</div></div>'}).join("")+
+  (L.length?L.map(l=>'<div><span>'+esc(l.nm)+'</span><b>'+pkNum(l.q)+' '+esc(l.x.u||"Stk")+'</b></div>').join(""):'<div class="mute">leer</div>')+'<div class="mute" style="font-size:12px">'+esc(nmA(b,"by"))+', '+fmt(b.t)+(b.done?' · fertig '+fmt(b.done.t).slice(-5):'')+'</div></div>'}).join("")+
   '<div style="position:sticky;bottom:-16px;background:var(--card);padding:8px 0 4px;margin-top:6px"><button class="btn ghost" type="button" id="bxx" style="width:100%">Schließen</button></div>');
  o.querySelector("#bxx").onclick=()=>o.remove();
  o.querySelectorAll("[data-bxop]").forEach(x=>x.onclick=()=>{const b=B.find(y=>y.k===x.dataset.bxop);o.remove();pkHSet(P,bxSave(P,b,{done:null,dev:bxDev(),by:me,...tabAs("by")}));if(view==="packopen")packOpenView()});

@@ -649,3 +649,9 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.195 (Jürgen, 26.11.): „Boxen ansehen“ ließ sich nicht scrollen
 - Alle Fenster aus bx.js (`bxOv`) höchstens Bildschirmhöhe − 40 px und scrollbar (dvh, overscroll contain); in „Boxen ansehen“ bleibt „Schließen“ unten stehen (sticky). Test in `tests/bx_t.js`.
+
+## 1.196 (Jürgen, 26.11.): Box-Etikett neu, Nummer zuerst, Alternativen in der Box
+- Namen: „Nr. 2 · Kleine Box“ statt „Kleine Box 2“ (klang wie die zweite kleine Box) – `bxName`, Start „Nr. 3 – was ist es?“, Knöpfe „Nr. 3 · Palette starten“ / „Nr. 3 starten“, Etikett „NR. 2 · KLEINE BOX“.
+- Alternativen: Mengen-Fenster „Was kommt in Nr. n · …?“ mit Auswahl Packschein-Artikel / jede Alternative (vorgewählt die Alternative, wenn vom Original nichts da ist bzw. das Original schon ganz in Boxen ist). Alternative im Box-Inhalt als Schlüssel `h_<Pos>~<i>` (`bxAltOf`, `bxPutKey` – ändert nur die Box, der Herricht-Stand steht schon in der Position). Etikett, Box-fertig-Liste, Boxen ansehen und Zeilen-Hinweis zeigen den Namen der Alternative.
+- Etikett mit Box (etik.js, nur wenn `j.box`): Kopfzeile 12 mm (Logo klein, www, QR 10 mm), darunter Veranstaltung groß (10 mm, schrumpft auf eine Zeile) und „Auftrags-Nr.“ groß (9 mm), Inhalt, unten „Gewicht: ____ kg“ + „Inhalt 1 von 2“; Box-Nummer senkrecht in schwarzem 12-mm-Streifen ganz rechts (`.bxs`, writing-mode vertical-rl, von unten nach oben lesbar). Andere Etiketten unverändert.
+- Test `tests/bx_t.js` angepasst + Alternative.
