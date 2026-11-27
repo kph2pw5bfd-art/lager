@@ -8,7 +8,7 @@ const seed=[{col:"pack",id:"P1",data:{ord:"260130001",ps:"14402",ev:"Gala Wien 2
  const fk=fs.readFileSync(S+"fakesb.js","utf8").replace("const T={docs:[]","const T={docs:"+J(seed));
  await ctx.route("**/*",r=>{const u=r.request().url();if(u.startsWith("https://app.test/"))return r.fulfill({body:fs.readFileSync("/home/claude/gh/index.html"),contentType:"text/html"});if(u.includes("supabase-js"))return r.fulfill({body:fk,contentType:"text/javascript"});return r.fulfill({status:404,body:""})});
  await p.goto("https://app.test/");await p.evaluate(()=>{window.MF_NOASK=true;window.PK_FOPEN=true});await p.waitForTimeout(1000);await p.mouse.click(195,420);await p.waitForTimeout(400);
- ok("Version ab 1.198",await p.evaluate(()=>+APPV.split(".")[1]>=198));
+ ok("Version ab 1.199",await p.evaluate(()=>+APPV.split(".")[1]>=199));
  const H=()=>p.evaluate(()=>{const d=(__T.docs.find(d=>d.col==="packh"&&d.id==="P1")||{}).data||{};const o={...d};Object.keys(d).filter(k=>/^bx_/.test(k)&&d[k]).forEach(k=>{o["bx_"+d[k].n]=d[k]});return o});
  const open=async()=>{await p.evaluate(()=>{curPack="P1";view="packopen";draw();packOpenView()});await p.waitForTimeout(400)};
  const row=t=>p.evaluate(t=>{const r=[...document.querySelectorAll(".pkp")].find(x=>x.querySelector(".pkt").textContent.trim().startsWith(t));return r?+r.dataset.pkrow:-1},t);
@@ -113,7 +113,7 @@ const seed=[{col:"pack",id:"P1",data:{ord:"260130001",ps:"14402",ev:"Gala Wien 2
  await p.evaluate(()=>localStorage.setItem("tpc_dev_id","tabletA"));
  /* Etikett: Box-Schild und Teilung */
  const d1=await p.evaluate(()=>gbDoc({art:"inh",ord:"260130001",ev:"Gala Wien 2026",n:1,box:"NR. 2 · PALETTE",inh:"20 Stk Schuko 20m\n8 Stk Defender 32A",rot:0}));
- ok("Etikett mit Box-Schild",/NR\. 2 · PALETTE/.test(d1)&&/class="bxs/.test(d1)&&!/Inhalt 1 von/.test(d1));
+ ok("Etikett mit Box-Schild (Nr. groß + Art getrennt, Kopfzeile wie früher)",/class="bxn fit1">NR\. 2</.test(d1)&&/class="bxty fit1">PALETTE</.test(d1)&&/Laaber Straße/.test(d1)&&/class="bxs/.test(d1)&&!/Inhalt 1 von/.test(d1));
  const many=Array.from({length:15},(_,k)=>(k+1)+" Stk Artikel "+(k+1)).join("\n");
  const d2=await p.evaluate(m=>gbDoc({art:"inh",ord:"1",ev:"X",n:1,box:"NR. 3 · RUNGE",inh:m,rot:0}),many);
  ok("viel Inhalt → 2 Etiketten „Inhalt 1 von 2 / 2 von 2“",(d2.match(/class="pp"/g)||[]).length===2&&/Inhalt 1 von 2/.test(d2)&&/Inhalt 2 von 2/.test(d2));

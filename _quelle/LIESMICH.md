@@ -663,3 +663,8 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## 1.198 (Jürgen, 26.11.): Alternative automatisch in die offene Box
 - `bxAutoAlt` + Hülle um `pkHSet` (nur Patches ohne bx_-Felder): wird bei einer Position über Bearbeiten/Scan eine Alternative neu eingetragen oder erhöht und hat dieses Gerät eine offene Box, kommt die zusätzliche Menge der Alternative gleich in diese Box (Hinweis „3 Stk … → Nr. 2 · Palette“). Lag der Packschein-Artikel schon in einer Box und wird dafür verringert (Weg B: erst 10 einlegen, dann 7 + 3 Alternative), tauscht `bxReconcile` in derselben Box – diese Menge wird nicht doppelt dazugelegt. Ohne eigene offene Box passiert nichts.
 - Test `tests/bx_t.js` (Teil 1.198).
+
+## 1.199 (Jürgen, 27.11., Foto vom Testdruck): Box-Etikett nachgebessert
+- Kopfzeile wieder mit allen Angaben wie früher (`gbHead`, Klasse `hd3`: 19 mm hoch, Logo 25 mm, Adresse 1,5 mm, QR 18 mm statt 10 mm).
+- Veranstaltung bis 2 Zeilen (8 mm, Feld 16 mm hoch, schrumpft erst wenn nötig), Auftrags-Nr. 9,5 mm fett (schrumpft nicht mehr).
+- Box-Streifen 16 mm breit: „NR. 1“ groß (12 mm) und „KLEINE BOX“ (8 mm) getrennt, über die ganze schwarze Fläche verteilt (vertical-rl, space-evenly, je eigenes fit1). Druckauftrag unverändert (`box` = „NR. 1 · KLEINE BOX“, wird beim Zeichnen an „ · “ geteilt).
