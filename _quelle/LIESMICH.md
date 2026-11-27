@@ -675,3 +675,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.201
 - Box-Etikett: Im schwarzen Streifen wurde Text abgeschnitten („GROSSE BOX“). Die Schriftgröße wird jetzt aus der echten Buchstabenbreite (Arial fett) berechnet. Nummer und Box-Art teilen sich zusammen max. 68 mm der etwa 76 mm Streifenlänge, dadurch bleibt immer Reserve.
+
+## 1.202
+- Zurück-Taste oben links (#bk in basis.html) größer: Tippfläche 64×56 px reicht bis an den linken Rand, Pfeil etwas größer, hellerer Aufblitz beim Antippen.
