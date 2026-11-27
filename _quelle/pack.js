@@ -201,7 +201,7 @@ async function pkQFlush(){if(pkQBusy||typeof SB==="undefined"||!ME)return;const 
  if(!net&&pkQN())return pkQFlush();
  if(done&&!pkQN()){if(pkQWarned)toast("Wieder Netz – alles vom Herrichten ist gespeichert",1);pkQWarned=false;if(view==="packopen")packOpenView()}}
 function pkQWarn(){if(!pkQWarned)toast("Kein Netz – wird im Gerät gemerkt und gespeichert, sobald wieder Netz da ist",1);pkQWarned=true;if(view==="packopen"&&!document.querySelector(".ov"))packOpenView()}
-function pkOffHint(){const n=pkQN();return n?'<div class="pkhint part">⏳ Kein Netz – '+(n===1?'eine Packliste wartet':n+' Packlisten warten')+' aufs Speichern. Nichts geht verloren.</div>':''}
+function pkOffHint(){const q=pkQ(),now=Date.now(),n=Object.values(q).filter(e=>e&&e.u===me).length,old=Object.values(q).some(e=>e&&e.u===me&&now-(e.t||0)>8000);return n&&(pkQWarned||!navigator.onLine||old)?'<div class="pkhint part">⏳ Kein Netz – '+(n===1?'eine Packliste wartet':n+' Packlisten warten')+' aufs Speichern. Nichts geht verloren.</div>':''}
 window.addEventListener("online",()=>setTimeout(pkQFlush,1200));setInterval(()=>{if(pkQN())pkQFlush()},20000);setTimeout(pkQFlush,4000);
 /* Anzeigename: wie in der Artikelliste (über die Artikelnummer), sonst wie im Packschein */
 function pkKat(x){const c=typeof artCode==="function"?artCode(x&&x.a):"";if(!c||typeof rkat==="undefined"||!Array.isArray(rkat))return null;return rkat.find(a=>artCode(a.nr)===c)||null}

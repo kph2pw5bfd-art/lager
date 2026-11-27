@@ -678,3 +678,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 
 ## 1.202
 - Zurück-Taste oben links (#bk in basis.html) größer: Tippfläche 64×56 px reicht bis an den linken Rand, Pfeil etwas größer, hellerer Aufblitz beim Antippen.
+
+## 1.203
+- Herrichten: Beim Abhaken sprang die Seite. Grund: Der Hinweis „⏳ Kein Netz – eine Packliste wartet aufs Speichern“ (pkOffHint) erschien kurz oben, solange der Haken noch in der Warteschlange lag (normalerweise unter 1 s). Er erscheint jetzt nur noch, wenn wirklich kein Netz da ist (pkQWarned / offline) oder etwas länger als 8 s wartet.
