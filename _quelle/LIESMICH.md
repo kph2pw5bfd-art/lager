@@ -668,3 +668,7 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 - Kopfzeile wieder mit allen Angaben wie früher (`gbHead`, Klasse `hd3`: 19 mm hoch, Logo 25 mm, Adresse 1,5 mm, QR 18 mm statt 10 mm).
 - Veranstaltung bis 2 Zeilen (8 mm, Feld 16 mm hoch, schrumpft erst wenn nötig), Auftrags-Nr. 9,5 mm fett (schrumpft nicht mehr).
 - Box-Streifen 16 mm breit: „NR. 1“ groß (12 mm) und „KLEINE BOX“ (8 mm) getrennt, über die ganze schwarze Fläche verteilt (vertical-rl, space-evenly, je eigenes fit1). Druckauftrag unverändert (`box` = „NR. 1 · KLEINE BOX“, wird beim Zeichnen an „ · “ geteilt).
+
+## 1.200 (Jürgen, 27.11., 2. Testdruck): Box-Etikett
+- Auftrags-Nr. kleiner als der Veranstaltungsname (6,5 mm statt 9,5 mm; Veranstaltung bleibt 8 mm, 2 Zeilen).
+- Box-Streifen: an der Druckstation schrumpfte das automatische Verkleinern („NR. 1“ / „KLEINE BOX“ winzig). Jetzt feste Größe aus der Textlänge (`gbBxFs(text, verfügbare mm, max)`: ≈ 0,7 em pro Zeichen; NR. max 12 mm auf 32 mm, Art max 8,5 mm auf 44 mm) – kein fit1 mehr im Streifen.
