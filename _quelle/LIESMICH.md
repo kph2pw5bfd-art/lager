@@ -672,3 +672,6 @@ Supabase: https://whfeipnyzffrejbakweb.supabase.co (anon key steht in shim.js; s
 ## 1.200 (Jürgen, 27.11., 2. Testdruck): Box-Etikett
 - Auftrags-Nr. kleiner als der Veranstaltungsname (6,5 mm statt 9,5 mm; Veranstaltung bleibt 8 mm, 2 Zeilen).
 - Box-Streifen: an der Druckstation schrumpfte das automatische Verkleinern („NR. 1“ / „KLEINE BOX“ winzig). Jetzt feste Größe aus der Textlänge (`gbBxFs(text, verfügbare mm, max)`: ≈ 0,7 em pro Zeichen; NR. max 12 mm auf 32 mm, Art max 8,5 mm auf 44 mm) – kein fit1 mehr im Streifen.
+
+## 1.201
+- Box-Etikett: Im schwarzen Streifen wurde Text abgeschnitten („GROSSE BOX“). Die Schriftgröße wird jetzt aus der echten Buchstabenbreite (Arial fett) berechnet. Nummer und Box-Art teilen sich zusammen max. 68 mm der etwa 76 mm Streifenlänge, dadurch bleibt immer Reserve.
